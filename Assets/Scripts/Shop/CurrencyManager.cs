@@ -1,0 +1,350 @@
+using System;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using Unity.Services.Economy;
+using Unity.Services.Economy.Model;
+using UnityEngine;
+
+/// <summary>
+/// Production-ready Currency Manager using Unity Economy Service.
+/// Currencies must be configured in Unity Dashboard: GOLD, GEM, POWER
+/// Plain C# singleton — no MonoBehaviour needed.
+/// 
+/// Usage:
+///   await CurrencyManager.Instance.LoadBalances();               // Call once after auth
+///   await CurrencyManager.Instance.AddGold(100);                 // Increment
+///   bool success = await CurrencyManager.Instance.SpendGems(50); // Decrement (false if insufficient)
+///   long gold = CurrencyManager.Instance.Gold;                   // Read cached value
+/// </summary>
+public class CurrencyManager
+{
+    private static CurrencyManager _instance;
+    public static CurrencyManager Instance => _instance ??= new CurrencyManager();
+
+    // ==================== Economy Currency IDs (match Unity Dashboard) ====================
+
+    private const string GOLD_ID = "GOLD";
+    private const string GEM_ID = "GEM";
+    private const string POWER_ID = "POWER";
+
+    // ==================== Cached Balances ====================
+
+    private long _gold;
+    private long _gems;
+    private long _power;
+
+    public long Gold => _gold;
+    public long Gems => _gems;
+    public long Power => _power;
+
+    // ==================== State ====================
+
+    private bool _isLoaded = false;
+    private bool _isBusy = false;
+
+    public bool IsLoaded => _isLoaded;
+    public bool IsBusy => _isBusy;
+
+    // ==================== Events ====================
+
+    /// <summary>Fired whenever any currency value changes. Args: (CurrencyType, newValue)</summary>
+    public static event Action<CurrencyType, long> OnCurrencyChanged;
+
+    /// <summary>Fired when a spend attempt fails due to insufficient funds.</summary>
+    public static event Action<CurrencyType, long> OnInsufficientFunds;
+
+    /// <summary>Call from external scripts (e.g. PurchaseManager) to notify insufficient funds.</summary>
+    public void NotifyInsufficientFunds(CurrencyType type, long amount)
+    {
+        OnInsufficientFunds?.Invoke(type, amount);
+    }
+
+    // ==================== Load Balances ====================
+
+    /// <summary>
+    /// Loads all currency balances from Unity Economy.
+    /// Call once after authentication. Safe to call multiple times.
+    /// </summary>
+    public async UniTask LoadBalances(bool forceReload = false)
+    {
+        if (_isLoaded && !forceReload) return;
+
+        try
+        {
+            var balancesResult = await EconomyService.Instance.PlayerBalances.GetBalancesAsync();
+
+            _gold = 0;
+            _gems = 0;
+            _power = 0;
+
+            foreach (var balance in balancesResult.Balances)
+            {
+                switch (balance.CurrencyId)
+                {
+                    case GOLD_ID:
+                        _gold = balance.Balance;
+                        break;
+                    case GEM_ID:
+                        _gems = balance.Balance;
+                        break;
+                    case POWER_ID:
+                        _power = balance.Balance;
+                        break;
+                }
+            }
+
+            _isLoaded = true;
+            Debug.Log($"[Currency] Loaded — Gold: {_gold}, Gems: {_gems}, Power: {_power}");
+
+            OnCurrencyChanged?.Invoke(CurrencyType.Gold, _gold);
+            OnCurrencyChanged?.Invoke(CurrencyType.Gems, _gems);
+            OnCurrencyChanged?.Invoke(CurrencyType.Power, _power);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[Currency] Failed to load balances: {ex.Message}");
+        }
+    }
+
+    // ==================== Add (Increment) ====================
+
+    public async UniTask AddGold(long amount)
+    {
+        await IncrementCurrency(CurrencyType.Gold, GOLD_ID, amount);
+    }
+
+    public async UniTask AddGems(long amount)
+    {
+        await IncrementCurrency(CurrencyType.Gems, GEM_ID, amount);
+    }
+
+    public async UniTask AddPower(long amount)
+    {
+        await IncrementCurrency(CurrencyType.Power, POWER_ID, amount);
+    }
+
+    // ==================== Spend (Decrement) ====================
+
+    /// <summary>Returns true if spend was successful, false if insufficient funds.</summary>
+    public async UniTask<bool> SpendGold(long amount)
+    {
+        return await DecrementCurrency(CurrencyType.Gold, GOLD_ID, amount);
+    }
+
+    /// <summary>Returns true if spend was successful, false if insufficient funds.</summary>
+    public async UniTask<bool> SpendGems(long amount)
+    {
+        return await DecrementCurrency(CurrencyType.Gems, GEM_ID, amount);
+    }
+
+    /// <summary>Returns true if spend was successful, false if insufficient funds.</summary>
+    public async UniTask<bool> SpendPower(long amount)
+    {
+        return await DecrementCurrency(CurrencyType.Power, POWER_ID, amount);
+    }
+
+    // ==================== Check Affordability ====================
+
+    public bool CanAffordGold(long amount) => _gold >= amount;
+    public bool CanAffordGems(long amount) => _gems >= amount;
+    public bool CanAffordPower(long amount) => _power >= amount;
+
+    public bool CanAfford(CurrencyType type, long amount)
+    {
+        return type switch
+        {
+            CurrencyType.Gold => _gold >= amount,
+            CurrencyType.Gems => _gems >= amount,
+            CurrencyType.Power => _power >= amount,
+            _ => false
+        };
+    }
+
+    // ==================== Set Balance (Admin/Override) ====================
+
+    /// <summary>Directly sets a currency balance on the server. Use sparingly.</summary>
+    public async UniTask SetBalance(CurrencyType type, long value)
+    {
+        if (_isBusy) return;
+        _isBusy = true;
+
+        string currencyId = GetCurrencyId(type);
+        value = Math.Max(0, value);
+
+        try
+        {
+            var result = await EconomyService.Instance.PlayerBalances.SetBalanceAsync(currencyId, value);
+            UpdateLocalBalance(type, result.Balance);
+            Debug.Log($"[Currency] Set {type} to {result.Balance}");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[Currency] Failed to set {type}: {ex.Message}");
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // ==================== Multi-Currency Spend ====================
+
+    /// <summary>
+    /// Checks all costs locally first. If all affordable, spends one by one on the server.
+    /// NOT truly atomic on server — but prevents unnecessary calls if locally insufficient.
+    /// </summary>
+    public async UniTask<bool> SpendMultiple(params (CurrencyType type, long amount)[] costs)
+    {
+        // Local validation first
+        foreach (var (type, amount) in costs)
+        {
+            if (!CanAfford(type, amount))
+            {
+                OnInsufficientFunds?.Invoke(type, amount);
+                return false;
+            }
+        }
+
+        // Deduct each on server
+        foreach (var (type, amount) in costs)
+        {
+            string currencyId = GetCurrencyId(type);
+            bool success = await DecrementCurrency(type, currencyId, amount);
+
+            if (!success)
+            {
+                // Server-side balance was different — reload to sync
+                Debug.LogWarning($"[Currency] Server rejected spend for {type}. Reloading balances.");
+                await LoadBalances(true);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // ==================== Get by Type ====================
+
+    public long GetCurrency(CurrencyType type)
+    {
+        return type switch
+        {
+            CurrencyType.Gold => _gold,
+            CurrencyType.Gems => _gems,
+            CurrencyType.Power => _power,
+            _ => 0
+        };
+    }
+
+    // ==================== Refresh ====================
+
+    /// <summary>Force refresh all balances from server.</summary>
+    public async UniTask Refresh()
+    {
+        await LoadBalances(true);
+    }
+
+    // ==================== Internal ====================
+
+    private async UniTask IncrementCurrency(CurrencyType type, string currencyId, long amount)
+    {
+        if (amount <= 0)
+        {
+            Debug.LogWarning($"[Currency] Cannot add negative or zero amount to {type}.");
+            return;
+        }
+
+        if (_isBusy) return;
+        _isBusy = true;
+
+        try
+        {
+            var result = await EconomyService.Instance.PlayerBalances.IncrementBalanceAsync(currencyId, (int)amount);
+            UpdateLocalBalance(type, result.Balance);
+
+            Debug.Log($"[Currency] Added {amount} {type}. New balance: {result.Balance}");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[Currency] Failed to add {type}: {ex.Message}");
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async UniTask<bool> DecrementCurrency(CurrencyType type, string currencyId, long amount)
+    {
+        if (amount <= 0)
+        {
+            Debug.LogWarning($"[Currency] Cannot spend negative or zero amount of {type}.");
+            return false;
+        }
+
+        // Local check first to avoid unnecessary API call
+        if (!CanAfford(type, amount))
+        {
+            OnInsufficientFunds?.Invoke(type, amount);
+            return false;
+        }
+
+        if (_isBusy) return false;
+        _isBusy = true;
+
+        try
+        {
+            var result = await EconomyService.Instance.PlayerBalances.DecrementBalanceAsync(currencyId, (int)amount);
+            UpdateLocalBalance(type, result.Balance);
+
+            Debug.Log($"[Currency] Spent {amount} {type}. New balance: {result.Balance}");
+            return true;
+        }
+        catch (EconomyException ex)
+        {
+            Debug.LogError($"[Currency] Economy error spending {type}: {ex.Message}");
+            // Reload balances to sync with server
+            await LoadBalances(true);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[Currency] Failed to spend {type}: {ex.Message}");
+            return false;
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private void UpdateLocalBalance(CurrencyType type, long newValue)
+    {
+        switch (type)
+        {
+            case CurrencyType.Gold: _gold = newValue; break;
+            case CurrencyType.Gems: _gems = newValue; break;
+            case CurrencyType.Power: _power = newValue; break;
+        }
+
+        OnCurrencyChanged?.Invoke(type, newValue);
+    }
+
+    private string GetCurrencyId(CurrencyType type)
+    {
+        return type switch
+        {
+            CurrencyType.Gold => GOLD_ID,
+            CurrencyType.Gems => GEM_ID,
+            CurrencyType.Power => POWER_ID,
+            _ => throw new ArgumentException($"Unknown currency type: {type}")
+        };
+    }
+}
+
+public enum CurrencyType
+{
+    Gold,
+    Gems,
+    Power
+}

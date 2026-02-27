@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bca238a5e094f1888245648e420a068, type: 3}
+  m_Name: Ch19_L15
+  m_EditorClassIdentifier: 
+  chapter: 19
+  globalLevel: 375
+  targetScore: 5500
+  minDuration: 50
+  maxDuration: 90
+  pressureMax: 158
+  pressureAvg: 103
+  maxE4: 4
+  maxE3: 11
+  maxE2: 52
+  spawnIntervalMin: 0.45
+  spawnIntervalMax: 0.925
+  expectedDps: 97
+  hpMultiplier: 7.5913234

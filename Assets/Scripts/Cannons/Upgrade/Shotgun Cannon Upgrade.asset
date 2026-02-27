@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47f0859e13c47ef46a791a2c815abb39, type: 3}
+  m_Name: Shotgun Cannon Upgrade
+  m_EditorClassIdentifier: 
+  cannonIndex: 2
+  cannonPrefab: {fileID: 2364492470350389745, guid: 6f6ef8cf059e1ae4599bc74f02094317, type: 3}
+  cannonName: Shot Gun
+  cannonDescription: ShotGun Cannon
+  cannonSprite: {fileID: 21300000, guid: 9f33e45114faaa340a038cf4b0127e07, type: 3}
+  cardsRequired: 1
+  coinsRequired: 4
+  cannonLevel: 1
+  cannonUnlock: 0
+  cannonStats: {fileID: 11400000, guid: 6c922df6897ae6641a5ae97d646871c9, type: 2}
+  coinIncrement: 25
+  CardUpgradeInLevels: 01000000020000000300000004000000
+  normalCardIncrement: 1
+  specificNumberCardIncrement: 0
+  moduloForCardUpgrade: 5
+  baseCoinsRequired: 0
+  baseCoinIncrement: 0
+  baseCardsRequired: 0
+  baseCannonLevel: 0

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b56bb0734ed8c974bbe5f984e2b3fc7a, type: 3}
+  m_Name: Level_12
+  m_EditorClassIdentifier: 
+  chapterNumber: 13
+  levelNumber: 12
+  levelName: Chapter 13 - Level 12
+  spawnInterval: 3
+  birdsToSpawn:
+  - birdPrefab: {fileID: 4839231315209424966, guid: a6ae64a291df042458a1e2add59dc500, type: 3}
+    count: 1
+  - birdPrefab: {fileID: 7322479139939081348, guid: a23feaf1d7a3acb449af59db52c27e97, type: 3}
+    count: 1
+  - birdPrefab: {fileID: 7865592226323995479, guid: 4d062cd1824ba94428d223604521f11c, type: 3}
+    count: 1
+  - birdPrefab: {fileID: 3431458301241522803, guid: df515bad065879540beb6bd970cdd158, type: 3}
+    count: 1

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b56bb0734ed8c974bbe5f984e2b3fc7a, type: 3}
+  m_Name: Level_10
+  m_EditorClassIdentifier: 
+  chapterNumber: 2
+  levelNumber: 10
+  levelName: Chapter 2 - Level 10
+  totalPoints: 20
+  spawnInterval: 3
+  birdsToSpawn:
+  - birdPrefab: {fileID: 6352729997528185007, guid: 3bdbeec27a5f30844bfab367449d6994, type: 3}
+    count: 1
+    minSpawnTime: 0
+    maxSpawnTime: 0

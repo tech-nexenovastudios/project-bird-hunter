@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4eba8969565d534babad6b86b390f7c, type: 3}
+  m_Name: Single Cannon
+  m_EditorClassIdentifier: 
+  cannonId: 0
+  baseBulletDamage: 10
+  baseFireRate: 1
+  baseBulletSpeed: 15
+  baseMoveSpeed: 5
+  baseMaxHealth: 100
+  baseMinBulletShot: 1
+  baseMaxBulletShot: 1
+  baseBulletBounce: 0
+  randomBulletFire: 0
+  damageIncrement: 1
+  healthIncrement: 5
+  fireRateIncrement: 0.05
+  bulletDamage: 10.141667
+  fireRate: 1.0066667
+  bulletSpeed: 15
+  moveSpeed: 5.004167
+  maxHealth: 103.66056
+  numberOfMinBulletInOneShot: 1
+  numberOfMaxBulletInOneShot: 1
+  bulletBounce: 0
+  damageMultiplier: 1.0141667
+  fireRateMultiplier: 1.0066667
+  healthMultiplier: 1.0366056
+  moveSpeedMultiplier: 1.0008334
+  _baseBulletDamage: 0
+  _baseFireRate: 0
+  _baseMaxHealth: 0

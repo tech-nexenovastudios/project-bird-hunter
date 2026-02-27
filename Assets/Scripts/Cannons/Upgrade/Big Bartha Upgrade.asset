@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47f0859e13c47ef46a791a2c815abb39, type: 3}
+  m_Name: Big Bartha Upgrade
+  m_EditorClassIdentifier: 
+  cannonIndex: 4
+  cannonPrefab: {fileID: 2602831570025325107, guid: ac82ff307fc0ace49a6207ac2e1cb6a0, type: 3}
+  cannonName: Big Bartha
+  cannonDescription: Big Bartha Cannon
+  cannonSprite: {fileID: 21300000, guid: f3645e57be61228478b9ecbfae4741ed, type: 3}
+  cardsRequired: 1
+  coinsRequired: 16
+  cannonLevel: 1
+  cannonUnlock: 0
+  cannonStats: {fileID: 11400000, guid: f94b08c3e9f6f294f956f7228a1ce7de, type: 2}
+  coinIncrement: 75
+  CardUpgradeInLevels: 01000000
+  normalCardIncrement: 1
+  specificNumberCardIncrement: 2
+  moduloForCardUpgrade: 2
+  baseCoinsRequired: 0
+  baseCoinIncrement: 0
+  baseCardsRequired: 0
+  baseCannonLevel: 0

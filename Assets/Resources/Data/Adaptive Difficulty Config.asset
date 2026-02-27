@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1525ee3569b4d66ab42f0b3108b8fa8, type: 3}
+  m_Name: Adaptive Difficulty Config
+  m_EditorClassIdentifier: 
+  performanceWindowSeconds: 15
+  highPerformanceThreshold: 1.25
+  lowPerformanceThreshold: 0.75
+  spawnIntervalMultiplierHigh: {x: 0.8, y: 0.9}
+  pressureMaxMultiplierHigh: {x: 1.1, y: 1.15}
+  b4WeightShiftHigh: 0.02
+  b3WeightShiftHigh: 0.03
+  spawnIntervalMultiplierLow: {x: 1.15, y: 1.35}
+  pressureMaxMultiplierLow: {x: 0.85, y: 0.9}
+  b1WeightShiftLow: 0.15
+  b2WeightShiftLow: 0.05
+  blockB4WhenLow: 1
+  reliefEnterRatio: 1
+  reliefExitRatio: 0.75
+  reliefScoreBonus: 1.25

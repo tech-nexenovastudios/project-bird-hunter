@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47f0859e13c47ef46a791a2c815abb39, type: 3}
+  m_Name: Rapid Fire Upgrade
+  m_EditorClassIdentifier: 
+  cannonIndex: 1
+  cannonPrefab: {fileID: 5482615771359566797, guid: 9cdc321ee0c08fa45837b4dfa0073f93, type: 3}
+  cannonName: Rapid Fire
+  cannonDescription: Rapid Fire Cannon
+  cannonSprite: {fileID: 21300000, guid: d9d00d8d64b2f0a4db300cb2e7b32fe4, type: 3}
+  cardsRequired: 1
+  coinsRequired: 2
+  cannonLevel: 1
+  cannonUnlock: 0
+  cannonStats: {fileID: 11400000, guid: 28f90ab1f0afb9a4f9991991806d87a4, type: 2}
+  coinIncrement: 5
+  CardUpgradeInLevels: 03000000040000000500000000000000
+  normalCardIncrement: 1
+  specificNumberCardIncrement: 0
+  moduloForCardUpgrade: 5
+  baseCoinsRequired: 0
+  baseCoinIncrement: 0
+  baseCardsRequired: 0
+  baseCannonLevel: 0

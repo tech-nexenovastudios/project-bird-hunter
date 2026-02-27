@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bca238a5e094f1888245648e420a068, type: 3}
+  m_Name: Ch6_L08
+  m_EditorClassIdentifier: 
+  chapter: 6
+  globalLevel: 108
+  targetScore: 2000
+  minDuration: 48
+  maxDuration: 80
+  pressureMax: 74
+  pressureAvg: 48
+  maxE4: 1
+  maxE3: 4
+  maxE2: 21
+  spawnIntervalMin: 0.98
+  spawnIntervalMax: 1.96
+  expectedDps: 41
+  hpMultiplier: 3.1

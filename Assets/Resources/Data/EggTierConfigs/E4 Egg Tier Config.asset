@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46e92f0f55104de087886e1d152904fa, type: 3}
+  m_Name: E4 Egg Tier Config
+  m_EditorClassIdentifier: 
+  tierId: E4
+  baseHp: 150
+  pressureValue: 8
+  splitInto: {fileID: 11400000, guid: 0bec7192586925a4abb8106c9479ca52, type: 2}
+  splitCount: 2
+  scorePerHit: 40
+  scoreOnDestroy: 200
+  jumpImpulse: 6.5

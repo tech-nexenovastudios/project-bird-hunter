@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5aeda893bbb84890b52772d46cd5d287, type: 3}
+  m_Name: B2 Bird Config
+  m_EditorClassIdentifier: 
+  birdId: B2
+  eggTier: {fileID: 11400000, guid: c9b8a1748e1724041a1625144404c80f, type: 2}
+  layInterval: 0.65
+  movementType: 0
+  moveSpeed: 2.2
+  chaseSpeed: 4
+  zigZagPoints: []
+  useCameraBoundary: 1
+  gravity: -9
+  flapForce: 5
+  heightTolerance: 0.3
+  damping: 0.985
+  lifetime: 2.5
+  baseHp: 40
+  spawnWeight: 0.3
+  difficultyWeight: 1
+  birdSpecialConfig: {fileID: 0}
