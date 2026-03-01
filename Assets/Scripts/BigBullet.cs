@@ -1,10 +1,10 @@
 using UnityEngine;
+using Gameplay.Interfaces;
 
 public class BigBullet : MonoBehaviour
 {
     public float Damage;
     public float speed;
- 
 
     private void Update()
     {
@@ -13,19 +13,21 @@ public class BigBullet : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        EggHealth health = collision.GetComponent<EggHealth>();
-        if (health != null)
+        Vector3 hitPoint = collision.ClosestPoint(transform.position);
+        var damageable = collision.GetComponent<IDamageable>();
+        if (damageable != null && damageable.IsAlive)
         {
-            if(health.Health < Damage)
+            damageable.TakeDamage((int)Damage, hitPoint);
+            Destroy(gameObject);
+        }
+        else
+        {
+            var legacyHealth = collision.GetComponent<IHealthManager>();
+            if (legacyHealth != null)
             {
-                health.TakeDamage(Damage);
-            }
-            else
-            {
-                health.TakeDamage(Damage);
+                legacyHealth.TakeDamage(Damage);
                 Destroy(gameObject);
             }
         }
-       
     }
 }

@@ -1,4 +1,4 @@
-﻿using Gameplay.Birds;
+using Gameplay.Birds;
 using Gameplay.Eggs;
 using Gameplay.Levels;
 using UnityEngine;
@@ -20,8 +20,7 @@ namespace Gameplay
         public GameObject birdPrefab;
         public GameObject eggPrefab;
 
-        [Header("State (read-only)")] public int currentScore;
-        public float elapsedTime;
+        [Header("State (read-only)")] public float elapsedTime;
 
         PressureTracker _pressureTracker;
         readonly List<BaseBird> _activeBirds = new();
@@ -46,7 +45,6 @@ namespace Gameplay
 
         public void ResetLevel()
         {
-            currentScore = 0;
             elapsedTime = 0f;
             _spawnTimer = 0f;
             _reliefMode = false;
@@ -77,6 +75,7 @@ namespace Gameplay
             _performanceExpectedScore = levelProfile.targetScore * t;
 
             float expected = Mathf.Max(1f, _performanceExpectedScore);
+            int currentScore = Managers.ScoreManager.Instance != null ? Managers.ScoreManager.Instance.CurrentScore : 0;
             _performanceRatio = currentScore / expected;
         }
 
@@ -284,7 +283,7 @@ namespace Gameplay
             egg.OnDestroyed -= HandleEggDestroyed;
 
             _activeEggs.Remove(egg);
-            AwardScore(egg);
+            // Score is now handled by ScoreManager via GameEvents.OnEggDestroyed
 
             if (egg.config != null && egg.config.splitInto != null)
             {
@@ -306,17 +305,6 @@ namespace Gameplay
             }
 
             Destroy(egg.gameObject);
-        }
-
-        void AwardScore(Eggs.Egg egg)
-        {
-            int gained = egg.config.scoreOnDestroy;
-            if (_reliefMode)
-            {
-                gained = Mathf.RoundToInt(gained * adaptiveConfig.reliefScoreBonus);
-            }
-
-            currentScore += gained;
         }
     }
 

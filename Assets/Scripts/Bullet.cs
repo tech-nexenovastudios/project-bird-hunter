@@ -1,9 +1,10 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using Gameplay.Interfaces;
 
 
 public enum BulletType
@@ -104,10 +105,12 @@ public class Bullet : MonoBehaviour
                 if (!alreadyHitObj.Contains(collideObjects[0]))
                 {
                     alreadyHitObj.Add(collision.gameObject);
-                    var Health = collideObjects[0].GetComponent<IHealthManager>();
-                    if (Health != null)
+                    Vector3 hitPoint = collision.ClosestPoint(transform.position);
+                    var damageable = collideObjects[0].GetComponent<IDamageable>();
+                    var legacyHealth = collideObjects[0].GetComponent<IHealthManager>();
+                    if (damageable != null)
                     {
-                        Health.TakeDamage(Damage);
+                        damageable.TakeDamage((int)Damage, hitPoint);
                         if (GamePoolManager.bulletDamageTextQueue.Count <= 0)
                         {
 
@@ -128,36 +131,68 @@ public class Bullet : MonoBehaviour
                             cannonFire.DestroyText(go);
                         }
 
-                        if (Health != null)
+                        IDamageEffect damageEffect = collideObjects[0].GetComponent<IDamageEffect>();
+                        if (damageEffect != null)
                         {
-                            IDamageEffect damageEffect = collideObjects[0].GetComponent<IDamageEffect>();
-                            if (damageEffect != null)
+                            if (IgniteEffect)
                             {
-                                if (IgniteEffect)
-                                {
-                                    damageEffect.igniteDamage(Damage, igniteEffectDuration);
-                                }
-                                if (electricEffect)
-                                {
-                                    damageEffect.ElectricDamage(Damage, electricEffectDuration);
-                                }
+                                damageEffect.igniteDamage(Damage, igniteEffectDuration);
                             }
-
-                            if (chanceOfBulletPierceEnemies && Random.Range(0, 100) < chanceOfBulletPierceEnemiesProbability)
+                            if (electricEffect)
                             {
-                                if (Health != null)
-                                {
-                                    Health.TakeDamage(float.MaxValue);
-                                    DestroyBullet();
-                                }
-                            }
-
-                            else
-                            {
-                                BounceCheck();
+                                damageEffect.ElectricDamage(Damage, electricEffectDuration);
                             }
                         }
 
+                        if (chanceOfBulletPierceEnemies && Random.Range(0, 100) < chanceOfBulletPierceEnemiesProbability)
+                        {
+                            damageable.TakeDamage(int.MaxValue, hitPoint);
+                            DestroyBullet();
+                        }
+                        else
+                        {
+                            BounceCheck();
+                        }
+                    }
+                    else if (legacyHealth != null)
+                    {
+                        legacyHealth.TakeDamage(Damage);
+                        if (GamePoolManager.bulletDamageTextQueue != null && cannonFire != null && damageText != null)
+                        {
+                            if (GamePoolManager.bulletDamageTextQueue.Count <= 0)
+                            {
+                                GameObject go = Instantiate(damageText, transform.position, Quaternion.identity);
+                                go.GetComponent<TextMeshPro>().text = "-" + Damage.ToString("0");
+                                go.transform.DOMoveY(transform.position.y + 2f, 1f);
+                                go.GetComponent<TextMeshPro>().DOFade(0, 1);
+                                cannonFire.DestroyText(go);
+                            }
+                            else
+                            {
+                                GameObject go = GamePoolManager.bulletDamageTextQueue.Dequeue();
+                                go.transform.position = transform.position;
+                                go.SetActive(true);
+                                go.GetComponent<TextMeshPro>().text = "-" + Damage.ToString("0");
+                                go.transform.DOMoveY(transform.position.y + 2f, 1f);
+                                go.GetComponent<TextMeshPro>().DOFade(0, 1);
+                                cannonFire.DestroyText(go);
+                            }
+                        }
+                        var damageEffect = collideObjects[0].GetComponent<IDamageEffect>();
+                        if (damageEffect != null)
+                        {
+                            if (IgniteEffect) damageEffect.igniteDamage(Damage, igniteEffectDuration);
+                            if (electricEffect) damageEffect.ElectricDamage(Damage, electricEffectDuration);
+                        }
+                        if (chanceOfBulletPierceEnemies && Random.Range(0, 100) < chanceOfBulletPierceEnemiesProbability)
+                        {
+                            legacyHealth.TakeDamage(float.MaxValue);
+                            DestroyBullet();
+                        }
+                        else
+                        {
+                            BounceCheck();
+                        }
                     }
                 }
             }

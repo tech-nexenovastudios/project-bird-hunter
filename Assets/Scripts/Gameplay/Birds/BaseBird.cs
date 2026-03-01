@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
+using Gameplay.Health;
 using Random = UnityEngine.Random;
 
 namespace Gameplay.Birds
@@ -34,6 +35,10 @@ namespace Gameplay.Birds
             config    = birdConfig;
             currentHp = hp;
             _isDead   = false;
+
+            var birdHealth = GetComponent<BirdHealth>();
+            if (birdHealth != null)
+                birdHealth.Init(birdConfig, hp);
 
             // ✅ Random start offset — birds spawned together won't lay in sync
             _layTimer          = Random.Range(config.layIntervalMin, config.layIntervalMax);

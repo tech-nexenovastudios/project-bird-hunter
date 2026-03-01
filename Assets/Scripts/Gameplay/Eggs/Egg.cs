@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using UnityEngine;
+using Gameplay.Health;
 
 namespace Gameplay.Eggs
 {
@@ -54,6 +55,10 @@ namespace Gameplay.Eggs
         {
             config = tierConfig;
             currentHp = hp;
+
+            var eggHealth = GetComponent<Gameplay.Health.EggHealth>();
+            if (eggHealth != null)
+                eggHealth.Init(tierConfig, hp);
 
             // Override jump impulse from tier config if provided
             if (config != null && config.jumpImpulse > 0f)

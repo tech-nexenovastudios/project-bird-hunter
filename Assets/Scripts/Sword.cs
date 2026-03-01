@@ -62,9 +62,15 @@ public class Sword : MonoBehaviour
         }
 
         // If target is still valid, apply damage
-        if (target != null && target.TryGetComponent<IHealthManager>(out var health))
+        Vector3 hitPoint = target.transform.position;
+        int damageAmount = Mathf.RoundToInt((cannonFire.initialDamage * damage) / 100f);
+        if (target != null && target.TryGetComponent<Gameplay.Interfaces.IDamageable>(out var damageable))
         {
-            health.TakeDamage((cannonFire.initialDamage*damage)/100);
+            damageable.TakeDamage(damageAmount, hitPoint);
+        }
+        else if (target != null && target.TryGetComponent<IHealthManager>(out var health))
+        {
+            health.TakeDamage((cannonFire.initialDamage * damage) / 100f);
         }
         // Move sword back to holder before searching
         transform.parent = holder;

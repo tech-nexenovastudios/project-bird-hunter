@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gameplay.PowerUps;
@@ -122,7 +122,8 @@ namespace Gameplay.Managers
             }
 
             state = GameState.Gameplay;
-            
+
+            ScoreManager.Instance?.ResetLevel();
             spawnController.levelProfile = profile;
             spawnController.ResetLevel();
 

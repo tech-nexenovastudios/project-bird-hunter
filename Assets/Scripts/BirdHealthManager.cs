@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 
+[System.Obsolete("Use Gameplay.Health.BirdHealth with IDamageable instead. Legacy flow - will be removed.")]
 public class BirdHealthManager : MonoBehaviour, IHealthManager
 {
     public int maxHealth = 10;

@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
-
 
 public enum EggType
 {
@@ -15,6 +14,8 @@ public enum EggType
     IceEgg = 5,
     FireEgg = 6,
 }
+
+[Obsolete("Use Gameplay.Health.EggHealth with IDamageable instead. Legacy flow - will be removed.")]
 public class EggHealth : MonoBehaviour, IHealthManager, IDamageEffect
 {
 
