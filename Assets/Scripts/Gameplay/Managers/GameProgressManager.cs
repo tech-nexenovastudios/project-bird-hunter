@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -169,6 +169,9 @@ namespace Gameplay.Managers
             public int totalScore;
             public string[] slotPowerupIds = new string[4];
             public List<string> globalUnlocked = new List<string>();
+            public int playerXP;
+            public int playerLevel;
+            public int lastLevelUpXP;
         }
 
         public void SaveProgress()
@@ -181,7 +184,10 @@ namespace Gameplay.Managers
                 currentLevel = _progress.currentLevel,
                 highScore = _progress.highScore,
                 totalScore = _progress.totalScore,
-                globalUnlocked = _progress.globalUnlockedPowerupIds ?? new List<string>()
+                globalUnlocked = _progress.globalUnlockedPowerupIds ?? new List<string>(),
+                playerXP = _progress.playerXP,
+                playerLevel = _progress.playerLevel,
+                lastLevelUpXP = _progress.lastLevelUpXP
             };
 
             for (int i = 0; i < 4; i++)
@@ -224,7 +230,10 @@ namespace Gameplay.Managers
                     currentLevel = data.currentLevel,
                     highScore = data.highScore,
                     totalScore = data.totalScore,
-                    globalUnlockedPowerupIds = data.globalUnlocked ?? new List<string>()
+                    globalUnlockedPowerupIds = data.globalUnlocked ?? new List<string>(),
+                    playerXP = data.playerXP,
+                    playerLevel = Mathf.Max(1, data.playerLevel),
+                    lastLevelUpXP = data.lastLevelUpXP
                 };
 
                 // Restore slots

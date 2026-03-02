@@ -124,6 +124,7 @@ namespace Gameplay.Managers
             state = GameState.Gameplay;
 
             ScoreManager.Instance?.ResetLevel();
+            LevelCompletionController.Instance?.ResetForNewLevel();
             spawnController.levelProfile = profile;
             spawnController.ResetLevel();
 

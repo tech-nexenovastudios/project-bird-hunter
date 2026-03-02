@@ -20,6 +20,12 @@ namespace Gameplay.Events
         // Score
         public static event Action<int, int> OnLevelScoreUpdated;
 
+        // Meta-progression (XP / player level)
+        public static event Action<int> OnPlayerLevelUp;
+
+        // Level completion (score-based)
+        public static event Action<int> OnLevelCompleted;
+
         public static void FireEggHit(IDamageable egg, int damage, Vector3 hitPoint) =>
             OnEggHit?.Invoke(egg, damage, hitPoint);
 
@@ -37,5 +43,11 @@ namespace Gameplay.Events
 
         public static void FireLevelScoreUpdated(int currentScore, int delta) =>
             OnLevelScoreUpdated?.Invoke(currentScore, delta);
+
+        public static void FirePlayerLevelUp(int newLevel) =>
+            OnPlayerLevelUp?.Invoke(newLevel);
+
+        public static void FireLevelCompleted(int scoreAchieved) =>
+            OnLevelCompleted?.Invoke(scoreAchieved);
     }
 }

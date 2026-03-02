@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gameplay.Abilities;
@@ -14,6 +14,11 @@ public class GameProgress
     public int currentLevel = 1;
     public int highScore = 0;
     public int totalScore = 0;
+
+    // XP / Player level (meta-progression)
+    public int playerXP;
+    public int playerLevel = 1;
+    public int lastLevelUpXP;  // XP threshold for current level
 
     // 4 slots per chapter reset on each chapter start
     public PowerupSlot[] chapterSlots = new PowerupSlot[4]
