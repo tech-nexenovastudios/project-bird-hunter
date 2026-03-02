@@ -14,6 +14,7 @@ namespace Gameplay.Eggs
         public int scoreOnDestroy;
         public float jumpImpulse;
         
-        public Sprite sprite;
+        //public Sprite sprite;
+        public GameObject eggPrefab;
     }
 }

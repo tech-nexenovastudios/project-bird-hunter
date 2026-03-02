@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: B3 Bird Config
   m_EditorClassIdentifier: 
   birdId: B3
+  birdPrefab: {fileID: 3156992274698880405, guid: f0ecd8ced9a403543a3828d297509abf, type: 3}
   eggTier: {fileID: 11400000, guid: 0bec7192586925a4abb8106c9479ca52, type: 2}
-  layInterval: 0.85
+  layIntervalMin: 1
+  layIntervalMax: 3.5
   movementType: 0
   moveSpeed: 2
   chaseSpeed: 4
@@ -28,4 +30,3 @@ MonoBehaviour:
   baseHp: 80
   spawnWeight: 0.15
   difficultyWeight: 1
-  birdSpecialConfig: {fileID: 0}

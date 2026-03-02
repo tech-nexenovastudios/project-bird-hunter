@@ -1,7 +1,10 @@
 using DG.Tweening;
+using Gameplay.Events;
+using Gameplay.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing.Text;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -162,12 +165,13 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        /*        if (collision.transform.CompareTag("Egg"))
+                if (collision.transform.CompareTag("Egg"))
                 {
                     if (!invincible && currentInvincibleCount <= 0)
                     {
-                        TakeDamage(collision.GetComponent<EggHealth>().Health);
-                    }
+                        GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), 0, collision.transform.position);
+
+            }
                     else
                     {
                         if (currentInvincibleCount > 0)
@@ -182,20 +186,20 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
 
                     if (destroyDamageObj)
                     {
-                        collision.GetComponent<EggHealth>().DestroyEggs();
+                        GameEvents.FireEggDestroyed(collision.GetComponent<IDamageable>(), 0, collision.transform.position);
 
-                    }
+            }
 
-                    if (damageObject)
-                    {
-                        foreach (var eggs in EggManager.eggsList)
-                        {
-                            eggs.GetComponent<IHealthManager>().TakeDamage((eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100);
-                        }
-                    }
+                    //if (damageObject)
+                    //{
+                    //    foreach (var eggs in EggManager.eggsList)
+                    //    {
+                    //        eggs.GetComponent<IHealthManager>().TakeDamage((eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100);
+                    //    }
+                    //}
                     cannonHitCallBack?.Invoke();
 
-                }*/
+                }
     }
 
     public void GetDamage(EggHealth health)
@@ -246,10 +250,10 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
         healthBarSlider.DOFillAmount((currentHealth / maxHealth), 1f).SetSpeedBased();
         healthMaterial.SetFloat("_Value", (currentHealth / maxHealth));
         healthText.text = ((currentHealth / maxHealth) * 100).ToString();
+        float healthPercent = (currentHealth / maxHealth) * 100;
 
-
-        /*        // Pick sprite + text color
-                if (healthPercent > 75f) // 76�100%
+        // Pick sprite + text color
+        if (healthPercent > 75f) // 76�100%
                 {
                     healthBarSlider.sprite = greenBar;
                     healthText.color = new Color32(0x68, 0xF5, 0x00, 0xFF);
@@ -273,7 +277,7 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
                 {
                     healthBarSlider.sprite = redBar;
                     healthText.color = new Color32(0xBF, 0x08, 0x00, 0xFF);
-                }*/
+                }
     }
 
 

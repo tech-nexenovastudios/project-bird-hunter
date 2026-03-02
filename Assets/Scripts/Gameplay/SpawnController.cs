@@ -4,21 +4,17 @@ using Gameplay.Levels;
 using UnityEngine;
 using System.Collections.Generic;
 using Gameplay.Managers;
-using UnityEngine.InputSystem.LowLevel;
-
 
 namespace Gameplay
 {
     public class SpawnController : MonoBehaviour
     {
         public static SpawnController Instance;
-        
+
         [Header("Config")] public LevelProfile levelProfile;
         public AdaptiveDifficultyConfig adaptiveConfig;
         public BirdConfig[] birds; // assign B1–B4
         public Transform[] birdSpawnPoints;
-        public GameObject birdPrefab;
-        public GameObject eggPrefab;
 
         [Header("State (read-only)")] public float elapsedTime;
 
@@ -160,8 +156,6 @@ namespace Gameplay
                 chosen = cheap;
             }
 
-            // TODO: per-tier caps check using levelProfile.maxE4/E3/E2
-
             SpawnBirdInstance(chosen);
         }
 
@@ -240,8 +234,14 @@ namespace Gameplay
 
         void SpawnBirdInstance(BirdConfig birdConfig)
         {
+            if (birdConfig.birdPrefab == null)
+            {
+                Debug.LogError($"[SpawnController] No birdPrefab assigned in BirdConfig '{birdConfig.birdId}'.");
+                return;
+            }
+
             Transform spawnPoint = birdSpawnPoints[Random.Range(0, birdSpawnPoints.Length)];
-            var go = Instantiate(birdPrefab, spawnPoint.position, Quaternion.identity);
+            var go = Instantiate(birdConfig.birdPrefab, spawnPoint.position, Quaternion.identity);
             var bird = go.GetComponent<BaseBird>();
 
             int hp = Mathf.RoundToInt(birdConfig.baseHp * levelProfile.hpMultiplier);
@@ -255,11 +255,18 @@ namespace Gameplay
 
         void HandleBirdLayEgg(BaseBird bird)
         {
+            EggTierConfig tier = bird.config.eggTier;
+
+            if (tier == null || tier.eggPrefab == null)
+            {
+                Debug.LogError($"[SpawnController] No eggPrefab assigned in EggTierConfig for bird '{bird.config.birdId}'.");
+                return;
+            }
+
             Vector3 pos = bird.transform.position;
-            var go = Instantiate(eggPrefab, pos, Quaternion.identity);
+            var go = Instantiate(tier.eggPrefab, pos, Quaternion.identity);
             var egg = go.GetComponent<Gameplay.Eggs.Egg>();
 
-            EggTierConfig tier = bird.config.eggTier;
             int hp = Mathf.RoundToInt(tier.baseHp * levelProfile.hpMultiplier);
 
             egg.Init(tier, hp);
@@ -283,20 +290,27 @@ namespace Gameplay
             egg.OnDestroyed -= HandleEggDestroyed;
 
             _activeEggs.Remove(egg);
-            // Score is now handled by ScoreManager via GameEvents.OnEggDestroyed
 
             if (egg.config != null && egg.config.splitInto != null)
             {
+                EggTierConfig splitTier = egg.config.splitInto;
+
+                if (splitTier.eggPrefab == null)
+                {
+                    Debug.LogError($"[SpawnController] No eggPrefab assigned in EggTierConfig '{splitTier.tierId}'.");
+                    Destroy(egg.gameObject);
+                    return;
+                }
+
                 for (int i = 0; i < egg.config.splitCount; i++)
                 {
                     Vector3 offset = new Vector3(Random.Range(-0.3f, 0.3f), 0f, 0f);
-                    var go = Instantiate(eggPrefab, egg.transform.position + offset, Quaternion.identity);
+                    var go = Instantiate(splitTier.eggPrefab, egg.transform.position + offset, Quaternion.identity);
                     var newEgg = go.GetComponent<Eggs.Egg>();
 
-                    EggTierConfig tier = egg.config.splitInto;
-                    int hp = Mathf.RoundToInt(tier.baseHp * levelProfile.hpMultiplier);
+                    int hp = Mathf.RoundToInt(splitTier.baseHp * levelProfile.hpMultiplier);
 
-                    newEgg.Init(tier, hp);
+                    newEgg.Init(splitTier, hp);
                     newEgg.OnDestroyed += HandleEggDestroyed;
 
                     _activeEggs.Add(newEgg);
@@ -307,5 +321,4 @@ namespace Gameplay
             Destroy(egg.gameObject);
         }
     }
-
 }
