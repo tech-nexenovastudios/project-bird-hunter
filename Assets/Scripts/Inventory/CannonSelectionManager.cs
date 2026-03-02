@@ -24,6 +24,9 @@ public class CannonAndAbilitySelectionManager : MonoBehaviour
     [SerializeField] private Button equipButton;
     [SerializeField] private TextMeshProUGUI equipButtonText;
 
+    [Header("Description")]
+    [SerializeField] private TextMeshProUGUI cannonDescriptionText;
+
     [Header("Visual States")]
     [SerializeField] private Sprite activeBgSprite;
     [SerializeField] private Sprite inactiveBgSprite;
@@ -141,15 +144,8 @@ public class CannonAndAbilitySelectionManager : MonoBehaviour
     {
         if (index < 0 || index >= cannonItems.Count) return;
 
-        if (previewedCannonIndex == index)
-        {
-            SetCannonBg(previewedCannonIndex, false);
-            previewedCannonIndex = -1;
-            if (cannonImage != null)
-                cannonImage.sprite = null;
-            UpdateEquipButtonState();
-            return;
-        }
+        // Already selected — do nothing
+        if (previewedCannonIndex == index) return;
 
         if (previewedCannonIndex >= 0 && previewedCannonIndex < cannonItems.Count)
             SetCannonBg(previewedCannonIndex, false);
@@ -159,6 +155,13 @@ public class CannonAndAbilitySelectionManager : MonoBehaviour
 
         if (cannonImage != null && cannonItems[index].cannonSprite != null)
             cannonImage.sprite = cannonItems[index].cannonSprite;
+
+        // Show cannon description from SO
+        if (cannonDescriptionText != null && cannonHolderSO != null
+            && index < cannonHolderSO.cannonsData.Length)
+        {
+            cannonDescriptionText.text = cannonHolderSO.cannonsData[index].cannonDescription;
+        }
 
         UpdateEquipButtonState();
     }
@@ -176,15 +179,8 @@ public class CannonAndAbilitySelectionManager : MonoBehaviour
     {
         if (index < 0 || index >= abilityItems.Count) return;
 
-        if (previewedAbilityIndex == index)
-        {
-            SetAbilityBg(previewedAbilityIndex, false);
-            previewedAbilityIndex = -1;
-            if (abilityImage != null)
-                abilityImage.sprite = null;
-            UpdateEquipButtonState();
-            return;
-        }
+        // Already selected — do nothing
+        if (previewedAbilityIndex == index) return;
 
         if (previewedAbilityIndex >= 0 && previewedAbilityIndex < abilityItems.Count)
             SetAbilityBg(previewedAbilityIndex, false);
