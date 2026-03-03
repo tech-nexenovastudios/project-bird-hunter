@@ -21,6 +21,14 @@ public class CannonUpgradeManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI healthText;
     [SerializeField] private TextMeshProUGUI fireRateText;
 
+    [Header("Stats Sliders")]
+    [SerializeField] private Slider damageSlider;
+    [SerializeField] private Slider healthSlider;
+    [SerializeField] private Slider fireRateSlider;
+
+    [Header("Max Level")]
+    [SerializeField] private int maxCannonLevel = 100;
+
     [Header("Upgrade Button")]
     [SerializeField] private Button upgradeButton;
 
@@ -191,14 +199,37 @@ public class CannonUpgradeManager : MonoBehaviour
 
         if (data.cannonStats != null)
         {
+            var stats = data.cannonStats;
+
+            // Max possible values at max level
+            float maxDamage = stats._baseBulletDamage + (stats.damageIncrement * maxCannonLevel);
+            float maxHealth = stats._baseMaxHealth + (stats.healthIncrement * maxCannonLevel);
+            float maxFireRate = stats._baseFireRate + (stats.fireRateIncrement * maxCannonLevel);
+
+            // Current values
+            float curDamage = stats.bulletDamage;
+            float curHealth = stats.maxHealth;
+            float curFireRate = stats.fireRate;
+
+            // Text
             if (damageText != null)
-                damageText.text = $"DAMAGE: {data.cannonStats.bulletDamage}";
+                damageText.text = $"DAMAGE:";  //{curDamage:F0}
 
             if (healthText != null)
-                healthText.text = $"HEALTH: {data.cannonStats.maxHealth}";
+                healthText.text = $"HEALTH:";   // {curHealth:F0}
 
             if (fireRateText != null)
-                fireRateText.text = $"FIRE RATE: {data.cannonStats.fireRate}";
+                fireRateText.text = $"FIRE RATE:";  //{curFireRate:F1}
+
+            // Fill sliders (current / max at max level)
+            if (damageSlider != null)
+                damageSlider.value = Mathf.Clamp01(curDamage / maxDamage);
+
+            if (healthSlider != null)
+                healthSlider.value = Mathf.Clamp01(curHealth / maxHealth);
+
+            if (fireRateSlider != null)
+                fireRateSlider.value = Mathf.Clamp01(curFireRate / maxFireRate);
         }
     }
 

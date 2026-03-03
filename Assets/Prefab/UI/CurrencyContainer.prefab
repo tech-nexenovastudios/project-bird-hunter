@@ -181,7 +181,7 @@ GameObject:
   - component: {fileID: 8871872939018625898}
   - component: {fileID: 1525540609252533791}
   m_Layer: 5
-  m_Name: goldText
+  m_Name: POWERText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -272,6 +272,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -317,7 +318,7 @@ GameObject:
   - component: {fileID: 8468968785059878739}
   - component: {fileID: 8276090565621415202}
   m_Layer: 5
-  m_Name: goldText
+  m_Name: GEMSText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -408,6 +409,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -782,7 +784,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 22.6, y: 6.3963}
-  m_SizeDelta: {x: 230.19, y: 73.97}
+  m_SizeDelta: {x: 261, y: 117}
   m_Pivot: {x: 0.5000001, y: 0.5}
 --- !u!222 &8181403690686454817
 CanvasRenderer:
@@ -812,7 +814,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -7241298206687152270, guid: b97be0df2ecb8ce4993fe797501dec48, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 714f05695258e974883f357245f5f472, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1246,6 +1248,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1744,7 +1747,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 22.6, y: 6.3963}
-  m_SizeDelta: {x: 230.19, y: 73.97}
+  m_SizeDelta: {x: 261, y: 117}
   m_Pivot: {x: 0.5000001, y: 0.5}
 --- !u!222 &1586139708790760765
 CanvasRenderer:
@@ -1774,7 +1777,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -7241298206687152270, guid: b97be0df2ecb8ce4993fe797501dec48, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 714f05695258e974883f357245f5f472, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1979,6 +1982,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -2049,7 +2053,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 22.6, y: 6.3963}
-  m_SizeDelta: {x: 230.19, y: 73.97}
+  m_SizeDelta: {x: 261, y: 117}
   m_Pivot: {x: 0.5000001, y: 0.5}
 --- !u!222 &1317268515769143833
 CanvasRenderer:
@@ -2079,7 +2083,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -7241298206687152270, guid: b97be0df2ecb8ce4993fe797501dec48, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 714f05695258e974883f357245f5f472, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2359,6 +2363,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
