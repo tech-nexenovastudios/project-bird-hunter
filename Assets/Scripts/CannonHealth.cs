@@ -5,12 +5,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing.Text;
+using System.Globalization;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
+public class CannonHealth : MonoBehaviour, IDamageable, IDamageEffect
 {
     public float maxHealth;
     public float currentHealth;
@@ -52,6 +53,7 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
     public bool damageObject;
     public float damageValueWhenHit;
     public static Action cannonHitCallBack;
+    private static readonly int Value = Shader.PropertyToID("_Value");
 
 
     public bool fullHealBeforeBoss;
@@ -113,9 +115,9 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
         currentHealth = Mathf.Clamp(currentHealth + ((maxHealth / 25) * 100), 0, maxHealth);
         UpdateUI();
     }
-    public void TakeDamage(float ApplyDamage)
+    public void TakeDamage(int damage, Vector3 hitPoint)
     {
-        currentHealth = Mathf.Clamp(currentHealth - ApplyDamage, 0, maxHealth);
+        currentHealth = Mathf.Clamp(currentHealth - damage, 0, maxHealth);
         UpdateUI() ;
         if (currentHealth <= 0)
         {
@@ -165,48 +167,49 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-                if (collision.transform.CompareTag("Egg"))
+        if (collision.transform.CompareTag("Egg"))
+        {
+            if (!invincible && currentInvincibleCount <= 0)
+            {
+                GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)cannonStats._baseBulletDamage, collision.transform.position);
+
+            }
+            else
+            {
+                if (currentInvincibleCount > 0)
                 {
-                    if (!invincible && currentInvincibleCount <= 0)
-                    {
-                        GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), 0, collision.transform.position);
-
-            }
-                    else
-                    {
-                        if (currentInvincibleCount > 0)
-                        {
-                            currentInvincibleCount--;
-                        }
-                        else
-                        {
-                            InvincibleEffect();
-                        }
-                    }
-
-                    if (destroyDamageObj)
-                    {
-                        GameEvents.FireEggDestroyed(collision.GetComponent<IDamageable>(), 0, collision.transform.position);
-
-            }
-
-                    //if (damageObject)
-                    //{
-                    //    foreach (var eggs in EggManager.eggsList)
-                    //    {
-                    //        eggs.GetComponent<IHealthManager>().TakeDamage((eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100);
-                    //    }
-                    //}
-                    cannonHitCallBack?.Invoke();
-
+                    currentInvincibleCount--;
                 }
+                else
+                {
+                    InvincibleEffect();
+                }
+            }
+
+            if (destroyDamageObj)
+            {
+                GameEvents.FireEggDestroyed(collision.GetComponent<IDamageable>(), 0, collision.transform.position);
+
+            }
+
+            if (damageObject)
+            {
+                foreach (var eggs in EggManager.eggsList)
+                {
+                    GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)(eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100, collision.transform.position);
+                    //eggs.GetComponent<IDamageable>().TakeDamage((int)(eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100, transform.position);
+                }
+            }
+            cannonHitCallBack?.Invoke();
+
+        }
     }
 
     public void GetDamage(EggHealth health)
     {
         if (!invincible && currentInvincibleCount <= 0)
         {
-            TakeDamage(health.Health);
+            TakeDamage((int)health.Health,  health.transform.position);
         }
         else
         {
@@ -237,6 +240,7 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
 
 
     }
+    
     IEnumerator InvincibleAgain()
     {
         yield return new WaitForSeconds(invincibleDuration);
@@ -244,40 +248,41 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
         yield return new WaitForSeconds(20);
         invincible = true;
     }
+
     private void UpdateUI()
     {
         healthBarSlider.fillAmount = currentHealth / maxHealth;
         healthBarSlider.DOFillAmount((currentHealth / maxHealth), 1f).SetSpeedBased();
-        healthMaterial.SetFloat("_Value", (currentHealth / maxHealth));
-        healthText.text = ((currentHealth / maxHealth) * 100).ToString();
+        healthMaterial.SetFloat(Value, (currentHealth / maxHealth));
+        healthText.text = ((currentHealth / maxHealth) * 100).ToString(CultureInfo.InvariantCulture);
         float healthPercent = (currentHealth / maxHealth) * 100;
 
         // Pick sprite + text color
         if (healthPercent > 75f) // 76�100%
-                {
-                    healthBarSlider.sprite = greenBar;
-                    healthText.color = new Color32(0x68, 0xF5, 0x00, 0xFF);
-                }
-                else if (healthPercent > 50f) // 51�75%
-                {
-                    healthBarSlider.sprite = yellowBar;
-                    healthText.color = new Color32(0xE1, 0xF5, 0x00, 0xFF);
-                }
-                else if (healthPercent > 25f) // 26�50%
-                {
-                    healthBarSlider.sprite = orangeBar;
-                    healthText.color = new Color32(0xF5, 0x4F, 0x00, 0xFF);
-                }
-                else if (healthPercent > 10f) // 11�25%
-                {
-                    healthBarSlider.sprite = redBar;
-                    healthText.color = new Color32(0xF5, 0x1F, 0x00, 0xFF);
-                }
-                else // 0�10%
-                {
-                    healthBarSlider.sprite = redBar;
-                    healthText.color = new Color32(0xBF, 0x08, 0x00, 0xFF);
-                }
+        {
+            healthBarSlider.sprite = greenBar;
+            healthText.color = new Color32(0x68, 0xF5, 0x00, 0xFF);
+        }
+        else if (healthPercent > 50f) // 51�75%
+        {
+            healthBarSlider.sprite = yellowBar;
+            healthText.color = new Color32(0xE1, 0xF5, 0x00, 0xFF);
+        }
+        else if (healthPercent > 25f) // 26�50%
+        {
+            healthBarSlider.sprite = orangeBar;
+            healthText.color = new Color32(0xF5, 0x4F, 0x00, 0xFF);
+        }
+        else if (healthPercent > 10f) // 11�25%
+        {
+            healthBarSlider.sprite = redBar;
+            healthText.color = new Color32(0xF5, 0x1F, 0x00, 0xFF);
+        }
+        else // 0�10%
+        {
+            healthBarSlider.sprite = redBar;
+            healthText.color = new Color32(0xBF, 0x08, 0x00, 0xFF);
+        }
     }
 
 
@@ -310,11 +315,16 @@ public class CannonHealth : MonoBehaviour, IHealthManager, IDamageEffect
         while(time > 0)
         {
             time -= 1;
-            TakeDamage(applyDamage/effectTime);
+            TakeDamage((int)(applyDamage/effectTime), transform.position);
             damage += applyDamage / effectTime;
             yield return new WaitForSeconds(1);
         }
 
         Debug.Log(damage);
     }
+
+    public int CurrentHp { get; }
+    public int MaxHp { get; }
+    public bool IsAlive { get; }
+    
 }

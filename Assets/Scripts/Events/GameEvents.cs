@@ -26,6 +26,9 @@ namespace Gameplay.Events
         // Level completion (score-based)
         public static event Action<int> OnLevelCompleted;
 
+        // Player death
+        public static event Action OnPlayerDeath;
+
         public static void FireEggHit(IDamageable egg, int damage, Vector3 hitPoint) =>
             OnEggHit?.Invoke(egg, damage, hitPoint);
 
@@ -49,5 +52,8 @@ namespace Gameplay.Events
 
         public static void FireLevelCompleted(int scoreAchieved) =>
             OnLevelCompleted?.Invoke(scoreAchieved);
+
+        public static void FirePlayerDeath() =>
+            OnPlayerDeath?.Invoke();
     }
 }

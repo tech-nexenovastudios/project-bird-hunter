@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 7911013524061347063}
   - component: {fileID: 9033385679475359738}
   - component: {fileID: 96112293446289958}
+  - component: {fileID: 772841551281367049}
   m_Layer: 6
   m_Name: Egg_04
   m_TagString: Egg
@@ -379,6 +380,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Health.EggHealth
   config: {fileID: 0}
+--- !u!114 &772841551281367049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1251663967950569254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86f0832b4a7584b5ea0c433b7eb3618f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Health.EggHealthView
+  eggHealth: {fileID: 96112293446289958}
+  hpText: {fileID: 1248958175663909309}
+  showPercent: 0
 --- !u!1 &3522176344157975600
 GameObject:
   m_ObjectHideFlags: 0

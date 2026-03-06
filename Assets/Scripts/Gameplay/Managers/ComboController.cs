@@ -38,6 +38,7 @@ namespace Gameplay.Managers
             GameEvents.OnEggDestroyed += OnHit;
             GameEvents.OnBirdHit += OnHit;
             GameEvents.OnBirdDestroyed += OnHit;
+            GameEvents.OnCannonHit += OnCannonHit;
         }
 
         private void OnDisable()
@@ -46,6 +47,7 @@ namespace Gameplay.Managers
             GameEvents.OnEggDestroyed -= OnHit;
             GameEvents.OnBirdHit -= OnHit;
             GameEvents.OnBirdDestroyed -= OnHit;
+            GameEvents.OnCannonHit -= OnCannonHit;
         }
 
         private void Update()
@@ -62,6 +64,13 @@ namespace Gameplay.Managers
             _lastHitTime = Time.time;
             _comboCount = Mathf.Min(_comboCount + 1, maxComboIndex + 1);
             OnComboUpdated?.Invoke(_comboCount, ComboMultiplier);
+        }
+
+        private void OnCannonHit(Vector3 position, int damage)
+        {
+            // Reset combo when cannon gets hit
+            _comboCount = 0;
+            OnComboUpdated?.Invoke(0, 1f);
         }
     }
 }

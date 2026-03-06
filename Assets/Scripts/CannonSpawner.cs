@@ -1,5 +1,7 @@
+using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Gameplay.Player;
 
 public class CannonSpawner : MonoBehaviour
 {
@@ -13,49 +15,53 @@ public class CannonSpawner : MonoBehaviour
     {
         await UniTask.Yield();
 
-        //int index = await CloudSaveManager.Instance.LoadValueAsync(SELECTEDCANNONKEY, 0);
-        var index =  PlayerPrefs.GetInt(SELECTEDCANNONKEY, 0);
+        var index = PlayerPrefs.GetInt(SELECTEDCANNONKEY, 0);
         index = Mathf.Clamp(index, 0, cannons.cannonsData.Length - 1);
 
         var data = cannons.cannonsData[index];
-        cannon   = Instantiate(data.cannonPrefab, transform.position, transform.rotation);
+        cannon = Instantiate(data.cannonPrefab, transform.position, transform.rotation);
 
-        // Wire stats
-        var statsSetter = cannon.GetComponent<CannonStatsSetter>();
-        if (statsSetter != null)
-            statsSetter.cannonStats = data.cannonStats;
-
-        var move =  cannon.GetComponent<CannonMove>();
-        if (move != null)
+        // --- NEW CANNON SYSTEM ---
+        var baseCannon = cannon.GetComponent<BaseCannon>();
+        if (baseCannon != null)
         {
-            var (left, right) = references.GetWall();
-            move.SetWalls(left,right);
+            baseCannon.Configure(data.cannonStats, references, data.bulletPrefab);
+            Debug.Log($"[CannonSpawner] Configured new BaseCannon: {data.cannonPrefab.name}");
         }
-        
-        var health =  cannon.GetComponent<CannonHealth>();
-        if (health != null)
+        else
         {
+            // --- LEGACY FALLBACK ---
+            Debug.LogWarning($"[CannonSpawner] {data.cannonPrefab.name} does not have BaseCannon component. Using legacy setup.");
+            
+            var statsSetter = cannon.GetComponent<CannonStatsSetter>();
+            if (statsSetter != null)
+                statsSetter.cannonStats = data.cannonStats;
+
+            var move = cannon.GetComponent<CannonMove>();
+            if (move != null)
+            {
+                var (left, right) = references.GetWall();
+                move.SetWalls(left, right);
+            }
+
             var (slider, text) = references.GetCannonHealth();
-            health.SetHealthUI(slider, text);
-        }
-        
-        // Wire ability
-        var ability = cannon.GetComponent<CannonAbility>();
-        if (ability != null && AbilityManager.instance?.activeAbility != null)
-            ability.activeAbility = AbilityManager.instance.activeAbility;
+            var legacyHealth = cannon.GetComponent<CannonHealth>();
+            if (legacyHealth != null)
+                legacyHealth.SetHealthUI(slider, text);
 
-        // ✅ Wire bullet prefab from CannonData → CannonFire
-        var fire = cannon.GetComponent<CannonFire>();
-        if (fire != null)
-        {
-            fire.bulletPrefab = data.bulletPrefab;  // ← single prefab
-            fire.AssignValue();
-            fire.StartFiring();
+            var fire = cannon.GetComponent<CannonFire>();
+            if (fire != null)
+            {
+                fire.bulletPrefab = data.bulletPrefab;
+                fire.AssignValue();
+                fire.StartFiring();
+            }
         }
 
         return cannon;
     }
 
+    [Obsolete]
     public GameObject SpawnCannon()
     {
         int index = PlayerPrefs.GetInt("CannonIndex", 0);

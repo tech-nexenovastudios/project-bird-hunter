@@ -291,6 +291,14 @@ namespace Gameplay
 
             _activeEggs.Remove(egg);
 
+            string tierId = egg.config != null ? egg.config.tierId : "null";
+            string splitTierId = egg.config != null && egg.config.splitInto != null
+                ? egg.config.splitInto.tierId
+                : "null";
+            int splitCount = egg.config != null ? egg.config.splitCount : 0;
+
+            Debug.Log($"[SpawnController] Egg destroyed tier={tierId}, splitInto={splitTierId}, splitCount={splitCount}");
+
             if (egg.config != null && egg.config.splitInto != null)
             {
                 EggTierConfig splitTier = egg.config.splitInto;

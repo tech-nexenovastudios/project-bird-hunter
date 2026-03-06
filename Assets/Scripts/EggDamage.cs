@@ -1,38 +1,61 @@
+using Gameplay.Interfaces;
 using UnityEngine;
+using Gameplay.Health;
+using Gameplay.Eggs;
 
 public class EggDamage : MonoBehaviour
 {
-    EggType eggType;
-    EggHealth eggHealth;
+    private Gameplay.Health.EggHealth _eggHealth;
+
     private void Start()
     {
-        eggType = GetComponent<EggHealth>().eggType;
-        eggHealth = this.GetComponent<EggHealth>();
+        _eggHealth = GetComponent<Gameplay.Health.EggHealth>();
     }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.transform.tag == "Player")
+        if (collision.CompareTag("Player"))
         {
-            var health = collision.GetComponent<CannonHealth>();
-            if (health != null)
+            Vector3 hitPoint = collision.ClosestPoint(transform.position);
+
+            if (collision.TryGetComponent<IDamageable>(out var damageable))
             {
-                health.GetDamage(eggHealth);
+                int damageAmount = 0;
+                
+                if (_eggHealth != null)
+                {
+                    damageAmount = _eggHealth.CurrentHp;
+                }
+                
+                if (damageAmount <= 0)
+                {
+                    if (TryGetComponent<Egg>(out var egg))
+                    {
+                        damageAmount = egg.currentHp;
+                    }
+                }
+
+                if (damageAmount <= 0) damageAmount = 10;
+
+                Debug.Log($"[EggDamage] Hitting cannon via IDamageable for {damageAmount} damage at {hitPoint}");
+                damageable.TakeDamage(damageAmount, hitPoint);
             }
+
             var damageEffect = collision.GetComponent<IDamageEffect>();
-            switch (eggType)
+            if (damageEffect != null)
             {
-                case EggType.IceEgg:
-                    damageEffect.FreezeEffect(3f);
-                    break;
-                case EggType.FireEgg:
-                    damageEffect.igniteDamage(1f, 3f);
-                    break;
+                if (TryGetComponent<Egg>(out var egg) && egg.config != null)
+                {
+                    if (egg.config.tierId.Contains("Ice"))
+                    {
+                        damageEffect.FreezeEffect(3f);
+                    }
+                    else if (egg.config.tierId.Contains("Fire"))
+                    {
+                        damageEffect.igniteDamage(1f, 3f);
+                    }
+                }
             }
-            /*  if (eggType == EggType.IceEgg)
-              {
-                  var damageEffect = collision.GetComponent<IDamageEffect>();
-                  damageEffect.FreezeEffect(3f);
-              }*/
         }
     }
 }

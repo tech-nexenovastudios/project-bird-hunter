@@ -1,16 +1,15 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using Gameplay.PowerUps;
 using UnityEngine;
-using Gameplay.Slot;
-using UnityUtils;
+using Gameplay.Events;
+using Gameplay.Player;
 
 public enum GameState
 {
     Loading,
     Gameplay,
     Slot,
+    GameOver,
 }
 
 namespace Gameplay.Managers
@@ -51,12 +50,14 @@ namespace Gameplay.Managers
         {
             GameProgressManager.OnProgressChanged += OnProgressChanged;
             GameProgressManager.OnSpinTriggered += OnSpinTriggered;
+            GameEvents.OnPlayerDeath += OnPlayerDeath;
         }
 
         private void OnDisable()
         {
             GameProgressManager.OnProgressChanged -= OnProgressChanged;
             GameProgressManager.OnSpinTriggered -= OnSpinTriggered;
+            GameEvents.OnPlayerDeath -= OnPlayerDeath;
         }
 
         // ──────────────────────────
@@ -105,6 +106,13 @@ namespace Gameplay.Managers
             Debug.Log("Spin triggered!");
             Debug.Log($"Slot {slotIndex} | Options: {powerupConfigs.Length}");
             state = GameState.Slot;
+
+            if (currentCannon != null)
+            {
+                var baseCannon = currentCannon.GetComponent<BaseCannon>();
+                if (baseCannon != null) baseCannon.StopFiring();
+            }
+
             slotMachine.gameObject.SetActive(true);
             slotMachine.Spin(powerupConfigs.ToList());
         }
@@ -131,6 +139,12 @@ namespace Gameplay.Managers
             if (currentCannon == null)
             {
                 currentCannon = await cannonSpawner.CannonSpawn();
+            }
+            else
+            {
+                // If cannon already exists, ensure it's firing
+                var baseCannon = currentCannon.GetComponent<BaseCannon>();
+                if (baseCannon != null) baseCannon.StartFiring();
             }
 
             // Apply power ups to cannon
@@ -171,8 +185,15 @@ namespace Gameplay.Managers
 
         public bool IsGameActive()
         {
-            //TODO: Add logic to check if game is active
-            return true;
+            return state == GameState.Gameplay;
+        }
+
+        private void OnPlayerDeath()
+        {
+            Debug.Log("Game Over!");
+            state = GameState.GameOver;
+            
+            //TODO: Make timescale to 0 to pause the game. and show GameOver UI
         }
     }
 
