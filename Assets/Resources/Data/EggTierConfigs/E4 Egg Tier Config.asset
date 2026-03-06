@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: E4 Egg Tier Config
   m_EditorClassIdentifier: 
   tierId: E4
-  baseHp: 150
+  baseHpMin: 60
+  baseHpMax: 130
   pressureValue: 8
   splitInto: {fileID: 11400000, guid: 0bec7192586925a4abb8106c9479ca52, type: 2}
   splitCount: 2

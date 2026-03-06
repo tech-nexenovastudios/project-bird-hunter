@@ -133,7 +133,7 @@ namespace Gameplay.Player
             if (isDeactivated) return;
             isDeactivated = true;
             
-            gameObject.SetActive(false);
+            Destroy(gameObject);
 
             // If this bullet has a specific type, we can return it to the legacy pool
             // to maintain compatibility with legacy CannonFire if they share the same prefab.

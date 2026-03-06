@@ -12,7 +12,6 @@ namespace Gameplay.Managers
         public static XPManager Instance { get; private set; }
 
         [Header("XP Formula")]
-        [SerializeField] private float cascadeBonusMultiplier = 1.25f;
         [SerializeField] private int baseXPPerLevel = 100;
         [SerializeField] private float levelExponent = 1.5f;
 
@@ -32,18 +31,13 @@ namespace Gameplay.Managers
 
         private void OnEnable()
         {
+            // FIXED: only subscribe to OnEggHit — XP earned only during active combo on egg hits
             GameEvents.OnEggHit += OnEggHit;
-            GameEvents.OnEggDestroyed += OnEggDestroyed;
-            GameEvents.OnBirdHit += OnBirdHit;
-            GameEvents.OnBirdDestroyed += OnBirdDestroyed;
         }
 
         private void OnDisable()
         {
             GameEvents.OnEggHit -= OnEggHit;
-            GameEvents.OnEggDestroyed -= OnEggDestroyed;
-            GameEvents.OnBirdHit -= OnBirdHit;
-            GameEvents.OnBirdDestroyed -= OnBirdDestroyed;
         }
 
         private void OnEggHit(IDamageable egg, int damage, Vector3 hitPoint)
@@ -55,36 +49,9 @@ namespace Gameplay.Managers
             if (xp <= 0) return;
 
             float multiplier = ComboController.Instance != null ? ComboController.Instance.ComboMultiplier : 1f;
-            AddXP(Mathf.RoundToInt(xp * multiplier));
+            AddXP(Mathf.RoundToInt(xp * multiplier)); // AddXP will reject if combo is inactive
         }
 
-        private void OnEggDestroyed(IDamageable egg, int scoreAwarded, Vector3 position)
-        {
-            var config = GetEggConfig(egg);
-            if (config == null) return;
-
-            int baseXP = scoreAwarded > 0 ? scoreAwarded : config.scoreOnDestroy;
-            float tierMultiplier = GetTierMultiplier(config.tierId);
-            float cascadeBonus = config.splitInto != null ? cascadeBonusMultiplier : 1f;
-            float comboMultiplier = ComboController.Instance != null ? ComboController.Instance.ComboMultiplier : 1f;
-
-            int xp = Mathf.RoundToInt(baseXP * tierMultiplier * cascadeBonus * comboMultiplier);
-            AddXP(Mathf.Max(1, xp));
-        }
-
-        private void OnBirdHit(IDamageable bird, int damage, Vector3 hitPoint)
-        {
-            int xp = Mathf.Max(1, damage);
-            float multiplier = ComboController.Instance != null ? ComboController.Instance.ComboMultiplier : 1f;
-            AddXP(Mathf.RoundToInt(xp * multiplier));
-        }
-
-        private void OnBirdDestroyed(IDamageable bird, int scoreAwarded, Vector3 position)
-        {
-            int baseXP = Mathf.Max(1, scoreAwarded);
-            float comboMultiplier = ComboController.Instance != null ? ComboController.Instance.ComboMultiplier : 1f;
-            AddXP(Mathf.RoundToInt(baseXP * comboMultiplier));
-        }
 
         private EggTierConfig GetEggConfig(IDamageable damageable)
         {
@@ -93,21 +60,12 @@ namespace Gameplay.Managers
             return egg?.config;
         }
 
-        private float GetTierMultiplier(string tierId)
-        {
-            if (string.IsNullOrEmpty(tierId)) return 1f;
-            return tierId switch
-            {
-                "E4" => 4f,
-                "E3" => 3f,
-                "E2" => 2f,
-                "E1" => 1f,
-                _ => 1f
-            };
-        }
-
         public void AddXP(int amount)
         {
+            // Guard: only add XP if combo is active
+            if (ComboController.Instance == null) return;
+            if (ComboController.Instance.ComboCount <= 0) return;
+
             if (GameProgressManager.Instance == null || GameProgressManager.Instance.Data == null) return;
 
             var progress = GameProgressManager.Instance.Data;
@@ -118,6 +76,7 @@ namespace Gameplay.Managers
 
             CheckLevelUp(progress);
         }
+
 
         private void CheckLevelUp(GameProgress progress)
         {

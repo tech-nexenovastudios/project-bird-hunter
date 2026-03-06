@@ -4,6 +4,7 @@ using Gameplay.Levels;
 using UnityEngine;
 using System.Collections.Generic;
 using Gameplay.Managers;
+using Gameplay.Events;
 
 namespace Gameplay
 {
@@ -13,17 +14,18 @@ namespace Gameplay
 
         [Header("Config")] public LevelProfile levelProfile;
         public AdaptiveDifficultyConfig adaptiveConfig;
-        public BirdConfig[] birds; // assign B1–B4
+        public BirdConfig[] birds;
         public Transform[] birdSpawnPoints;
 
         [Header("State (read-only)")] public float elapsedTime;
 
         PressureTracker _pressureTracker;
         readonly List<BaseBird> _activeBirds = new();
-        readonly List<Gameplay.Eggs.Egg> _activeEggs = new();
+        readonly List<Egg> _activeEggs = new();
 
         float _spawnTimer;
         bool _reliefMode;
+        bool _levelCompleted;
 
         float _performanceExpectedScore;
         float _performanceRatio = 1f;
@@ -32,6 +34,22 @@ namespace Gameplay
         {
             Instance = this;
             _pressureTracker = new PressureTracker();
+        }
+
+        void OnEnable()
+        {
+            GameEvents.OnLevelCompleted += HandleLevelCompleted;
+        }
+
+        void OnDisable()
+        {
+            GameEvents.OnLevelCompleted -= HandleLevelCompleted;
+        }
+
+        void HandleLevelCompleted(int finalScore)
+        {
+            _levelCompleted = true;
+            Debug.Log($"[SpawnController] Level completed with score {finalScore}. Stopping bird spawns.");
         }
 
         void Start()
@@ -44,6 +62,7 @@ namespace Gameplay
             elapsedTime = 0f;
             _spawnTimer = 0f;
             _reliefMode = false;
+            _levelCompleted = false;
             _performanceExpectedScore = 0f;
             _performanceRatio = 1f;
         }
@@ -58,7 +77,7 @@ namespace Gameplay
             _spawnTimer += Time.deltaTime;
             float currentSpawnInterval = GetCurrentSpawnInterval();
 
-            if (!_reliefMode && _spawnTimer >= currentSpawnInterval)
+            if (!_reliefMode && !_levelCompleted && _spawnTimer >= currentSpawnInterval)
             {
                 TrySpawnBird();
                 _spawnTimer = 0f;
@@ -80,37 +99,20 @@ namespace Gameplay
             int maxPressure = GetCurrentPressureMax();
 
             if (!_reliefMode && _pressureTracker.CurrentPressure > maxPressure * adaptiveConfig.reliefEnterRatio)
-            {
                 _reliefMode = true;
-            }
             else if (_reliefMode && _pressureTracker.CurrentPressure < maxPressure * adaptiveConfig.reliefExitRatio)
-            {
                 _reliefMode = false;
-            }
         }
 
         float GetCurrentSpawnInterval()
         {
-            float baseMin = levelProfile.spawnIntervalMin;
-            float baseMax = levelProfile.spawnIntervalMax;
-            float baseInterval = Random.Range(baseMin, baseMax);
-
+            float baseInterval = Random.Range(levelProfile.spawnIntervalMin, levelProfile.spawnIntervalMax);
             float multiplier = 1f;
 
             if (_performanceRatio > adaptiveConfig.highPerformanceThreshold)
-            {
-                multiplier = Random.Range(
-                    adaptiveConfig.spawnIntervalMultiplierHigh.x,
-                    adaptiveConfig.spawnIntervalMultiplierHigh.y
-                );
-            }
+                multiplier = Random.Range(adaptiveConfig.spawnIntervalMultiplierHigh.x, adaptiveConfig.spawnIntervalMultiplierHigh.y);
             else if (_performanceRatio < adaptiveConfig.lowPerformanceThreshold)
-            {
-                multiplier = Random.Range(
-                    adaptiveConfig.spawnIntervalMultiplierLow.x,
-                    adaptiveConfig.spawnIntervalMultiplierLow.y
-                );
-            }
+                multiplier = Random.Range(adaptiveConfig.spawnIntervalMultiplierLow.x, adaptiveConfig.spawnIntervalMultiplierLow.y);
 
             return Mathf.Max(0.3f, baseInterval * multiplier);
         }
@@ -121,19 +123,9 @@ namespace Gameplay
             float mult = 1f;
 
             if (_performanceRatio > adaptiveConfig.highPerformanceThreshold)
-            {
-                mult = Random.Range(
-                    adaptiveConfig.pressureMaxMultiplierHigh.x,
-                    adaptiveConfig.pressureMaxMultiplierHigh.y
-                );
-            }
+                mult = Random.Range(adaptiveConfig.pressureMaxMultiplierHigh.x, adaptiveConfig.pressureMaxMultiplierHigh.y);
             else if (_performanceRatio < adaptiveConfig.lowPerformanceThreshold)
-            {
-                mult = Random.Range(
-                    adaptiveConfig.pressureMaxMultiplierLow.x,
-                    adaptiveConfig.pressureMaxMultiplierLow.y
-                );
-            }
+                mult = Random.Range(adaptiveConfig.pressureMaxMultiplierLow.x, adaptiveConfig.pressureMaxMultiplierLow.y);
 
             return Mathf.RoundToInt(baseMax * mult);
         }
@@ -141,12 +133,10 @@ namespace Gameplay
         void TrySpawnBird()
         {
             int maxPressure = GetCurrentPressureMax();
-            if (_pressureTracker.CurrentPressure >= maxPressure)
-                return;
+            if (_pressureTracker.CurrentPressure >= maxPressure) return;
 
             BirdConfig chosen = SelectBirdType();
-            if (chosen == null)
-                return;
+            if (chosen == null) return;
 
             int lifetimePressure = EstimateLifetimePressure(chosen);
             if (_pressureTracker.CurrentPressure + lifetimePressure > maxPressure)
@@ -170,20 +160,13 @@ namespace Gameplay
         BirdConfig FindBird(string id)
         {
             foreach (var b in birds)
-                if (b != null && b.birdId == id)
-                    return b;
-
+                if (b != null && b.birdId == id) return b;
             return null;
         }
 
         BirdConfig SelectBirdType()
         {
-            float baseB1 = 0.50f;
-            float baseB2 = 0.30f;
-            float baseB3 = 0.15f;
-            float baseB4 = 0.05f;
-
-            float b1 = baseB1, b2 = baseB2, b3 = baseB3, b4 = baseB4;
+            float b1 = 0.50f, b2 = 0.30f, b3 = 0.15f, b4 = 0.05f;
 
             if (_performanceRatio > adaptiveConfig.highPerformanceThreshold)
             {
@@ -199,10 +182,7 @@ namespace Gameplay
                 b2 += adaptiveConfig.b2WeightShiftLow;
                 if (adaptiveConfig.blockB4WhenLow) b4 = 0f;
                 float total = b1 + b2 + b3 + b4;
-                b1 /= total;
-                b2 /= total;
-                b3 /= total;
-                b4 /= total;
+                b1 /= total; b2 /= total; b3 /= total; b4 /= total;
             }
 
             float roll = Random.value;
@@ -217,10 +197,8 @@ namespace Gameplay
             EggTierConfig tier = bird.eggTier;
             if (tier == null) return 0;
 
-            int total = 0;
-            int count = 1;
+            int total = 0, count = 1;
             EggTierConfig t = tier;
-
             while (t != null)
             {
                 total += count * t.pressureValue;
@@ -265,9 +243,11 @@ namespace Gameplay
 
             Vector3 pos = bird.transform.position;
             var go = Instantiate(tier.eggPrefab, pos, Quaternion.identity);
-            var egg = go.GetComponent<Gameplay.Eggs.Egg>();
+            var egg = go.GetComponent<Egg>();
 
-            int hp = Mathf.RoundToInt(tier.baseHp * levelProfile.hpMultiplier);
+            // FIXED: random HP within tier range, scaled by level hpMultiplier
+            int baseHp = Random.Range(tier.baseHpMin, tier.baseHpMax + 1);
+            int hp = Mathf.RoundToInt(baseHp * levelProfile.hpMultiplier);
 
             egg.Init(tier, hp);
             egg.OnDestroyed += HandleEggDestroyed;
@@ -285,16 +265,13 @@ namespace Gameplay
             Destroy(bird.gameObject);
         }
 
-        void HandleEggDestroyed(Gameplay.Eggs.Egg egg)
+        void HandleEggDestroyed(Egg egg)
         {
             egg.OnDestroyed -= HandleEggDestroyed;
-
             _activeEggs.Remove(egg);
 
             string tierId = egg.config != null ? egg.config.tierId : "null";
-            string splitTierId = egg.config != null && egg.config.splitInto != null
-                ? egg.config.splitInto.tierId
-                : "null";
+            string splitTierId = egg.config?.splitInto != null ? egg.config.splitInto.tierId : "null";
             int splitCount = egg.config != null ? egg.config.splitCount : 0;
 
             Debug.Log($"[SpawnController] Egg destroyed tier={tierId}, splitInto={splitTierId}, splitCount={splitCount}");
@@ -312,11 +289,13 @@ namespace Gameplay
 
                 for (int i = 0; i < egg.config.splitCount; i++)
                 {
-                    Vector3 offset = new Vector3(Random.Range(-0.3f, 0.3f), 0f, 0f);
+                    Vector3 offset = new Vector3(Random.Range(-1f, 1f), 0f, 0f);
                     var go = Instantiate(splitTier.eggPrefab, egg.transform.position + offset, Quaternion.identity);
-                    var newEgg = go.GetComponent<Eggs.Egg>();
+                    var newEgg = go.GetComponent<Egg>();
 
-                    int hp = Mathf.RoundToInt(splitTier.baseHp * levelProfile.hpMultiplier);
+                    // FIXED: random HP within split tier range, scaled by level hpMultiplier
+                    int baseHp = Random.Range(splitTier.baseHpMin, splitTier.baseHpMax + 1);
+                    int hp = Mathf.RoundToInt(baseHp * levelProfile.hpMultiplier);
 
                     newEgg.Init(splitTier, hp);
                     newEgg.OnDestroyed += HandleEggDestroyed;

@@ -3,6 +3,7 @@ using Gameplay.PowerUps;
 using UnityEngine;
 using Gameplay.Events;
 using Gameplay.Player;
+using TMPro;
 
 public enum GameState
 {
@@ -23,6 +24,10 @@ namespace Gameplay.Managers
         public CannonSpawner cannonSpawner;
 
         public GameState state;
+        
+        
+        public TextMeshProUGUI playerLevelupText;
+        public TextMeshProUGUI playerXPText;
         
         public GameObject currentCannon;
         private void Awake()
@@ -51,6 +56,18 @@ namespace Gameplay.Managers
             GameProgressManager.OnProgressChanged += OnProgressChanged;
             GameProgressManager.OnSpinTriggered += OnSpinTriggered;
             GameEvents.OnPlayerDeath += OnPlayerDeath;
+            XPManager.Instance.OnXPAdded += OnXPAdded;
+            XPManager.Instance.OnPlayerLevelUp += OnPlayerLevelUp;
+        }
+
+        private void OnPlayerLevelUp(int level)
+        {
+            playerLevelupText.text = $"Level Up! {level}";
+        }
+
+        private void OnXPAdded(int xp, int amountAdded)
+        {
+            playerXPText.text = $"XP: {xp}";
         }
 
         private void OnDisable()

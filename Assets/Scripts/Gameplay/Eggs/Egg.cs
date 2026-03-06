@@ -41,12 +41,7 @@ namespace Gameplay.Eggs
         private bool _useScreenBounds;
         private bool _wallBounceCooldown = false;
         private float _wallBounceCooldownTime = 0.1f;
-
-        private void Start()
-        {
-            Init(config, 100);
-        }
-
+        
         // ─────────────────────────────────────────────
         // Init
         // ─────────────────────────────────────────────
