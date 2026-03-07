@@ -11,18 +11,18 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5bca238a5e094f1888245648e420a068, type: 3}
   m_Name: Ch2_L05
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Levels.LevelProfile
   chapter: 2
   globalLevel: 25
-  targetScore: 700
-  minDuration: 45
-  maxDuration: 70
-  pressureMax: 26
-  pressureAvg: 17
+  targetScore: 500
+  minDuration: 29.241379
+  maxDuration: 47.58621
+  pressureMax: 9
+  pressureAvg: 5
   maxE4: 0
-  maxE3: 1
-  maxE2: 6
-  spawnIntervalMin: 3.25
-  spawnIntervalMax: 5
-  expectedDps: 17
-  hpMultiplier: 1.375
+  maxE3: 0
+  maxE2: 3
+  spawnIntervalMin: 5.976895
+  spawnIntervalMax: 7.918274
+  expectedDps: 14
+  hpMultiplier: 1.15

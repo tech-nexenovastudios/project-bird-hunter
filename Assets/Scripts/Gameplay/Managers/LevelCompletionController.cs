@@ -7,10 +7,9 @@ using Gameplay.Levels;
 namespace Gameplay.Managers
 {
     /// <summary>
-    /// Monitors two win conditions independently:
-    ///   1. LevelScore >= targetScore  → fires OnTargetScoreReached + may complete level
-    ///   2. All active eggs cleared    → fires OnAllEggsCleared + may complete level
-    /// Level is completed when EITHER condition is met first.
+    /// Level completes when BOTH conditions are met in order:
+    /// 1. LevelScore >= targetScore → triggers SpawnController.StartDrain()
+    /// 2. All active eggs cleared   → fires level completed
     /// </summary>
     public class LevelCompletionController : MonoBehaviour
     {
@@ -21,7 +20,6 @@ namespace Gameplay.Managers
 
         private bool _levelCompleteTriggered;
         private bool _targetScoreReached;
-        private bool _allEggsCleared;
 
         public event Action<int> OnLevelCompleteConditionMet;
 
@@ -34,46 +32,46 @@ namespace Gameplay.Managers
         private void OnEnable()
         {
             GameEvents.OnLevelScoreUpdated += OnScoreUpdated;
+            GameEvents.OnAllEggsCleared    += OnAllEggsCleared;
         }
 
         private void OnDisable()
         {
             GameEvents.OnLevelScoreUpdated -= OnScoreUpdated;
+            GameEvents.OnAllEggsCleared    -= OnAllEggsCleared;
         }
 
         public void ResetForNewLevel()
         {
             _levelCompleteTriggered = false;
             _targetScoreReached     = false;
-            _allEggsCleared         = false;
         }
 
         private void OnScoreUpdated(int currentScore, int delta)
         {
             if (GameManager.Instance?.state != GameState.Gameplay) return;
             if (_targetScoreReached) return;
+            if (ScoreManager.Instance == null) return;
 
-            int levelScore  = ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : 0;
+            int levelScore  = ScoreManager.Instance.LevelScore;
             int targetScore = GetTargetScore();
 
             if (levelScore >= targetScore)
             {
                 _targetScoreReached = true;
-                Debug.Log($"[LevelCompletion] Target score {targetScore} reached!");
-                TryCompleteLevel(levelScore);
+                Debug.Log($"[LevelCompletion] Target score {targetScore} reached — starting drain.");
+                SpawnController.Instance?.StartDrain(levelScore);
             }
         }
-
 
         private void OnAllEggsCleared()
         {
             if (GameManager.Instance?.state != GameState.Gameplay) return;
-            if (_allEggsCleared) return;
+            if (!_targetScoreReached) return;
 
-            _allEggsCleared = true;
-            Debug.Log("[LevelCompletion] All eggs cleared!");
-            // XPManager listens to OnAllEggsCleared directly — no need to relay here
-            TryCompleteLevel(ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : 0);
+            int finalScore = ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : 0;
+            Debug.Log("[LevelCompletion] All eggs cleared — completing level.");
+            TryCompleteLevel(finalScore);
         }
 
         private void TryCompleteLevel(int finalScore)
@@ -82,14 +80,12 @@ namespace Gameplay.Managers
             _levelCompleteTriggered = true;
 
             OnLevelCompleteConditionMet?.Invoke(finalScore);
-            GameEvents.FireLevelCompleted(finalScore);
             GameManager.Instance.CompleteCurrentLevel(finalScore);
         }
 
         private int GetTargetScore()
         {
-            var profile = SpawnController.Instance?.levelProfile
-                       ?? GameProgressManager.Instance?.GetCurrentLevelProfile();
+            var profile = SpawnController.Instance?.levelProfile ?? GameProgressManager.Instance?.GetCurrentLevelProfile();
             return profile != null ? Mathf.Max(1, profile.targetScore) : fallbackTargetScore;
         }
 

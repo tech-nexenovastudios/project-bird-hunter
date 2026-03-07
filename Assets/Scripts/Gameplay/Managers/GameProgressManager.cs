@@ -27,14 +27,13 @@ namespace Gameplay.Managers
         public static event Action<GameProgress>         OnProgressChanged;
         public static event Action<LevelProfile>         OnLevelLoaded;
 
-        public GameProgress Data => _progress;
-
-        public int CurrentChapter => _progress?.currentChapter ?? 1;
-        public int CurrentLevel   => _progress?.currentLevel   ?? 1;
-        public int GlobalLevel    => (CurrentChapter - 1) * 20 + CurrentLevel;
-        public int HighScore      => _progress?.highScore      ?? 0;
-        public int TotalScore     => _progress?.totalScore     ?? 0;
-        public PowerupSlot[] CurrentSlots => _progress?.chapterSlots ?? new PowerupSlot[0];
+        public GameProgress   Data          => _progress;
+        public int            CurrentChapter => _progress?.currentChapter ?? 1;
+        public int            CurrentLevel   => _progress?.currentLevel   ?? 1;
+        public int            GlobalLevel    => (CurrentChapter - 1) * 20 + CurrentLevel;
+        public int            HighScore      => _progress?.highScore  ?? 0;
+        public int            TotalScore     => _progress?.totalScore ?? 0;
+        public PowerupSlot[]  CurrentSlots   => _progress?.chapterSlots ?? new PowerupSlot[0];
 
         private void Awake()
         {
@@ -74,11 +73,12 @@ namespace Gameplay.Managers
             _progress.highScore  = Mathf.Max(_progress.highScore, scoreAchieved);
             _progress.totalScore += scoreAchieved;
 
-            int levelIndex = _progress.currentLevel - 1; // 0-based index of CURRENT level
-
-            // Check spin BEFORE advancing (spin belongs to the level just finished)
+            int  levelIndex    = _progress.currentLevel - 1; // 0-based index of level just finished
             bool spinTriggered = false;
-            if (_progress.IsSpinLevel(levelIndex))
+
+            // FIXED: index 0 is ONLY for chapter-start spin (GameManager.IsInitialSpinRequired)
+            // CompleteLevel must never re-fire the spin for index 0
+            if (levelIndex != 0 && _progress.IsSpinLevel(levelIndex))
             {
                 int slotIndex = _progress.GetSpinSlotIndex(levelIndex);
                 if (slotIndex >= 0)
@@ -95,16 +95,15 @@ namespace Gameplay.Managers
             }
             else
             {
-                // Chapter complete — advance to next chapter, reset slots
+                // Chapter complete — move to next chapter
                 _progress.currentChapter++;
                 _progress.currentLevel = 1;
                 _progress.ResetSlotsForNewChapter();
 
-                // New chapter always gets a spin on L1 (slot 0)
-                // Only trigger if not already triggered above (shouldn't overlap but guard anyway)
+                // Chapter-start spin for slot 0
                 if (!spinTriggered)
                 {
-                    TriggerSpin(0); // slot 0 = chapter start spin
+                    TriggerSpin(0);
                     spinTriggered = true;
                 }
             }
@@ -112,7 +111,6 @@ namespace Gameplay.Managers
             SaveProgress();
             OnProgressChanged?.Invoke(_progress);
         }
-
 
         public void TriggerSpin(int slotIndex)
         {
@@ -127,7 +125,8 @@ namespace Gameplay.Managers
             if (powerup == null) return;
             _progress.EquipPowerup(powerup);
             SaveProgress();
-            OnProgressChanged?.Invoke(_progress);
+            // FIXED: do NOT fire OnProgressChanged here — GameManager.OnSpinComplete()
+            // calls StartGameplay() directly, firing OnProgressChanged would double-start gameplay
             Debug.Log($"✅ Equipped [{powerup.rarity}] {powerup.displayName}");
         }
 
@@ -210,19 +209,19 @@ namespace Gameplay.Managers
             try
             {
                 var bf = new BinaryFormatter();
-                using var fs   = new FileStream(path, FileMode.Open);
-                var        data = (SaveData)bf.Deserialize(fs);
+                using var fs = new FileStream(path, FileMode.Open);
+                var data = (SaveData)bf.Deserialize(fs);
 
                 _progress = new GameProgress
                 {
-                    currentChapter           = data.currentChapter,
-                    currentLevel             = data.currentLevel,
-                    highScore                = data.highScore,
-                    totalScore               = data.totalScore,
+                    currentChapter          = data.currentChapter,
+                    currentLevel            = data.currentLevel,
+                    highScore               = data.highScore,
+                    totalScore              = data.totalScore,
                     globalUnlockedPowerupIds = data.globalUnlocked ?? new(),
-                    playerXP                 = data.playerXP,
-                    playerLevel              = Mathf.Max(1, data.playerLevel),
-                    lastLevelUpXP            = data.lastLevelUpXP
+                    playerXP                = data.playerXP,
+                    playerLevel             = Mathf.Max(1, data.playerLevel),
+                    lastLevelUpXP           = data.lastLevelUpXP
                 };
 
                 for (int i = 0; i < 4; i++)
