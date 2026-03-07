@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
@@ -21,10 +21,15 @@ public class CannonUpgradeManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI healthText;
     [SerializeField] private TextMeshProUGUI fireRateText;
 
-    [Header("Stats Sliders")]
-    [SerializeField] private Slider damageSlider;
-    [SerializeField] private Slider healthSlider;
-    [SerializeField] private Slider fireRateSlider;
+    [Header("Stats Fill (Current)")]
+    [SerializeField] private Image damageFillCurrent;
+    [SerializeField] private Image healthFillCurrent;
+    [SerializeField] private Image fireRateFillCurrent;
+
+    [Header("Stats Fill (Next Level Preview)")]
+    [SerializeField] private Image damageFillNext;
+    [SerializeField] private Image healthFillNext;
+    [SerializeField] private Image fireRateFillNext;
 
     [Header("Max Level")]
     [SerializeField] private int maxCannonLevel = 100;
@@ -211,26 +216,58 @@ public class CannonUpgradeManager : MonoBehaviour
             float curHealth = stats.maxHealth;
             float curFireRate = stats.fireRate;
 
+            // Next level values (+1 upgrade)
+            float nextDamage = curDamage + stats.damageIncrement;
+            float nextHealth = curHealth + stats.healthIncrement;
+            float nextFireRate = curFireRate + stats.fireRateIncrement;
+
             // Text
             if (damageText != null)
-                damageText.text = $"DAMAGE:";  //{curDamage:F0}
+                damageText.text = "DAMAGE:";
 
             if (healthText != null)
-                healthText.text = $"HEALTH:";   // {curHealth:F0}
+                healthText.text = "HEALTH:";
 
             if (fireRateText != null)
-                fireRateText.text = $"FIRE RATE:";  //{curFireRate:F1}
+                fireRateText.text = "FIRE RATE:";
 
-            // Fill sliders (current / max at max level)
-            if (damageSlider != null)
-                damageSlider.value = Mathf.Clamp01(curDamage / maxDamage);
+            // Current fill (render on top)
+            SetFill(damageFillCurrent, curDamage / maxDamage);
+            SetFill(healthFillCurrent, curHealth / maxHealth);
+            SetFill(fireRateFillCurrent, curFireRate / maxFireRate);
 
-            if (healthSlider != null)
-                healthSlider.value = Mathf.Clamp01(curHealth / maxHealth);
-
-            if (fireRateSlider != null)
-                fireRateSlider.value = Mathf.Clamp01(curFireRate / maxFireRate);
+            // Next level preview fill (starts after current + gap)
+            SetNextFill(damageFillNext, curDamage / maxDamage, nextDamage / maxDamage);
+            SetNextFill(healthFillNext, curHealth / maxHealth, nextHealth / maxHealth);
+            SetNextFill(fireRateFillNext, curFireRate / maxFireRate, nextFireRate / maxFireRate);
         }
+    }
+
+    [Header("Fill Gap")]
+    [SerializeField] private float fillGap = 0.05f;
+
+    private void SetFill(Image fillImage, float ratio)
+    {
+        if (fillImage == null) return;
+
+        var rt = fillImage.rectTransform;
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(Mathf.Clamp01(ratio), 1f);
+        rt.sizeDelta = Vector2.zero;
+        rt.anchoredPosition = Vector2.zero;
+    }
+
+    private void SetNextFill(Image fillImage, float currentRatio, float nextRatio)
+    {
+        if (fillImage == null) return;
+
+        var rt = fillImage.rectTransform;
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(Mathf.Clamp01(nextRatio + fillGap), 1f);
+        rt.sizeDelta = Vector2.zero;
+        rt.anchoredPosition = Vector2.zero;
     }
 
     // ==================== Upgrade & Save to Cloud ====================

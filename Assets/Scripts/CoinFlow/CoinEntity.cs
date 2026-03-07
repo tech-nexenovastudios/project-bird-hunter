@@ -1,122 +1,81 @@
 ﻿using System;
-using System.Collections;
+using DG.Tweening;
 using Gameplay.Events;
 using UnityEngine;
-
-// ───────────────────────────────────────────────────────────
-// PURPOSE: Self-contained coin icon. Knows how to:
-//          1. Burst outward from origin
-//          2. Fly along a curved arc to the target
-//          3. Fire arrival event
-//          4. Return itself to the pool
-//
-// ATTACH TO: The coin prefab (a UI Image on a RectTransform).
-// ───────────────────────────────────────────────────────────
+using UnityEngine.UI;
 
 [RequireComponent(typeof(RectTransform))]
+[RequireComponent(typeof(Image))]
+[RequireComponent(typeof(CanvasGroup))]
 public class CoinEntity : MonoBehaviour
 {
     private RectTransform rect;
-    private CoinFlowConfig config;
-    private Action<CoinEntity> releaseCallback;    // pool return
-    private int coinValue;
+    private CanvasGroup canvasGroup;
+    private Sequence currentSequence;
 
-    // Cached to avoid repeated GetComponent
     private void Awake()
     {
         rect = GetComponent<RectTransform>();
+        canvasGroup = GetComponent<CanvasGroup>();
     }
 
-
-    /// <summary>
-    /// Called by CoinFlowManager to kick off this coin's full animation.
-    /// </summary>
     public void Launch(
-        Vector2 origin,          // screen-space start
-        Vector2 target,          // screen-space end (coin counter)
+        Vector2 origin,
+        Vector2 target,
         CoinFlowConfig cfg,
         int value,
         Action<CoinEntity> onComplete)
     {
-        config = cfg;
-        coinValue = value;
-        releaseCallback = onComplete;
+        currentSequence?.Kill();
 
         rect.position = origin;
-        rect.localScale = Vector3.one * config.startScale;
+        rect.localScale = Vector3.one * cfg.startScale;
+        canvasGroup.alpha = 1f;
 
-        StartCoroutine(AnimateRoutine(origin, target));
+        // ── Straight line with tiny random offset ────────
+        // No big arcs. Just a small horizontal nudge so
+        // coins don't perfectly overlap each other.
+
+        float tinyOffset = UnityEngine.Random.Range(-cfg.spreadWidth, cfg.spreadWidth);
+
+        Vector2 midPoint = new Vector2(
+            Mathf.Lerp(origin.x, target.x, 0.5f) + tinyOffset,
+            Mathf.Lerp(origin.y, target.y, 0.5f)
+        );
+
+        Vector3[] path = new Vector3[]
+        {
+            origin,
+            (Vector3)midPoint,
+            (Vector3)target
+        };
+
+        currentSequence = DOTween.Sequence();
+
+        currentSequence.Append(
+            rect.DOPath(path, cfg.flightDuration, PathType.CatmullRom)
+                .SetEase(cfg.dotweenFlightEase)
+        );
+
+        currentSequence.Insert(0f,
+            rect.DOScale(Vector3.one * cfg.endScale, cfg.flightDuration)
+                .SetEase(Ease.InQuad)
+        );
+
+        currentSequence.Insert(
+            cfg.flightDuration * 0.85f,
+            canvasGroup.DOFade(0.4f, cfg.flightDuration * 0.15f)
+        );
+
+        currentSequence.OnComplete(() =>
+        {
+            GameEvent.CoinArrived(value);
+            onComplete?.Invoke(this);
+        });
     }
 
-
-    private IEnumerator AnimateRoutine(Vector2 origin, Vector2 target)
+    private void OnDestroy()
     {
-        // ── PHASE 1: Burst outward ────────────────────────
-        // Pick a random direction and push the coin outward.
-        // This creates the "explosion" scatter before flight.
-
-        Vector2 randomDir = UnityEngine.Random.insideUnitCircle.normalized;
-        Vector2 burstTarget = origin + randomDir * config.burstRadius;
-
-        float elapsed = 0f;
-        while (elapsed < config.burstDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / config.burstDuration);
-
-            // Ease-out for burst (fast start, gentle stop)
-            float eased = 1f - Mathf.Pow(1f - t, 3f);
-            rect.position = Vector2.Lerp(origin, burstTarget, eased);
-
-            yield return null;   // wait one frame
-        }
-
-
-        // ── PHASE 2: Curved flight to target ──────────────
-        // The coin now swoops from its burst position to the
-        // coin counter UI. An arc offset makes it curve.
-
-        Vector2 flightStart = burstTarget;
-
-        // Perpendicular direction for the arc bend
-        Vector2 direction = (target - flightStart).normalized;
-        Vector2 perpendicular = new Vector2(-direction.y, direction.x);
-
-        // Randomize arc side and strength for organic feel
-        float arcOffset = config.arcStrength
-                        * UnityEngine.Random.Range(0.5f, 1.0f)
-                        * (UnityEngine.Random.value > 0.5f ? 1f : -1f);
-
-        Vector2 controlPoint = Vector2.Lerp(flightStart, target, 0.5f)
-                             + perpendicular * arcOffset;
-
-        elapsed = 0f;
-        while (elapsed < config.flightDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / config.flightDuration);
-
-            // Use the designer's AnimationCurve for easing
-            float curved = config.flightCurve.Evaluate(t);
-
-            // Quadratic Bézier: start → control → end
-            // This creates a smooth arc instead of a straight line.
-            Vector2 a = Vector2.Lerp(flightStart, controlPoint, curved);
-            Vector2 b = Vector2.Lerp(controlPoint, target, curved);
-            rect.position = Vector2.Lerp(a, b, curved);
-
-            // Scale shrinks as coin approaches target
-            float scale = Mathf.Lerp(config.startScale, config.endScale, curved);
-            rect.localScale = Vector3.one * scale;
-
-            yield return null;
-        }
-
-        // ── PHASE 3: Arrival ──────────────────────────────
-        rect.position = target;
-        GameEvent.CoinArrived(coinValue);
-
-        // Return self to pool
-        releaseCallback?.Invoke(this);
+        currentSequence?.Kill();
     }
 }

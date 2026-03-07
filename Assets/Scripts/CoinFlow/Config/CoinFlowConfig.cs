@@ -1,77 +1,37 @@
 ﻿using UnityEngine;
+using DG.Tweening;
 
-// ───────────────────────────────────────────────────────────
-// PURPOSE: Single source of truth for ALL coin-flow settings.
-//          Change values here — nothing else needs editing.
-//
-// HOW TO USE:
-//   1. Right-click in Project window
-//   2. Create → CoinFlow → Config
-//   3. Name it "DefaultCoinFlowConfig"
-//   4. Drag it into CoinFlowManager's inspector slot
-// ───────────────────────────────────────────────────────────
-
-[CreateAssetMenu(
-    fileName = "CoinFlowConfig",
-    menuName = "CoinFlow/Config",
-    order = 0
-)]
+[CreateAssetMenu(fileName = "CoinFlowConfig", menuName = "CoinFlow/Config")]
 public class CoinFlowConfig : ScriptableObject
 {
     [Header("═══ Coin Count ═══")]
-
-    [Tooltip("How many coin icons fly toward the counter per trigger")]
     [Range(5, 30)]
     public int coinsPerBurst = 10;
 
-
     [Header("═══ Timing ═══")]
-
-    [Tooltip("Seconds between each coin's launch (stagger effect)")]
     [Range(0.01f, 0.15f)]
-    public float spawnInterval = 0.04f;
+    public float spawnInterval = 0.05f;
 
-    [Tooltip("Total seconds each coin takes to reach the target")]
     [Range(0.3f, 2.0f)]
-    public float flightDuration = 0.7f;
+    public float flightDuration = 0.6f;
 
+    [Header("═══ Path ═══")]
+    [Tooltip("Small horizontal spread so coins don't stack on one line. " +
+             "Keep this LOW — 15 to 40 pixels max.")]
+    [Range(0f, 50f)]
+    public float spreadWidth = 25f;
 
-    [Header("═══ Spread — Initial Burst ═══")]
+    [Tooltip("InOutSine or OutQuad work best for direct paths")]
+    public Ease dotweenFlightEase = Ease.InOutSine;
 
-    [Tooltip("Coins burst outward this many pixels from the origin before flying to target")]
-    [Range(20f, 200f)]
-    public float burstRadius = 80f;
-
-    [Tooltip("Seconds the burst-outward phase takes (before curving to target)")]
-    [Range(0.05f, 0.4f)]
-    public float burstDuration = 0.15f;
-
-
-    [Header("═══ Flight Path Curve ═══")]
-
-    [Tooltip("Controls the flight arc. Default ease-in-out gives a satisfying swoop.")]
-    public AnimationCurve flightCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
-
-    [Tooltip("Maximum sideways pixel offset at the midpoint of flight (creates arc)")]
-    [Range(0f, 300f)]
-    public float arcStrength = 120f;
-
-
-    [Header("═══ Visual ═══")]
-
-    [Tooltip("Coin icon starts at this scale")]
+    [Header("═══ Scale ═══")]
     [Range(0.3f, 1.5f)]
     public float startScale = 1.0f;
 
-    [Tooltip("Coin icon ends at this scale when reaching target")]
     [Range(0.2f, 1.0f)]
     public float endScale = 0.5f;
 
-
     [Header("═══ Pool ═══")]
-
-    [Tooltip("Pre-created coins sitting in memory ready to go. " +
-             "Set this to your largest expected burst size.")]
     [Range(10, 60)]
     public int poolInitialSize = 20;
 }

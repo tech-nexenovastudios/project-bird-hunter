@@ -88,23 +88,15 @@ public class CoinFlowManager : MonoBehaviour
     private IEnumerator SpawnBurstRoutine(Vector2 origin, int totalValue)
     {
         int coinCount = config.coinsPerBurst;
-
-        // Divide total value across coins.
-        // Example: 100 coins / 10 icons = each icon worth 10.
-        // Remainder goes to last coin so nothing is lost.
         int valuePerCoin = totalValue / coinCount;
         int remainder = totalValue % coinCount;
-
-        // Track how many coins from THIS burst have arrived
         int arrivedCount = 0;
 
-        // Target position (coin counter icon's screen position)
         Vector2 targetPos = targetUI.position;
 
         for (int i = 0; i < coinCount; i++)
         {
             CoinEntity coin = pool.Get();
-
             int value = valuePerCoin + (i == coinCount - 1 ? remainder : 0);
 
             coin.Launch(
@@ -116,15 +108,11 @@ public class CoinFlowManager : MonoBehaviour
                 {
                     pool.Release(returnedCoin);
                     arrivedCount++;
-
                     if (arrivedCount >= coinCount)
-                    {
                         GameEvent.CoinBurstComplete();
-                    }
                 }
             );
 
-            // Stagger: wait before launching next coin
             yield return new WaitForSeconds(config.spawnInterval);
         }
     }

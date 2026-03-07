@@ -12,36 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: becea7ca57265cf4f800ac517be82202, type: 3}
   m_Name: CoinFlowConfig
   m_EditorClassIdentifier: Assembly-CSharp::CoinFlowConfig
-  coinsPerBurst: 10
-  spawnInterval: 0.04
-  flightDuration: 0.7
-  burstRadius: 80
-  burstDuration: 0.15
-  flightCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  arcStrength: 120
+  coinsPerBurst: 7
+  spawnInterval: 0.0409
+  flightDuration: 0.826
+  spreadWidth: 0.8
+  dotweenFlightEase: 10
   startScale: 1
   endScale: 0.5
   poolInitialSize: 20
