@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using Gameplay.Managers;
 using Gameplay.PowerUps;
 
 namespace Gameplay.Slot
@@ -9,13 +10,13 @@ namespace Gameplay.Slot
     public class SlotMachineController : MonoBehaviour
     {
         [SerializeField] private ReelController[] reels;  // Assign 3 reels
-        [SerializeField] private List<Sprite> symbolLibrary;  // All icons
+        [SerializeField] private List<PowerupConfig> symbolLibrary;  // All icons
 
         void Start()
         {
             foreach (var reel in reels)
             {
-                reel.symbolSprites = symbolLibrary;  // Share library
+                reel.symbolList = symbolLibrary;  // Share library
                 reel.InitializeReel();
             }
         }
@@ -25,24 +26,31 @@ namespace Gameplay.Slot
         {
             for (int i = 0; i < reels.Length; i++)
             {
+                var reel       = reels[i];
                 var reelResult = resultsPerReel[i];
                 var delay = i * 0.12f;
                 var i1 = i;
+                
+                reel.OnPowerupSelected = null;
+                reel.OnPowerupSelected += OnPowerupSelected;
+                
                 DOVirtual.DelayedCall(delay, () => reels[i1].SpinToResult(reelResult));
             }
         }
-
-        // Example usage from your economy/RNG
-        [ContextMenu("Test Spin")]
-        public void TestSpin()
+        
+        private void OnPowerupSelected(PowerupConfig selected)
         {
-            var results = new List<Sprite>
+            GameProgressManager.Instance.PlayerSelectedPowerup(selected);
+            foreach (var reel in reels)
             {
-                symbolLibrary[0],  // Reel 0
-                symbolLibrary[2],  // Reel 1  
-                symbolLibrary[8]   // Reel 2 (win!)
-            };
-            //Spin(results);
+                reel.OnPowerupSelected = null;
+            }
+            Managers.GameManager.Instance.OnSpinComplete();
+        }
+
+        private void OnDisable()
+        {
+            DOTween.KillAll();
         }
     }
 

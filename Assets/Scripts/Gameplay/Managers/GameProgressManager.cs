@@ -74,27 +74,45 @@ namespace Gameplay.Managers
             _progress.highScore  = Mathf.Max(_progress.highScore, scoreAchieved);
             _progress.totalScore += scoreAchieved;
 
-            int levelIndex = _progress.currentLevel - 1;
+            int levelIndex = _progress.currentLevel - 1; // 0-based index of CURRENT level
+
+            // Check spin BEFORE advancing (spin belongs to the level just finished)
+            bool spinTriggered = false;
             if (_progress.IsSpinLevel(levelIndex))
             {
                 int slotIndex = _progress.GetSpinSlotIndex(levelIndex);
-                if (slotIndex >= 0) TriggerSpin(slotIndex);
+                if (slotIndex >= 0)
+                {
+                    TriggerSpin(slotIndex);
+                    spinTriggered = true;
+                }
             }
 
+            // Advance level
             if (_progress.currentLevel < 20)
             {
                 _progress.currentLevel++;
             }
             else
             {
+                // Chapter complete — advance to next chapter, reset slots
                 _progress.currentChapter++;
                 _progress.currentLevel = 1;
                 _progress.ResetSlotsForNewChapter();
+
+                // New chapter always gets a spin on L1 (slot 0)
+                // Only trigger if not already triggered above (shouldn't overlap but guard anyway)
+                if (!spinTriggered)
+                {
+                    TriggerSpin(0); // slot 0 = chapter start spin
+                    spinTriggered = true;
+                }
             }
 
             SaveProgress();
             OnProgressChanged?.Invoke(_progress);
         }
+
 
         public void TriggerSpin(int slotIndex)
         {

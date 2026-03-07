@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using Gameplay.Managers;
 using Gameplay.PowerUps;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace Gameplay.Slot
 {
@@ -11,12 +13,14 @@ namespace Gameplay.Slot
     {
         [Header("Settings")] public float symbolSize = 160f;
         public float spinDuration = 1.2f; // ← ADDED THIS!
-        public List<Sprite> symbolSprites = new();
+        public List<PowerupConfig> symbolList = new();
 
         [Header("Assign These")] public RectTransform content;
 
         private SymbolView[] symbols = new SymbolView[20];
         private Tween spinTween;
+        
+        public Action<PowerupConfig> OnPowerupSelected;
 
         [ContextMenu("🔧 Initialize Reel")]
         public void InitializeReel()
@@ -32,7 +36,7 @@ namespace Gameplay.Slot
                 }
             }
 
-            if (symbolSprites.Count == 0)
+            if (symbolList.Count == 0)
             {
                 Debug.LogError("Assign symbolSprites!");
                 return;
@@ -84,27 +88,30 @@ namespace Gameplay.Slot
             var symView = go.GetComponent<SymbolView>();
             symView.iconImage = image; // Direct reference!
 
-            // Initial random sprite
-            var sprite = symbolSprites[Random.Range(0, symbolSprites.Count)];
-            symView.SetIcon(sprite, sprite.name);
-
+            var randomConfig = symbolList[Random.Range(0, symbolList.Count)];
+            if (randomConfig == null || randomConfig.icon == null)
+            {
+                Debug.LogWarning($"[ReelController] PowerupConfig at index has null icon — skipping SetIcon");
+                return symView;
+            }
+            symView.SetIcon(randomConfig.icon, randomConfig.id);
             return symView;
         }
-
-        [ContextMenu("🎰 Test Spin")]
-        public void TestSpin()
-        {
-            //SpinToResult(symbolSprites[0]);
-        }
-
         public void SpinToResult(PowerupConfig results)
         {
+            if (results == null || results.icon == null)
+            {
+                Debug.LogError("[ReelController] SpinToResult called with null PowerupConfig or icon!");
+                return;
+            }
             spinTween?.Kill();
 
-            // Assign sprites (indices: 0=hidden bottom, 1=top visible, 2=middle visible)
-            symbols[1].SetIcon(symbolSprites[Random.Range(0, symbolSprites.Count)], "top");
-            symbols[2].SetIcon(results.icon, "middle");
-            symbols[0].SetIcon(symbolSprites[Random.Range(0, symbolSprites.Count)], "bottom");
+            var top    = symbolList[Random.Range(0, symbolList.Count)];
+            var bottom = symbolList[Random.Range(0, symbolList.Count)];
+
+            if (top?.icon != null)    symbols[1].SetIcon(top.icon,     "top");
+            if (results?.icon != null) symbols[2].SetIcon(results.icon, "middle");
+            if (bottom?.icon != null) symbols[0].SetIcon(bottom.icon,  "bottom");
 
             // Animate: overshoot up → settle
             float overshootY = symbolSize * 20;
@@ -119,12 +126,11 @@ namespace Gameplay.Slot
                     // Win pop
                     symbols[1].transform.DOScale(1.1f, 0.15f).SetLoops(2, LoopType.Yoyo).OnComplete(() =>
                     {
-                        //TODO: Activate OnClick Listeners
-
+                        symbols[1].button.onClick.RemoveAllListeners();
                         symbols[1].AddListener(() =>
                         {
                             Debug.Log("Powerup Clicked!");
-                            GameProgressManager.Instance.PlayerSelectedPowerup(results);
+                            OnPowerupSelected?.Invoke(results);
                         });
                     });
                     symbols[2].gameObject.SetActive(false);

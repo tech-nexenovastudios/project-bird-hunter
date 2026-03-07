@@ -34,13 +34,11 @@ namespace Gameplay.Managers
         private void OnEnable()
         {
             GameEvents.OnLevelScoreUpdated += OnScoreUpdated;
-            GameEvents.OnAllEggsCleared    += OnAllEggsCleared;
         }
 
         private void OnDisable()
         {
             GameEvents.OnLevelScoreUpdated -= OnScoreUpdated;
-            GameEvents.OnAllEggsCleared    -= OnAllEggsCleared;
         }
 
         public void ResetForNewLevel()

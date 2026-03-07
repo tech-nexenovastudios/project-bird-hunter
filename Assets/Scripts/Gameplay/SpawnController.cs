@@ -249,6 +249,10 @@ namespace Gameplay
             int baseHp = Random.Range(tier.baseHpMin, tier.baseHpMax + 1);
             int hp = Mathf.RoundToInt(baseHp * levelProfile.hpMultiplier);
 
+            var rb = egg.GetComponent<Rigidbody2D>();
+            //down left impulse force
+            rb.AddForce(new Vector2(-2f, 0f), ForceMode2D.Impulse);
+            
             egg.Init(tier, hp);
             egg.OnDestroyed += HandleEggDestroyed;
 

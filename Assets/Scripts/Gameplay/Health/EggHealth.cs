@@ -85,14 +85,14 @@ namespace Gameplay.Health
         private void Die()
         {
             if (_isDead) return;
-            _isDead = true;
+            _isDead    = true;
             _currentHp = 0;
 
             int scoreAwarded = config != null ? config.scoreOnDestroy : 0;
             GameEvents.FireEggDestroyed(this, scoreAwarded, transform.position);
 
             var egg = GetComponent<Egg>();
-            egg?.OnDestroyed?.Invoke(egg);
+            egg?.OnDestroyed?.Invoke(egg); // ← this already notifies SpawnController
         }
 
         private void StartHitEffect()

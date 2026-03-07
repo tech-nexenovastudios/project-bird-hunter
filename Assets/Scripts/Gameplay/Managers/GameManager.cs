@@ -20,21 +20,24 @@ namespace Gameplay.Managers
         public static GameManager Instance;
 
         public Slot.SlotMachineController slotMachine;
-        public SpawnController spawnController;
-        public CannonSpawner cannonSpawner;
+        public SpawnController            spawnController;
+        public CannonSpawner              cannonSpawner;
 
         public GameState state;
-        
-        
+
         public TextMeshProUGUI playerLevelupText;
         public TextMeshProUGUI playerXPText;
-        
+
         public GameObject currentCannon;
+
+        // ADDED: guard so OnProgressChanged never triggers StartGameplay more than once per completion
+        private bool _pendingLevelStart = false;
+
         private void Awake()
         {
             Instance = this;
-            
-            var cam = Camera.main;
+
+            var cam    = Camera.main;
             float height = cam.orthographicSize;
             float width  = height * cam.aspect;
 
@@ -44,84 +47,79 @@ namespace Gameplay.Managers
             ScreenBounds.maxY =  height;
         }
 
-        public void ResetGame()
-        {
-            // Reset to Ch1 L1
-            GameProgressManager.Instance.ResetProgress();
-            StartGameplay();
-        }
-
         private void OnEnable()
         {
             GameProgressManager.OnProgressChanged += OnProgressChanged;
-            GameProgressManager.OnSpinTriggered += OnSpinTriggered;
-            GameEvents.OnPlayerDeath += OnPlayerDeath;
-            XPManager.Instance.OnXPAdded += OnXPAdded;
-            XPManager.Instance.OnPlayerLevelUp += OnPlayerLevelUp;
-        }
-
-        private void OnPlayerLevelUp(int level)
-        {
-            playerLevelupText.text = $"Level Up! {level}";
-        }
-
-        private void OnXPAdded(int xp, int amountAdded)
-        {
-            playerXPText.text = $"XP: {xp}";
+            GameProgressManager.OnSpinTriggered   += OnSpinTriggered;
+            GameEvents.OnPlayerDeath              += OnPlayerDeath;
+            XPManager.Instance.OnXPAdded          += OnXPAdded;
+            XPManager.Instance.OnPlayerLevelUp    += OnPlayerLevelUp;
         }
 
         private void OnDisable()
         {
             GameProgressManager.OnProgressChanged -= OnProgressChanged;
-            GameProgressManager.OnSpinTriggered -= OnSpinTriggered;
-            GameEvents.OnPlayerDeath -= OnPlayerDeath;
+            GameProgressManager.OnSpinTriggered   -= OnSpinTriggered;
+            GameEvents.OnPlayerDeath              -= OnPlayerDeath;
         }
 
+        private void OnPlayerLevelUp(int level)
+            => playerLevelupText.text = $"Level Up! {level}";
+
+        private void OnXPAdded(int xp, int amountAdded)
+            => playerXPText.text = $"XP: {xp}";
+
         // ──────────────────────────
-        // ENTRY POINT: Scene loads
+        // ENTRY POINT
         // ──────────────────────────
+
         void Start()
         {
-            // 1. Check if we need an initial spin for this chapter
             var progress = GameProgressManager.Instance.Data;
+
             if (IsInitialSpinRequired(progress))
             {
-                TriggerInitialSpin();
-                return; // Wait for spin to finish before gameplay
+                TriggerInitialSpin(progress);
+                return; // StartGameplay() called by OnSpinComplete() after player picks
             }
 
-            // 2. Normal case: start gameplay immediately
             StartGameplay();
         }
 
         // ──────────────────────────
-        // INITIAL SPIN LOGIC
+        // INITIAL SPIN
         // ──────────────────────────
         bool IsInitialSpinRequired(GameProgress progress)
         {
-            return progress.IsSpinLevel(progress.currentLevel - 1);
+            int levelIndex = progress.currentLevel - 1;
+            return progress.IsSpinLevel(levelIndex);
         }
 
-        void TriggerInitialSpin()
+        void TriggerInitialSpin(GameProgress progress)
         {
-            var progress = GameProgressManager.Instance.Data;
-            int slotIndex = 0; // Always slot 0 for L1
+            int levelIndex = progress.currentLevel - 1;
+            int slotIndex  = progress.GetSpinSlotIndex(levelIndex);
+
+            if (slotIndex < 0)
+            {
+                StartGameplay(); // fallback — no valid slot, just start
+                return;
+            }
 
             var options = progress.GetAvailablePowerUpForSpin(
                 progress.currentChapter, slotIndex,
                 GameProgressManager.Instance.allPowerups, 3);
 
-            Debug.Log($"🎰 Initial spin for Ch{progress.currentChapter} Slot {slotIndex}");
-            OnSpinTriggered(slotIndex, options); // Reuse your existing handler!
+            Debug.Log($"🎰 Initial spin Ch{progress.currentChapter} L{progress.currentLevel} → Slot {slotIndex}");
+            OnSpinTriggered(slotIndex, options);
+            // StartGameplay() will be called by OnSpinComplete() when player picks
         }
 
         // ──────────────────────────
-        // NORMAL SPINS (after level complete)
+        // SPIN TRIGGERED (show UI)
         // ──────────────────────────
         private void OnSpinTriggered(int slotIndex, PowerupConfig[] powerupConfigs)
         {
-            Debug.Log("Spin triggered!");
-            Debug.Log($"Slot {slotIndex} | Options: {powerupConfigs.Length}");
             state = GameState.Slot;
 
             if (currentCannon != null)
@@ -133,12 +131,14 @@ namespace Gameplay.Managers
             slotMachine.gameObject.SetActive(true);
             slotMachine.Spin(powerupConfigs.ToList());
         }
-
+        
         // ──────────────────────────
         // START GAMEPLAY
         // ──────────────────────────
         public async void StartGameplay()
         {
+            _pendingLevelStart = false;
+
             var profile = GameProgressManager.Instance.GetCurrentLevelProfile();
             if (profile == null)
             {
@@ -150,6 +150,7 @@ namespace Gameplay.Managers
 
             ScoreManager.Instance?.ResetLevel();
             LevelCompletionController.Instance?.ResetForNewLevel();
+            XPManager.Instance?.ResetForNewLevel();
             spawnController.levelProfile = profile;
             spawnController.ResetLevel();
 
@@ -159,60 +160,59 @@ namespace Gameplay.Managers
             }
             else
             {
-                // If cannon already exists, ensure it's firing
                 var baseCannon = currentCannon.GetComponent<BaseCannon>();
                 if (baseCannon != null) baseCannon.StartFiring();
             }
 
-            // Apply power ups to cannon
             GameProgressManager.Instance.ApplyPowerUpsToCurrentCannon(currentCannon);
         }
+        // ──────────────────────────
+        // LEVEL COMPLETE
+        // ──────────────────────────
+        public void CompleteCurrentLevel(int scoreAchieved)
+        {
+            _pendingLevelStart = true;
+            GameProgressManager.Instance.CompleteLevel(scoreAchieved);
+        }
 
-        // ──────────────────────────
-        // LEVEL COMPLETE (your existing logic)
-        // ──────────────────────────
+        // FIXED: only handles mid-game progress advances, NOT initial spin
         private void OnProgressChanged(GameProgress progress)
         {
             Debug.Log($"Progress changed to Ch{progress.currentChapter} L{progress.currentLevel}");
 
-            // Optional: if you want to auto-advance after spin completes
-            if (slotMachine.gameObject.activeSelf)
-            {
-                slotMachine.gameObject.SetActive(false);
-                StartGameplay();
-            }
-            
-            //StartGameplay();
+            if (!_pendingLevelStart) return; // ignore SaveProgress duplicate fires
+            _pendingLevelStart = false;
+
+            // If spin is showing, wait — OnSpinComplete() will call StartGameplay()
+            if (slotMachine.gameObject.activeSelf) return;
+
+            StartGameplay();
+        }
+        // ──────────────────────────
+        // SPIN COMPLETE — single exit point for ALL spins (initial + mid-game)
+        // ──────────────────────────
+        public void OnSpinComplete() // Called by SlotMachineController after player picks powerup
+        {
+            slotMachine.gameObject.SetActive(false);
+            StartGameplay(); // always safe — works for both initial and mid-game spins
         }
 
         // ──────────────────────────
-        // PUBLIC CALLS (from your UI)
+        // MISC
         // ──────────────────────────
-        public void CompleteCurrentLevel(int scoreAchieved)
-        {
-            GameProgressManager.Instance.CompleteLevel(scoreAchieved);
-            // Spin UI will show automatically if this was L7/12/17
-        }
 
-        public void OnSpinComplete() // Called by SlotMachineController
+        public void ResetGame()
         {
-            // After spin ends, start the next gameplay
+            GameProgressManager.Instance.ResetProgress();
             StartGameplay();
         }
 
-        public bool IsGameActive()
-        {
-            return state == GameState.Gameplay;
-        }
+        public bool IsGameActive() => state == GameState.Gameplay;
 
         private void OnPlayerDeath()
         {
             Debug.Log("Game Over!");
             state = GameState.GameOver;
-            
-            //TODO: Make timescale to 0 to pause the game. and show GameOver UI
         }
     }
-
-
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gameplay.Abilities;
 using Gameplay.PowerUps;
 using UnityEngine;
 
@@ -16,11 +15,11 @@ namespace Gameplay
         public int totalScore     = 0;
 
         // Meta XP progression
-        public int playerXP        = 0;
-        public int playerLevel     = 1;
-        public int lastLevelUpXP   = 0;
+        public int playerXP      = 0;
+        public int playerLevel   = 1;
+        public int lastLevelUpXP = 0;
 
-        // 4 powerup slots per chapter, reset on chapter start
+        // 4 slots per chapter, reset on new chapter
         public PowerupSlot[] chapterSlots = new PowerupSlot[4]
         {
             new(0), new(1), new(2), new(3)
@@ -28,12 +27,16 @@ namespace Gameplay
 
         public List<string> globalUnlockedPowerupIds = new();
 
-        private static readonly int[] SpinLevels = { 0, 6, 11, 16 };
-        private static readonly Dictionary<int, int> SpinLevelToSlot = new()
-        {
-            { 0, 0 }, { 6, 1 }, { 11, 2 }, { 16, 3 }
-        };
+        // FIXED: spin after L5(idx 4), L10(idx 9), L15(idx 14)
+        // Level 1 (idx 0) spin is handled by GameManager.Start() as initial spin ONLY
+        private static readonly int[] SpinLevels = { 4, 9, 14 };
 
+        private static readonly Dictionary<int, int> SpinLevelToSlot = new() { { 4,  1 }, { 9,  2 }, { 14, 3 } };
+
+        /// <summary>
+        /// Pass levelInChapter = currentLevel - 1 (0-based).
+        /// Returns true if a spin should trigger after completing this level.
+        /// </summary>
         public bool IsSpinLevel(int levelInChapter)
             => Array.IndexOf(SpinLevels, levelInChapter) >= 0;
 
@@ -42,22 +45,29 @@ namespace Gameplay
 
         public PowerupConfig[] GetAvailablePowerUpForSpin(int chapter, int slotIndex, PowerupConfig[] allPowerups, int maxOptions = 3)
         {
-            int spinLevel = SpinLevels[slotIndex];
-
+            // IDs already equipped in slots this chapter — don't offer duplicates
             var equippedThisChapter = new HashSet<string>(
                 chapterSlots.Where(s => !s.IsEmpty).Select(s => s.equippedPowerupId)
             );
 
+            // All powerups unlocked so far = unlockFromChapter <= current chapter
+            // Exclude already equipped ones this chapter
             var candidates = allPowerups
                 .Where(p => p != null
-                         && p.spinUnlockLevel == spinLevel
-                         && p.unlockFromChapter <= chapter
-                         && !equippedThisChapter.Contains(p.id))
+                            && p.unlockFromChapter <= chapter
+                            && !equippedThisChapter.Contains(p.id))
                 .ToList();
+
+            if (candidates.Count == 0)
+            {
+                Debug.LogWarning($"[GameProgress] No powerup candidates for Ch{chapter} Slot{slotIndex}!");
+                return Array.Empty<PowerupConfig>();
+            }
 
             candidates = WeightedShuffle(candidates);
             return candidates.Take(maxOptions).ToArray();
         }
+
 
         private List<PowerupConfig> WeightedShuffle(List<PowerupConfig> candidates)
         {
@@ -88,7 +98,6 @@ namespace Gameplay
                     break;
                 }
             }
-
             return result;
         }
 
@@ -97,9 +106,9 @@ namespace Gameplay
             int slotIndex = GetSpinSlotIndex(currentLevel - 1);
             if (slotIndex < 0 || slotIndex > 3 || powerup == null) return;
 
-            chapterSlots[slotIndex].equippedPowerupId  = powerup.id;
-            chapterSlots[slotIndex].isOnCooldown       = false;
-            chapterSlots[slotIndex].cooldownRemaining  = 0f;
+            chapterSlots[slotIndex].equippedPowerupId = powerup.id;
+            chapterSlots[slotIndex].isOnCooldown      = false;
+            chapterSlots[slotIndex].cooldownRemaining = 0f;
 
             if (!globalUnlockedPowerupIds.Contains(powerup.id))
                 globalUnlockedPowerupIds.Add(powerup.id);
