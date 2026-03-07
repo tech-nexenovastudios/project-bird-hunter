@@ -2,71 +2,63 @@ using System;
 using UnityEngine;
 using Gameplay;
 using Gameplay.Events;
-using Gameplay.Interfaces;
-using Gameplay.Eggs;
 
 namespace Gameplay.Managers
 {
+    /// <summary>
+    /// Awards XP when:
+    ///   - All eggs are cleared from screen (OnAllEggsCleared)
+    ///   - Level target score is reached (OnLevelCompleted)
+    /// XP is meta-progression — persists across sessions via GameProgressManager.
+    /// </summary>
     public class XPManager : MonoBehaviour
     {
         public static XPManager Instance { get; private set; }
 
-        [Header("XP Formula")]
+        [Header("XP Awards")]
+        [SerializeField] private int xpOnAllEggsCleared = 50;
+        [SerializeField] private int xpOnTargetScoreReached = 100;
+
+        [Header("Level Up Formula")]
         [SerializeField] private int baseXPPerLevel = 100;
         [SerializeField] private float levelExponent = 1.5f;
 
-        public event Action<int, int> OnXPAdded;
-        public event Action<int> OnPlayerLevelUp;
+        public event Action<int, int> OnXPAdded;       // (totalXP, amountAdded)
+        public event Action<int>      OnPlayerLevelUp;  // (newLevel)
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
 
         private void OnEnable()
         {
-            // FIXED: only subscribe to OnEggHit — XP earned only during active combo on egg hits
-            GameEvents.OnEggHit += OnEggHit;
+            GameEvents.OnAllEggsCleared  += HandleAllEggsCleared;
+            GameEvents.OnLevelCompleted  += HandleLevelCompleted;
         }
 
         private void OnDisable()
         {
-            GameEvents.OnEggHit -= OnEggHit;
+            GameEvents.OnAllEggsCleared  -= HandleAllEggsCleared;
+            GameEvents.OnLevelCompleted  -= HandleLevelCompleted;
         }
 
-        private void OnEggHit(IDamageable egg, int damage, Vector3 hitPoint)
+        private void HandleAllEggsCleared()
         {
-            var config = GetEggConfig(egg);
-            if (config == null) return;
-
-            int xp = config.scorePerHit;
-            if (xp <= 0) return;
-
-            float multiplier = ComboController.Instance != null ? ComboController.Instance.ComboMultiplier : 1f;
-            AddXP(Mathf.RoundToInt(xp * multiplier)); // AddXP will reject if combo is inactive
+            AddXP(xpOnAllEggsCleared);
         }
 
-
-        private EggTierConfig GetEggConfig(IDamageable damageable)
+        private void HandleLevelCompleted(int finalScore)
         {
-            if (damageable is not MonoBehaviour mb) return null;
-            var egg = mb.GetComponent<Egg>();
-            return egg?.config;
+            AddXP(xpOnTargetScoreReached);
         }
 
         public void AddXP(int amount)
         {
-            // Guard: only add XP if combo is active
-            if (ComboController.Instance == null) return;
-            if (ComboController.Instance.ComboCount <= 0) return;
-
-            if (GameProgressManager.Instance == null || GameProgressManager.Instance.Data == null) return;
+            if (amount <= 0) return;
+            if (GameProgressManager.Instance?.Data == null) return;
 
             var progress = GameProgressManager.Instance.Data;
             progress.playerXP += amount;
@@ -76,7 +68,6 @@ namespace Gameplay.Managers
 
             CheckLevelUp(progress);
         }
-
 
         private void CheckLevelUp(GameProgress progress)
         {
@@ -105,7 +96,7 @@ namespace Gameplay.Managers
             if (GameProgressManager.Instance?.Data == null) return 0f;
             var p = GameProgressManager.Instance.Data;
             int current = p.playerXP - GetXPForLevel(p.playerLevel);
-            int needed = GetXPForLevel(p.playerLevel + 1) - GetXPForLevel(p.playerLevel);
+            int needed  = GetXPForLevel(p.playerLevel + 1) - GetXPForLevel(p.playerLevel);
             return needed > 0 ? Mathf.Clamp01((float)current / needed) : 1f;
         }
     }

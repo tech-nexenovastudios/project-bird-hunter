@@ -28,6 +28,8 @@ namespace Gameplay.Events
 
         // Player death
         public static event Action OnPlayerDeath;
+        public static event Action OnAllEggsCleared;
+        public static void FireAllEggsCleared() => OnAllEggsCleared?.Invoke();
 
         public static void FireEggHit(IDamageable egg, int damage, Vector3 hitPoint) =>
             OnEggHit?.Invoke(egg, damage, hitPoint);

@@ -303,6 +303,11 @@ namespace Gameplay
                     _activeEggs.Add(newEgg);
                     _pressureTracker.RegisterEgg(newEgg);
                 }
+                if (_activeEggs.Count == 0)
+                {
+                    Debug.Log("[SpawnController] All eggs cleared!");
+                    GameEvents.FireAllEggsCleared();
+                }
             }
 
             Destroy(egg.gameObject);
