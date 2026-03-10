@@ -31,6 +31,9 @@ public class CannonUpgradeManager : MonoBehaviour
     [SerializeField] private Image healthFillNext;
     [SerializeField] private Image fireRateFillNext;
 
+    [Header("Fill Gap")]
+    [SerializeField] private float fillGap = 0.05f;
+
     [Header("Max Level")]
     [SerializeField] private int maxCannonLevel = 100;
 
@@ -47,10 +50,8 @@ public class CannonUpgradeManager : MonoBehaviour
     private int selectedIndex = -1;
     private bool isUpgrading = false;
 
-    // Cloud Save key suffix
     private const string CANNON_LEVEL_SUFFIX = "_CannonLevel";
 
-    /// <summary>Generates a cloud key from cannon name, e.g. "Shotgun_CannonLevel"</summary>
     private string GetCannonKey(int index)
     {
         return cannonHolderSO.cannonsData[index].cannonName.Replace(" ", "") + CANNON_LEVEL_SUFFIX;
@@ -62,6 +63,18 @@ public class CannonUpgradeManager : MonoBehaviour
     {
         if (upgradeButton != null)
             upgradeButton.onClick.AddListener(OnUpgradePressed);
+    }
+
+    private void OnEnable()
+    {
+        CannonLockManager.OnCannonUnlocked += OnCannonUnlockedHandler;
+        CannonLockManager.OnAllUnlockStatesLoaded += RefreshAllLockVisuals;
+    }
+
+    private void OnDisable()
+    {
+        CannonLockManager.OnCannonUnlocked -= OnCannonUnlockedHandler;
+        CannonLockManager.OnAllUnlockStatesLoaded -= RefreshAllLockVisuals;
     }
 
     private void Start()
@@ -79,6 +92,40 @@ public class CannonUpgradeManager : MonoBehaviour
         {
             if (item.button != null)
                 item.button.onClick.RemoveAllListeners();
+        }
+    }
+
+    // ==================== Lock / Unlock ====================
+
+    private void OnCannonUnlockedHandler(int index)
+    {
+        if (index < 0 || index >= cannonItems.Count) return;
+
+        if (CannonLockManager.Instance != null && cannonItems[index].button != null)
+        {
+            CannonLockManager.Instance.ApplyUnlockedVisual(cannonItems[index].button.transform);
+            cannonItems[index].button.interactable = true;
+        }
+    }
+
+    private void RefreshAllLockVisuals()
+    {
+        if (CannonLockManager.Instance == null) return;
+
+        for (int i = 0; i < cannonItems.Count; i++)
+        {
+            if (cannonItems[i].button == null) continue;
+
+            if (CannonLockManager.Instance.IsUnlocked(i))
+            {
+                CannonLockManager.Instance.ApplyUnlockedVisual(cannonItems[i].button.transform);
+                cannonItems[i].button.interactable = true;
+            }
+            else
+            {
+                CannonLockManager.Instance.ApplyLockedVisual(cannonItems[i].button.transform);
+                cannonItems[i].button.interactable = false;
+            }
         }
     }
 
@@ -102,14 +149,12 @@ public class CannonUpgradeManager : MonoBehaviour
 
         try
         {
-            // Build keys using cannon names
             var keys = new HashSet<string>();
             for (int i = 0; i < cannonHolderSO.cannonsData.Length; i++)
                 keys.Add(GetCannonKey(i));
 
             var data = await CloudSaveManager.Instance.LoadAsync(keys);
 
-            // Replay each cannon to its saved level
             for (int i = 0; i < cannonHolderSO.cannonsData.Length; i++)
             {
                 string key = GetCannonKey(i);
@@ -128,8 +173,8 @@ public class CannonUpgradeManager : MonoBehaviour
             Debug.LogError($"[CannonUpgrade] Failed to load cannon levels: {ex.Message}");
         }
 
-        // Initialize UI after data is ready
         InitializeItems();
+        RefreshAllLockVisuals();
 
         if (cannonItems.Count > 0)
             SelectCannon(0);
@@ -165,6 +210,9 @@ public class CannonUpgradeManager : MonoBehaviour
     private void SelectCannon(int index)
     {
         if (index < 0 || index >= cannonItems.Count) return;
+
+        // Block if locked
+        if (CannonLockManager.Instance != null && !CannonLockManager.Instance.IsUnlocked(index)) return;
 
         if (selectedIndex >= 0 && selectedIndex < cannonItems.Count)
             SetItemBg(selectedIndex, false);
@@ -206,22 +254,18 @@ public class CannonUpgradeManager : MonoBehaviour
         {
             var stats = data.cannonStats;
 
-            // Max possible values at max level
             float maxDamage = stats._baseBulletDamage + (stats.damageIncrement * maxCannonLevel);
             float maxHealth = stats._baseMaxHealth + (stats.healthIncrement * maxCannonLevel);
             float maxFireRate = stats._baseFireRate + (stats.fireRateIncrement * maxCannonLevel);
 
-            // Current values
             float curDamage = stats.bulletDamage;
             float curHealth = stats.maxHealth;
             float curFireRate = stats.fireRate;
 
-            // Next level values (+1 upgrade)
             float nextDamage = curDamage + stats.damageIncrement;
             float nextHealth = curHealth + stats.healthIncrement;
             float nextFireRate = curFireRate + stats.fireRateIncrement;
 
-            // Text
             if (damageText != null)
                 damageText.text = "DAMAGE:";
 
@@ -231,20 +275,15 @@ public class CannonUpgradeManager : MonoBehaviour
             if (fireRateText != null)
                 fireRateText.text = "FIRE RATE:";
 
-            // Current fill (render on top)
             SetFill(damageFillCurrent, curDamage / maxDamage);
             SetFill(healthFillCurrent, curHealth / maxHealth);
             SetFill(fireRateFillCurrent, curFireRate / maxFireRate);
 
-            // Next level preview fill (starts after current + gap)
             SetNextFill(damageFillNext, curDamage / maxDamage, nextDamage / maxDamage);
             SetNextFill(healthFillNext, curHealth / maxHealth, nextHealth / maxHealth);
             SetNextFill(fireRateFillNext, curFireRate / maxFireRate, nextFireRate / maxFireRate);
         }
     }
-
-    [Header("Fill Gap")]
-    [SerializeField] private float fillGap = 0.05f;
 
     private void SetFill(Image fillImage, float ratio)
     {
@@ -270,7 +309,7 @@ public class CannonUpgradeManager : MonoBehaviour
         rt.anchoredPosition = Vector2.zero;
     }
 
-    // ==================== Upgrade & Save to Cloud ====================
+    // ==================== Upgrade & Save ====================
 
     private void OnUpgradePressed()
     {
@@ -279,15 +318,12 @@ public class CannonUpgradeManager : MonoBehaviour
 
         var data = cannonHolderSO.cannonsData[selectedIndex];
 
-        // Upgrade via SO's existing method
         data.UpgradeCannon();
 
-        // Refresh UI
         UpdateStatsDisplay();
         if (cannonItems[selectedIndex].levelText != null)
             cannonItems[selectedIndex].levelText.text = $"{data.cannonLevel}";
 
-        // Save to cloud
         SaveCannonLevel(selectedIndex, data.cannonLevel).Forget();
 
         OnCannonUpgraded?.Invoke(selectedIndex);
