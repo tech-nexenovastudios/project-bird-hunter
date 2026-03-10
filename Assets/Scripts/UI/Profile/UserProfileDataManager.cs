@@ -3,44 +3,67 @@ using UnityEngine.UI;
 using TMPro;
 using Cysharp.Threading.Tasks;
 using Unity.Services.Authentication;
+using System.Collections.Generic;
 
 /// <summary>
-/// Manages the user profile UI, including loading and saving the player's username
-/// via Unity Cloud Save. The player ID is read-only and sourced from Unity Authentication.
+/// Manages user profile: username (editable), player ID (read-only),
+/// and avatar selection with cloud save.
 /// </summary>
 public class UserProfileDataManager : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private TMP_InputField usernameInputField; // Input field for the editable username
-    [SerializeField] private TextMeshProUGUI playerIdText;      // Displays the read-only Unity player ID
-    [SerializeField] private Button editButton;                 // Toggles edit mode for the username
+    [SerializeField] private TMP_InputField usernameInputField;
+    [SerializeField] private TextMeshProUGUI playerIdText;
+    [SerializeField] private Button editButton;
 
-    // Cloud Save key used to persist the username across sessions
+    [Header("Avatar")]
+    [SerializeField] private Image profileImage;               // External display — shows selected avatar
+    [SerializeField] private Image profileButtonImage;
+    [SerializeField] private List<Button> avatarButtons;        // 8 avatar buttons in ProfilePanel
+    [SerializeField] private List<Sprite> avatarSprites;        // 8 matching sprites (same order as buttons)
+    [SerializeField] private Button saveButton;
+
+    [Header("Avatar Visual States")]
+    [SerializeField] private Color selectedColor = Color.white;
+    [SerializeField] private Color normalColor = new Color(1f, 1f, 1f, 0.5f);
+
+    // Cloud Save keys
     private const string USERNAME_KEY = "username";
+    private const string AVATAR_KEY = "avatarIndex";
 
-    private string currentUsername;      // The last saved/loaded username
-    private bool isEditing = false;      // Tracks whether the username field is currently in edit mode
+    private string currentUsername;
+    private bool isEditing = false;
+
+    private int savedAvatarIndex = 0;
+    private int previewedAvatarIndex = -1;
 
     private void Awake()
     {
-        // Lock input field by default so users can't type until they press Edit
         if (usernameInputField != null)
             usernameInputField.interactable = false;
 
         if (editButton != null)
             editButton.onClick.AddListener(OnEditPressed);
+
+        if (saveButton != null)
+            saveButton.onClick.AddListener(OnSavePressed);
+
+        // Hook avatar buttons
+        for (int i = 0; i < avatarButtons.Count; i++)
+        {
+            int index = i;
+            if (avatarButtons[i] != null)
+                avatarButtons[i].onClick.AddListener(() => PreviewAvatar(index));
+        }
     }
 
     private void Start()
     {
-        // Kick off async profile load without blocking the main thread
         LoadProfile().Forget();
     }
 
     private void OnEnable()
     {
-        // Subscribe to submit/deselect events so the username saves when the user
-        // presses Enter or clicks away from the input field
         if (usernameInputField != null)
         {
             usernameInputField.onSubmit.AddListener(OnInputSubmit);
@@ -50,7 +73,6 @@ public class UserProfileDataManager : MonoBehaviour
 
     private void OnDisable()
     {
-        // Unsubscribe to prevent memory leaks or stale callbacks when the object is disabled
         if (usernameInputField != null)
         {
             usernameInputField.onSubmit.RemoveListener(OnInputSubmit);
@@ -60,22 +82,35 @@ public class UserProfileDataManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Clean up the edit button listener when the object is destroyed
         if (editButton != null)
             editButton.onClick.RemoveListener(OnEditPressed);
+
+        if (saveButton != null)
+            saveButton.onClick.RemoveListener(OnSavePressed);
+
+        for (int i = 0; i < avatarButtons.Count; i++)
+        {
+            if (avatarButtons[i] != null)
+                avatarButtons[i].onClick.RemoveAllListeners();
+        }
     }
 
     // ==================== Load Profile ====================
 
     private async UniTaskVoid LoadProfile()
     {
-        // Display Player ID (fixed, never changes)
         if (playerIdText != null && AuthenticationService.Instance.IsSignedIn)
             playerIdText.text = AuthenticationService.Instance.PlayerId;
 
         try
         {
-            string savedUsername = await CloudSaveManager.Instance.LoadValueAsync<string>(USERNAME_KEY, null);
+            var keys = new HashSet<string> { USERNAME_KEY, AVATAR_KEY };
+            var data = await CloudSaveManager.Instance.LoadAsync(keys);
+
+            // Load username
+            string savedUsername = null;
+            if (data.ContainsKey(USERNAME_KEY))
+                savedUsername = data[USERNAME_KEY].Value.GetAs<string>();
 
             if (string.IsNullOrEmpty(savedUsername))
             {
@@ -83,17 +118,116 @@ public class UserProfileDataManager : MonoBehaviour
                 await CloudSaveManager.Instance.SaveValueAsync(USERNAME_KEY, savedUsername);
                 Debug.Log($"[UserProfile] Generated new username: {savedUsername}");
             }
-            else
-            {
-                Debug.Log($"[UserProfile] Loaded username: {savedUsername}");
-            }
 
             currentUsername = savedUsername;
             SetInputFieldText(currentUsername);
+
+            // Load avatar
+            if (data.ContainsKey(AVATAR_KEY))
+                savedAvatarIndex = data[AVATAR_KEY].Value.GetAs<int>();
+
+            savedAvatarIndex = Mathf.Clamp(savedAvatarIndex, 0, avatarSprites.Count - 1);
+            previewedAvatarIndex = savedAvatarIndex;
+            ApplyAvatar(savedAvatarIndex);
+            HighlightAvatar(savedAvatarIndex);
+
+            Debug.Log($"[UserProfile] Loaded — Username: {currentUsername}, Avatar: {savedAvatarIndex}");
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"[UserProfile] Failed to load profile: {ex.Message}");
+        }
+    }
+
+    // ==================== Avatar ====================
+
+    private void PreviewAvatar(int index)
+    {
+        if (index < 0 || index >= avatarSprites.Count) return;
+        if (previewedAvatarIndex == index) return;
+
+        previewedAvatarIndex = index;
+        ApplyAvatar(index);
+        HighlightAvatar(index);
+    }
+
+    private void ApplyAvatar(int index)
+    {
+        if (profileImage != null && index >= 0 && index < avatarSprites.Count)
+        {
+
+            profileImage.sprite = avatarSprites[index];
+            profileButtonImage.sprite = avatarSprites[index];
+        }
+    }
+
+    private void HighlightAvatar(int selectedIndex)
+    {
+        for (int i = 0; i < avatarButtons.Count; i++)
+        {
+            if (avatarButtons[i] == null) continue;
+
+            var img = avatarButtons[i].GetComponent<Image>();
+            if (img != null)
+                img.color = (i == selectedIndex) ? selectedColor : normalColor;
+        }
+    }
+
+    // ==================== Save Button ====================
+
+    private void OnSavePressed()
+    {
+        SaveProfile().Forget();
+    }
+
+    private async UniTaskVoid SaveProfile()
+    {
+        string newUsername = usernameInputField != null ? usernameInputField.text.Trim() : currentUsername;
+        if (string.IsNullOrWhiteSpace(newUsername))
+            newUsername = currentUsername;
+
+        bool usernameChanged = newUsername != currentUsername;
+        bool avatarChanged = previewedAvatarIndex != savedAvatarIndex;
+
+        if (!usernameChanged && !avatarChanged)
+        {
+            Debug.Log("[UserProfile] No changes to save.");
+            LockInput();
+            return;
+        }
+
+        try
+        {
+            if (usernameChanged && avatarChanged)
+            {
+                await CloudSaveManager.Instance.SaveBatchAsync(
+                    (USERNAME_KEY, newUsername),
+                    (AVATAR_KEY, previewedAvatarIndex)
+                );
+                currentUsername = newUsername;
+                savedAvatarIndex = previewedAvatarIndex;
+            }
+            else if (usernameChanged)
+            {
+                await CloudSaveManager.Instance.SaveValueAsync(USERNAME_KEY, newUsername);
+                currentUsername = newUsername;
+            }
+            else
+            {
+                await CloudSaveManager.Instance.SaveValueAsync(AVATAR_KEY, previewedAvatarIndex);
+                savedAvatarIndex = previewedAvatarIndex;
+            }
+
+            Debug.Log($"[UserProfile] Saved — Username: {currentUsername}, Avatar: {savedAvatarIndex}");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[UserProfile] Failed to save: {ex.Message}");
+        }
+        finally
+        {
+            SetInputFieldText(currentUsername);
+            LockInput();
         }
     }
 
@@ -105,7 +239,6 @@ public class UserProfileDataManager : MonoBehaviour
 
         if (!isEditing)
         {
-            // Enable editing
             isEditing = true;
             usernameInputField.interactable = true;
             usernameInputField.Select();
@@ -113,12 +246,11 @@ public class UserProfileDataManager : MonoBehaviour
         }
         else
         {
-            // Confirm edit
             OnInputSubmit(usernameInputField.text);
         }
     }
 
-    // ==================== Save Username ====================
+    // ==================== Save Username (via Enter/Deselect) ====================
 
     private void OnInputSubmit(string input)
     {
@@ -130,16 +262,13 @@ public class UserProfileDataManager : MonoBehaviour
     {
         newUsername = newUsername.Trim();
 
-        // Revert if empty
         if (string.IsNullOrWhiteSpace(newUsername))
         {
-            Debug.LogWarning("[UserProfile] Cannot save empty username.");
             SetInputFieldText(currentUsername);
             LockInput();
             return;
         }
 
-        // No change
         if (newUsername == currentUsername)
         {
             LockInput();
@@ -177,7 +306,6 @@ public class UserProfileDataManager : MonoBehaviour
         if (usernameInputField != null)
         {
             usernameInputField.text = text;
-            // Force refresh so text is visible even when non-interactable
             usernameInputField.ForceLabelUpdate();
         }
     }
@@ -209,6 +337,9 @@ public class UserProfileDataManager : MonoBehaviour
     // ==================== Public API ====================
 
     public string GetUsername() => currentUsername;
+    public int GetAvatarIndex() => savedAvatarIndex;
+    public Sprite GetAvatarSprite() => (savedAvatarIndex >= 0 && savedAvatarIndex < avatarSprites.Count)
+        ? avatarSprites[savedAvatarIndex] : null;
 
     public string GetPlayerId()
     {
