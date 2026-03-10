@@ -18,6 +18,7 @@ namespace Gameplay
         public int playerXP      = 0;
         public int playerLevel   = 1;
         public int lastLevelUpXP = 0;
+        public int playerSpins   = 0;
 
         // 4 slots per chapter, reset on new chapter
         public PowerupSlot[] chapterSlots = new PowerupSlot[4]
@@ -109,6 +110,7 @@ namespace Gameplay
             chapterSlots[slotIndex].equippedPowerupId = powerup.id;
             chapterSlots[slotIndex].isOnCooldown      = false;
             chapterSlots[slotIndex].cooldownRemaining = 0f;
+            playerSpins++;
 
             if (!globalUnlockedPowerupIds.Contains(powerup.id))
                 globalUnlockedPowerupIds.Add(powerup.id);

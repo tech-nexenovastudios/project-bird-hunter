@@ -27,6 +27,7 @@ namespace Gameplay.Managers
 
         public TextMeshProUGUI playerLevelupText;
         public TextMeshProUGUI playerXPText;
+        public TextMeshProUGUI currentLevelText;
 
         public GameObject currentCannon;
 
@@ -75,6 +76,8 @@ namespace Gameplay.Managers
 
         void Start()
         {
+            GameProgressManager.Instance.LoadProgress();
+            
             var progress = GameProgressManager.Instance.Data;
 
             if (IsInitialSpinRequired(progress))
@@ -91,27 +94,18 @@ namespace Gameplay.Managers
         // ──────────────────────────
         bool IsInitialSpinRequired(GameProgress progress)
         {
-            int levelIndex = progress.currentLevel - 1;
-            return progress.IsSpinLevel(levelIndex);
+            Debug.Log($"IsInitialSpinRequired? Ch{progress.currentChapter} L{progress.currentLevel} Spins: {progress.playerSpins}");
+            return progress.playerSpins == 0;
         }
 
         void TriggerInitialSpin(GameProgress progress)
         {
-            int levelIndex = progress.currentLevel - 1;
-            int slotIndex  = progress.GetSpinSlotIndex(levelIndex);
-
-            if (slotIndex < 0)
-            {
-                StartGameplay(); // fallback — no valid slot, just start
-                return;
-            }
-
             var options = progress.GetAvailablePowerUpForSpin(
-                progress.currentChapter, slotIndex,
+                progress.currentChapter, 0,
                 GameProgressManager.Instance.allPowerups, 3);
 
-            Debug.Log($"🎰 Initial spin Ch{progress.currentChapter} L{progress.currentLevel} → Slot {slotIndex}");
-            OnSpinTriggered(slotIndex, options);
+            Debug.Log($"🎰 Initial spin Ch{progress.currentChapter} L{progress.currentLevel} → Slot {0}");
+            OnSpinTriggered(0, options);
             // StartGameplay() will be called by OnSpinComplete() when player picks
         }
 
@@ -180,6 +174,8 @@ namespace Gameplay.Managers
         {
             Debug.Log($"Progress changed to Ch{progress.currentChapter} L{progress.currentLevel}");
 
+            currentLevelText.text = $"Level {progress.currentLevel} | Level {progress.currentLevel}";
+            
             if (!_pendingLevelStart) return; // ignore SaveProgress duplicate fires
             _pendingLevelStart = false;
 

@@ -41,9 +41,6 @@ namespace Gameplay.Managers
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
-
-        private void Start() => LoadProgress();
-
         // ─────────────────────────────────────────────
         // Level Loading
         // ─────────────────────────────────────────────
@@ -124,6 +121,7 @@ namespace Gameplay.Managers
         {
             if (powerup == null) return;
             _progress.EquipPowerup(powerup);
+            _progress.playerSpins++;
             SaveProgress();
             // FIXED: do NOT fire OnProgressChanged here — GameManager.OnSpinComplete()
             // calls StartGameplay() directly, firing OnProgressChanged would double-start gameplay
@@ -136,7 +134,7 @@ namespace Gameplay.Managers
             {
                 if (string.IsNullOrEmpty(slot.equippedPowerupId) || slot.isOnCooldown) continue;
                 var powerup = Array.Find(allPowerups, p => p.id == slot.equippedPowerupId);
-                // powerup?.ApplyEffect(cannon);
+                // ToDo: powerup?.ApplyEffect(cannon);
             }
         }
 
@@ -163,6 +161,7 @@ namespace Gameplay.Managers
             public int            playerXP;
             public int            playerLevel;
             public int            lastLevelUpXP;
+            public int            playerSpins;
         }
 
         public void SaveProgress()
@@ -178,7 +177,8 @@ namespace Gameplay.Managers
                 globalUnlocked = _progress.globalUnlockedPowerupIds ?? new(),
                 playerXP       = _progress.playerXP,
                 playerLevel    = _progress.playerLevel,
-                lastLevelUpXP  = _progress.lastLevelUpXP
+                lastLevelUpXP  = _progress.lastLevelUpXP,
+                playerSpins    = _progress.playerSpins
             };
 
             for (int i = 0; i < 4; i++)
@@ -221,7 +221,8 @@ namespace Gameplay.Managers
                     globalUnlockedPowerupIds = data.globalUnlocked ?? new(),
                     playerXP                = data.playerXP,
                     playerLevel             = Mathf.Max(1, data.playerLevel),
-                    lastLevelUpXP           = data.lastLevelUpXP
+                    lastLevelUpXP           = data.lastLevelUpXP,
+                    playerSpins             = data.playerSpins
                 };
 
                 for (int i = 0; i < 4; i++)
