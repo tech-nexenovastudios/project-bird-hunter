@@ -240,6 +240,7 @@ public class AuthBootstrapper : MonoBehaviour
 
         SetStatus("Signed in! Loading...");
         Debug.Log($"[Auth] Loading {mainMenuSceneName}. Player ID: {PlayerId}");
+        //IAnalyticsService.TrackNewUserFirstLogin(PlayerId);
         SceneManager.LoadScene(mainMenuSceneName);
     }
 

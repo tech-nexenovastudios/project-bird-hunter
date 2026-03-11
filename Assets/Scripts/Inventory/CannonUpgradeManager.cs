@@ -166,6 +166,11 @@ public class CannonUpgradeManager : MonoBehaviour
                 cannonHolderSO.cannonsData[i].ReplayToLevel(savedLevel);
             }
 
+            foreach(var cannon in cannonHolderSO.cannonsData)
+            {
+                Debug.Log($"[CannonUpgrade] {cannon.cannonName} loaded at Level {cannon.cannonLevel} damege {cannon.cannonStats.baseBulletDamage}");
+            }
+
             Debug.Log("[CannonUpgrade] Loaded and replayed all cannon levels from cloud.");
         }
         catch (Exception ex)
