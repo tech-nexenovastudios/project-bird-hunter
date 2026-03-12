@@ -17,7 +17,7 @@ public class BigBullet : MonoBehaviour
         var damageable = collision.GetComponent<IDamageable>();
         if (damageable != null && damageable.IsAlive)
         {
-            damageable.TakeDamage((int)Damage, hitPoint);
+            damageable.TakeDamage((int)Damage);
             Destroy(gameObject);
         }
         else

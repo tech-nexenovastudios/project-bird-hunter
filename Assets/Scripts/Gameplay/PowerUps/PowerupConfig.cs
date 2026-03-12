@@ -39,5 +39,4 @@ namespace Gameplay.PowerUps
         [Header("Reset")]
         public string resetRule = "Resets at next Chapter Level 0";
     }
-
 }

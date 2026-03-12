@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4eba8969565d534babad6b86b390f7c, type: 3}
   m_Name: Single Cannon
   m_EditorClassIdentifier: 
-  cannonId: 0
   baseBulletDamage: 10
   baseFireRate: 1
   baseBulletSpeed: 15
@@ -21,22 +20,23 @@ MonoBehaviour:
   baseMinBulletShot: 1
   baseMaxBulletShot: 1
   baseBulletBounce: 0
+  baseBulletMass: 1
   randomBulletFire: 0
   damageIncrement: 1
   healthIncrement: 5
   fireRateIncrement: 0.05
-  bulletDamage: 10.141667
-  fireRate: 1.0066667
+  bulletDamage: 10
+  fireRate: 1
   bulletSpeed: 15
-  moveSpeed: 5.004167
-  maxHealth: 103.66056
+  moveSpeed: 5
+  maxHealth: 100
   numberOfMinBulletInOneShot: 1
   numberOfMaxBulletInOneShot: 1
   bulletBounce: 0
-  damageMultiplier: 1.0141667
-  fireRateMultiplier: 1.0066667
-  healthMultiplier: 1.0366056
-  moveSpeedMultiplier: 1.0008334
-  _baseBulletDamage: 0
-  _baseFireRate: 0
-  _baseMaxHealth: 0
+  damageMultiplier: 1.0283333
+  fireRateMultiplier: 1.0133333
+  healthMultiplier: 1.0730894
+  moveSpeedMultiplier: 1.0016667
+  _baseBulletDamage: 10
+  _baseFireRate: 1
+  _baseMaxHealth: 100

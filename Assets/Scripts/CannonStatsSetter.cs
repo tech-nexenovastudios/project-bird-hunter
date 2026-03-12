@@ -6,7 +6,7 @@ public class CannonStatsSetter : MonoBehaviour
     public CannonStats cannonStats;
     public CannonFire   cannonFire;
     public CannonMove   cannonMove;
-    public CannonHealth cannonHealth;
+    public CannonHealthOld cannonHealth;
 
     private void Start()
     {

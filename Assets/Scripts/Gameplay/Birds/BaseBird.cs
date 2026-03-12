@@ -1,21 +1,27 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using Gameplay.Health;
+using Gameplay.Interfaces;
+using Gameplay.PowerUps;
 using Random = UnityEngine.Random;
 
 namespace Gameplay.Birds
 {
     [RequireComponent(typeof(BoxCollider2D))]
-    public abstract class BaseBird : MonoBehaviour
+    public abstract class BaseBird : MonoBehaviour, IDamageable
     {
         [Header("Movement Points")]
         [SerializeField] private Vector3[] movePoints;
         public Vector3[] MovePoints => movePoints;
 
         public BirdConfig config { get; private set; }
-        public int currentHp { get; private set; }
+        public int CurrentHp { get; private set; }
+        
+        public int MaxHp { get; }
+        public bool IsAlive { get; }
 
         public event Action<BaseBird> OnLayEgg;
         public event Action<BaseBird> OnDestroyed;
@@ -29,11 +35,12 @@ namespace Gameplay.Birds
         private BoxCollider2D _collider;
 
         private IBirdMovementStrategy _movementStrategy;
+        readonly List<IEffect<IDamageable>> activeEffects = new();
 
         public virtual void Init(BirdConfig birdConfig, int hp)
         {
             config    = birdConfig;
-            currentHp = hp;
+            CurrentHp = hp;
             _isDead   = false;
 
             var birdHealth = GetComponent<BirdHealth>();
@@ -101,11 +108,24 @@ namespace Gameplay.Birds
         {
             if (_isDead) return;
 
-            currentHp -= damage;
-            _ = PlayFX();
+            CurrentHp -= damage;
+            Debug.Log($"[Gameplay] Bird took {damage} damage. Health now {CurrentHp}");
 
-            if (currentHp <= 0)
+            if (CurrentHp <= 0)
                 Die(true);
+        }
+        public void ApplyEffect(IEffect<IDamageable> effect)
+        {
+            if (CurrentHp <= 0) return; // Dead enemies should't receive effects
+
+            effect.OnCompleted += RemoveEffect;
+            activeEffects.Add(effect);
+            effect.Apply(this);
+        }
+        void RemoveEffect(IEffect<IDamageable> effect)
+        {
+            effect.OnCompleted -= RemoveEffect;
+            activeEffects.Remove(effect);
         }
         public void ForceKill()
         {
@@ -118,13 +138,20 @@ namespace Gameplay.Birds
 
             _isDead = true;
 
+            for (int i = activeEffects.Count - 1; i >= 0; i--)
+            {
+                var effect = activeEffects[i];
+                effect.OnCompleted -= RemoveEffect;
+                effect.Cancel();
+            }
+
+            activeEffects.Clear();
             _movementStrategy?.Dispose();
+            
             DOTween.Kill(transform);
 
             OnDestroyed?.Invoke(this);
         }
-
-        public virtual UniTask PlayFX() => UniTask.CompletedTask;
 
         protected virtual void OnDisable()
         {

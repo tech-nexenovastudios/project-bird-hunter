@@ -21,7 +21,7 @@ namespace Gameplay
         public int playerSpins   = 0;
 
         // 4 slots per chapter, reset on new chapter
-        public PowerupSlot[] chapterSlots = new PowerupSlot[4]
+        public PowerUpSlot[] chapterSlots = new PowerUpSlot[4]
         {
             new(0), new(1), new(2), new(3)
         };
@@ -118,7 +118,7 @@ namespace Gameplay
 
         public void ResetSlotsForNewChapter()
         {
-            chapterSlots = new PowerupSlot[4] { new(0), new(1), new(2), new(3) };
+            chapterSlots = new PowerUpSlot[4] { new(0), new(1), new(2), new(3) };
         }
     }
 }

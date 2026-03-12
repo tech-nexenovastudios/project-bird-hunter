@@ -11,7 +11,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CannonHealth : MonoBehaviour, IDamageable, IDamageEffect
+[Obsolete]
+public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
 {
     public float maxHealth;
     public float currentHealth;
@@ -171,7 +172,7 @@ public class CannonHealth : MonoBehaviour, IDamageable, IDamageEffect
         {
             if (!invincible && currentInvincibleCount <= 0)
             {
-                GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)cannonStats._baseBulletDamage, collision.transform.position);
+                GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)cannonStats._baseBulletDamage);
 
             }
             else
@@ -196,7 +197,7 @@ public class CannonHealth : MonoBehaviour, IDamageable, IDamageEffect
             {
                 foreach (var eggs in EggManager.eggsList)
                 {
-                    GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)(eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100, collision.transform.position);
+                    GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)(eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100);
                     //eggs.GetComponent<IDamageable>().TakeDamage((int)(eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100, transform.position);
                 }
             }
@@ -326,5 +327,9 @@ public class CannonHealth : MonoBehaviour, IDamageable, IDamageEffect
     public int CurrentHp { get; }
     public int MaxHp { get; }
     public bool IsAlive { get; }
-    
+    public void TakeDamage(int damage)
+    {
+        currentHealth -= damage;
+        UpdateUI();
+    }
 }

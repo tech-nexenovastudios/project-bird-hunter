@@ -75,7 +75,7 @@ public class BirdHealthManager : MonoBehaviour, IHealthManager
         {
             if (Random.Range(0, 100) < CannonPower.instance.probabilityToGetBackHealth)
             {
-                CannonHealth.increaseHealthCallBack?.Invoke(increaseCannonHealth);
+                CannonHealthOld.increaseHealthCallBack?.Invoke(increaseCannonHealth);
             }
         }
         if (Coin.Length > 0)

@@ -110,16 +110,16 @@ public class Bullet : MonoBehaviour
                     var legacyHealth = collideObjects[0].GetComponent<IHealthManager>();
                     if (damageable != null)
                     {
-                        damageable.TakeDamage((int)Damage, hitPoint);
+                        damageable.TakeDamage((int)Damage);
 
                         // Fire hit events based on tag
                         if (collision.transform.CompareTag(TagManager.EggTag))
                         {
-                            Gameplay.Events.GameEvents.FireEggHit(damageable, (int)Damage, hitPoint);
+                            Gameplay.Events.GameEvents.FireEggHit(damageable, (int)Damage);
                         }
                         else if (collision.transform.CompareTag(TagManager.BirdTag))
                         {
-                            Gameplay.Events.GameEvents.FireBirdHit(damageable, (int)Damage, hitPoint);
+                            Gameplay.Events.GameEvents.FireBirdHit(damageable, (int)Damage);
                         }
 
                         if (GamePoolManager.bulletDamageTextQueue.Count <= 0)
@@ -157,7 +157,7 @@ public class Bullet : MonoBehaviour
 
                         if (chanceOfBulletPierceEnemies && Random.Range(0, 100) < chanceOfBulletPierceEnemiesProbability)
                         {
-                            damageable.TakeDamage(int.MaxValue, hitPoint);
+                            damageable.TakeDamage(int.MaxValue);
                             DestroyBullet();
                         }
                         else

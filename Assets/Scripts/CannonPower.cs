@@ -45,7 +45,7 @@ public class CannonPower : MonoBehaviour
     Sword sword;
 
     [Header("CannonRef")]
-    public CannonHealth health;
+    public CannonHealthOld health;
     public CannonFire cannonFire;
     public CannonMove cannonMove;
 
@@ -164,7 +164,7 @@ public class CannonPower : MonoBehaviour
                 laser = Instantiate(laserObj, transform).GetComponentInChildren<Laser>();
             }
 
-            // Scale the laser based on the cannon’s current size.
+            // Scale the laser based on the cannonï¿½s current size.
             if (currentCannonSize != 1)
             {
                 float scalePercentage = (1 - (currentCannonSize / 1));

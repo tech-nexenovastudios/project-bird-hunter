@@ -412,13 +412,19 @@ namespace Gameplay
                             continue;
                         }
 
-                        Vector3 offset = new Vector3(Random.Range(-1f, 1f), 0f, 0f);
-                        var go     = Instantiate(splitTier.eggPrefab, egg.transform.position + offset, Quaternion.identity);
+                        Vector3 offset = egg.config.GetSplitImpulse(i);
+                        
+                        var go     = Instantiate(splitTier.eggPrefab);
+                        
+                        go.TryGetComponent(out Rigidbody2D rb);
+                        
+                        rb.AddForce(offset, ForceMode2D.Impulse);
+                        
                         var newEgg = go.GetComponent<Egg>();
 
                         int baseHp = Random.Range(splitTier.baseHpMin, splitTier.baseHpMax + 1);
                         int hp     = Mathf.RoundToInt(baseHp * levelProfile.hpMultiplier);
-
+                        
                         newEgg.Init(splitTier, hp);
                         newEgg.OnDestroyed += HandleEggDestroyed;
 

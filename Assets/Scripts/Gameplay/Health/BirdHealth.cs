@@ -42,14 +42,14 @@ namespace Gameplay.Health
             }
         }
 
-        public void TakeDamage(int damage, Vector3 hitPoint)
+        public void TakeDamage(int damage)
         {
             if (_isDead) return;
 
             int actualDamage = Mathf.Min(damage, _currentHp);
             _currentHp -= damage;
 
-            GameEvents.FireBirdHit(this, actualDamage, hitPoint);
+            GameEvents.FireBirdHit(this, actualDamage);
 
             if (_currentHp <= 0)
             {
@@ -105,7 +105,7 @@ namespace Gameplay.Health
             while (elapsed < duration && !_isDead)
             {
                 yield return new WaitForSeconds(interval);
-                TakeDamage(Mathf.RoundToInt(damage), transform.position);
+                TakeDamage(Mathf.RoundToInt(damage));
                 elapsed += interval;
             }
         }

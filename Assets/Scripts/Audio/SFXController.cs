@@ -36,7 +36,7 @@ namespace Audio
             GameEvents.OnBirdDestroyed -= OnBirdDestroyed;
         }
 
-        private void OnEggHit(IDamageable egg, int damage, Vector3 hitPoint)
+        private void OnEggHit(IDamageable egg, int damage)
         {
             PlaySound(hitSound);
         }
@@ -46,7 +46,7 @@ namespace Audio
             PlaySound(eggDestroySound);
         }
 
-        private void OnBirdHit(IDamageable bird, int damage, Vector3 hitPoint)
+        private void OnBirdHit(IDamageable bird, int damage)
         {
             PlaySound(hitSound);
         }

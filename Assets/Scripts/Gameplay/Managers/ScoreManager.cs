@@ -16,6 +16,8 @@ namespace Gameplay.Managers
 
         [SerializeField] private TMP_Text scoreText;
 
+        
+        //ToDo: Replace this with EggConfigData Score
         [Header("Score Values")]
         [SerializeField] private int scorePerEggHit     = 5;
         [SerializeField] private int scorePerEggDestroy = 20;
@@ -66,7 +68,7 @@ namespace Gameplay.Managers
             UpdateDisplay();
         }
 
-        private void OnEggHit(IDamageable egg, int damage, Vector3 hitPoint)
+        private void OnEggHit(IDamageable egg, int damage)
         {
             AddScore(scorePerEggHit);
         }

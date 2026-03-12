@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using Gameplay.Managers;
 using UnityEngine;
 using Gameplay.Player;
 
@@ -25,38 +26,12 @@ public class CannonSpawner : MonoBehaviour
         var baseCannon = cannon.GetComponent<BaseCannon>();
         if (baseCannon != null)
         {
+            data.cannonStats.ApplyProgression(GameProgressManager.Instance.GlobalLevel);
+            
             baseCannon.Configure(data.cannonStats, references, data.bulletPrefab);
             Debug.Log($"[CannonSpawner] Configured new BaseCannon: {data.cannonPrefab.name}");
         }
-        else
-        {
-            // --- LEGACY FALLBACK ---
-            Debug.LogWarning($"[CannonSpawner] {data.cannonPrefab.name} does not have BaseCannon component. Using legacy setup.");
-            
-            var statsSetter = cannon.GetComponent<CannonStatsSetter>();
-            if (statsSetter != null)
-                statsSetter.cannonStats = data.cannonStats;
-
-            var move = cannon.GetComponent<CannonMove>();
-            if (move != null)
-            {
-                var (left, right) = references.GetWall();
-                move.SetWalls(left, right);
-            }
-
-            var (slider, text) = references.GetCannonHealth();
-            var legacyHealth = cannon.GetComponent<CannonHealth>();
-            if (legacyHealth != null)
-                legacyHealth.SetHealthUI(slider, text);
-
-            var fire = cannon.GetComponent<CannonFire>();
-            if (fire != null)
-            {
-                fire.bulletPrefab = data.bulletPrefab;
-                fire.AssignValue();
-                fire.StartFiring();
-            }
-        }
+        else Debug.LogError($"[CannonSpawner] {data.cannonPrefab.name} does not have a BaseCannon component!");
 
         return cannon;
     }

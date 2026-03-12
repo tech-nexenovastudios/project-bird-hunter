@@ -1,15 +1,21 @@
 using UnityEngine;
-using Gameplay.Interfaces;
 
 namespace Gameplay.Player
 {
     public class ElementalBullet : BaseBullet
     {
+        //ToDo: Reimplement elemental logic
+        
         public enum ElementType { None, Fire, Electric, Poison, Ice }
         
         [Header("Elemental Settings")]
         public ElementType element = ElementType.None;
         public float effectDuration = 3f;
+
+        protected override void HandleMovement()
+        {
+            //
+        }
 
         protected override void ApplyElementalEffects(GameObject target)
         {

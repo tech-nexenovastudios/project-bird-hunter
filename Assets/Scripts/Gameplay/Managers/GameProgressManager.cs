@@ -33,7 +33,7 @@ namespace Gameplay.Managers
         public int            GlobalLevel    => (CurrentChapter - 1) * 20 + CurrentLevel;
         public int            HighScore      => _progress?.highScore  ?? 0;
         public int            TotalScore     => _progress?.totalScore ?? 0;
-        public PowerupSlot[]  CurrentSlots   => _progress?.chapterSlots ?? new PowerupSlot[0];
+        public PowerUpSlot[]  CurrentSlots   => _progress?.chapterSlots ?? new PowerUpSlot[0];
 
         private void Awake()
         {

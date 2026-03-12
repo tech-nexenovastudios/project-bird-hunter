@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using Gameplay.Events;
 using Gameplay.Interfaces;
@@ -15,8 +16,9 @@ namespace Gameplay.Player
         public float lifetime = 5f;
 
         [Header("Hit Impulse")]
-        [SerializeField] protected float hitImpulseForce    = 8f;   // horizontal nudge strength
-        [SerializeField] protected float verticalFreezeTime = 0.15f; // seconds egg floats in place
+        [SerializeField] protected float maxHitImpulseForce = 8f;
+        [SerializeField] protected float minHitImpulseForce = 2f;
+        [SerializeField] protected float maxForceDistance   = 10f;
         [SerializeField] protected bool  applyHitImpulse    = true;
 
         [Header("VFX & UI")]
@@ -25,46 +27,52 @@ namespace Gameplay.Player
         protected Rigidbody2D rb;
         protected float       currentLifetime;
         protected bool        isDeactivated;
+        protected Vector2     startPosition;
 
         protected virtual void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
         }
 
+        public void Init(CannonStats stats)
+        {
+            bulletSpeed = stats.currentBulletSpeed;
+            damage = stats.currentBulletDamage;
+            rb.mass = stats.baseBulletMass;
+            
+            startPosition = transform.position;
+            rb.linearVelocity = Vector2.up * bulletSpeed;
+        }
         protected virtual void OnEnable()
         {
             currentLifetime = 0;
             isDeactivated   = false;
+            startPosition   = transform.position;
         }
 
         protected virtual void Update()
         {
             if (isDeactivated) return;
-
-            HandleMovement();
-
+            
             currentLifetime += Time.deltaTime;
             if (currentLifetime >= lifetime)
                 Deactivate();
         }
 
-        protected virtual void HandleMovement()
-        {
-            transform.position += transform.up * bulletSpeed * Time.deltaTime;
-        }
-
-        protected virtual void OnTriggerEnter2D(Collider2D collision)
+        protected void OnCollisionEnter2D(Collision2D other)
         {
             if (isDeactivated) return;
 
-            if (collision.CompareTag("Wall"))
+            if (other.gameObject.CompareTag("Wall"))
             {
                 Deactivate();
                 return;
             }
-
-            if (collision.CompareTag("Bird") || collision.CompareTag("Egg"))
-                OnHitTarget(collision);
+            
+            if (other.gameObject.CompareTag("Egg"))
+            {
+                OnHitTarget(other.collider);
+            }
         }
 
         protected virtual void OnHitTarget(Collider2D collision)
@@ -73,12 +81,12 @@ namespace Gameplay.Player
 
             if (collision.TryGetComponent<IDamageable>(out var damageable))
             {
-                damageable.TakeDamage((int)damage, hitPoint);
+                damageable.TakeDamage((int)damage);
 
                 if (collision.CompareTag("Egg"))
-                    GameEvents.FireEggHit(damageable, (int)damage, hitPoint);
+                    GameEvents.FireEggHit(damageable, (int)damage);
                 else if (collision.CompareTag("Bird"))
-                    GameEvents.FireBirdHit(damageable, (int)damage, hitPoint);
+                    GameEvents.FireBirdHit(damageable, (int)damage);
 
                 ShowDamageText(hitPoint, damage);
                 ApplyElementalEffects(collision.gameObject);
@@ -91,20 +99,20 @@ namespace Gameplay.Player
             HandlePostHit(collision);
         }
 
-        // ─────────────────────────────────────────────
-        // Hit Impulse — freezes egg vertically, nudges horizontally
-        // ─────────────────────────────────────────────
-
         protected virtual void ApplyHitImpulse(Collider2D collision)
         {
             if (!applyHitImpulse) return;
 
-            var egg = collision.GetComponent<Egg>();
+            Egg egg = collision.GetComponentInParent<Egg>();
             if (egg == null) return;
 
-            // Pass bullet travel direction so Egg can compute horizontal nudge
-            Vector2 bulletDir = transform.up.normalized;
-            egg.ApplyHitFreeze(verticalFreezeTime, hitImpulseForce, bulletDir);
+            Vector2 bulletDir = rb != null && rb.linearVelocity.sqrMagnitude > 0.0001f ? rb.linearVelocity.normalized : (Vector2)transform.up.normalized;
+            
+            float distance = Vector2.Distance(startPosition, transform.position);
+            float t = maxForceDistance > 0f ? Mathf.Clamp01(distance / maxForceDistance) : 1f;
+            float impulseForce = Mathf.Lerp(maxHitImpulseForce, minHitImpulseForce, t);
+
+            egg.ApplyBulletHitForce(bulletDir, impulseForce);
         }
 
         protected virtual void HandlePostHit(Collider2D collision)
@@ -112,12 +120,14 @@ namespace Gameplay.Player
             Deactivate();
         }
 
+        protected abstract void HandleMovement();
+
         protected virtual void ApplyElementalEffects(GameObject target)
         {
             // Override in subclass for fire, electric, poison, freeze
         }
 
-        protected virtual void ShowDamageText(Vector3 position, float amount)
+        private void ShowDamageText(Vector3 position, float amount)
         {
             GameObject go = null;
 
@@ -154,6 +164,9 @@ namespace Gameplay.Player
             if (isDeactivated) return;
             isDeactivated = true;
             gameObject.SetActive(false);
+            
+            Destroy(gameObject);
+            //GamePoolManager.cannonBulletQueue.Enqueue(gameObject);
         }
     }
 }

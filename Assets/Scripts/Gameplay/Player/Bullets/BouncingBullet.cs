@@ -6,6 +6,8 @@ namespace Gameplay.Player
 {
     public class BouncingBullet : BaseBullet
     {
+        //ToDo: Reimplement bouncing logic
+        
         [Header("Bounce Settings")]
         public int bounceCount = 2;
         public float searchRadius = 5f;
@@ -47,10 +49,6 @@ namespace Gameplay.Player
                 {
                     // If we reached the target, we should trigger hit if OnTriggerEnter2D didn't
                 }
-            }
-            else
-            {
-                base.HandleMovement();
             }
         }
 

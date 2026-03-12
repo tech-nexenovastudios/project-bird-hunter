@@ -11,6 +11,7 @@ public static class GamePoolManager
     public static Queue<GameObject> blastParticlePool = new Queue<GameObject>();
     public static Dictionary<BulletType, Queue<GameObject>> bulletQueue = new(); //Bullet pool
     public static Queue<GameObject> bulletDamageTextQueue = new(); //Bullet pool
+    public static Queue<GameObject> cannonBulletQueue = new();
 
 
     public async static void SetBackToPool<T>(int timer, Queue<T> queue, T Obj)

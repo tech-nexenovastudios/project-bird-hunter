@@ -66,7 +66,7 @@ public class Sword : MonoBehaviour
         int damageAmount = Mathf.RoundToInt((cannonFire.initialDamage * damage) / 100f);
         if (target != null && target.TryGetComponent<Gameplay.Interfaces.IDamageable>(out var damageable))
         {
-            damageable.TakeDamage(damageAmount, hitPoint);
+            damageable.TakeDamage(damageAmount);
         }
         else if (target != null && target.TryGetComponent<IHealthManager>(out var health))
         {

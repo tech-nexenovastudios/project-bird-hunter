@@ -13,6 +13,6 @@ public class HealingAbility_SO : Abilities_SO
 
     public override void UseAbility(GameObject Player)
     {
-        Player.GetComponent<CannonPower>().RestoreHP((Player.GetComponent<CannonHealth>().maxHealth* healthIncreasePercentageByLevel[powerLevel]) /100);
+        Player.GetComponent<CannonPower>().RestoreHP((Player.GetComponent<CannonHealthOld>().maxHealth* healthIncreasePercentageByLevel[powerLevel]) /100);
     }
 }

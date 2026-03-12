@@ -138,12 +138,12 @@ public class CannonFire : MonoBehaviour
 
     private void OnEnable()
     {
-        CannonHealth.cannonHitCallBack += DamageIncreaseWhenHit;
+        CannonHealthOld.cannonHitCallBack += DamageIncreaseWhenHit;
     }
 
     private void OnDisable()
     {
-        CannonHealth.cannonHitCallBack -= DamageIncreaseWhenHit;
+        CannonHealthOld.cannonHitCallBack -= DamageIncreaseWhenHit;
         GamePoolManager.bulletQueue.Clear();
         GamePoolManager.bulletDamageTextQueue.Clear();
     }

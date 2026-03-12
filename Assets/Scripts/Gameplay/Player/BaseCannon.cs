@@ -2,6 +2,7 @@ using Gameplay.Events;
 using Gameplay.Interfaces;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Pool;
 using UnityEngine.UI;
 
 namespace Gameplay.Player
@@ -33,6 +34,7 @@ namespace Gameplay.Player
         
         private float fireTimer;
         private Vector2 movementInput;
+        private ObjectPool<BaseBullet> bulletPool;
 
         protected virtual void Awake()
         {
@@ -60,6 +62,10 @@ namespace Gameplay.Player
             var (left, right) = references.GetWall();
             leftWall = left;
             rightWall = right;
+            
+            // bulletPool = new ObjectPool<BaseBullet>(
+            //     CreateProjectile, OnGetFromPool, OnReleaseToPool, OnDestroyPooledObject, 
+            //     collectionCheck: true, defaultCapacity: 10, maxSize: 20);
 
             UpdateUI();
             
@@ -199,6 +205,7 @@ namespace Gameplay.Player
             // Handle New System
             if (go.TryGetComponent<BaseBullet>(out var newBullet))
             {
+                newBullet.Init(CannonStats);
                 newBullet.damage = CannonStats.currentBulletDamage;
                 newBullet.bulletSpeed = CannonStats.currentBulletSpeed;
                 
@@ -207,7 +214,11 @@ namespace Gameplay.Player
                 {
                     bouncing.bounceCount = CannonStats.bulletBounce;
                 }
-                
+
+                if (newBullet is ElementalBullet)
+                {
+                    
+                }
                 // If it's an elemental bullet, we could set element here if it's not preset on prefab
                 // Or pull from CannonStats if we add elemental stats there
             }
@@ -220,7 +231,7 @@ namespace Gameplay.Player
             }
         }
 
-        public virtual void TakeDamage(int damage, Vector3 hitPoint)
+        public virtual void TakeDamage(int damage)
         {
             if (!IsAlive) return;
 
@@ -229,7 +240,7 @@ namespace Gameplay.Player
             
             UpdateUI();
             
-            GameEvents.FireCannonHit(hitPoint, damage);
+            GameEvents.FireCannonHit(damage);
 
             if (CurrentHp <= 0)
             {
@@ -283,21 +294,21 @@ namespace Gameplay.Player
         public virtual void ElectricDamage(float applyDamage, float effectTime)
         {
             // Apply damage over time or immediate electric effect
-            TakeDamage(Mathf.RoundToInt(applyDamage), transform.position);
+            TakeDamage(Mathf.RoundToInt(applyDamage));
             // Additional electric effect logic (e.g. visual or slowdown) can be added here
         }
 
         public virtual void igniteDamage(float applyDamage, float effectTime)
         {
             // Apply fire/burn effect
-            TakeDamage(Mathf.RoundToInt(applyDamage), transform.position);
+            TakeDamage(Mathf.RoundToInt(applyDamage));
             // Additional ignite effect logic can be added here
         }
 
         public virtual void PoisonDamage(float applyDamage, float effectTime)
         {
             // Apply poison damage
-            TakeDamage(Mathf.RoundToInt(applyDamage), transform.position);
+            TakeDamage(Mathf.RoundToInt(applyDamage));
         }
 
         public virtual void FreezeEffect(float effectTime)

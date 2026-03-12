@@ -12,6 +12,7 @@ public class CannonStats : ScriptableObject
     public int   baseMinBulletShot  = 1;
     public int   baseMaxBulletShot  = 1;
     public int   baseBulletBounce   = 0;
+    public float baseBulletMass;
     public bool  randomBulletFire;
 
     [Header("Upgrade Increments")]

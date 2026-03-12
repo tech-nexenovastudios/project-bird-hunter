@@ -1,14 +1,14 @@
-﻿namespace Gameplay.PowerUps
+﻿namespace Gameplay
 {
     [System.Serializable]
-    public class PowerupSlot
+    public class PowerUpSlot
     {
         public int slotIndex;           // 0-3
         public string equippedPowerupId; // PowerupConfig.powerupId
         public bool isOnCooldown;
         public float cooldownRemaining;
 
-        public PowerupSlot(int index)
+        public PowerUpSlot(int index)
         {
             slotIndex = index;
             equippedPowerupId = null;

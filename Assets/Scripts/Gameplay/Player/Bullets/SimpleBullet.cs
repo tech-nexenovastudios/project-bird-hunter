@@ -6,12 +6,13 @@ namespace Gameplay.Player
     {
         protected override void HandleMovement()
         {
-            transform.position += transform.up * bulletSpeed * Time.deltaTime;
+            
         }
 
         protected override void ApplyElementalEffects(GameObject target)
         {
             // Simple bullet has no special elemental effects
+            base.ApplyElementalEffects(target);
         }
     }
 }

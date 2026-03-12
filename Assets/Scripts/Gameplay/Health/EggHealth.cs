@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using Gameplay.Events;
 using Gameplay.Eggs;
 using Gameplay.Interfaces;
+using Gameplay.PowerUps;
 using UnityEngine;
 
 namespace Gameplay.Health
@@ -21,6 +23,7 @@ namespace Gameplay.Health
         public int CurrentHp => _currentHp;
         public int MaxHp => _maxHp;
         public bool IsAlive => !_isDead;
+        private readonly List<IEffect<IDamageable>> activeEffects = new();
 
         /// <summary>
         /// Fired whenever HP changes: (oldHp, newHp).
@@ -61,7 +64,7 @@ namespace Gameplay.Health
             OnHpChanged?.Invoke(oldHp, _currentHp);
         }
 
-        public void TakeDamage(int damage, Vector3 hitPoint)
+        public void TakeDamage(int damage)
         {
             if (_isDead) return;
 
@@ -69,9 +72,11 @@ namespace Gameplay.Health
             int oldHp = _currentHp;
             _currentHp -= damage;
 
-            GameEvents.FireEggHit(this, actualDamage, hitPoint);
+            GameEvents.FireEggHit(this, actualDamage);
             OnHpChanged?.Invoke(oldHp, _currentHp);
 
+            Debug.Log($"[Gameplay] took {damage} damage. Health now {CurrentHp}");
+            
             if (_currentHp <= 0)
             {
                 Die();
@@ -159,7 +164,7 @@ namespace Gameplay.Health
             while (elapsed < duration && !_isDead)
             {
                 yield return new WaitForSeconds(interval);
-                TakeDamage(Mathf.RoundToInt(damage), transform.position);
+                TakeDamage(Mathf.RoundToInt(damage));
                 elapsed += interval;
             }
             
