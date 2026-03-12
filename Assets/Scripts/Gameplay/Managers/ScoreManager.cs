@@ -68,7 +68,7 @@ namespace Gameplay.Managers
             UpdateDisplay();
         }
 
-        private void OnEggHit(IDamageable egg, int damage)
+        private void OnEggHit(IDamageable egg, int damage, Vector3 hitPoint)
         {
             AddScore(scorePerEggHit);
         }

@@ -26,34 +26,56 @@ namespace Gameplay.Player
 
         protected Rigidbody2D rb;
         protected float       currentLifetime;
-        protected bool        isDeactivated;
-        protected Vector2     startPosition;
+        protected bool isDeactivated;
+        protected Vector2 startPosition;
+
+        private Action<BaseBullet> releaseToPool;
 
         protected virtual void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
         }
 
+        public void SetReleaseAction(Action<BaseBullet> releaseAction)
+        {
+            releaseToPool = releaseAction;
+        }
+
         public void Init(CannonStats stats)
         {
             bulletSpeed = stats.currentBulletSpeed;
             damage = stats.currentBulletDamage;
-            rb.mass = stats.baseBulletMass;
-            
+
+            if (rb != null)
+            {
+                rb.mass = stats.baseBulletMass;
+            }
+
             startPosition = transform.position;
-            rb.linearVelocity = Vector2.up * bulletSpeed;
+
+            if (rb != null)
+            {
+                rb.linearVelocity = (Vector2)transform.up * bulletSpeed;
+                rb.angularVelocity = 0f;
+            }
         }
+
         protected virtual void OnEnable()
         {
-            currentLifetime = 0;
-            isDeactivated   = false;
-            startPosition   = transform.position;
+            currentLifetime = 0f;
+            isDeactivated = false;
+            startPosition = transform.position;
+
+            if (rb != null)
+            {
+                rb.angularVelocity = 0f;
+            }
         }
 
         protected virtual void Update()
         {
             if (isDeactivated) return;
-            
+
             currentLifetime += Time.deltaTime;
             if (currentLifetime >= lifetime)
                 Deactivate();
@@ -84,9 +106,9 @@ namespace Gameplay.Player
                 damageable.TakeDamage((int)damage);
 
                 if (collision.CompareTag("Egg"))
-                    GameEvents.FireEggHit(damageable, (int)damage);
+                    GameEvents.FireEggHit(damageable, (int)damage, hitPoint);
                 else if (collision.CompareTag("Bird"))
-                    GameEvents.FireBirdHit(damageable, (int)damage);
+                    GameEvents.FireBirdHit(damageable, (int)damage, hitPoint);
 
                 ShowDamageText(hitPoint, damage);
                 ApplyElementalEffects(collision.gameObject);
@@ -162,11 +184,23 @@ namespace Gameplay.Player
         public virtual void Deactivate()
         {
             if (isDeactivated) return;
+
             isDeactivated = true;
+
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector2.zero;
+                rb.angularVelocity = 0f;
+            }
+
+            if (releaseToPool != null)
+            {
+                releaseToPool.Invoke(this);
+                return;
+            }
+
             gameObject.SetActive(false);
-            
             Destroy(gameObject);
-            //GamePoolManager.cannonBulletQueue.Enqueue(gameObject);
         }
     }
 }

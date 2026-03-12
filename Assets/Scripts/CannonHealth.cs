@@ -172,7 +172,7 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
         {
             if (!invincible && currentInvincibleCount <= 0)
             {
-                GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)cannonStats._baseBulletDamage);
+                GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)cannonStats._baseBulletDamage, collision.transform.position);
 
             }
             else
@@ -197,7 +197,7 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
             {
                 foreach (var eggs in EggManager.eggsList)
                 {
-                    GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)(eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100);
+                    GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)(eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100, collision.transform.position);
                     //eggs.GetComponent<IDamageable>().TakeDamage((int)(eggs.GetComponent<EggHealth>().Health * damageValueWhenHit) / 100, transform.position);
                 }
             }

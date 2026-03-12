@@ -115,11 +115,11 @@ public class Bullet : MonoBehaviour
                         // Fire hit events based on tag
                         if (collision.transform.CompareTag(TagManager.EggTag))
                         {
-                            Gameplay.Events.GameEvents.FireEggHit(damageable, (int)Damage);
+                            //Gameplay.Events.GameEvents.FireEggHit(damageable, (int)Damage);
                         }
                         else if (collision.transform.CompareTag(TagManager.BirdTag))
                         {
-                            Gameplay.Events.GameEvents.FireBirdHit(damageable, (int)Damage);
+                            //Gameplay.Events.GameEvents.FireBirdHit(damageable, (int)Damage);
                         }
 
                         if (GamePoolManager.bulletDamageTextQueue.Count <= 0)

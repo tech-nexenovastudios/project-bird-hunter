@@ -48,29 +48,91 @@ namespace Gameplay.Player
         {
             CannonStats = stats;
             BulletPrefab = bulletPrefab;
-            
-            // Stats initialization
+
             CannonStats.InitRuntime();
             CurrentHp = MaxHp;
-            
-            // UI References
+
             var (bar, text) = references.GetCannonHealth();
             cannonHealthBar = bar;
             cannonHealthText = text;
-            
-            // Bounds
+
             var (left, right) = references.GetWall();
             leftWall = left;
             rightWall = right;
-            
-            // bulletPool = new ObjectPool<BaseBullet>(
-            //     CreateProjectile, OnGetFromPool, OnReleaseToPool, OnDestroyPooledObject, 
-            //     collectionCheck: true, defaultCapacity: 10, maxSize: 20);
+
+            if (BulletPrefab != null && BulletPrefab.GetComponent<BaseBullet>() != null)
+            {
+                bulletPool = new ObjectPool<BaseBullet>(
+                    CreateProjectile,
+                    OnGetFromPool,
+                    OnReleaseToPool,
+                    OnDestroyPooledObject,
+                    collectionCheck: true,
+                    defaultCapacity: 10,
+                    maxSize: 20);
+            }
+            else
+            {
+                bulletPool = null;
+            }
 
             UpdateUI();
-            
-            // Events
+
             GameEvents.OnPlayerLevelUp += OnLevelUp;
+        }
+
+        private void OnDestroyPooledObject(BaseBullet obj)
+        {
+            if (obj != null)
+            {
+                Destroy(obj.gameObject);
+            }
+        }
+
+        private void OnReleaseToPool(BaseBullet obj)
+        {
+            if (obj == null) return;
+
+            var bulletTransform = obj.transform;
+            bulletTransform.SetParent(null);
+
+            if (obj.TryGetComponent<Rigidbody2D>(out var bulletRb))
+            {
+                bulletRb.linearVelocity = Vector2.zero;
+                bulletRb.angularVelocity = 0f;
+            }
+
+            obj.gameObject.SetActive(false);
+        }
+
+        private void OnGetFromPool(BaseBullet obj)
+        {
+            if (obj == null) return;
+
+            obj.gameObject.SetActive(true);
+        }
+
+        private BaseBullet CreateProjectile()
+        {
+            GameObject go = Instantiate(BulletPrefab);
+            BaseBullet bullet = go.GetComponent<BaseBullet>();
+
+            bullet.SetReleaseAction(ReleaseBulletToPool);
+            go.SetActive(false);
+
+            return bullet;
+        }
+
+        private void ReleaseBulletToPool(BaseBullet bullet)
+        {
+            if (bulletPool != null)
+            {
+                bulletPool.Release(bullet);
+            }
+            else if (bullet != null)
+            {
+                Destroy(bullet.gameObject);
+            }
         }
 
         private void OnDestroy()
@@ -200,16 +262,32 @@ namespace Gameplay.Player
 
         protected virtual void SpawnBullet(Vector3 position, Quaternion rotation)
         {
+            if (bulletPool != null)
+            {
+                BaseBullet pooledBullet = bulletPool.Get();
+                Transform bulletTransform = pooledBullet.transform;
+
+                bulletTransform.SetPositionAndRotation(position, rotation);
+                pooledBullet.Init(CannonStats);
+                pooledBullet.damage = CannonStats.currentBulletDamage;
+                pooledBullet.bulletSpeed = CannonStats.currentBulletSpeed;
+
+                if (pooledBullet is BouncingBullet bouncing)
+                {
+                    bouncing.bounceCount = CannonStats.bulletBounce;
+                }
+
+                return;
+            }
+
             GameObject go = Instantiate(BulletPrefab, position, rotation);
-            
-            // Handle New System
+
             if (go.TryGetComponent<BaseBullet>(out var newBullet))
             {
                 newBullet.Init(CannonStats);
                 newBullet.damage = CannonStats.currentBulletDamage;
                 newBullet.bulletSpeed = CannonStats.currentBulletSpeed;
-                
-                // If it's a bouncing bullet, set bounce count
+
                 if (newBullet is BouncingBullet bouncing)
                 {
                     bouncing.bounceCount = CannonStats.bulletBounce;
@@ -217,12 +295,8 @@ namespace Gameplay.Player
 
                 if (newBullet is ElementalBullet)
                 {
-                    
                 }
-                // If it's an elemental bullet, we could set element here if it's not preset on prefab
-                // Or pull from CannonStats if we add elemental stats there
             }
-            // Fallback to legacy
             else if (go.TryGetComponent<Bullet>(out var bullet))
             {
                 bullet.Damage = CannonStats.currentBulletDamage;

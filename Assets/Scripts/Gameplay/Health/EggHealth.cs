@@ -72,7 +72,7 @@ namespace Gameplay.Health
             int oldHp = _currentHp;
             _currentHp -= damage;
 
-            GameEvents.FireEggHit(this, actualDamage);
+            GameEvents.FireEggHit(this, actualDamage, transform.position);
             OnHpChanged?.Invoke(oldHp, _currentHp);
 
             Debug.Log($"[Gameplay] took {damage} damage. Health now {CurrentHp}");

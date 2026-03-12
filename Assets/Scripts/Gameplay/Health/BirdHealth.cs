@@ -49,7 +49,7 @@ namespace Gameplay.Health
             int actualDamage = Mathf.Min(damage, _currentHp);
             _currentHp -= damage;
 
-            GameEvents.FireBirdHit(this, actualDamage);
+            GameEvents.FireBirdHit(this, actualDamage, transform.position);
 
             if (_currentHp <= 0)
             {
