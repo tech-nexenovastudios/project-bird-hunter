@@ -76,7 +76,7 @@ public class CannonUpgradeManager : MonoBehaviour
         CannonLockManager.OnCannonUnlocked -= OnCannonUnlockedHandler;
         CannonLockManager.OnAllUnlockStatesLoaded -= RefreshAllLockVisuals;
     }
-
+    public static event Action OnAllLevelsLoaded; 
     private void Start()
     {
         CacheAllBaseValues();
@@ -180,6 +180,8 @@ public class CannonUpgradeManager : MonoBehaviour
 
         InitializeItems();
         RefreshAllLockVisuals();
+
+        OnAllLevelsLoaded?.Invoke(); //  fire after levels are ready
 
         if (cannonItems.Count > 0)
             SelectCannon(0);

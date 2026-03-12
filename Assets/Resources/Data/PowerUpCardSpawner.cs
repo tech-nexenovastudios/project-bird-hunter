@@ -41,7 +41,7 @@ public class PowerupCardSpawner : MonoBehaviour
         ClearContainer();
 
         // Sort: Common(0) → Epic(2) → Rare(1) → Legendary(3)
-        int[] sortOrder = { 0, 2, 1, 3 };
+        int[] sortOrder = { 0, 1, 2, 3 };
         var sorted = new List<PowerupConfig>(database.allPowerups);
         sorted.Sort((a, b) =>
         {

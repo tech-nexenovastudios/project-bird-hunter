@@ -16,6 +16,7 @@ public class CannonSelectionManager : MonoBehaviour
     [Header("Common Display")]
     [SerializeField] private Image cannonImage;
     [SerializeField] private TextMeshProUGUI cannonNameText;
+    //[SerializeField] private TextMeshProUGUI cannonLevel;
 
     [Header("Action Button (Equip / Unlock)")]
     [SerializeField] private Button actionButton;
@@ -47,12 +48,31 @@ public class CannonSelectionManager : MonoBehaviour
     {
         CannonLockManager.OnCannonUnlocked += OnCannonUnlockedHandler;
         CannonLockManager.OnAllUnlockStatesLoaded += RefreshAllLockVisuals;
+        CannonUpgradeManager.OnCannonUpgraded += OnCannonUpgradedHandler;
+        CannonUpgradeManager.OnAllLevelsLoaded += RefreshAllLevelTexts; // ADD THIS
     }
 
     private void OnDisable()
     {
         CannonLockManager.OnCannonUnlocked -= OnCannonUnlockedHandler;
         CannonLockManager.OnAllUnlockStatesLoaded -= RefreshAllLockVisuals;
+        CannonUpgradeManager.OnCannonUpgraded -= OnCannonUpgradedHandler;
+        CannonUpgradeManager.OnAllLevelsLoaded -= RefreshAllLevelTexts; // ADD THIS
+    }
+
+    // load levels for all cannons when they are loaded from cloud, and also refresh the level text for each item
+    private void RefreshAllLevelTexts()
+    {
+        for (int i = 0; i < cannonItems.Count; i++)
+            RefreshCannonLevelText(i);
+    }
+    // when a cannon is upgraded, only refresh the level text for that specific item, and if currently previewing it, also update the preview display to reflect any changes related to the new level (like XP requirements or stats)
+    private void OnCannonUpgradedHandler(int index)
+    {
+        RefreshCannonLevelText(index); // updates the item's level badge
+
+        if (index == previewedCannonIndex)
+            UpdatePreviewDisplay(index);
     }
 
     private void Start()
@@ -122,9 +142,18 @@ public class CannonSelectionManager : MonoBehaviour
                 cannonItems[i].button.interactable = true;
                 cannonItems[i].button.onClick.AddListener(() => PreviewCannon(index));
             }
+
+            RefreshCannonLevelText(i); // ADD THIS
         }
     }
+    private void RefreshCannonLevelText(int index)
+    {
+        if (index < 0 || index >= cannonItems.Count) return;
+        if (index >= cannonHolderSO.cannonsData.Length) return;
+        if (cannonItems[index].levelText == null) return;
 
+        cannonItems[index].levelText.text = $"{cannonHolderSO.cannonsData[index].cannonLevel}";
+    }
     // ==================== Load from Cloud ====================
 
     private async UniTaskVoid LoadEquippedData()
@@ -308,4 +337,5 @@ public class CannonItemUI
     public Button button;
     public Sprite cannonSprite;
     public Image backgroundImage;
+    public TextMeshProUGUI levelText; 
 }
