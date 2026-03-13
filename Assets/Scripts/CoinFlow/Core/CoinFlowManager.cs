@@ -27,7 +27,7 @@ public class CoinFlowManager : MonoBehaviour
     [Tooltip("The ScriptableObject with all coin-flow settings")]
     [SerializeField] private CoinFlowConfig config;
 
-    [Tooltip("Prefab: a UI Image with CoinEntity script attached")]
+    [Tooltip("Prefab: a UI Image with CoinEntity script attached     ")]
     [SerializeField] private CoinEntity coinPrefab;
 
     [Tooltip("The RectTransform coins fly toward (coin icon in HUD)")]

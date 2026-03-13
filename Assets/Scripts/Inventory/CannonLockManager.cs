@@ -186,7 +186,7 @@ public class CannonLockManager : MonoBehaviour
     }
 
     private async UniTaskVoid SaveUnlock(int index)
-    {
+    {  
         try
         {
             await CloudSaveManager.Instance.SaveValueAsync(GetUnlockKey(index), true);
