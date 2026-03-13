@@ -3,7 +3,6 @@
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
 .idea/
-.plastic/
 .utmp/
 /[Ll]ibrary/
 /[Tt]emp/
@@ -80,6 +79,7 @@ crashlytics-build.properties
 
 # TestRunner generated files
 InitTestScene*.unity*
+*.DS_Store
 
 # Addressables default ignores, before user customizations
 /ServerData
@@ -99,6 +99,9 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Auto-generated scenes by play mode tests
+/[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
 Assets/_Recovery/
-Bird Hunter_BurstDebugInformation_DoNotShip/
 CCDBuildData/
