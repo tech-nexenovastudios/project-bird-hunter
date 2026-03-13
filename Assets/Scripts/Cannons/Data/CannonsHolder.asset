@@ -21,13 +21,16 @@ MonoBehaviour:
     cannonPrefab: {fileID: 2726379633117213735, guid: 03b16c5a248234a0193c4fb77595e6ae, type: 3}
     bulletPrefab: {fileID: 7505696441944762806, guid: 420286fe4a16340fdb8a065f476c620a, type: 3}
     cannonStats: {fileID: 11400000, guid: faa4ba72d6350364abe2966d5071b28a, type: 2}
-    cannonLevel: 4
-    coinsRequired: 110
-    cardsRequired: 11
-    coinIncrement: 5
+    cannonLevel: 38
+    coinsRequired: 841
+    cardsRequired: 59
+    coinIncrement: 39
     normalCardIncrement: 1
     specificNumberCardIncrement: 3
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 0
+    coinCost: 0
+    gemCost: 0
     baseCoinsRequired: 110
     baseCoinIncrement: 5
     baseCardsRequired: 11
@@ -47,6 +50,9 @@ MonoBehaviour:
     normalCardIncrement: 3
     specificNumberCardIncrement: 10
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 1
+    coinCost: 1500
+    gemCost: 40
     baseCoinsRequired: 5000
     baseCoinIncrement: 5
     baseCardsRequired: 80
@@ -66,6 +72,9 @@ MonoBehaviour:
     normalCardIncrement: 3
     specificNumberCardIncrement: 8
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 0
+    coinCost: 4000
+    gemCost: 80
     baseCoinsRequired: 2000
     baseCoinIncrement: 3.5
     baseCardsRequired: 50
@@ -85,6 +94,9 @@ MonoBehaviour:
     normalCardIncrement: 3
     specificNumberCardIncrement: 8
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 7
+    coinCost: 8000
+    gemCost: 120
     baseCoinsRequired: 2000
     baseCoinIncrement: 3.5
     baseCardsRequired: 50
@@ -104,6 +116,9 @@ MonoBehaviour:
     normalCardIncrement: 3
     specificNumberCardIncrement: 10
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 11
+    coinCost: 15000
+    gemCost: 240
     baseCoinsRequired: 5000
     baseCoinIncrement: 5
     baseCardsRequired: 80
@@ -123,6 +138,9 @@ MonoBehaviour:
     normalCardIncrement: 3
     specificNumberCardIncrement: 8
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 16
+    coinCost: 25000
+    gemCost: 360
     baseCoinsRequired: 2000
     baseCoinIncrement: 3.5
     baseCardsRequired: 50
@@ -142,6 +160,9 @@ MonoBehaviour:
     normalCardIncrement: 3
     specificNumberCardIncrement: 10
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 22
+    coinCost: 40000
+    gemCost: 520
     baseCoinsRequired: 5000
     baseCoinIncrement: 5
     baseCardsRequired: 80
