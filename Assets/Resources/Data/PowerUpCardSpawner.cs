@@ -5,9 +5,15 @@ using Gameplay.PowerUps;
 using System.Collections.Generic;
 
 /// <summary>
-/// Spawns powerup cards in the editor (no play mode needed).
-/// Use the "Spawn Cards" button in the Inspector.
-/// Sort: Common → Epic → Rare → Legendary
+/// Spawns powerup cards from the database.
+/// Works in Edit Mode (Spawn Cards button) and Play Mode.
+///
+/// After spawning each card it:
+///   1. Sets the icon sprite and display name (as before)
+///   2. Adds / finds a PowerupCardController on the card
+///   3. Calls Initialise(id, rarity) so the controller knows its identity
+///   4. Calls PowerupLockManager to apply the correct locked/unlocked visual
+///      immediately — no waiting for async load.
 /// </summary>
 public class PowerupCardSpawner : MonoBehaviour
 {
@@ -23,6 +29,10 @@ public class PowerupCardSpawner : MonoBehaviour
     [Header("Spawn Target")]
     [Tooltip("Parent with GridLayoutGroup")]
     [SerializeField] private Transform container;
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Editor button entry point
+    // ─────────────────────────────────────────────────────────────────────
 
     public void SpawnAll()
     {
@@ -40,15 +50,9 @@ public class PowerupCardSpawner : MonoBehaviour
 
         ClearContainer();
 
-        // Sort: Common(0) → Epic(2) → Rare(1) → Legendary(3)
-        int[] sortOrder = { 0, 2, 1, 3 };
+        // Sort: Common(0) → Rare(1) → Epic(2) → Legendary(3)
         var sorted = new List<PowerupConfig>(database.allPowerups);
-        sorted.Sort((a, b) =>
-        {
-            int orderA = System.Array.IndexOf(sortOrder, (int)a.rarity);
-            int orderB = System.Array.IndexOf(sortOrder, (int)b.rarity);
-            return orderA.CompareTo(orderB);
-        });
+        sorted.Sort((a, b) => ((int)a.rarity).CompareTo((int)b.rarity));
 
         foreach (var config in sorted)
         {
@@ -59,15 +63,15 @@ public class PowerupCardSpawner : MonoBehaviour
                 continue;
             }
 
+            // ── Instantiate ───────────────────────────────────────────────
 #if UNITY_EDITOR
             GameObject card = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(prefab, container);
 #else
             GameObject card = Instantiate(prefab, container);
 #endif
-
             card.name = config.displayName;
 
-            // Find "icon" child (recursive) and set sprite
+            // ── Icon sprite ───────────────────────────────────────────────
             var iconTransform = FindDeep(card.transform, "icon");
             if (iconTransform != null)
             {
@@ -76,7 +80,7 @@ public class PowerupCardSpawner : MonoBehaviour
                     iconImage.sprite = config.icon;
             }
 
-            // Find "powerUpName" child (recursive) and set text
+            // ── Display name ──────────────────────────────────────────────
             var nameTransform = FindDeep(card.transform, "powerUpName");
             if (nameTransform != null)
             {
@@ -84,16 +88,37 @@ public class PowerupCardSpawner : MonoBehaviour
                 if (nameText != null)
                     nameText.text = config.displayName;
             }
+
+            // ── Lock / Unlock wiring ──────────────────────────────────────
+            // Get or add the controller — this is what was missing before.
+            var ctrl = card.GetComponent<PowerupCardController>();
+            if (ctrl == null)
+                ctrl = card.AddComponent<PowerupCardController>();
+
+            // Give the controller its identity (id + rarity).
+            // Must happen before RegisterCard so the manager can look up state.
+            ctrl.Initialise(config.id, config.rarity);
+
+            // In Play Mode the controller's Start() will call RegisterCard.
+            // In Edit Mode (or if Start hasn't fired yet) we call it manually
+            // so the visual applies immediately after spawning.
+            if (Application.isPlaying && PowerupLockManager.Instance != null)
+            {
+                // Force re-register in case this card was already in the dictionary
+                // from a previous spawn — ensures the visual is always current.
+                PowerupLockManager.Instance.RegisterCard(ctrl);
+            }
         }
 
         Debug.Log($"[PowerupCards] Spawned {sorted.Count} cards.");
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+
     public void ClearContainer()
     {
         if (container == null) return;
 
-        // DestroyImmediate needed in edit mode
         for (int i = container.childCount - 1; i >= 0; i--)
         {
             if (Application.isPlaying)
@@ -102,6 +127,8 @@ public class PowerupCardSpawner : MonoBehaviour
                 DestroyImmediate(container.GetChild(i).gameObject);
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────
 
     private GameObject GetPrefabForRarity(PowerupRarity rarity)
     {
