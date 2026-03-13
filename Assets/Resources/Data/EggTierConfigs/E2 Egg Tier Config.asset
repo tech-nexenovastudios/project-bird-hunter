@@ -19,12 +19,12 @@ MonoBehaviour:
   scorePerHit: 10
   scoreOnDestroy: 50
   eggPrefab: {fileID: 1251663967950569254, guid: b7955bd3d2dc48c4bb45d83513a6a73f, type: 3}
-  bounceVelocity: 8
+  bounceVelocity: 11
   bounceIncrease: 1.5
   horizontalIncrease: 1.2
-  maxSpeed: 12
-  gravityScale: 1
-  mass: 4.5
+  maxSpeed: 7
+  gravityScale: 0.5
+  mass: 4
   linearDamping: 0
   splitForce: 4
   splitInto: {fileID: 11400000, guid: 94e21ff081ae30648b414361787f5d04, type: 2}

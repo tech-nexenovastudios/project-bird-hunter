@@ -173,6 +173,7 @@ namespace Gameplay.Player
             // Simple touch/mouse input for movement
             if (Input.GetMouseButton(0))
             {
+                StartFiring();
                 Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 float direction = mousePos.x > transform.position.x ? 1f : -1f;
                 
@@ -185,6 +186,7 @@ namespace Gameplay.Player
             else
             {
                 movementInput = Vector2.zero;
+                StopFiring();
             }
         }
 

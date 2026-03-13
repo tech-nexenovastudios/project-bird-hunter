@@ -414,11 +414,11 @@ namespace Gameplay
 
                         Vector3 offset = egg.config.GetSplitImpulse(i);
                         
-                        var go     = Instantiate(splitTier.eggPrefab);
+                        var go     = Instantiate(splitTier.eggPrefab, egg.transform.position + offset, Quaternion.identity);
                         
                         go.TryGetComponent(out Rigidbody2D rb);
                         
-                        rb.AddForce(offset, ForceMode2D.Impulse);
+                        //rb.AddForce(egg.transform.position + offset, ForceMode2D.Impulse);
                         
                         var newEgg = go.GetComponent<Egg>();
 

@@ -125,7 +125,7 @@ namespace Gameplay.Player
         {
             if (!applyHitImpulse) return;
 
-            Egg egg = collision.GetComponentInParent<Egg>();
+            Egg egg = collision.GetComponent<Egg>();
             if (egg == null) return;
 
             Vector2 bulletDir = rb != null && rb.linearVelocity.sqrMagnitude > 0.0001f ? rb.linearVelocity.normalized : (Vector2)transform.up.normalized;

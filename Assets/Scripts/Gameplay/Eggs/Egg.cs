@@ -20,7 +20,7 @@ namespace Gameplay.Eggs
         private Rigidbody2D _rb;
         private float _dynamicMinX;
         private float _dynamicMaxX;
-
+        
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
@@ -43,7 +43,6 @@ namespace Gameplay.Eggs
 
             ApplyPhysicsSettings();
         }
-
         private void ApplyPhysicsSettings()
         {
             _rb.gravityScale = config.gravityScale;

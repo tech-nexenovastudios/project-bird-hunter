@@ -2,10 +2,13 @@ using Gameplay.Birds;
 using Gameplay.Eggs;
 using Gameplay.Levels;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 namespace Gameplay
 {
+    #if UNITY_EDITOR
     public class FullChapterLevelProfileGenerator : EditorWindow
     {
         private EggTierConfig e1, e2, e3, e4;
@@ -375,4 +378,5 @@ namespace Gameplay
             return t * t * t;
         }
     }
+    #endif
 }

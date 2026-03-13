@@ -155,7 +155,7 @@ namespace Gameplay.Managers
             else
             {
                 var baseCannon = currentCannon.GetComponent<BaseCannon>();
-                if (baseCannon != null) baseCannon.StartFiring();
+                //if (baseCannon != null) baseCannon.StartFiring();
             }
 
             GameProgressManager.Instance.ApplyPowerUpsToCurrentCannon(currentCannon);
