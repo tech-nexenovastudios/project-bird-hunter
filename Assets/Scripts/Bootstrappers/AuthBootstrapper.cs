@@ -204,8 +204,8 @@ public class AuthBootstrapper : MonoBehaviour
 
     private const string STARTER_GRANTED_KEY = "starter_currency_granted";
 
-    private const int STARTER_GOLD = 100;
-    private const int STARTER_GEMS = 10;
+    private const int STARTER_GOLD = 1000000;
+    private const int STARTER_GEMS = 10000;
     private const int STARTER_POWER = 5;
 
     // ==================== Result Handlers ====================
@@ -240,6 +240,7 @@ public class AuthBootstrapper : MonoBehaviour
 
         SetStatus("Signed in! Loading...");
         Debug.Log($"[Auth] Loading {mainMenuSceneName}. Player ID: {PlayerId}");
+        //IAnalyticsService.TrackNewUserFirstLogin(PlayerId);
         SceneManager.LoadScene(mainMenuSceneName);
     }
 

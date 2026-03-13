@@ -1,4 +1,6 @@
 using System;
+using Gameplay.Interfaces;
+using Gameplay.Player;
 using UnityEngine;
 
 namespace Gameplay.Eggs
@@ -16,11 +18,13 @@ namespace Gameplay.Eggs
 
         [Header("VFX")]
         [SerializeField] private GameObject smokeParticle;
-        
+
         private Rigidbody2D _rb;
-        private float _dynamicMinX;
-        private float _dynamicMaxX;
-        
+
+        // ─────────────────────────────────────────────
+        //  Lifecycle
+        // ─────────────────────────────────────────────
+
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
@@ -31,7 +35,7 @@ namespace Gameplay.Eggs
             var col = GetComponent<Collider2D>();
             halfWidth = col.bounds.extents.x;
         }
-        
+
         public void Init(EggTierConfig tierConfig, int hp)
         {
             config = tierConfig;
@@ -43,27 +47,31 @@ namespace Gameplay.Eggs
 
             ApplyPhysicsSettings();
         }
+
         private void ApplyPhysicsSettings()
         {
-            _rb.gravityScale = config.gravityScale;
-            _rb.mass = config.mass;
-            _rb.linearDamping = config.linearDamping;
+            _rb.gravityScale    = config.gravityScale;
+            _rb.mass            = config.mass;
+            _rb.linearDamping   = config.linearDamping;
         }
+
+        // ─────────────────────────────────────────────
+        //  Physics Loop
+        // ─────────────────────────────────────────────
+
         private void FixedUpdate()
         {
             _rb.linearVelocity = Vector2.ClampMagnitude(_rb.linearVelocity, config.maxSpeed);
             HandleScreenEdges();
         }
 
-        void HandleScreenEdges()
+        private void HandleScreenEdges()
         {
             Vector3 pos = transform.position;
 
-            // Get camera bounds in world units
-            float leftBound = mainCam.ViewportToWorldPoint(Vector3.zero).x + halfWidth;
+            float leftBound  = mainCam.ViewportToWorldPoint(Vector3.zero).x  + halfWidth;
             float rightBound = mainCam.ViewportToWorldPoint(Vector3.right).x - halfWidth;
 
-            // Bounce off left/right edges
             if (pos.x < leftBound)
             {
                 pos.x = leftBound;
@@ -78,6 +86,10 @@ namespace Gameplay.Eggs
             transform.position = pos;
         }
 
+        // ─────────────────────────────────────────────
+        //  Collision
+        // ─────────────────────────────────────────────
+
         private void OnCollisionEnter2D(Collision2D collision)
         {
             if (collision.gameObject.CompareTag("Ground"))
@@ -88,17 +100,56 @@ namespace Gameplay.Eggs
                 Vector2 velocity = _rb.linearVelocity;
                 velocity.y = config.bounceVelocity;
                 _rb.linearVelocity = velocity;
+                return;
             }
+
+            HandleCollision(collision);
         }
+
+        /// <summary>
+        /// Handles non-ground collisions. Checks if the hit object is a
+        /// CannonPartCollider, resolves IDamageable from its parent, and
+        /// applies damage scaled by the part's damageMultiplier.
+        /// </summary>
+        private void HandleCollision(Collision2D collision)
+        {
+            var damageable = GetDamageable(collision.collider);
+            if (damageable == null || !damageable.IsAlive) return;
+
+            // Read damage from this egg's own SO config
+            var rawDamage = config.cannonDamage;
+
+            // Scale by the specific part that was hit (barrel, body, wheel, etc.)
+            if (collision.collider.TryGetComponent<CannonPartCollider>(out var part))
+                rawDamage = Mathf.RoundToInt(rawDamage * part.damageMultiplier);
+
+            damageable.TakeDamage(rawDamage);
+        }
+
+        /// <summary>
+        /// Resolves IDamageable from the collided object.
+        /// Checks the object itself first, then walks up the parent hierarchy —
+        /// this covers both a root cannon collider and child CannonPartColliders.
+        /// </summary>
+        private IDamageable GetDamageable(Collider2D other)
+        {
+            return other.GetComponentInParent<IDamageable>();
+        }
+
+        // ─────────────────────────────────────────────
+        //  Public API
+        // ─────────────────────────────────────────────
 
         public void ApplyBulletHitForce(Vector2 hitDirection, float hitForce)
         {
-            if (hitDirection.sqrMagnitude <= 0.0001f)
-                return;
-
+            if (hitDirection.sqrMagnitude <= 0.0001f) return;
             _rb.AddForce(hitDirection.normalized * hitForce, ForceMode2D.Impulse);
         }
-        
+
+        // ─────────────────────────────────────────────
+        //  Helpers
+        // ─────────────────────────────────────────────
+
         private void SpawnSmoke(Vector2 position)
         {
             if (smokeParticle == null) return;

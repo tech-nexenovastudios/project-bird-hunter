@@ -901,13 +901,6 @@ RectTransform:
   - {fileID: 8194219235733793345}
   - {fileID: 885856871118725596}
   - {fileID: 2631336896779519262}
-  - {fileID: 4835724040131363981}
-  - {fileID: 6078159525844145422}
-  - {fileID: 3859693901068475215}
-  - {fileID: 4765157630520946925}
-  - {fileID: 6027560312013688158}
-  - {fileID: 8619953072697406257}
-  - {fileID: 7300334594349419216}
   - {fileID: 2912769439629938661}
   - {fileID: 5695054614272873673}
   - {fileID: 7639764804689406781}
@@ -920,6 +913,13 @@ RectTransform:
   - {fileID: 6428640827500934797}
   - {fileID: 5038776612173322161}
   - {fileID: 2252670951326833871}
+  - {fileID: 4835724040131363981}
+  - {fileID: 6078159525844145422}
+  - {fileID: 3859693901068475215}
+  - {fileID: 4765157630520946925}
+  - {fileID: 6027560312013688158}
+  - {fileID: 8619953072697406257}
+  - {fileID: 7300334594349419216}
   - {fileID: 3327760043723697040}
   - {fileID: 8263387211936974890}
   - {fileID: 8593341602135527142}
@@ -927,7 +927,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -511.1999, y: 674.2502}
+  m_AnchoredPosition: {x: -511.1999, y: 674.24927}
   m_SizeDelta: {x: 1042.7, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &788427903221484847
@@ -1401,8 +1401,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6617687791272993575}
   m_HandleRect: {fileID: 7826170215741318921}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.3233805
+  m_Value: 1.0000004
+  m_Size: 0.3232482
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3163,6 +3163,10 @@ PrefabInstance:
     - target: {fileID: 1769699222931032539, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
       propertyPath: m_Name
       value: Rocket Barrage
+      objectReference: {fileID: 0}
+    - target: {fileID: 3055213742762529875, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
+      propertyPath: m_Name
+      value: icon
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -10156,6 +10160,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Revenge Pulse
       objectReference: {fileID: 0}
+    - target: {fileID: 3055213742762529875, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
+      propertyPath: m_Name
+      value: icon
+      objectReference: {fileID: 0}
     - target: {fileID: 6671921039739283914, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
       propertyPath: m_text
       value: Revenge Pulse
@@ -10375,6 +10383,10 @@ PrefabInstance:
     - target: {fileID: 1769699222931032539, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
       propertyPath: m_Name
       value: Second Chance
+      objectReference: {fileID: 0}
+    - target: {fileID: 3055213742762529875, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
+      propertyPath: m_Name
+      value: icon
       objectReference: {fileID: 0}
     - target: {fileID: 6671921039739283914, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
       propertyPath: m_text
