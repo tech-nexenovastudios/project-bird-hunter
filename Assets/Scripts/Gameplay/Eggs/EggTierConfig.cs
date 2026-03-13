@@ -5,15 +5,22 @@ namespace Gameplay.Eggs
     [CreateAssetMenu(menuName = "BirdHunter/Egg Tier Config")]
     public class EggTierConfig : ScriptableObject
     {
+        [Header("Basic Settings")]
         public string tierId;            // "E1", "E2", ...
         public int baseHpMin;
         public int baseHpMax;
         public int pressureValue;        // 1,2,4,8
+        
+        [Header("Damage Settings")]
+        public int cannonDamage;
+        
+        [Header("Score Settings")]
         public int scorePerHit;
         public int scoreOnDestroy;
         
-        //public Sprite sprite;
+        [Header("Prefab")]
         public GameObject eggPrefab;
+        public GameObject crackedEggPrefab;
         
         [Header("Bounce Settings")]
         public float bounceVelocity = 8f;       // Y velocity on ground hit
