@@ -1,7 +1,7 @@
 using Gameplay.Interfaces;
 using UnityEngine;
 
-namespace Gameplay.Player                          // ✅ same namespace
+namespace Gameplay.Player
 {
     public class StraightBullet : BaseBullet<StraightBullet>
     {
@@ -17,9 +17,14 @@ namespace Gameplay.Player                          // ✅ same namespace
 
     public class StraightBehaviour : IBulletBehaviour<StraightBullet>
     {
-        public void OnSpawn  (StraightBullet bullet)               { }  // ✅ velocity set in Initialize
-        public void Tick     (StraightBullet bullet, float dt)     { }  // no runtime logic
-        public void OnHit    (StraightBullet bullet, Collider2D col) { bullet.ApplyDamage(col); bullet.Deactivate(); }
-        public void OnDespawn(StraightBullet bullet)               { }
+        // Velocity is already set by BaseBullet.Initialize — nothing extra needed
+        public void OnSpawn(StraightBullet bullet)  { }
+        public void Tick(StraightBullet bullet, float dt) { }
+        public void OnHit(StraightBullet bullet, Collider2D col)
+        {
+            bullet.ApplyDamage(col);
+            bullet.Deactivate();
+        }
+        public void OnDespawn(StraightBullet bullet) { }
     }
 }

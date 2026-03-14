@@ -5,7 +5,7 @@ using Gameplay.Interfaces;
 using TMPro;
 using UnityEngine;
 
-namespace Gameplay.Player                          // ✅ namespace wraps EVERYTHING
+namespace Gameplay.Player
 {
     public interface IBullet
     {
@@ -14,30 +14,29 @@ namespace Gameplay.Player                          // ✅ namespace wraps EVERYT
         GameObject gameObject { get; }
     }
 
-    public interface IBulletBehaviour<TBullet>
-        where TBullet : BaseBullet<TBullet>        // ✅ correct generic constraint
+    public interface IBulletBehaviour<TBullet> where TBullet : BaseBullet<TBullet>
     {
-        void OnSpawn  (TBullet bullet);
-        void Tick     (TBullet bullet, float dt);
-        void OnHit    (TBullet bullet, Collider2D collider);
+        void OnSpawn(TBullet bullet);
+        void Tick(TBullet bullet, float dt);
+        void OnHit(TBullet bullet, Collider2D collider);
         void OnDespawn(TBullet bullet);
     }
 
     public abstract class BaseBullet<TBullet> : MonoBehaviour, IBullet
-        where TBullet : BaseBullet<TBullet>        // ✅ recursive generic constraint
+        where TBullet : BaseBullet<TBullet>
     {
-        [Header("Runtime Stats")]
-        public float currentDamage;
-        public float currentSpeed;
-        public float currentSize;
-        public int   pierceRemaining;
-
         [Header("VFX & UI")]
         public GameObject damageTextPrefab;
 
+        // Runtime stats — written once per spawn by Initialize
+        public float currentDamage  { get; private set; }
+        public float currentSpeed   { get; private set; }
+        public float currentSize    { get; private set; }
+        public int   pierceRemaining { get; protected set; }
+
         protected Rigidbody2D rb;
+        protected Vector2     direction;
         protected BulletConfig config;
-        protected Vector2 direction;
 
         private IBulletBehaviour<TBullet> _behaviour;
         private Action<IBullet>           _releaseToPool;
@@ -45,44 +44,44 @@ namespace Gameplay.Player                          // ✅ namespace wraps EVERYT
         private float                     _elapsed;
         private bool                      _active;
 
-        // ── Lifecycle ─────────────────────────────────────────────────────
+        // ── Lifecycle ────────────────────────────────────────────────────────
         protected virtual void Awake()
         {
             rb         = GetComponent<Rigidbody2D>();
             _behaviour = CreateBehaviour();
         }
 
-        // Each subclass returns its own behaviour — no external generic param needed
         protected abstract IBulletBehaviour<TBullet> CreateBehaviour();
 
-        // ── IBullet.Initialize ────────────────────────────────────────────
+        // ── IBullet ──────────────────────────────────────────────────────────
         public void Initialize(BulletConfig cfg, Vector2 dir, Action<IBullet> releaseAction)
         {
-            config         = cfg;                          // ✅ assigned first — no null
+            config         = cfg;
             direction      = dir.normalized;
-            _releaseToPool = releaseAction;                // ✅ stored here, never overwritten
+            _releaseToPool = releaseAction;
 
-            currentDamage   = cfg.baseDamage;
-            currentSpeed    = cfg.baseSpeed;
-            currentSize     = cfg.baseSize;
-            pierceRemaining = cfg.pierceCount;
-            _lifetime       = cfg.lifetime;
-            _elapsed        = 0f;
-            _active         = true;
+            // Stats
+            currentDamage    = cfg.baseDamage;
+            currentSpeed     = cfg.baseSpeed;
+            currentSize      = cfg.baseSize;
+            pierceRemaining  = cfg.pierceCount;
+            _lifetime        = cfg.lifetime;
+            _elapsed         = 0f;
+            _active          = true;
 
+            // Physics
             transform.localScale = Vector3.one * currentSize;
-
             if (rb != null)
             {
                 rb.mass            = cfg.mass;
                 rb.angularVelocity = 0f;
-                rb.linearVelocity  = direction * currentSpeed;  // ✅ moves in correct direction
+                rb.linearVelocity  = direction * currentSpeed;
             }
 
-            _behaviour?.OnSpawn((TBullet)this);             // ✅ called LAST — all data ready
+            // Behaviour notified LAST — all data is ready
+            _behaviour?.OnSpawn((TBullet)this);
         }
 
-        // ── IBullet.Deactivate ────────────────────────────────────────────
         public virtual void Deactivate()
         {
             if (!_active) return;
@@ -97,18 +96,12 @@ namespace Gameplay.Player                          // ✅ namespace wraps EVERYT
             }
 
             if (_releaseToPool != null)
-                _releaseToPool.Invoke(this);               // ✅ always returns to pool
+                _releaseToPool.Invoke(this);
             else
                 gameObject.SetActive(false);
         }
 
-        // ── OnEnable — NO game logic ──────────────────────────────────────
-        protected virtual void OnEnable()
-        {
-            if (_behaviour == null) _behaviour = CreateBehaviour();  // ✅ safety only
-        }
-
-        // ── Update ────────────────────────────────────────────────────────
+        // ── Unity Update ─────────────────────────────────────────────────────
         protected virtual void Update()
         {
             if (!_active) return;
@@ -117,15 +110,16 @@ namespace Gameplay.Player                          // ✅ namespace wraps EVERYT
             if (_elapsed >= _lifetime) Deactivate();
         }
 
-        // ── Collision ─────────────────────────────────────────────────────
+        // ── Hit detection ────────────────────────────────────────────────────
         protected virtual void OnTriggerEnter2D(Collider2D col)
         {
             if (!_active) return;
-            if (col.CompareTag("Wall"))                           { Deactivate(); return; }
-            if (col.CompareTag("Bird") || col.CompareTag("Egg"))   _behaviour?.OnHit((TBullet)this, col);
+            if (col.CompareTag("Wall"))         { Deactivate(); return; }
+            if (col.CompareTag("Bird") || col.CompareTag("Egg"))
+                _behaviour?.OnHit((TBullet)this, col);
         }
 
-        // ── Damage ────────────────────────────────────────────────────────
+        // ── Damage helpers ───────────────────────────────────────────────────
         public virtual void ApplyDamage(Collider2D col)
         {
             Vector3 hitPoint = col.ClosestPoint(transform.position);
@@ -133,7 +127,7 @@ namespace Gameplay.Player                          // ✅ namespace wraps EVERYT
 
             dmg.TakeDamage((int)currentDamage, hitPoint);
 
-            if      (col.CompareTag("Egg"))  GameEvents.FireEggHit (dmg, (int)currentDamage, hitPoint);
+            if (col.CompareTag("Egg"))  GameEvents.FireEggHit(dmg,  (int)currentDamage, hitPoint);
             else if (col.CompareTag("Bird")) GameEvents.FireBirdHit(dmg, (int)currentDamage, hitPoint);
 
             ShowDamageText(hitPoint, currentDamage);
@@ -147,7 +141,7 @@ namespace Gameplay.Player                          // ✅ namespace wraps EVERYT
             if (rb != null) rb.linearVelocity = dir.normalized * currentSpeed;
         }
 
-        // ── Damage text ───────────────────────────────────────────────────
+        // ── Damage text ──────────────────────────────────────────────────────
         private void ShowDamageText(Vector3 position, float amount)
         {
             GameObject go = GamePoolManager.bulletDamageTextQueue.Count > 0
@@ -160,6 +154,7 @@ namespace Gameplay.Player                          // ✅ namespace wraps EVERYT
 
             var tmp = go.GetComponent<TMP_Text>();
             if (tmp == null) return;
+
             tmp.text  = $"-{amount:0}";
             tmp.color = new Color(tmp.color.r, tmp.color.g, tmp.color.b, 1f);
             go.transform.DOMoveY(position.y + 2f, 1f);
