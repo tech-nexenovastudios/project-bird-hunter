@@ -114,6 +114,18 @@ namespace Gameplay.Birds
             if (CurrentHp <= 0)
                 Die(true);
         }
+
+        public void TakeDamage(int damage, Vector3 hitPoint)
+        {
+            if (_isDead) return;
+
+            CurrentHp -= damage;
+            Debug.Log($"[Gameplay] Bird took {damage} damage. Health now {CurrentHp}");
+
+            if (CurrentHp <= 0)
+                Die(true);
+        }
+
         public void ApplyEffect(IEffect<IDamageable> effect)
         {
             if (CurrentHp <= 0) return; // Dead enemies should't receive effects

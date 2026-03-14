@@ -1,7 +1,10 @@
+using System;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using UI.Scroll;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class ChapterSelector : MonoBehaviour
 {
@@ -9,6 +12,7 @@ public class ChapterSelector : MonoBehaviour
     [SerializeField] ChaptersConfig worlds;
 
     [Header("UI")]
+    [SerializeField] Image worldBGImage;
     [SerializeField] TMP_Text locationText;
     [SerializeField] TMP_Text worldText;
     [SerializeField] TMP_Text chapterText;
@@ -17,6 +21,12 @@ public class ChapterSelector : MonoBehaviour
 
     private void OnEnable() => ScrollCarouselEffect.currentLevelChange += ChangeWorld;
     private void OnDisable() => ScrollCarouselEffect.currentLevelChange -= ChangeWorld;
+
+
+    private void Awake()
+    {
+        
+    }
 
     private void Start() => ChangeWorld(1);
 

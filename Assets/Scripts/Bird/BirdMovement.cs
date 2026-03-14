@@ -1,8 +1,7 @@
 using DG.Tweening;
 using System;
 using System.Collections;
-using Unity.VisualScripting;
-using UnityEngine;
+ using UnityEngine;
 using Random = UnityEngine.Random;
 
 public enum BirdMovementType

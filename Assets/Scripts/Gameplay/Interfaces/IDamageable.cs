@@ -8,6 +8,7 @@ namespace Gameplay.Interfaces
         int MaxHp { get; }
         bool IsAlive { get; }
         void TakeDamage(int damage);
+        void TakeDamage(int damage, Vector3 hitPoint);
     }
     
     public interface IEntity : IDamageable

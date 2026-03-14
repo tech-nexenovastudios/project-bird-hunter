@@ -100,7 +100,7 @@ public class CannonSelection : MonoBehaviour
     private void RefreshStatsText()
     {
         var stats = cannonUpgradeSO.cannonsData[selectedCannonIndex].cannonStats;
-        if (damageText != null) damageText.text = $"DAMAGE: {stats.bulletDamage:F0}";
+        //if (damageText != null) damageText.text = $"DAMAGE: {stats.bulletDamage:F0}";
         if (healthText != null) healthText.text = $"HEALTH: {stats.maxHealth:F0}";
         if (powerText  != null) powerText.text  = $"FIRE RATE: {stats.fireRate:F2}";
     }

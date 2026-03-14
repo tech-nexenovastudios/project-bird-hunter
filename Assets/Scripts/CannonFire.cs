@@ -183,16 +183,16 @@ public class CannonFire : MonoBehaviour
         }
 
         // ── Pull stats from CannonStats ──
-        Damage                    = cannonStats.bulletDamage;
-        initialDamage             = cannonStats.bulletDamage;
+        //Damage                    = cannonStats.bulletDamage;
+        // initialDamage             = cannonStats.bulletDamage;
         shotsPerSecond            = cannonStats.fireRate;
-        bulletSpeed               = cannonStats.bulletSpeed;
+        // bulletSpeed               = cannonStats.bulletSpeed;
         numberOfMinBulletInShot   = cannonStats.numberOfMinBulletInOneShot;
         numberOfMaxBulletInShot   = cannonStats.numberOfMaxBulletInOneShot;
         numberOfBulletInShot      = numberOfMaxBulletInShot;
         bulletCount               = numberOfMaxBulletInShot;
         bulletCountInShot         = 1;
-        bulletBounce              = cannonStats.bulletBounce;
+        // bulletBounce              = cannonStats.bulletBounce;
         randomBulletFire          = cannonStats.randomBulletFire;
         damagePercentage          = 100f;
 

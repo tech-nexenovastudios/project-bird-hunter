@@ -22,12 +22,12 @@ public class CannonSpawner : MonoBehaviour
         var data = cannons.cannonsData[index];
         cannon = Instantiate(data.cannonPrefab, transform.position, transform.rotation);
 
-        var baseCannon = cannon.GetComponent<BaseCannon>();
+        var baseCannon = cannon.GetComponent<ICannonBase>();
         if (baseCannon != null)
         {
             data.cannonStats.ApplyProgression(GameProgressManager.Instance.GlobalLevel);
             
-            baseCannon.Configure(data.cannonStats, data.bulletPrefab);
+            baseCannon.Configure(data.cannonStats);
             
             Debug.Log($"[CannonSpawner] Configured new BaseCannon: {data.cannonPrefab.name}");
         }

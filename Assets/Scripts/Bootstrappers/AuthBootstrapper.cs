@@ -1,9 +1,13 @@
+using System;
+using Constants;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using Unity.Services.CloudSave;
+using Unity.Services.RemoteConfig;
 
 //#if UNITY_ANDROID && !UNITY_EDITOR
 #if UNITY_ANDROID
@@ -14,6 +18,9 @@ using GooglePlayGames.BasicApi;
 public class AuthBootstrapper : MonoBehaviour
 {
     public static AuthBootstrapper Instance { get; private set; }
+    
+    [Header("Config")]
+    public string environmentId = "development"; 
 
     [Header("Scene")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
@@ -38,6 +45,28 @@ public class AuthBootstrapper : MonoBehaviour
 #endif
 
         HideAllButtons();
+    }
+
+    private void OnEnable()
+    {
+        PlayerDataLoader.OnDataLoaded += OnDataLoaded;
+        PlayerDataLoader.OnNewPlayerReady += OnNewPlayerJoined;
+        PlayerDataLoader.OnReturningPlayerReady += OnReturningPlayer;
+    }
+
+    private void OnReturningPlayer()
+    {
+        
+    }
+
+    private void OnNewPlayerJoined()
+    {
+        
+    }
+
+    private void OnDataLoaded(PlayerDataLoader.LoadResult obj)
+    {
+        
     }
 
     private void Start()
@@ -217,6 +246,14 @@ public class AuthBootstrapper : MonoBehaviour
 
         try
         {
+            if (!string.IsNullOrEmpty(environmentId))
+            {
+                RemoteConfigService.Instance.SetEnvironmentID(environmentId);
+            }
+
+            await PlayerDataLoader.Instance.LoadAllPlayerDataAsync();
+            
+            
             bool alreadyGranted = await CloudSaveManager.Instance.LoadValueAsync<bool>(STARTER_GRANTED_KEY, false);
 
             if (!alreadyGranted)

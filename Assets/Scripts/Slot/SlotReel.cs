@@ -6,7 +6,6 @@ using DG.Tweening;
 using System.Collections.Generic;
 using Gameplay.Managers;
 using Gameplay.PowerUps;
-using Unity.VisualScripting; // For DOTween animations (optional but recommended)
 
 public class SlotReel : MonoBehaviour
 {
@@ -198,7 +197,7 @@ public class SlotReel : MonoBehaviour
             }
         }*/
 
-        var icon = resultTransform.AddComponent<SlotIcon>();
+        var icon = resultTransform.gameObject.AddComponent<SlotIcon>();
         icon.SetIcon(powerUp[index]);
 
         // Enable button interaction

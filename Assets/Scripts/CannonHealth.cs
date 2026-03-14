@@ -172,7 +172,7 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
         {
             if (!invincible && currentInvincibleCount <= 0)
             {
-                GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)cannonStats._baseBulletDamage, collision.transform.position);
+               // GameEvents.FireEggHit(collision.GetComponent<IDamageable>(), (int)cannonStats._baseBulletDamage, collision.transform.position);
 
             }
             else

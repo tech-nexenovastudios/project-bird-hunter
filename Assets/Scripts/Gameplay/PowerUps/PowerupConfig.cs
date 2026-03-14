@@ -28,15 +28,31 @@ namespace Gameplay.PowerUps
         [Tooltip("becomes available in spin pool from which chapter")]
         public int unlockFromChapter;   // becomes available in spin pool from this chapter
         public bool initiallyUnlocked;  // true = available from chapter 1
-
-        [Header("Effect")]
-        public string effectType;       // matches your effect class name
-        public float baseValue;
-        public float duration;
-        public float cooldown;
-        public bool stackable;
+        
+        [Header("Bullet Modifiers")]
+        public BulletModifier[] bulletModifiers;
 
         [Header("Reset")]
         public string resetRule = "Resets at next Chapter Level 0";
     }
+    
+    [System.Serializable]
+    public class BulletModifier
+    {
+        public BulletStat stat;
+        public float multiplier = 1f;
+        public float flatBonus = 0f;
+    }
+
+    public enum BulletStat
+    {
+        Damage,
+        Speed,
+        Size,
+        Pierce,
+        SpreadAngle,
+        CritChance,
+        Bounce,
+        HomingStrength
+    }   
 }

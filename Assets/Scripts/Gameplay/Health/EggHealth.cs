@@ -87,6 +87,11 @@ namespace Gameplay.Health
             }
         }
 
+        public void TakeDamage(int damage, Vector3 hitPoint)
+        {
+            
+        }
+
         private void Die()
         {
             if (_isDead) return;

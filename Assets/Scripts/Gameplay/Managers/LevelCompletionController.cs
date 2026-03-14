@@ -14,6 +14,9 @@ namespace Gameplay.Managers
     public class LevelCompletionController : MonoBehaviour
     {
         public static LevelCompletionController Instance { get; private set; }
+        
+        [Header("Economy Settings")]
+        [SerializeField] private EconomyFormulaConfig economyFormula;
 
         [Header("Fallback")]
         [SerializeField] private int fallbackTargetScore = 1000;

@@ -118,7 +118,7 @@ namespace Gameplay.Managers
 
             if (currentCannon != null)
             {
-                var baseCannon = currentCannon.GetComponent<BaseCannon>();
+                var baseCannon = currentCannon.GetComponent<ICannonBase>();
                 if (baseCannon != null) baseCannon.StopFiring();
             }
 
@@ -154,7 +154,7 @@ namespace Gameplay.Managers
             }
             else
             {
-                var baseCannon = currentCannon.GetComponent<BaseCannon>();
+                var baseCannon = currentCannon.GetComponent<ICannonBase>();
                 //if (baseCannon != null) baseCannon.StartFiring();
             }
 

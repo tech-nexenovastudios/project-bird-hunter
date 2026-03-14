@@ -7,44 +7,45 @@ using TMPro;
 
 public class CannonUpgradeManager : MonoBehaviour
 {
-    [Header("Data")]
-    [SerializeField] private CannonHolder_SO cannonHolderSO;
+    [Header("Data")] [SerializeField] private CannonHolder_SO cannonHolderSO;
 
-    [Header("Cannon Items")]
-    [SerializeField] private List<CannonUpgradeItemUI> cannonItems;
+    [Header("Cannon Items")] [SerializeField]
+    private List<CannonUpgradeItemUI> cannonItems;
 
-    [Header("Stats Display")]
-    [SerializeField] private Image selectedCannonImage;
+    [Header("Stats Display")] [SerializeField]
+    private Image selectedCannonImage;
+
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI statsLevelText;
     [SerializeField] private TextMeshProUGUI damageText;
     [SerializeField] private TextMeshProUGUI healthText;
     [SerializeField] private TextMeshProUGUI fireRateText;
 
-    [Header("Stats Fill (Current)")]
-    [SerializeField] private Image damageFillCurrent;
+    [Header("Stats Fill (Current)")] [SerializeField]
+    private Image damageFillCurrent;
+
     [SerializeField] private Image healthFillCurrent;
     [SerializeField] private Image fireRateFillCurrent;
 
-    [Header("Stats Fill (Next Level Preview)")]
-    [SerializeField] private Image damageFillNext;
+    [Header("Stats Fill (Next Level Preview)")] [SerializeField]
+    private Image damageFillNext;
+
     [SerializeField] private Image healthFillNext;
     [SerializeField] private Image fireRateFillNext;
 
-    [Header("Fill Gap")]
-    [SerializeField] private float fillGap = 0.05f;
+    [Header("Fill Gap")] [SerializeField] private float fillGap = 0.05f;
 
-    [Header("Max Level")]
-    [SerializeField] private int maxCannonLevel = 100;
+    [Header("Max Level")] [SerializeField] private int maxCannonLevel = 100;
 
-    [Header("Upgrade Button")]
-    [SerializeField] private Button upgradeButton;
+    [Header("Upgrade Button")] [SerializeField]
+    private Button upgradeButton;
 
-    [Header("Description")]
-    [SerializeField] private TextMeshProUGUI cannonDescriptionText;
+    [Header("Description")] [SerializeField]
+    private TextMeshProUGUI cannonDescriptionText;
 
-    [Header("Visual States")]
-    [SerializeField] private Sprite activeBg;
+    [Header("Visual States")] [SerializeField]
+    private Sprite activeBg;
+
     [SerializeField] private Sprite normalBg;
 
     private int selectedIndex = -1;
@@ -76,7 +77,9 @@ public class CannonUpgradeManager : MonoBehaviour
         CannonLockManager.OnCannonUnlocked -= OnCannonUnlockedHandler;
         CannonLockManager.OnAllUnlockStatesLoaded -= RefreshAllLockVisuals;
     }
-    public static event Action OnAllLevelsLoaded; 
+
+    public static event Action OnAllLevelsLoaded;
+
     private void Start()
     {
         CacheAllBaseValues();
@@ -166,9 +169,9 @@ public class CannonUpgradeManager : MonoBehaviour
                 cannonHolderSO.cannonsData[i].ReplayToLevel(savedLevel);
             }
 
-            foreach(var cannon in cannonHolderSO.cannonsData)
+            foreach (var cannon in cannonHolderSO.cannonsData)
             {
-                Debug.Log($"[CannonUpgrade] {cannon.cannonName} loaded at Level {cannon.cannonLevel} damege {cannon.cannonStats.baseBulletDamage}");
+                //Debug.Log($"[CannonUpgrade] {cannon.cannonName} loaded at Level {cannon.cannonLevel} damege {cannon.cannonStats.baseBulletDamage}");
             }
 
             Debug.Log("[CannonUpgrade] Loaded and replayed all cannon levels from cloud.");
@@ -238,12 +241,12 @@ public class CannonUpgradeManager : MonoBehaviour
     }
 
     // ==================== Stats Display ====================
-
     private void UpdateStatsDisplay()
     {
         if (selectedIndex < 0 || selectedIndex >= cannonHolderSO.cannonsData.Length) return;
 
         var data = cannonHolderSO.cannonsData[selectedIndex];
+        var stats = data.cannonStats;
 
         if (selectedCannonImage != null)
             selectedCannonImage.sprite = data.cannonSprite;
@@ -257,40 +260,41 @@ public class CannonUpgradeManager : MonoBehaviour
         if (statsLevelText != null)
             statsLevelText.text = $"Level {data.cannonLevel}";
 
-        if (data.cannonStats != null)
-        {
-            var stats = data.cannonStats;
+        if (stats == null) return;
 
-            float maxDamage = stats._baseBulletDamage + (stats.damageIncrement * maxCannonLevel);
-            float maxHealth = stats._baseMaxHealth + (stats.healthIncrement * maxCannonLevel);
-            float maxFireRate = stats._baseFireRate + (stats.fireRateIncrement * maxCannonLevel);
+        var bullet = stats.baseBulletConfig; // ← bullet values live here now
 
-            float curDamage = stats.bulletDamage;
-            float curHealth = stats.maxHealth;
-            float curFireRate = stats.fireRate;
+        // ── Max values for fill bar normalization ──
+        float maxDamage = bullet != null ? bullet.baseDamage + (bullet.damageIncrement * maxCannonLevel) : 1f;
+        float maxHealth = stats._baseMaxHealth + (stats.healthIncrement * maxCannonLevel);
+        float maxFireRate = stats._baseFireRate + (stats.fireRateIncrement * maxCannonLevel);
 
-            float nextDamage = curDamage + stats.damageIncrement;
-            float nextHealth = curHealth + stats.healthIncrement;
-            float nextFireRate = curFireRate + stats.fireRateIncrement;
+        // ── Current runtime values ──
+        float curDamage = bullet != null ? bullet.currentDamage : 0f;
+        float curHealth = stats.maxHealth;
+        float curFireRate = stats.fireRate;
 
-            if (damageText != null)
-                damageText.text = "DAMAGE:";
+        // ── Next level preview ──
+        float nextDamage = curDamage + (bullet != null ? bullet.damageIncrement : 0f);
+        float nextHealth = curHealth + stats.healthIncrement;
+        float nextFireRate = curFireRate + stats.fireRateIncrement;
 
-            if (healthText != null)
-                healthText.text = "HEALTH:";
+        // ── Labels ──
+        if (damageText != null) damageText.text = "DAMAGE:";
+        if (healthText != null) healthText.text = "HEALTH:";
+        if (fireRateText != null) fireRateText.text = "FIRE RATE:";
 
-            if (fireRateText != null)
-                fireRateText.text = "FIRE RATE:";
+        // ── Current fills ──
+        SetFill(damageFillCurrent, curDamage / maxDamage);
+        SetFill(healthFillCurrent, curHealth / maxHealth);
+        SetFill(fireRateFillCurrent, curFireRate / maxFireRate);
 
-            SetFill(damageFillCurrent, curDamage / maxDamage);
-            SetFill(healthFillCurrent, curHealth / maxHealth);
-            SetFill(fireRateFillCurrent, curFireRate / maxFireRate);
-
-            SetNextFill(damageFillNext, curDamage / maxDamage, nextDamage / maxDamage);
-            SetNextFill(healthFillNext, curHealth / maxHealth, nextHealth / maxHealth);
-            SetNextFill(fireRateFillNext, curFireRate / maxFireRate, nextFireRate / maxFireRate);
-        }
+        // ── Next level fills ──
+        SetNextFill(damageFillNext, curDamage / maxDamage, nextDamage / maxDamage);
+        SetNextFill(healthFillNext, curHealth / maxHealth, nextHealth / maxHealth);
+        SetNextFill(fireRateFillNext, curFireRate / maxFireRate, nextFireRate / maxFireRate);
     }
+
 
     private void SetFill(Image fillImage, float ratio)
     {

@@ -28,6 +28,7 @@ public class AbilityManager : MonoBehaviour
 
     private void Start()
     {
+        return;
         if (PlayerPrefs.HasKey("AbilityIndex"))
         {
             activeAbility = abilities[PlayerPrefs.GetInt("AbilityIndex")];

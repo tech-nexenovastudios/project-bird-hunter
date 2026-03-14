@@ -2,154 +2,150 @@ using System;
 using DG.Tweening;
 using Gameplay.Events;
 using Gameplay.Interfaces;
-using Gameplay.Eggs;
 using TMPro;
 using UnityEngine;
 
 namespace Gameplay.Player
 {
-    public abstract class BaseBullet : MonoBehaviour
+    public interface IInitializable
     {
-        [Header("Base Settings")]
-        public float bulletSpeed;
-        public float damage;
-        public float lifetime = 5f;
+        void Initialize(BulletConfig config, Vector2 direction, Action<IBullet> releaseAction = null);
+    }
+    public interface IBulletBehaviour<TBullet>
+    {
+        void OnSpawn(TBullet bullet);
+        void Tick(TBullet bullet, float dt);
+        void OnHit(TBullet bullet, Collider2D collider);
+        void OnDespawn(TBullet bullet);
+    }
 
-        [Header("Hit Impulse")]
-        [SerializeField] protected float maxHitImpulseForce = 8f;
-        [SerializeField] protected float minHitImpulseForce = 2f;
-        [SerializeField] protected float maxForceDistance   = 10f;
-        [SerializeField] protected bool  applyHitImpulse    = true;
+    public interface IBullet
+    {
+        void Deactivate();
+        GameObject gameObject { get; }
+        void SetReleaseAction(Action<IBullet> releaseBulletToPool);
+    }
+
+    public abstract class BaseBullet<TBullet, TBehaviour> : MonoBehaviour, IBullet, IInitializable
+        where TBullet    : BaseBullet<TBullet, TBehaviour>
+        where TBehaviour : IBulletBehaviour<TBullet>, new()
+    {
+        [Header("Runtime Stats")]
+        public float currentDamage;
+        public float currentSpeed;
+        public float currentSize;
+        public int pierceRemaining;
 
         [Header("VFX & UI")]
-        public GameObject damageTextPrefab;
+        public GameObject damageTextPrefab;  // ← MOVED HERE
 
         protected Rigidbody2D rb;
-        protected float       currentLifetime;
+        protected TBehaviour behaviour;
+        protected BulletConfig config;
+        protected Vector2 direction;
+        protected float lifetime;
+        protected float currentLifetime;
         protected bool isDeactivated;
+        protected Action<IBullet> releaseToPool;
         protected Vector2 startPosition;
-
-        private Action<BaseBullet> releaseToPool;
 
         protected virtual void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
+            behaviour = new TBehaviour();
         }
 
-        public void SetReleaseAction(Action<BaseBullet> releaseAction)
+        public virtual void Initialize(
+            BulletConfig bulletConfig,
+            Vector2 shootDirection,
+            Action<IBullet> releaseAction = null)
         {
+            config = bulletConfig;
+            direction = shootDirection.normalized;
             releaseToPool = releaseAction;
+            ApplyConfig();
+            ResetState();
+            behaviour.OnSpawn((TBullet)this);
         }
 
-        public void Init(CannonStats stats)
+        protected virtual void ApplyConfig()
         {
-            bulletSpeed = stats.currentBulletSpeed;
-            damage = stats.currentBulletDamage;
-
-            if (rb != null)
-            {
-                rb.mass = stats.baseBulletMass;
-            }
-
-            startPosition = transform.position;
-
-            if (rb != null)
-            {
-                rb.linearVelocity = (Vector2)transform.up * bulletSpeed;
-                rb.angularVelocity = 0f;
-            }
+            if (config == null) return;
+            currentDamage = config.baseDamage;
+            currentSpeed = config.baseSpeed;
+            currentSize = config.baseSize;
+            pierceRemaining = config.pierceCount;
+            lifetime = config.lifetime;
+            transform.localScale = Vector3.one * currentSize;
+            if (rb != null) rb.mass = config.mass;
         }
 
-        protected virtual void OnEnable()
+        protected virtual void ResetState()
         {
-            currentLifetime = 0f;
             isDeactivated = false;
+            currentLifetime = 0f;
             startPosition = transform.position;
-
             if (rb != null)
             {
                 rb.angularVelocity = 0f;
+                rb.linearVelocity = direction * currentSpeed;
             }
         }
 
         protected virtual void Update()
         {
             if (isDeactivated) return;
-
-            currentLifetime += Time.deltaTime;
-            if (currentLifetime >= lifetime)
-                Deactivate();
+            float dt = Time.deltaTime;
+            currentLifetime += dt;
+            behaviour.Tick((TBullet)this, dt);
+            if (currentLifetime >= lifetime) Deactivate();
         }
 
-        protected void OnCollisionEnter2D(Collision2D other)
+        // ─────────────────────────────────────────
+        // Tag-based hit detection (ALL bullets)
+        // ─────────────────────────────────────────
+        protected virtual void OnTriggerEnter2D(Collider2D collider)
         {
             if (isDeactivated) return;
 
-            if (other.gameObject.CompareTag("Wall"))
+            if (collider.CompareTag("Wall"))
             {
                 Deactivate();
                 return;
             }
-            
-            if (other.gameObject.CompareTag("Egg"))
+
+            if (collider.CompareTag("Bird") || collider.CompareTag("Egg"))
             {
-                OnHitTarget(other.collider);
+                behaviour.OnHit((TBullet)this, collider);
             }
         }
 
-        protected virtual void OnHitTarget(Collider2D collision)
+        // ─────────────────────────────────────────
+        // Core hit handler (ALL bullets use this)
+        // ─────────────────────────────────────────
+        public virtual void ApplyDamage(Collider2D collider)
         {
-            Vector3 hitPoint = collision.ClosestPoint(transform.position);
+            Vector3 hitPoint = collider.ClosestPoint(transform.position);
 
-            if (collision.TryGetComponent<IDamageable>(out var damageable))
-            {
-                damageable.TakeDamage((int)damage);
+            if (!collider.TryGetComponent<IDamageable>(out var damageable)) return;
 
-                if (collision.CompareTag("Egg"))
-                    GameEvents.FireEggHit(damageable, (int)damage, hitPoint);
-                else if (collision.CompareTag("Bird"))
-                    GameEvents.FireBirdHit(damageable, (int)damage, hitPoint);
+            damageable.TakeDamage((int)currentDamage, hitPoint);
 
-                ShowDamageText(hitPoint, damage);
-                ApplyElementalEffects(collision.gameObject);
+            // Fire events
+            if (collider.CompareTag("Egg"))
+                GameEvents.FireEggHit(damageable, (int)currentDamage, hitPoint);
+            else if (collider.CompareTag("Bird"))
+                GameEvents.FireBirdHit(damageable, (int)currentDamage, hitPoint);
 
-                // Only apply hit impulse to eggs — birds handle their own knockback
-                if (collision.CompareTag("Egg"))
-                    ApplyHitImpulse(collision);
-            }
-
-            HandlePostHit(collision);
+            // ← ALL bullets get this automatically
+            ShowDamageText(hitPoint, currentDamage);
+            ApplyElementalEffects(collider.gameObject);
         }
 
-        protected virtual void ApplyHitImpulse(Collider2D collision)
-        {
-            if (!applyHitImpulse) return;
-
-            Egg egg = collision.GetComponent<Egg>();
-            if (egg == null) return;
-
-            Vector2 bulletDir = rb != null && rb.linearVelocity.sqrMagnitude > 0.0001f ? rb.linearVelocity.normalized : (Vector2)transform.up.normalized;
-            
-            float distance = Vector2.Distance(startPosition, transform.position);
-            float t = maxForceDistance > 0f ? Mathf.Clamp01(distance / maxForceDistance) : 1f;
-            float impulseForce = Mathf.Lerp(maxHitImpulseForce, minHitImpulseForce, t);
-
-            egg.ApplyBulletHitForce(bulletDir, impulseForce);
-        }
-
-        protected virtual void HandlePostHit(Collider2D collision)
-        {
-            Deactivate();
-        }
-
-        protected abstract void HandleMovement();
-
-        protected virtual void ApplyElementalEffects(GameObject target)
-        {
-            // Override in subclass for fire, electric, poison, freeze
-        }
-
-        private void ShowDamageText(Vector3 position, float amount)
+        // ─────────────────────────────────────────
+        // Damage text (ALL bullets inherit this)
+        // ─────────────────────────────────────────
+        protected virtual void ShowDamageText(Vector3 position, float amount)
         {
             GameObject go = null;
 
@@ -164,43 +160,56 @@ namespace Gameplay.Player
                 go = Instantiate(damageTextPrefab, position, Quaternion.identity);
             }
 
-            if (go != null)
+            if (go == null) return;
+
+            var tmp = go.GetComponent<TextMeshPro>();
+            if (tmp == null) return;
+
+            tmp.text = $"-{amount:0}";
+            tmp.color = new Color(tmp.color.r, tmp.color.g, tmp.color.b, 1f);
+            go.transform.DOMoveY(position.y + 2f, 1f);
+            tmp.DOFade(0f, 1f).OnComplete(() =>
             {
-                var tmp = go.GetComponent<TMP_Text>();
-                if (tmp != null)
-                {
-                    tmp.text  = $"-{amount:0}";
-                    tmp.color = new Color(tmp.color.r, tmp.color.g, tmp.color.b, 1f);
-                    go.transform.DOMoveY(position.y + 2f, 1f);
-                    tmp.DOFade(0f, 1f).OnComplete(() =>
-                    {
-                        go.SetActive(false);
-                        GamePoolManager.bulletDamageTextQueue.Enqueue(go);
-                    });
-                }
-            }
+                go.SetActive(false);
+                GamePoolManager.bulletDamageTextQueue.Enqueue(go);
+            });
+        }
+
+        // ─────────────────────────────────────────
+        // Elemental hook (ALL bullets, override in subclass)
+        // ─────────────────────────────────────────
+        protected virtual void ApplyElementalEffects(GameObject target) { }
+
+        public virtual void SetVelocity(Vector2 dir)
+        {
+            if (rb == null) return;
+            rb.linearVelocity = dir.normalized * currentSpeed;
+        }
+
+        public virtual void StopMovement()
+        {
+            if (rb == null) return;
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
         }
 
         public virtual void Deactivate()
         {
             if (isDeactivated) return;
-
             isDeactivated = true;
-
-            if (rb != null)
-            {
-                rb.linearVelocity = Vector2.zero;
-                rb.angularVelocity = 0f;
-            }
-
-            if (releaseToPool != null)
-            {
-                releaseToPool.Invoke(this);
-                return;
-            }
-
+            behaviour.OnDespawn((TBullet)this);
+            StopMovement();
+            if (releaseToPool != null) { releaseToPool.Invoke(this); return; }
             gameObject.SetActive(false);
-            Destroy(gameObject);
         }
+
+        public void SetReleaseAction(Action<IBullet> releaseBulletToPool)
+            => releaseToPool = releaseBulletToPool;
+
+        protected virtual void OnDisable() => StopMovement();
+
+        public Vector2 GetDirection() => direction;
+        public Vector2 GetVelocity() => rb != null ? rb.linearVelocity : Vector2.zero;
+        public Vector2 GetTravelVector() => (Vector2)transform.position - startPosition;
     }
 }

@@ -4,49 +4,43 @@ namespace Gameplay.Player
 {
     /// <summary>
     /// Snapshot of a single collision or trigger event on a BaseCannon.
-    /// Carries which child part was hit and the final damage already
-    /// scaled by that part's damageMultiplier.
+    /// Non-generic — collision data never needs to know the bullet type.
     /// </summary>
     public class CannonCollisionData
     {
-        /// <summary>The BaseCannon that owns this event.</summary>
-        public BaseCannon sourceCannon;
+        /// The BaseCannon that owns this event (non-generic base reference)
+        public ICannonBase sourceCannon;
 
-        /// <summary>The specific child part that received the hit.</summary>
+        /// The specific child part that received the hit
         public CannonPartCollider hitPart;
 
-        /// <summary>Shorthand for the part type enum.</summary>
+        /// Shorthand for part type enum
         public CannonPartType HitPartType => hitPart != null ? hitPart.partType : CannonPartType.Body;
 
-        /// <summary>The other GameObject involved.</summary>
+        /// The other GameObject involved
         public GameObject otherObject;
 
-        /// <summary>World-space contact point (zero for triggers).</summary>
+        /// World-space contact point (zero for triggers)
         public Vector2 contactPoint;
 
-        /// <summary>Surface normal at contact (zero for triggers).</summary>
+        /// Surface normal at contact (zero for triggers)
         public Vector2 contactNormal;
 
-        /// <summary>Relative velocity magnitude at impact (zero for triggers).</summary>
+        /// Relative velocity magnitude at impact (zero for triggers)
         public float impactForce;
 
-        /// <summary>Type of physics event that produced this data.</summary>
+        /// Type of physics event that produced this data
         public CollisionEventType eventType;
 
-        /// <summary>Time.time when the event occurred.</summary>
+        /// Time.time when the event occurred
         public float timestamp;
 
-        /// <summary>
-        /// Raw damage from the hazard already multiplied by hitPart.damageMultiplier.
-        /// Set by BaseCannon.ApplyPartDamageIfHazard — read this in subclass hooks
-        /// if you need to know how much damage was actually dealt.
-        /// </summary>
+        /// Raw damage already scaled by hitPart.damageMultiplier
         public int FinalDamage { get; private set; }
-
         internal void SetFinalDamage(int value) => FinalDamage = value;
 
         public override string ToString() =>
-            $"[CannonCollision] source='{sourceCannon?.name}' | part={HitPartType} " +
+            $"[CannonCollision] source='{sourceCannon?.CannonName}' | part={HitPartType} " +
             $"(x{hitPart?.damageMultiplier:F1}) | dmg={FinalDamage} | {eventType} | " +
             $"other='{otherObject?.name}' | t={timestamp:F2}s";
     }
@@ -58,13 +52,12 @@ namespace Gameplay.Player
         TriggerEnter,
         TriggerExit
     }
-
-    /// <summary>
-    /// Implement on any hazard that deals damage on contact (e.g. EggDamage).
-    /// BaseCannon reads DamageAmount and scales it by the hit part's multiplier.
-    /// </summary>
-    public interface IDamageSource
+    public enum CannonPartType
     {
-        int DamageAmount { get; }
+        Body,    // main hull     — 1.0×
+        Barrel,  // gun tube      — 1.5×
+        Wheel,   // mobility      — 0.75×
+        Shield,  // armour        — 0.5×
+        Base     // platform      — 1.0×
     }
 }
