@@ -174,7 +174,7 @@ namespace Gameplay.Managers
         {
             Debug.Log($"Progress changed to Ch{progress.currentChapter} L{progress.currentLevel}");
 
-            currentLevelText.text = $"Level {progress.currentLevel} | Level {progress.currentLevel}";
+//            currentLevelText.text = $"Level {progress.currentLevel} | Level {progress.currentLevel}";
             
             if (!_pendingLevelStart) return; // ignore SaveProgress duplicate fires
             _pendingLevelStart = false;

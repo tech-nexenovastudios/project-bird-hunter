@@ -11,111 +11,85 @@ namespace Gameplay.Managers
         public static BulletManager Instance { get; private set; }
 
         [Header("Bullet Prefabs")]
-        [SerializeField] private StraightBullet  straightBulletPrefab;
-        [SerializeField] private SpreadBullet    spreadBulletPrefab;
-        [SerializeField] private ExplosiveBullet explosiveBulletPrefab;
-        [SerializeField] private HomingBullet    homingBulletPrefab;
-        [SerializeField] private SplitBullet     splitBulletPrefab;
-        [SerializeField] private PierceBullet    pierceBulletPrefab;
-        [SerializeField] private BounceBullet    bounceBulletPrefab;
+        [SerializeField] private StraightBullet straightBulletPrefab;
 
         [Header("Pool Settings")]
         [SerializeField] private int defaultCapacity = 10;
-        [SerializeField] private int maxSize = 30;
+        [SerializeField] private int maxSize         = 30;
 
-        // Per-type pool storage
-        private readonly Dictionary<Type, object> _pools = new();
+        private readonly Dictionary<Type, object>         _pools   = new();
+        private readonly Dictionary<Type, MonoBehaviour>  _prefabs = new();
 
         private void Awake()
         {
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
-            PrewarmPools();
+            Register(straightBulletPrefab);
         }
 
-        private void PrewarmPools()
-        {
-            GetOrCreatePool<StraightBullet>  (straightBulletPrefab);
-            GetOrCreatePool<SpreadBullet>    (spreadBulletPrefab);
-            GetOrCreatePool<ExplosiveBullet> (explosiveBulletPrefab);
-            GetOrCreatePool<HomingBullet>    (homingBulletPrefab);
-            GetOrCreatePool<SplitBullet>     (splitBulletPrefab);
-            GetOrCreatePool<PierceBullet>    (pierceBulletPrefab);
-            GetOrCreatePool<BounceBullet>    (bounceBulletPrefab);
-        }
-
-        public TBullet SpawnBullet<TBullet>(
-            BulletConfig config,
-            Vector2 position,
-            Vector2 direction)
+        private void Register<TBullet>(TBullet prefab)
             where TBullet : MonoBehaviour, IBullet
         {
-            var pool = GetOrCreatePool<TBullet>(GetPrefab<TBullet>());
-            var bullet = pool.Get();
-
-            bullet.transform.position = (Vector3)position;
-            bullet.transform.up       = (Vector3)direction;
-            bullet.SetReleaseAction(b => pool.Release((TBullet)b));
-
-            if (bullet is IInitializable init)
-                init.Initialize(config, direction);
-
-            return bullet;
+            if (prefab == null)
+            {
+                Debug.LogError($"[BulletManager] Prefab for {typeof(TBullet).Name} is not assigned in the Inspector!");
+                return;
+            }
+            _prefabs[typeof(TBullet)] = prefab;
+            CreatePool<TBullet>(prefab);
         }
 
-        // ─────────────────────────────────────────
-        // Pool getter / creator
-        // ─────────────────────────────────────────
-        private ObjectPool<TBullet> GetOrCreatePool<TBullet>(MonoBehaviour prefab = null)
+        // ── Public API ────────────────────────────────────────────────────
+        public TBullet SpawnBullet<TBullet>(BulletConfig config, Vector2 position, Vector2 direction)
             where TBullet : MonoBehaviour, IBullet
         {
-            var type = typeof(TBullet);
-            if (_pools.TryGetValue(type, out var existing))
+            var pool   = GetPool<TBullet>();
+            var bullet = pool.Get();                       // ← actionOnGet: SetActive(true) → OnEnable (safe)
+
+            bullet.transform.position = position;
+            bullet.transform.up       = direction;         // ✅ 2D rotation — sets Z axis correctly
+
+            Debug.Log("Bullet spawned: " + bullet.GetType().Name);
+
+            if (config != null)
+            { 
+                bullet.Initialize(config, direction, b => pool.Release((TBullet)b));  // ✅ single owner of releaseAction
+                return bullet;
+            }
+            Debug.Log("Bullet config: " + config.ToString());
+            
+
+           return null;
+        }
+
+        // ── Pool internals ─────────────────────────────────────────────────
+        private ObjectPool<TBullet> GetPool<TBullet>()
+            where TBullet : MonoBehaviour, IBullet
+        {
+            if (_pools.TryGetValue(typeof(TBullet), out var existing))
                 return (ObjectPool<TBullet>)existing;
 
-            var pool = new ObjectPool<TBullet>(
-                createFunc: () =>
-                {
-                    var go = Instantiate(prefab.gameObject);
-                    go.SetActive(false);
-                    return go.GetComponent<TBullet>();
-                },
-                actionOnGet:     b => b.gameObject.SetActive(true),
-                actionOnRelease: b =>
-                {
-                    b.gameObject.SetActive(false);
-                    if (b.TryGetComponent<Rigidbody2D>(out var rb))
-                    {
-                        rb.linearVelocity  = Vector2.zero;
-                        rb.angularVelocity = 0f;
-                    }
-                },
-                actionOnDestroy: b => Destroy(b.gameObject),
-                collectionCheck: true,
-                defaultCapacity: defaultCapacity,
-                maxSize: maxSize
-            );
+            if (!_prefabs.TryGetValue(typeof(TBullet), out var prefab))
+                throw new Exception($"[BulletManager] No prefab registered for {typeof(TBullet).Name}. Call Register() in Awake.");
 
-            _pools[type] = pool;
-            return pool;
+            return CreatePool<TBullet>((TBullet)prefab);
         }
 
-        // ─────────────────────────────────────────
-        // Prefab lookup by type
-        // ─────────────────────────────────────────
-        private MonoBehaviour GetPrefab<TBullet>() where TBullet : MonoBehaviour
+        private ObjectPool<TBullet> CreatePool<TBullet>(TBullet prefab)
+            where TBullet : MonoBehaviour, IBullet
         {
-            return typeof(TBullet) switch
-            {
-                var t when t == typeof(StraightBullet)  => straightBulletPrefab,
-                var t when t == typeof(SpreadBullet)    => spreadBulletPrefab,
-                var t when t == typeof(ExplosiveBullet) => explosiveBulletPrefab,
-                var t when t == typeof(HomingBullet)    => homingBulletPrefab,
-                var t when t == typeof(SplitBullet)     => splitBulletPrefab,
-                var t when t == typeof(PierceBullet)    => pierceBulletPrefab,
-                var t when t == typeof(BounceBullet)    => bounceBulletPrefab,
-                _ => throw new Exception($"[BulletManager] No prefab for {typeof(TBullet).Name}")
-            };
+            var pool = new ObjectPool<TBullet>(
+                createFunc:      ()  => { var go = Instantiate(prefab.gameObject); go.SetActive(false); return go.GetComponent<TBullet>(); },
+                actionOnGet:     b   => b.gameObject.SetActive(true),   // ✅ OnEnable fires — behaviour null-check safe
+                actionOnRelease: b   => b.gameObject.SetActive(false),  // ✅ physics cleared in Deactivate before this runs
+                actionOnDestroy: b   => Destroy(b.gameObject),
+                collectionCheck: true,
+                defaultCapacity: defaultCapacity,
+                maxSize:         maxSize
+            );
+
+            _pools[typeof(TBullet)] = pool;
+            return pool;
         }
 
         private void OnDestroy()

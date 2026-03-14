@@ -5,167 +5,162 @@ using Gameplay.Interfaces;
 using TMPro;
 using UnityEngine;
 
-namespace Gameplay.Player
+namespace Gameplay.Player                          // ✅ namespace wraps EVERYTHING
 {
-    public interface IInitializable
+    public interface IBullet
     {
-        void Initialize(BulletConfig config, Vector2 direction, Action<IBullet> releaseAction = null);
+        void Initialize(BulletConfig config, Vector2 direction, Action<IBullet> releaseAction);
+        void Deactivate();
+        GameObject gameObject { get; }
     }
+
     public interface IBulletBehaviour<TBullet>
+        where TBullet : BaseBullet<TBullet>        // ✅ correct generic constraint
     {
-        void OnSpawn(TBullet bullet);
-        void Tick(TBullet bullet, float dt);
-        void OnHit(TBullet bullet, Collider2D collider);
+        void OnSpawn  (TBullet bullet);
+        void Tick     (TBullet bullet, float dt);
+        void OnHit    (TBullet bullet, Collider2D collider);
         void OnDespawn(TBullet bullet);
     }
 
-    public interface IBullet
-    {
-        void Deactivate();
-        GameObject gameObject { get; }
-        void SetReleaseAction(Action<IBullet> releaseBulletToPool);
-    }
-
-    public abstract class BaseBullet<TBullet, TBehaviour> : MonoBehaviour, IBullet, IInitializable
-        where TBullet    : BaseBullet<TBullet, TBehaviour>
-        where TBehaviour : IBulletBehaviour<TBullet>, new()
+    public abstract class BaseBullet<TBullet> : MonoBehaviour, IBullet
+        where TBullet : BaseBullet<TBullet>        // ✅ recursive generic constraint
     {
         [Header("Runtime Stats")]
         public float currentDamage;
         public float currentSpeed;
         public float currentSize;
-        public int pierceRemaining;
+        public int   pierceRemaining;
 
         [Header("VFX & UI")]
-        public GameObject damageTextPrefab;  // ← MOVED HERE
+        public GameObject damageTextPrefab;
 
         protected Rigidbody2D rb;
-        protected TBehaviour behaviour;
         protected BulletConfig config;
         protected Vector2 direction;
-        protected float lifetime;
-        protected float currentLifetime;
-        protected bool isDeactivated;
-        protected Action<IBullet> releaseToPool;
-        protected Vector2 startPosition;
 
+        private IBulletBehaviour<TBullet> _behaviour;
+        private Action<IBullet>           _releaseToPool;
+        private float                     _lifetime;
+        private float                     _elapsed;
+        private bool                      _active;
+
+        // ── Lifecycle ─────────────────────────────────────────────────────
         protected virtual void Awake()
         {
-            rb = GetComponent<Rigidbody2D>();
-            behaviour = new TBehaviour();
+            rb         = GetComponent<Rigidbody2D>();
+            _behaviour = CreateBehaviour();
         }
 
-        public virtual void Initialize(
-            BulletConfig bulletConfig,
-            Vector2 shootDirection,
-            Action<IBullet> releaseAction = null)
-        {
-            config = bulletConfig;
-            direction = shootDirection.normalized;
-            releaseToPool = releaseAction;
-            ApplyConfig();
-            ResetState();
-            behaviour.OnSpawn((TBullet)this);
-        }
+        // Each subclass returns its own behaviour — no external generic param needed
+        protected abstract IBulletBehaviour<TBullet> CreateBehaviour();
 
-        protected virtual void ApplyConfig()
+        // ── IBullet.Initialize ────────────────────────────────────────────
+        public void Initialize(BulletConfig cfg, Vector2 dir, Action<IBullet> releaseAction)
         {
-            if (config == null) return;
-            currentDamage = config.baseDamage;
-            currentSpeed = config.baseSpeed;
-            currentSize = config.baseSize;
-            pierceRemaining = config.pierceCount;
-            lifetime = config.lifetime;
+            config         = cfg;                          // ✅ assigned first — no null
+            direction      = dir.normalized;
+            _releaseToPool = releaseAction;                // ✅ stored here, never overwritten
+
+            currentDamage   = cfg.baseDamage;
+            currentSpeed    = cfg.baseSpeed;
+            currentSize     = cfg.baseSize;
+            pierceRemaining = cfg.pierceCount;
+            _lifetime       = cfg.lifetime;
+            _elapsed        = 0f;
+            _active         = true;
+
             transform.localScale = Vector3.one * currentSize;
-            if (rb != null) rb.mass = config.mass;
-        }
 
-        protected virtual void ResetState()
-        {
-            isDeactivated = false;
-            currentLifetime = 0f;
-            startPosition = transform.position;
             if (rb != null)
             {
+                rb.mass            = cfg.mass;
                 rb.angularVelocity = 0f;
-                rb.linearVelocity = direction * currentSpeed;
+                rb.linearVelocity  = direction * currentSpeed;  // ✅ moves in correct direction
             }
+
+            _behaviour?.OnSpawn((TBullet)this);             // ✅ called LAST — all data ready
         }
 
+        // ── IBullet.Deactivate ────────────────────────────────────────────
+        public virtual void Deactivate()
+        {
+            if (!_active) return;
+            _active = false;
+
+            _behaviour?.OnDespawn((TBullet)this);
+
+            if (rb != null)
+            {
+                rb.linearVelocity  = Vector2.zero;
+                rb.angularVelocity = 0f;
+            }
+
+            if (_releaseToPool != null)
+                _releaseToPool.Invoke(this);               // ✅ always returns to pool
+            else
+                gameObject.SetActive(false);
+        }
+
+        // ── OnEnable — NO game logic ──────────────────────────────────────
+        protected virtual void OnEnable()
+        {
+            if (_behaviour == null) _behaviour = CreateBehaviour();  // ✅ safety only
+        }
+
+        // ── Update ────────────────────────────────────────────────────────
         protected virtual void Update()
         {
-            if (isDeactivated) return;
-            float dt = Time.deltaTime;
-            currentLifetime += dt;
-            behaviour.Tick((TBullet)this, dt);
-            if (currentLifetime >= lifetime) Deactivate();
+            if (!_active) return;
+            _elapsed += Time.deltaTime;
+            _behaviour?.Tick((TBullet)this, Time.deltaTime);
+            if (_elapsed >= _lifetime) Deactivate();
         }
 
-        // ─────────────────────────────────────────
-        // Tag-based hit detection (ALL bullets)
-        // ─────────────────────────────────────────
-        protected virtual void OnTriggerEnter2D(Collider2D collider)
+        // ── Collision ─────────────────────────────────────────────────────
+        protected virtual void OnTriggerEnter2D(Collider2D col)
         {
-            if (isDeactivated) return;
-
-            if (collider.CompareTag("Wall"))
-            {
-                Deactivate();
-                return;
-            }
-
-            if (collider.CompareTag("Bird") || collider.CompareTag("Egg"))
-            {
-                behaviour.OnHit((TBullet)this, collider);
-            }
+            if (!_active) return;
+            if (col.CompareTag("Wall"))                           { Deactivate(); return; }
+            if (col.CompareTag("Bird") || col.CompareTag("Egg"))   _behaviour?.OnHit((TBullet)this, col);
         }
 
-        // ─────────────────────────────────────────
-        // Core hit handler (ALL bullets use this)
-        // ─────────────────────────────────────────
-        public virtual void ApplyDamage(Collider2D collider)
+        // ── Damage ────────────────────────────────────────────────────────
+        public virtual void ApplyDamage(Collider2D col)
         {
-            Vector3 hitPoint = collider.ClosestPoint(transform.position);
+            Vector3 hitPoint = col.ClosestPoint(transform.position);
+            if (!col.TryGetComponent<IDamageable>(out var dmg)) return;
 
-            if (!collider.TryGetComponent<IDamageable>(out var damageable)) return;
+            dmg.TakeDamage((int)currentDamage, hitPoint);
 
-            damageable.TakeDamage((int)currentDamage, hitPoint);
+            if      (col.CompareTag("Egg"))  GameEvents.FireEggHit (dmg, (int)currentDamage, hitPoint);
+            else if (col.CompareTag("Bird")) GameEvents.FireBirdHit(dmg, (int)currentDamage, hitPoint);
 
-            // Fire events
-            if (collider.CompareTag("Egg"))
-                GameEvents.FireEggHit(damageable, (int)currentDamage, hitPoint);
-            else if (collider.CompareTag("Bird"))
-                GameEvents.FireBirdHit(damageable, (int)currentDamage, hitPoint);
-
-            // ← ALL bullets get this automatically
             ShowDamageText(hitPoint, currentDamage);
-            ApplyElementalEffects(collider.gameObject);
+            ApplyElementalEffects(col.gameObject);
         }
 
-        // ─────────────────────────────────────────
-        // Damage text (ALL bullets inherit this)
-        // ─────────────────────────────────────────
-        protected virtual void ShowDamageText(Vector3 position, float amount)
-        {
-            GameObject go = null;
+        protected virtual void ApplyElementalEffects(GameObject target) { }
 
-            if (GamePoolManager.bulletDamageTextQueue.Count > 0)
-            {
-                go = GamePoolManager.bulletDamageTextQueue.Dequeue();
-                go.transform.position = position;
-                go.SetActive(true);
-            }
-            else if (damageTextPrefab != null)
-            {
-                go = Instantiate(damageTextPrefab, position, Quaternion.identity);
-            }
+        public void SetVelocity(Vector2 dir)
+        {
+            if (rb != null) rb.linearVelocity = dir.normalized * currentSpeed;
+        }
+
+        // ── Damage text ───────────────────────────────────────────────────
+        private void ShowDamageText(Vector3 position, float amount)
+        {
+            GameObject go = GamePoolManager.bulletDamageTextQueue.Count > 0
+                ? GamePoolManager.bulletDamageTextQueue.Dequeue()
+                : damageTextPrefab != null ? Instantiate(damageTextPrefab) : null;
 
             if (go == null) return;
+            go.transform.position = position;
+            go.SetActive(true);
 
-            var tmp = go.GetComponent<TextMeshPro>();
+            var tmp = go.GetComponent<TMP_Text>();
             if (tmp == null) return;
-
-            tmp.text = $"-{amount:0}";
+            tmp.text  = $"-{amount:0}";
             tmp.color = new Color(tmp.color.r, tmp.color.g, tmp.color.b, 1f);
             go.transform.DOMoveY(position.y + 2f, 1f);
             tmp.DOFade(0f, 1f).OnComplete(() =>
@@ -174,42 +169,5 @@ namespace Gameplay.Player
                 GamePoolManager.bulletDamageTextQueue.Enqueue(go);
             });
         }
-
-        // ─────────────────────────────────────────
-        // Elemental hook (ALL bullets, override in subclass)
-        // ─────────────────────────────────────────
-        protected virtual void ApplyElementalEffects(GameObject target) { }
-
-        public virtual void SetVelocity(Vector2 dir)
-        {
-            if (rb == null) return;
-            rb.linearVelocity = dir.normalized * currentSpeed;
-        }
-
-        public virtual void StopMovement()
-        {
-            if (rb == null) return;
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-        }
-
-        public virtual void Deactivate()
-        {
-            if (isDeactivated) return;
-            isDeactivated = true;
-            behaviour.OnDespawn((TBullet)this);
-            StopMovement();
-            if (releaseToPool != null) { releaseToPool.Invoke(this); return; }
-            gameObject.SetActive(false);
-        }
-
-        public void SetReleaseAction(Action<IBullet> releaseBulletToPool)
-            => releaseToPool = releaseBulletToPool;
-
-        protected virtual void OnDisable() => StopMovement();
-
-        public Vector2 GetDirection() => direction;
-        public Vector2 GetVelocity() => rb != null ? rb.linearVelocity : Vector2.zero;
-        public Vector2 GetTravelVector() => (Vector2)transform.position - startPosition;
     }
 }

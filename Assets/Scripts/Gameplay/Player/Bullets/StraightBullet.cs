@@ -1,45 +1,25 @@
 using Gameplay.Interfaces;
 using UnityEngine;
 
-namespace Gameplay.Player
+namespace Gameplay.Player                          // ✅ same namespace
 {
-    public class StraightBullet : BaseBullet<StraightBullet, StraightBehaviour>
+    public class StraightBullet : BaseBullet<StraightBullet>
     {
-        public void SetVelocity()
-        {
-            rb.linearVelocity = transform.up * currentSpeed;
-        }
+        protected override IBulletBehaviour<StraightBullet> CreateBehaviour()
+            => new StraightBehaviour();
 
-        public override void ApplyDamage(Collider2D collider)
+        public override void ApplyDamage(Collider2D col)
         {
-            if (collider.TryGetComponent<IDamageable>(out var dmg))
+            if (col.TryGetComponent<IDamageable>(out var dmg))
                 dmg.TakeDamage((int)currentDamage);
         }
     }
-    /// <summary>
-    /// Straight bullets are fired straight up, with no rotation.
-    /// Used by Single Shot and Rapid Fire cannons.
-    /// </summary>
+
     public class StraightBehaviour : IBulletBehaviour<StraightBullet>
     {
-        public void OnSpawn(StraightBullet bullet)
-        {
-            bullet.SetVelocity();
-        }
-
-        public void Tick(StraightBullet bullet, float dt)
-        {
-            // Straight bullets require no runtime logic
-        }
-
-        public void OnHit(StraightBullet bullet, Collider2D collider)
-        {
-            bullet.ApplyDamage(collider);
-            bullet.Deactivate();
-        }
-
-        public void OnDespawn(StraightBullet bullet)
-        {
-        }
+        public void OnSpawn  (StraightBullet bullet)               { }  // ✅ velocity set in Initialize
+        public void Tick     (StraightBullet bullet, float dt)     { }  // no runtime logic
+        public void OnHit    (StraightBullet bullet, Collider2D col) { bullet.ApplyDamage(col); bullet.Deactivate(); }
+        public void OnDespawn(StraightBullet bullet)               { }
     }
 }

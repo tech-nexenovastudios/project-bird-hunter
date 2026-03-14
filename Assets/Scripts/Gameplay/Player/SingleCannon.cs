@@ -2,19 +2,11 @@ using UnityEngine;
 
 namespace Gameplay.Player
 {
-    public class SingleCannon : BaseCannon<StraightBullet, StraightBehaviour>
+    public class SingleCannon : BaseCannon<StraightBullet>
     {
         protected override void Fire(Vector2 position, Vector2 direction)
         {
-            SpawnBullet(position, direction);
-            PlayFireParticles();
-        }
-
-        private void PlayFireParticles()
-        {
-            if (fireParticles == null) return;
-            foreach (var p in fireParticles)
-                if (p != null) p.Play();
+            base.SpawnBullet(position, direction);
         }
     }
 }
