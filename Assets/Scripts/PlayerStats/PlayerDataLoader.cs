@@ -25,6 +25,8 @@ public class PlayerDataLoader : Singleton<PlayerDataLoader>
     public static Action OnNewPlayerReady;
     public static Action OnReturningPlayerReady;
     
+    public static ChapterData ChapterData { get; private set; }
+    
     [System.Serializable]
     public class LoadResult
     {
@@ -33,8 +35,9 @@ public class PlayerDataLoader : Singleton<PlayerDataLoader>
         public string message;
     }
     
-    protected override async void Awake()
+    protected override void Awake()
     {
+        DontDestroyOnLoad(this);
         base.Awake();
     }
     

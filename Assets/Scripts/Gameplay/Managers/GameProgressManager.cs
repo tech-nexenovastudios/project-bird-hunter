@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Gameplay.Events;
 using Gameplay.Levels;
 using Gameplay.PowerUps;
 using UnityEngine;
@@ -33,7 +34,7 @@ namespace Gameplay.Managers
         public int            GlobalLevel    => (CurrentChapter - 1) * 20 + CurrentLevel;
         public int            HighScore      => _progress?.highScore  ?? 0;
         public int            TotalScore     => _progress?.totalScore ?? 0;
-        public PowerUpSlot[]  CurrentSlots   => _progress?.chapterSlots ?? new PowerUpSlot[0];
+        public PowerUpSlot[]  CurrentSlots   => _progress?.chapterSlots ?? Array.Empty<PowerUpSlot>();
 
         private void Awake()
         {
@@ -63,18 +64,16 @@ namespace Gameplay.Managers
         // Level Completion
         // ─────────────────────────────────────────────
 
-        public void CompleteLevel(int scoreAchieved)
+        public async void CompleteLevel(int scoreAchieved)
         {
             if (_progress == null) _progress = new GameProgress();
 
             _progress.highScore  = Mathf.Max(_progress.highScore, scoreAchieved);
             _progress.totalScore += scoreAchieved;
 
-            int  levelIndex    = _progress.currentLevel - 1; // 0-based index of level just finished
+            int  levelIndex    = _progress.currentLevel - 1;
             bool spinTriggered = false;
 
-            // FIXED: index 0 is ONLY for chapter-start spin (GameManager.IsInitialSpinRequired)
-            // CompleteLevel must never re-fire the spin for index 0
             if (levelIndex != 0 && _progress.IsSpinLevel(levelIndex))
             {
                 int slotIndex = _progress.GetSpinSlotIndex(levelIndex);
@@ -85,19 +84,18 @@ namespace Gameplay.Managers
                 }
             }
 
-            // Advance level
             if (_progress.currentLevel < 20)
             {
                 _progress.currentLevel++;
             }
             else
             {
-                // Chapter complete — move to next chapter
                 _progress.currentChapter++;
                 _progress.currentLevel = 1;
                 _progress.ResetSlotsForNewChapter();
 
-                // Chapter-start spin for slot 0
+                await ChapterUnlockManager.Instance.SetUnlock(_progress.currentChapter, true);
+                
                 if (!spinTriggered)
                 {
                     TriggerSpin(0);
@@ -109,7 +107,7 @@ namespace Gameplay.Managers
             OnProgressChanged?.Invoke(_progress);
         }
 
-        public void TriggerSpin(int slotIndex)
+        private void TriggerSpin(int slotIndex)
         {
             var options = _progress.GetAvailablePowerUpForSpin(
                 _progress.currentChapter, slotIndex, allPowerups, maxOptions: 3);
@@ -123,18 +121,18 @@ namespace Gameplay.Managers
             _progress.EquipPowerup(powerup);
             _progress.playerSpins++;
             SaveProgress();
-            // FIXED: do NOT fire OnProgressChanged here — GameManager.OnSpinComplete()
-            // calls StartGameplay() directly, firing OnProgressChanged would double-start gameplay
+            
             Debug.Log($"✅ Equipped [{powerup.rarity}] {powerup.displayName}");
         }
 
-        public void ApplyPowerUpsToCurrentCannon(GameObject cannon)
+        public void ApplyPowerUpsToCannon()
         {
             foreach (var slot in _progress.chapterSlots)
             {
                 if (string.IsNullOrEmpty(slot.equippedPowerupId) || slot.isOnCooldown) continue;
                 var powerup = Array.Find(allPowerups, p => p.id == slot.equippedPowerupId);
-                // ToDo: powerup?.ApplyEffect(cannon);
+                
+                GameEvents.FirePowerupSelected(powerup);
             }
         }
 

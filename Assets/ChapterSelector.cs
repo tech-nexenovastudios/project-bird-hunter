@@ -49,7 +49,6 @@ public class ChapterSelector : MonoBehaviour
             Debug.Log($"[ChapterSelector] Chapter {currentIndex} is locked.");
             return;
         }
-
         PlayerPrefs.SetInt("SelectedWorld", currentIndex);
         PlayerPrefs.SetInt("SelectedLevel", 1);
         SceneManager.LoadScene("GamePlay");

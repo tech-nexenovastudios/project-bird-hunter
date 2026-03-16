@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using Gameplay.Events;
 using Gameplay.Managers;
 using Gameplay.PowerUps;
+using Gameplay.UI;
 
 namespace Gameplay.Slot
 {
@@ -45,7 +47,8 @@ namespace Gameplay.Slot
             {
                 reel.OnPowerupSelected = null;
             }
-            Managers.GameManager.Instance.OnSpinComplete();
+            GameProgressManager.Instance.ApplyPowerUpsToCannon();
+            GameEvents.FireSpinComplete(); 
         }
 
         private void OnDisable()

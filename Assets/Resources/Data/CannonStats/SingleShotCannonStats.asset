@@ -19,19 +19,20 @@ MonoBehaviour:
   baseMinBulletShot: 1
   baseMaxBulletShot: 5
   baseBulletConfig: {fileID: 11400000, guid: 2be6285a0984c4ef7a21c399bb70df5d, type: 2}
-  specialEffect: 0
+  fireEffect: {fileID: 1198663731479534, guid: b46264f9e12caed4cb53e7c2ad64aa54, type: 3}
+  specialEffect: 2
   healthIncrement: 5
   fireRateIncrement: 0.05
   moveSpeedIncrement: 0.1
   maxFireRate: 10
   maxMoveSpeed: 12
-  fireRate: 0
-  moveSpeed: 0
-  maxHealth: 0
-  numberOfMinBulletInOneShot: 0
-  numberOfMaxBulletInOneShot: 0
-  fireRateMultiplier: 1
-  healthMultiplier: 1
-  moveSpeedMultiplier: 1
-  _baseFireRate: 0
-  _baseMaxHealth: 0
+  fireRate: 3
+  moveSpeed: 5
+  maxHealth: 100
+  numberOfMinBulletInOneShot: 1
+  numberOfMaxBulletInOneShot: 5
+  fireRateMultiplier: 1.0666667
+  healthMultiplier: 1.3606231
+  moveSpeedMultiplier: 1.0083333
+  _baseFireRate: 3
+  _baseMaxHealth: 100

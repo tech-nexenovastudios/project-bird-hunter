@@ -8,9 +8,8 @@ using UnityEngine.UI;
 public class ChapterData : ScriptableObject
 {
     public string worldName;
-    [SerializeField] private Sprite chapterBackground;
-    [SerializeField] private Sprite platform;
+    public Sprite chapterBackground;
+    public Sprite platform;
     public LevelProfile[] levelProfiles;
-   
     
 }

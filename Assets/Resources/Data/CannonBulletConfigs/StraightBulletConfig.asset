@@ -12,23 +12,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe7c1eefc49044c4a1946fedd262a1ed, type: 3}
   m_Name: StraightBulletConfig
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Player.BulletConfig
+  baseDPS: 50
   baseDamage: 5
   baseSpeed: 15
-  baseSize: 1
+  baseSize: 0.65
   pierceCount: 0
   bounceCount: 0
   lifetime: 3
   mass: 0.35
   impulseScale: 8
-  bulletPrefab: {fileID: 8285844873122228980, guid: 27f4c1fc6d8234ebaaf458402c3de41a, type: 3}
-  trail: {fileID: 0}
+  trail: {fileID: 1049843463841446, guid: 2966910701d40974c87f0338bb5694e3, type: 3}
   hitEffect: {fileID: 0}
   damageIncrement: 1
   speedIncrement: 0.5
   maxDamage: 200
   maxSpeed: 30
-  currentDamage: 0
-  currentSpeed: 0
-  currentSize: 0
-  damageMultiplier: 1
-  speedMultiplier: 1
+  currentDamage: 5.708333
+  currentSpeed: 15.25
+  currentSize: 0.65
+  targetDPS: 50
+  damageMultiplier: 1.1416667
+  speedMultiplier: 1.0166667

@@ -41,6 +41,11 @@ namespace UI.Scroll
         float lastDragTime;
         float dragVelocityX;
 
+        private void Start()
+        {
+            Initialize(items, 0);
+        }
+
         public void Initialize(List<RectTransform> items, int snapIndex)
         {
             this.items = items;

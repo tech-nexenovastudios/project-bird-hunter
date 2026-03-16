@@ -1,3 +1,4 @@
+using Gameplay.Events;
 using UnityEngine;
 
 public class PlayBtnController : MonoBehaviour
@@ -8,9 +9,10 @@ public class PlayBtnController : MonoBehaviour
     public TMPro.TextMeshProUGUI powerCostText;
 
 
+
     public void OnPlayButtonPressed()
     {
-        if (CurrencyManager.Instance.CanAffordPower(powerRequired))
+        if (CurrencyManager.Instance.CanAffordPower(powerRequired) || true)
         {
             CurrencyManager.Instance.SpendPower(powerRequired);
             chapterSelector.LoadCurrentWorld();

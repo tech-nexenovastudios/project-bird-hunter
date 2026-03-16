@@ -1,21 +1,21 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityUtils;
+using GameManager = Gameplay.Managers.GameManager;
 
-public class LevelReferences : MonoBehaviour
+public class LevelReferences : Singleton<LevelReferences>
 {
-    [SerializeField] Collider2D leftWall;
-    [SerializeField] Collider2D rightWall;
+    [SerializeField] private Image chapterBG;
+    [SerializeField] private SpriteRenderer groundSprite;
+    
+    [SerializeField] private Transform cannonSpawnPoint;
+    
+    public Transform CannonSpawnPoint => cannonSpawnPoint;
 
-    [SerializeField] private Image cannonHealthSlider;
-    [SerializeField] private TMPro.TextMeshProUGUI cannonHealthPercent;
-
-    public (Collider2D leftWall,  Collider2D rightWall) GetWall()
+    public void SetChapterData(ChapterData data)
     {
-        return (leftWall, rightWall);
-    }
-
-    public (Image slider, TMPro.TextMeshProUGUI healthText) GetCannonHealth()
-    {
-        return (cannonHealthSlider, cannonHealthPercent);
+        chapterBG.sprite = data.chapterBackground;
+        groundSprite.sprite = data.platform;
     }
 }
