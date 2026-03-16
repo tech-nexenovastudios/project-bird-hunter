@@ -34,14 +34,14 @@ namespace Gameplay.Eggs
         public float linearDamping;
         
         [Header("Split Settings")]
-        public float splitForce = 4f;
+        public float splitForce = .5f;
         public EggTierConfig splitInto;  // null for E1
         public int splitCount = 2;       // 2 for E4→E3×2, etc.
         
         public Vector2 GetSplitImpulse(int splitIndex)
         {
             Vector2 dir = splitIndex == 0 ? Vector2.left : Vector2.right;
-            return new Vector2(dir.x * splitForce * horizontalIncrease, splitForce);
+            return new Vector2(dir.x * horizontalIncrease, splitForce);
         }
         
         public float GetBounceVelocityForSplit()

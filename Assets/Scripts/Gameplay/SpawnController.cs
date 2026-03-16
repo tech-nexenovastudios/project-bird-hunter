@@ -412,7 +412,8 @@ namespace Gameplay
                             continue;
                         }
 
-                        Vector3 offset = egg.config.GetSplitImpulse(i);
+                        //Vector3 offset = egg.config.GetSplitImpulse(i);
+                        Vector3 offset = i == 0 ? Vector2.left : Vector2.right;
                         
                         var go     = Instantiate(splitTier.eggPrefab, egg.transform.position + offset, Quaternion.identity);
                         

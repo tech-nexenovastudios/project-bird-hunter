@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4503930230179006454}
   - component: {fileID: 5814563558601823995}
   - component: {fileID: 6752922538243577394}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Damage Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -194,7 +194,7 @@ GameObject:
   - component: {fileID: 126635068237499163}
   - component: {fileID: 7284711750948745595}
   - component: {fileID: 4828709271726057151}
-  m_Layer: 13
+  m_Layer: 0
   m_Name: SingleShotBullet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -288,11 +288,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1379e890ed3430babf1943676f25335, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Player.StraightBullet
-  currentDamage: 0
-  currentSpeed: 0
-  currentSize: 0
-  pierceRemaining: 0
   damageTextPrefab: {fileID: 3148502148113846747}
+  maxHitImpulseForce: 8
+  minHitImpulseForce: 4.98
+  maxForceDistance: 10
+  applyHitImpulse: 1
+  startPosition: {x: 0, y: 0}
 --- !u!58 &7284711750948745595
 CircleCollider2D:
   m_ObjectHideFlags: 0

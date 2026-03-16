@@ -20,7 +20,7 @@ public class CannonSpawner : MonoBehaviour
         index = Mathf.Clamp(index, 0, cannons.cannonsData.Length - 1);
 
         var data = cannons.cannonsData[index];
-        cannon = Instantiate(data.cannonPrefab, transform.position, transform.rotation);
+        cannon = Instantiate(data.cannonPrefab, references.CannonSpawnPoint.position, references.CannonSpawnPoint.rotation);
 
         var baseCannon = cannon.GetComponent<ICannonBase>();
         if (baseCannon != null)

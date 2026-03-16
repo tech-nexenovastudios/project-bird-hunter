@@ -16,9 +16,11 @@ MonoBehaviour:
   baseHpMin: 60
   baseHpMax: 130
   pressureValue: 8
+  cannonDamage: 25
   scorePerHit: 40
   scoreOnDestroy: 200
   eggPrefab: {fileID: 1251663967950569254, guid: 824d1d42665e6e6418e2e4767823682a, type: 3}
+  crackedEggPrefab: {fileID: 0}
   bounceVelocity: 13
   bounceIncrease: 1.5
   horizontalIncrease: 1.2

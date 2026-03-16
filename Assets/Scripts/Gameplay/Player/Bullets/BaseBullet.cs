@@ -114,9 +114,24 @@ namespace Gameplay.Player
         protected virtual void OnTriggerEnter2D(Collider2D col)
         {
             if (!_active) return;
-            if (col.CompareTag("Wall"))         { Deactivate(); return; }
+            if (col.CompareTag("Wall"))
+            {
+                Deactivate(); 
+                return;
+            }
             if (col.CompareTag("Bird") || col.CompareTag("Egg"))
                 _behaviour?.OnHit((TBullet)this, col);
+        }
+
+        protected virtual void OnCollisionEnter2D(Collision2D col)
+        {
+            if (!_active) return;
+            if (col.gameObject.CompareTag("Ground")) Deactivate();
+
+            if (col.gameObject.CompareTag("Egg") || col.gameObject.CompareTag("Bird"))
+            {
+                _behaviour?.OnHit((TBullet)this, col.collider);
+            }
         }
 
         // ── Damage helpers ───────────────────────────────────────────────────

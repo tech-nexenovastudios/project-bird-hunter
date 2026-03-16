@@ -16,7 +16,7 @@ namespace Gameplay.Player
         public float lifetime = 5f;
 
         [Header("Physics")]
-        public float mass         = 1f;
+        public float mass         = 0.2f;
         public float impulseScale = 1f;
 
         [Header("Visual")]
