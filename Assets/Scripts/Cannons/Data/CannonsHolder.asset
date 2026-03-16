@@ -21,7 +21,7 @@ MonoBehaviour:
     cannonPrefab: {fileID: 2726379633117213735, guid: 03b16c5a248234a0193c4fb77595e6ae, type: 3}
     bulletPrefab: {fileID: 7505696441944762806, guid: 420286fe4a16340fdb8a065f476c620a, type: 3}
     cannonStats: {fileID: 11400000, guid: faa4ba72d6350364abe2966d5071b28a, type: 2}
-    cannonLevel: 38
+    cannonLevel: 1
     coinsRequired: 841
     cardsRequired: 59
     coinIncrement: 39
@@ -31,10 +31,10 @@ MonoBehaviour:
     unlockChapterRequired: 0
     coinCost: 0
     gemCost: 0
-    baseCoinsRequired: 110
-    baseCoinIncrement: 5
-    baseCardsRequired: 11
-    baseCannonLevel: 4
+    baseCoinsRequired: 841
+    baseCoinIncrement: 39
+    baseCardsRequired: 59
+    baseCannonLevel: 38
   - cannonIndex: 1
     cannonName: Rapid Fire
     cannonDescription: One massive shot destroys everything. Slow but unstoppable.
@@ -43,7 +43,7 @@ MonoBehaviour:
     cannonPrefab: {fileID: 5482615771359566797, guid: 9cdc321ee0c08fa45837b4dfa0073f93, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 81e3d909f676fd441bb0c8887c296035, type: 3}
     cannonStats: {fileID: 11400000, guid: 28f90ab1f0afb9a4f9991991806d87a4, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 5000
     cardsRequired: 80
     coinIncrement: 5
@@ -65,14 +65,14 @@ MonoBehaviour:
     cannonPrefab: {fileID: 2364492470350389745, guid: 6f6ef8cf059e1ae4599bc74f02094317, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: b28b8d4bc385d054cabb477901c4f859, type: 3}
     cannonStats: {fileID: 11400000, guid: 6c922df6897ae6641a5ae97d646871c9, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 2000
     cardsRequired: 50
     coinIncrement: 3.5
     normalCardIncrement: 3
     specificNumberCardIncrement: 8
     moduloForCardUpgrade: 5
-    unlockChapterRequired: 0
+    unlockChapterRequired: 3
     coinCost: 4000
     gemCost: 80
     baseCoinsRequired: 2000
@@ -87,7 +87,7 @@ MonoBehaviour:
     cannonPrefab: {fileID: 2602831570025325107, guid: c4e7c909211d14d41aacb95633b43875, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 7ba1df6f2d84bc343a8925bf1eab2843, type: 3}
     cannonStats: {fileID: 11400000, guid: 13eceb3ee0f10c04ba9042f2b993687c, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 2000
     cardsRequired: 50
     coinIncrement: 3.5
@@ -109,7 +109,7 @@ MonoBehaviour:
     cannonPrefab: {fileID: 2602831570025325107, guid: ac82ff307fc0ace49a6207ac2e1cb6a0, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 81e3d909f676fd441bb0c8887c296035, type: 3}
     cannonStats: {fileID: 11400000, guid: f94b08c3e9f6f294f956f7228a1ce7de, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 5000
     cardsRequired: 80
     coinIncrement: 5
@@ -131,7 +131,7 @@ MonoBehaviour:
     cannonPrefab: {fileID: 2602831570025325107, guid: b981ecdfbc0ef084a8dced7f063de3cd, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 7ba1df6f2d84bc343a8925bf1eab2843, type: 3}
     cannonStats: {fileID: 11400000, guid: beecf1e7464685f4f94f5c8c3e2981b5, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 2000
     cardsRequired: 50
     coinIncrement: 3.5
@@ -153,7 +153,7 @@ MonoBehaviour:
     cannonPrefab: {fileID: 2602831570025325107, guid: 70a631ca0632c384da7ee879f80326ef, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 81e3d909f676fd441bb0c8887c296035, type: 3}
     cannonStats: {fileID: 11400000, guid: 8effc3b4b95dd4c429b7df011d049e7c, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 5000
     cardsRequired: 80
     coinIncrement: 5

@@ -1,119 +1,144 @@
-﻿using System.Collections;
-using Gameplay.Events;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-
-// ───────────────────────────────────────────────────────────
-// PURPOSE: Listens for coin-collect events, orchestrates the
-//          full burst-and-fly sequence using pooled coins.
-//
-// SETUP (Inspector):
-//   1. Drag your CoinFlowConfig asset into "Config"
-//   2. Drag your coin UI prefab into "Coin Prefab"
-//   3. Drag the RectTransform of your coin counter icon
-//      (the target coins fly toward) into "Target UI"
-//
-// HIERARCHY:
-//   Canvas (Screen Space - Overlay)
-//   ├── CoinCounter (top of screen)
-//   │   └── CoinIcon  ← drag this into "Target UI"
-//   └── CoinFlowManager (this script)
-//       └── (pooled coins spawn as children here)
-// ───────────────────────────────────────────────────────────
 
 public class CoinFlowManager : MonoBehaviour
 {
-    [Header("═══ References ═══")]
+    // ── One entry per currency ───────────────────────────
+    // You'll set up 3 of these in the Inspector:
+    //   Gold  → gold coin prefab  → gold counter icon
+    //   Gems  → gem prefab        → gem counter icon
+    //   Power → power prefab      → power counter icon
 
-    [Tooltip("The ScriptableObject with all coin-flow settings")]
-    [SerializeField] private CoinFlowConfig config;
-
-    [Tooltip("Prefab: a UI Image with CoinEntity script attached     ")]
-    [SerializeField] private CoinEntity coinPrefab;
-
-    [Tooltip("The RectTransform coins fly toward (coin icon in HUD)")]
-    [SerializeField] private RectTransform targetUI;
+    [SerializeField] private CurrencyFlowEntry[] currencyEntries;
 
 
-    // ── Internal State ───────────────────────────────────
-    private ObjectPoo<CoinEntity> pool;
-    private Camera mainCam;
+    // ── Runtime lookup ───────────────────────────────────
+    // Dictionary lets us instantly find the right prefab/pool/target
+    // for any CurrencyType without looping every time.
+
+    private Dictionary<CurrencyType, CurrencyFlowRuntime> runtimeMap;
 
 
     private void Awake()
     {
-        mainCam = Camera.main;
+        runtimeMap = new Dictionary<CurrencyType, CurrencyFlowRuntime>();
 
-        // Build the pool. Coins start hidden (SetActive false).
-        pool = new ObjectPoo<CoinEntity>(
-            prefab: coinPrefab,
-            parent: transform,
-            initialSize: config.poolInitialSize,
-            onGet: coin => coin.gameObject.SetActive(true),
-            onRelease: coin => coin.gameObject.SetActive(false)
-        );
+        foreach (var entry in currencyEntries)
+        {
+            if (runtimeMap.ContainsKey(entry.currencyType))
+            {
+                Debug.LogError($"[CoinFlowManager] Duplicate entry for {entry.currencyType}!");
+                continue;
+            }
+
+            // Build a separate pool for each currency type.
+            // Gold coins go back to the gold pool, gems to the gem pool, etc.
+            var pool = new ObjectPoo<CoinEntity>(
+                prefab: entry.iconPrefab,
+                parent: transform,
+                initialSize: entry.config.poolInitialSize,
+                onGet: coin => coin.gameObject.SetActive(true),
+                onRelease: coin => coin.gameObject.SetActive(false)
+            );
+
+            runtimeMap[entry.currencyType] = new CurrencyFlowRuntime
+            {
+                config = entry.config,
+                targetUI = entry.targetUI,
+                pool = pool
+            };
+        }
     }
 
 
-    // ── Subscribe / Unsubscribe ──────────────────────────
-    // ALWAYS unsubscribe in OnDisable to prevent memory leaks
-    // and errors from destroyed objects still listening.
-
     private void OnEnable()
     {
-        GameEvent.OnCoinCollected += HandleCoinCollected;
+        GameEvent.OnCurrencyCollected += HandleCurrencyCollected;
     }
 
     private void OnDisable()
     {
-        GameEvent.OnCoinCollected -= HandleCoinCollected;
+        GameEvent.OnCurrencyCollected -= HandleCurrencyCollected;
     }
 
 
-    // ── Event Handler ────────────────────────────────────
-
-    /// <param name="screenPos">
-    /// Where on screen the coins burst from.
-    /// If triggered from a world-space object (e.g., a chest),
-    /// convert with: Camera.main.WorldToScreenPoint(chest.position)
-    /// </param>
-    /// <param name="totalValue">
-    /// Total coins earned. Divided evenly across the burst.
-    /// </param>
-    private void HandleCoinCollected(Vector2 screenPos, int totalValue)
+    private void HandleCurrencyCollected(CurrencyType type, Vector2 screenPos, int totalValue)
     {
-        StartCoroutine(SpawnBurstRoutine(screenPos, totalValue));
+        if (!runtimeMap.ContainsKey(type))
+        {
+            Debug.LogWarning($"[CoinFlowManager] No entry configured for {type}!");
+            return;
+        }
+
+        StartCoroutine(SpawnFlowRoutine(type, screenPos, totalValue));
     }
 
 
-    private IEnumerator SpawnBurstRoutine(Vector2 origin, int totalValue)
+    private IEnumerator SpawnFlowRoutine(CurrencyType type, Vector2 origin, int totalValue)
     {
+        var runtime = runtimeMap[type];
+        var config = runtime.config;
         int coinCount = config.coinsPerBurst;
+
         int valuePerCoin = totalValue / coinCount;
         int remainder = totalValue % coinCount;
         int arrivedCount = 0;
 
-        Vector2 targetPos = targetUI.position;
+        Vector2 targetPos = runtime.targetUI.position;
 
         for (int i = 0; i < coinCount; i++)
         {
-            CoinEntity coin = pool.Get();
+            CoinEntity coin = runtime.pool.Get();
             int value = valuePerCoin + (i == coinCount - 1 ? remainder : 0);
 
             coin.Launch(
+                type: type,
                 origin: origin,
                 target: targetPos,
                 cfg: config,
                 value: value,
                 onComplete: returnedCoin =>
                 {
-                    pool.Release(returnedCoin);
+                    runtime.pool.Release(returnedCoin);
                     arrivedCount++;
+
                     if (arrivedCount >= coinCount)
-                        GameEvent.CoinBurstComplete();
+                        GameEvent.CurrencyBurstComplete(type);
                 }
             );
 
             yield return new WaitForSeconds(config.spawnInterval);
         }
     }
+}
+
+
+// ── Inspector data (what you set up per currency) ────────
+
+[Serializable]
+public class CurrencyFlowEntry
+{
+    [Tooltip("Which currency this entry handles")]
+    public CurrencyType currencyType;
+
+    [Tooltip("The icon prefab (Image + CoinEntity) for this currency")]
+    public CoinEntity iconPrefab;
+
+    [Tooltip("The RectTransform icons fly toward (HUD counter icon)")]
+    public RectTransform targetUI;
+
+    [Tooltip("Settings for this currency's flow (speed, count, etc.)")]
+    public CoinFlowConfig config;
+}
+
+
+// ── Internal runtime data (not visible in Inspector) ─────
+
+public class CurrencyFlowRuntime
+{
+    public CoinFlowConfig config;
+    public RectTransform targetUI;
+    public ObjectPoo<CoinEntity> pool;
 }

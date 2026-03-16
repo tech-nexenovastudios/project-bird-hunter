@@ -32,7 +32,6 @@ public class GoldPurchaseManager : MonoBehaviour
 
     private void Start()
     {
-        // Sync Economy config (Auth is already handled by AuthBootstrapper)
         SyncConfig().Forget();
     }
 
@@ -57,8 +56,6 @@ public class GoldPurchaseManager : MonoBehaviour
         }
     }
 
-    // ==================== Button Setup ====================
-
     private void SetupPurchaseButtons()
     {
         for (int i = 0; i < purchaseCards.Length; i++)
@@ -72,15 +69,12 @@ public class GoldPurchaseManager : MonoBehaviour
     private void SetButtonsInteractable(bool state)
     {
         if (purchaseCards == null) return;
-
         foreach (var card in purchaseCards)
         {
             if (card.purchaseButton != null)
                 card.purchaseButton.interactable = state;
         }
     }
-
-    // ==================== Purchase ====================
 
     private void OnPurchaseClicked(int index)
     {
@@ -102,24 +96,35 @@ public class GoldPurchaseManager : MonoBehaviour
             {
                 Debug.Log($"[GoldPurchase] Purchase '{card.purchaseName}' successful!");
 
-                // Log rewards
+                // ═══ GOLD FLOW EFFECT — from this button ═══
+                Vector2 buttonPos = card.purchaseButton.transform.position;
+                int goldAmount = 0;
+                if (result.Rewards != null)
+                {
+                    foreach (var curr in result.Rewards.Currency)
+                    {
+                        if (curr.Id == "GOLD")
+                            goldAmount = (int)curr.Amount;
+                    }
+                }
+                if (goldAmount > 0)
+                    GameEvent.CurrencyCollected(CurrencyType.Gold, buttonPos, goldAmount);
+                // ════════════════════════════════════════════
+
                 if (result.Rewards != null)
                 {
                     foreach (var item in result.Rewards.Inventory)
                         Debug.Log($"  Received item: {item.Id}");
-
                     foreach (var curr in result.Rewards.Currency)
                         Debug.Log($"  Received currency: {curr.Amount} {curr.Id}");
                 }
 
-                // Log costs deducted
                 if (result.Costs != null)
                 {
                     foreach (var curr in result.Costs.Currency)
                         Debug.Log($"  Spent: {curr.Amount} {curr.Id}");
                 }
 
-                // Refresh CurrencyManager so UI updates
                 await CurrencyManager.Instance.Refresh();
             }
         }
@@ -147,40 +152,25 @@ public class GoldPurchaseManager : MonoBehaviour
         }
     }
 
-    // ==================== Loading UI ====================
-
     private void ShowLoading()
     {
         isLoading = true;
-        if (loadingPanel != null)
-            loadingPanel.SetActive(true);
+        if (loadingPanel != null) loadingPanel.SetActive(true);
     }
 
     private void HideLoading()
     {
         isLoading = false;
-        if (loadingPanel != null)
-            loadingPanel.SetActive(false);
+        if (loadingPanel != null) loadingPanel.SetActive(false);
     }
-
-    // ==================== Cleanup ====================
 
     private void OnDestroy()
     {
         if (purchaseCards == null) return;
-
         foreach (var card in purchaseCards)
         {
             if (card.purchaseButton != null)
                 card.purchaseButton.onClick.RemoveAllListeners();
         }
     }
-}
-
-[System.Serializable]
-public class PurchaseCard
-{
-    public string purchaseName;
-    public string virtualPurchaseId;
-    public Button purchaseButton;
 }

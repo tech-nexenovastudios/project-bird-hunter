@@ -14,11 +14,12 @@ using UnityEngine.UI;
 /// - Removes the material from the "LevelImage" child Image on unlocked chapters.
 /// - Uses UniTask throughout.
 /// - UI is hidden entirely until cloud data is loaded to prevent flash/glitch.
+/// - Supports unlocking ALL chapters via Inspector toggle or public API.
 /// </summary>
 public class ChapterUnlockManager : MonoBehaviour
 {
     public static ChapterUnlockManager Instance { get; private set; }
-
+    
     // ── Inspector ────────────────────────────────────────────────────────────
     [Header("Shared Chapter UI (one object serves all chapters)")]
     [SerializeField] private GameObject playButton;
@@ -32,13 +33,19 @@ public class ChapterUnlockManager : MonoBehaviour
     [Header("Default Unlocks (used only when cloud has no data yet)")]
     [SerializeField] private int[] defaultUnlockedChapters = { 0 };
 
+    [Header("Dev / QA Override")]
+    [Tooltip("Tick this to unlock ALL chapters instantly (overrides cloud data). " +
+             "Untick to restore normal cloud-save behaviour. " +
+             "NEVER ship to production with this enabled.")]
+    [SerializeField] private bool devUnlockAll = true;
+
     // ── Cloud ────────────────────────────────────────────────────────────────
     private const string CLOUD_KEY = "chapter_unlock_data";
     private const string LEVEL_IMAGE_NAME = "LevelImage";
 
     // ── Runtime State ────────────────────────────────────────────────────────
     private readonly Dictionary<int, bool> _unlockMap = new();
-    private readonly Dictionary<int, Material> _savedMaterial = new(); // original materials per chapter
+    private readonly Dictionary<int, Material> _savedMaterial = new();
     private int _currentIndex;
     private bool _servicesReady;
     private bool _dataReady;
@@ -72,18 +79,12 @@ public class ChapterUnlockManager : MonoBehaviour
     // Material Cache
     // ═════════════════════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// Walks every chapter item, finds the child named "LevelImage", and caches
-    /// its current material so we can restore it if a chapter gets re-locked.
-    /// </summary>
     private void CacheLevelImageMaterials()
     {
         if (chapterItems == null) return;
-
         for (int i = 0; i < chapterItems.Length; i++)
         {
             if (chapterItems[i] == null) continue;
-
             var img = GetLevelImage(i);
             if (img != null)
                 _savedMaterial[i] = img.material;
@@ -97,14 +98,21 @@ public class ChapterUnlockManager : MonoBehaviour
     private async UniTaskVoid InitAsync()
     {
         await InitServicesAsync();
-        await LoadFromCloudAsync();
+
+        // ── Dev override: skip cloud entirely ─────────────────────────────
+        if (devUnlockAll)
+        {
+            ApplyUnlockAll();
+            Debug.LogWarning("[ChapterUnlockManager] DEV MODE: All chapters unlocked. " +
+                             "Cloud data was NOT loaded or written.");
+        }
+        else
+        {
+            await LoadFromCloudAsync();
+        }
 
         _dataReady = true;
-
-        // Apply material state to ALL chapters up front
         ApplyAllLevelImageStates();
-
-        // Then refresh the shared UI for whichever chapter is currently visible
         RefreshUI(_currentIndex);
     }
 
@@ -205,8 +213,6 @@ public class ChapterUnlockManager : MonoBehaviour
 
     /// <summary>
     /// Set unlock state for a chapter. Persists to cloud automatically.
-    /// Call this from gameplay (e.g. level complete, IAP unlock).
-    ///     await ChapterUnlockManager.Instance.SetUnlock(chapterIndex: 2, unlocked: true);
     /// </summary>
     public async UniTask SetUnlock(int chapterIndex, bool unlocked)
     {
@@ -215,17 +221,43 @@ public class ChapterUnlockManager : MonoBehaviour
 
         _unlockMap[chapterIndex] = unlocked;
 
-        // Update the LevelImage material for this specific chapter item
         if (_dataReady)
         {
             ApplyLevelImageState(chapterIndex, unlocked);
-
             if (chapterIndex == _currentIndex)
                 RefreshUI(_currentIndex);
         }
 
         OnChapterUnlockChanged?.Invoke(chapterIndex, unlocked);
-        await SaveToCloudAsync();
+
+        // Skip cloud write when running in dev-unlock-all mode
+        if (!devUnlockAll)
+            await SaveToCloudAsync();
+    }
+
+    /// <summary>
+    /// Unlocks every chapter registered in <see cref="chapterItems"/> at runtime.
+    /// Saves the result to cloud (skipped in devUnlockAll mode).
+    /// Safe to call from a UI button, cheat menu, or game event.
+    /// </summary>
+    public async UniTask UnlockAllChapters()
+    {
+        if (chapterItems == null) return;
+
+        for (int i = 0; i < chapterItems.Length; i++)
+            _unlockMap[i] = true;
+
+        ApplyAllLevelImageStates();
+        RefreshUI(_currentIndex);
+
+        // Raise events for every chapter so other systems stay in sync
+        for (int i = 0; i < chapterItems.Length; i++)
+            OnChapterUnlockChanged?.Invoke(i, true);
+
+        if (!devUnlockAll)
+            await SaveToCloudAsync();
+
+        Debug.Log("[ChapterUnlockManager] All chapters unlocked.");
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -260,7 +292,6 @@ public class ChapterUnlockManager : MonoBehaviour
     // LevelImage Material
     // ═════════════════════════════════════════════════════════════════════════
 
-    /// <summary>Applies correct material state to every chapter item at once.</summary>
     private void ApplyAllLevelImageStates()
     {
         if (chapterItems == null) return;
@@ -268,28 +299,16 @@ public class ChapterUnlockManager : MonoBehaviour
             ApplyLevelImageState(i, IsUnlocked(i));
     }
 
-    /// <summary>
-    /// Unlocked  → sets LevelImage.material to null (uses default UI material, shows sprite clearly).
-    /// Locked    → restores the cached material (e.g. greyscale / darkened shader).
-    /// </summary>
     private void ApplyLevelImageState(int chapterIndex, bool unlocked)
     {
         var img = GetLevelImage(chapterIndex);
         if (img == null) return;
 
-        if (unlocked)
-        {
-            img.material = null; // null = Unity's default UI material, removes any lock overlay shader
-        }
-        else
-        {
-            // Restore the original material that was on the image at startup
-            if (_savedMaterial.TryGetValue(chapterIndex, out var mat))
-                img.material = mat;
-        }
+        img.material = unlocked
+            ? null
+            : (_savedMaterial.TryGetValue(chapterIndex, out var mat) ? mat : null);
     }
 
-    /// <summary>Finds the Image component on the child named "LevelImage" for a given chapter index.</summary>
     private Image GetLevelImage(int chapterIndex)
     {
         if (chapterItems == null || chapterIndex >= chapterItems.Length) return null;
@@ -318,6 +337,15 @@ public class ChapterUnlockManager : MonoBehaviour
                 _unlockMap[i] = true;
     }
 
+    /// <summary>Fills _unlockMap with true for every chapter slot without touching cloud.</summary>
+    private void ApplyUnlockAll()
+    {
+        _unlockMap.Clear();
+        if (chapterItems == null) return;
+        for (int i = 0; i < chapterItems.Length; i++)
+            _unlockMap[i] = true;
+    }
+
     // ═════════════════════════════════════════════════════════════════════════
     // Serialization
     // ═════════════════════════════════════════════════════════════════════════
@@ -328,3 +356,5 @@ public class ChapterUnlockManager : MonoBehaviour
     [Serializable]
     private class ChapterEntry { public int chapterIndex; public bool isUnlocked; }
 }
+
+

@@ -34,7 +34,7 @@ public class CannonHolder_SO : ScriptableObject
 
         // ── Upgrade Economy ───────────────────────────────────────────────────
         [Header("Upgrade Economy")]
-        public int cannonLevel;
+        public int cannonLevel = 1;
         public float coinsRequired;
         public float cardsRequired;
         public float coinIncrement = 1f;
