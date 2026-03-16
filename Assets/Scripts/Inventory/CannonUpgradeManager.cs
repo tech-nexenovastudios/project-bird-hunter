@@ -76,7 +76,7 @@ public class CannonUpgradeManager : MonoBehaviour
         CannonLockManager.OnCannonUnlocked -= OnCannonUnlockedHandler;
         CannonLockManager.OnAllUnlockStatesLoaded -= RefreshAllLockVisuals;
     }
-
+    public static event Action OnAllLevelsLoaded; 
     private void Start()
     {
         CacheAllBaseValues();
@@ -166,6 +166,11 @@ public class CannonUpgradeManager : MonoBehaviour
                 cannonHolderSO.cannonsData[i].ReplayToLevel(savedLevel);
             }
 
+            foreach(var cannon in cannonHolderSO.cannonsData)
+            {
+                Debug.Log($"[CannonUpgrade] {cannon.cannonName} loaded at Level {cannon.cannonLevel} damege {cannon.cannonStats.baseBulletDamage}");
+            }
+
             Debug.Log("[CannonUpgrade] Loaded and replayed all cannon levels from cloud.");
         }
         catch (Exception ex)
@@ -175,6 +180,8 @@ public class CannonUpgradeManager : MonoBehaviour
 
         InitializeItems();
         RefreshAllLockVisuals();
+
+        OnAllLevelsLoaded?.Invoke(); //  fire after levels are ready
 
         if (cannonItems.Count > 0)
             SelectCannon(0);

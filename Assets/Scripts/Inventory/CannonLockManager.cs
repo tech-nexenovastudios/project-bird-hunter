@@ -96,7 +96,8 @@ public class CannonLockManager : MonoBehaviour
 
     // ==================== Visual Helpers ====================
 
-    /// <summary>Apply locked visuals: grayscale on Background & Cannon, show LockBg.</summary>
+    /// <summary>Apply locked visuals: grayscale on Background & Cannon, show LockIcon,
+    /// hide LevelDesc & LevelCount, show LockedText.</summary>
     public void ApplyLockedVisual(Transform buttonTransform)
     {
         SetGrayscale(buttonTransform, "Background", true);
@@ -104,9 +105,18 @@ public class CannonLockManager : MonoBehaviour
 
         var lockBg = buttonTransform.Find("LockIcon");
         if (lockBg != null) lockBg.gameObject.SetActive(true);
+
+        var background = buttonTransform.Find("Background");
+        if (background != null)
+        {
+            SetChildActive(background, "LevelDesc", false);
+            SetChildActive(background, "LockedText", true);
+            SetChildActive(background, "LevelCount", false);
+        }
     }
 
-    /// <summary>Remove locked visuals: clear material on Background & Cannon, hide LockBg.</summary>
+    /// <summary>Remove locked visuals: clear material on Background & Cannon, hide LockIcon,
+    /// show LevelDesc & LevelCount, hide LockedText.</summary>
     public void ApplyUnlockedVisual(Transform buttonTransform)
     {
         SetGrayscale(buttonTransform, "Background", false);
@@ -114,6 +124,14 @@ public class CannonLockManager : MonoBehaviour
 
         var lockBg = buttonTransform.Find("LockIcon");
         if (lockBg != null) lockBg.gameObject.SetActive(false);
+
+        var background = buttonTransform.Find("Background");
+        if (background != null)
+        {
+            SetChildActive(background, "LevelDesc", true);
+            SetChildActive(background, "LockedText", false);
+            SetChildActive(background, "LevelCount", true);
+        }
     }
 
     private void SetGrayscale(Transform parent, string childName, bool grey)
@@ -124,6 +142,12 @@ public class CannonLockManager : MonoBehaviour
         var img = child.GetComponent<Image>();
         if (img != null)
             img.material = grey ? grayscaleMaterial : null;
+    }
+
+    private void SetChildActive(Transform parent, string childName, bool active)
+    {
+        var child = parent.Find(childName);
+        if (child != null) child.gameObject.SetActive(active);
     }
 
     // ==================== Public API ====================
@@ -162,7 +186,7 @@ public class CannonLockManager : MonoBehaviour
     }
 
     private async UniTaskVoid SaveUnlock(int index)
-    {
+    {  
         try
         {
             await CloudSaveManager.Instance.SaveValueAsync(GetUnlockKey(index), true);

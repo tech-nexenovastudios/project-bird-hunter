@@ -8,7 +8,7 @@ using UnityEditor;
 
 namespace Gameplay
 {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     public class FullChapterLevelProfileGenerator : EditorWindow
     {
         private EggTierConfig e1, e2, e3, e4;
@@ -378,5 +378,5 @@ namespace Gameplay
             return t * t * t;
         }
     }
-    #endif
+#endif
 }

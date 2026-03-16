@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7290936734328380122}
   - component: {fileID: 4911300340455749902}
   m_Layer: 5
-  m_Name: Skeleton-forest
+  m_Name: InTheClouds
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -102,7 +102,7 @@ GameObject:
   - component: {fileID: 3662191766036524438}
   - component: {fileID: 6977409541629534718}
   m_Layer: 5
-  m_Name: devil's -cave
+  m_Name: Olimpus
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -318,7 +318,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e09f256b26b723d44828a77874846cb6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 891a18772494ab9418356fd745470192, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -713,7 +713,7 @@ GameObject:
   - component: {fileID: 6207410925806779717}
   - component: {fileID: 2625001332313888693}
   m_Layer: 5
-  m_Name: medusa-temple
+  m_Name: Asgard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -802,7 +802,7 @@ GameObject:
   - component: {fileID: 6616367630024796716}
   - component: {fileID: 7264034145488763820}
   m_Layer: 5
-  m_Name: ice-age
+  m_Name: Earthquake
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1030,7 +1030,7 @@ GameObject:
   - component: {fileID: 8647774314180998705}
   - component: {fileID: 6991448510130724070}
   m_Layer: 5
-  m_Name: Grand Canyon_Image
+  m_Name: SpaceInvasion
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1614,7 +1614,7 @@ GameObject:
   - component: {fileID: 899065450606455695}
   - component: {fileID: 5304936855615239642}
   m_Layer: 5
-  m_Name: Bunker
+  m_Name: PiratesBoat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1703,7 +1703,7 @@ GameObject:
   - component: {fileID: 8951137140572340075}
   - component: {fileID: 3074056239675191783}
   m_Layer: 5
-  m_Name: fairyland
+  m_Name: Cave
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2067,7 +2067,7 @@ GameObject:
   - component: {fileID: 4198290882277147149}
   - component: {fileID: 4430647773073814067}
   m_Layer: 5
-  m_Name: helldoor
+  m_Name: HellDoor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2562,95 +2562,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &2538203592155263784
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8914073179918153474}
-  - component: {fileID: 7032608463785621131}
-  - component: {fileID: 7101597524896332198}
-  - component: {fileID: 1640355225105135263}
-  m_Layer: 5
-  m_Name: steampunk
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &8914073179918153474
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2538203592155263784}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 1
-  m_Children:
-  - {fileID: 4540095620618902936}
-  m_Father: {fileID: 1596744179436445490}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 795, y: 920}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &7032608463785621131
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2538203592155263784}
-  m_CullTransparentMesh: 1
---- !u!114 &7101597524896332198
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2538203592155263784}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!225 &1640355225105135263
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2538203592155263784}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!1 &2747591328105384901
 GameObject:
   m_ObjectHideFlags: 0
@@ -2753,7 +2664,7 @@ GameObject:
   - component: {fileID: 5854412386267561336}
   - component: {fileID: 1475481665563949088}
   m_Layer: 5
-  m_Name: ice-age_2
+  m_Name: Forest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2842,7 +2753,7 @@ GameObject:
   - component: {fileID: 2649235591629798969}
   - component: {fileID: 8836105100374240640}
   m_Layer: 5
-  m_Name: Bamboo-land
+  m_Name: SecretVillage(Pandora)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3278,7 +3189,7 @@ GameObject:
   - component: {fileID: 21668610256662389}
   - component: {fileID: 3160479947201568618}
   m_Layer: 5
-  m_Name: Egypsian_Image
+  m_Name: BlackHole
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3442,7 +3353,7 @@ GameObject:
   - component: {fileID: 1472428898389907750}
   - component: {fileID: 2533781854996820723}
   m_Layer: 5
-  m_Name: scrap-land
+  m_Name: CrystalLand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3531,7 +3442,7 @@ GameObject:
   - component: {fileID: 370166500846541190}
   - component: {fileID: 9136780536002952726}
   m_Layer: 5
-  m_Name: crystal-land
+  m_Name: JurassicAge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3903,7 +3814,7 @@ GameObject:
   - component: {fileID: 2612563360050411193}
   - component: {fileID: 8026041814307156668}
   m_Layer: 5
-  m_Name: halloween
+  m_Name: Volcano
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4104,24 +4015,25 @@ MonoBehaviour:
   layoutGroup: {fileID: 5336455015322883781}
   items:
   - {fileID: 3911884923698951536}
+  - {fileID: 5309283275560230419}
+  - {fileID: 226964624367439805}
+  - {fileID: 4367600246449091710}
   - {fileID: 7362610074443552247}
-  - {fileID: 5831594060592922702}
   - {fileID: 5562862067156504126}
   - {fileID: 5297088313020979188}
+  - {fileID: 5831594060592922702}
+  - {fileID: 8851453833792895931}
   - {fileID: 5062109322629655522}
   - {fileID: 8586630687083353342}
   - {fileID: 9093161482294451531}
   - {fileID: 6614701329396227655}
   - {fileID: 3973705646472333374}
   - {fileID: 3792467022790280106}
-  - {fileID: 4367600246449091710}
   - {fileID: 639132449971305521}
-  - {fileID: 5309283275560230419}
   - {fileID: 4198732271824255051}
   - {fileID: 4435712837728813322}
   - {fileID: 6499801078871340996}
   - {fileID: 5821070062990170763}
-  - {fileID: 8851453833792895931}
   - {fileID: 9011207146021570260}
   - {fileID: 5485825630463364724}
   - {fileID: 7299901483931728026}
@@ -4132,99 +4044,12 @@ MonoBehaviour:
   - {fileID: 6572924748947892068}
   - {fileID: 5307799162922353654}
   - {fileID: 1215940181449272822}
-  - {fileID: 7961772055803575026}
-  - {fileID: 8914073179918153474}
   leftIndicator: {fileID: 6410674443473440283}
   rightIndicator: {fileID: 8722356968957676215}
---- !u!1 &3557541132855747375
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7961772055803575026}
-  - component: {fileID: 2752573143808735490}
-  - component: {fileID: 5129412750605839749}
-  - component: {fileID: 8421758689201801375}
-  m_Layer: 5
-  m_Name: spacepunk
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &7961772055803575026
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3557541132855747375}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 1
-  m_Children:
-  - {fileID: 999703754880983632}
-  m_Father: {fileID: 1596744179436445490}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 795, y: 920}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &2752573143808735490
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3557541132855747375}
-  m_CullTransparentMesh: 1
---- !u!114 &5129412750605839749
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3557541132855747375}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!225 &8421758689201801375
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3557541132855747375}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
+  momentumTime: 0.25
+  snapDuration: 0.35
+  inactiveScale: 0.7
+  inactiveFade: 0.5
 --- !u!1 &3591359283446385626
 GameObject:
   m_ObjectHideFlags: 0
@@ -4300,6 +4125,95 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &3681794869209626355
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 226964624367439805}
+  - component: {fileID: 7317952350886415176}
+  - component: {fileID: 2665840992641693383}
+  - component: {fileID: 2575425493015571299}
+  m_Layer: 5
+  m_Name: NuclearEra
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &226964624367439805
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3681794869209626355}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children:
+  - {fileID: 4537238785843581100}
+  m_Father: {fileID: 1596744179436445490}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 795, y: 920}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &7317952350886415176
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3681794869209626355}
+  m_CullTransparentMesh: 1
+--- !u!114 &2665840992641693383
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3681794869209626355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!225 &2575425493015571299
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3681794869209626355}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &3718587644789678644
 GameObject:
   m_ObjectHideFlags: 0
@@ -4673,7 +4587,7 @@ GameObject:
   - component: {fileID: 1058934829233422478}
   - component: {fileID: 3459208688574637962}
   m_Layer: 5
-  m_Name: Aztec
+  m_Name: MedusaTemple
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4762,7 +4676,7 @@ GameObject:
   - component: {fileID: 1916431483854934634}
   - component: {fileID: 3436009429757735751}
   m_Layer: 5
-  m_Name: Desert_Image
+  m_Name: Desert
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5004,7 +4918,7 @@ GameObject:
   - component: {fileID: 5588358254584871309}
   - component: {fileID: 248472648466574642}
   m_Layer: 5
-  m_Name: Secret-village
+  m_Name: SnowFall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5220,7 +5134,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 0054086fc5f4c48c8a5d9a2c69b66a87, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 253a199fe73890946922306dabda7a84, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5334,7 +5248,7 @@ GameObject:
   - component: {fileID: 818616912012341630}
   - component: {fileID: 3722756075533379236}
   m_Layer: 5
-  m_Name: hellstorm
+  m_Name: CyberTechCity
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5550,7 +5464,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: b72b773d671235143bf61989b17c8b0b, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e5ed44c6e372c7c4e86a7deae75a2418, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5708,7 +5622,7 @@ GameObject:
   - component: {fileID: 3277878347021818592}
   - component: {fileID: 28208048458773665}
   m_Layer: 5
-  m_Name: pirate-ship
+  m_Name: Mountain
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6131,7 +6045,7 @@ GameObject:
   - component: {fileID: 222681958804351787}
   - component: {fileID: 8532512410691125015}
   m_Layer: 5
-  m_Name: Graveyard
+  m_Name: Mars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6492,7 +6406,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 19e0ec7c9aaa24fd5b0984079d0e4f19, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e20081ef54d7cba489a84c2bd9a9cd34, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6685,7 +6599,7 @@ GameObject:
   - component: {fileID: 6647752639325188620}
   - component: {fileID: 6943656981631819189}
   m_Layer: 5
-  m_Name: jungle
+  m_Name: Marsh(Mud Pool)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7149,7 +7063,7 @@ GameObject:
   - component: {fileID: 1097258182272404437}
   - component: {fileID: 2611998406789296903}
   m_Layer: 5
-  m_Name: volcano
+  m_Name: LivingForest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7556,7 +7470,7 @@ GameObject:
   - component: {fileID: 6066305479216355608}
   - component: {fileID: 8158627636626689878}
   m_Layer: 5
-  m_Name: mountain
+  m_Name: Festival(Mela)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7663,24 +7577,25 @@ RectTransform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3911884923698951536}
+  - {fileID: 5309283275560230419}
+  - {fileID: 226964624367439805}
+  - {fileID: 4367600246449091710}
   - {fileID: 7362610074443552247}
-  - {fileID: 5831594060592922702}
   - {fileID: 5562862067156504126}
   - {fileID: 5297088313020979188}
+  - {fileID: 5831594060592922702}
+  - {fileID: 8851453833792895931}
   - {fileID: 5062109322629655522}
   - {fileID: 8586630687083353342}
   - {fileID: 9093161482294451531}
   - {fileID: 6614701329396227655}
   - {fileID: 3973705646472333374}
   - {fileID: 3792467022790280106}
-  - {fileID: 4367600246449091710}
   - {fileID: 639132449971305521}
-  - {fileID: 5309283275560230419}
   - {fileID: 4198732271824255051}
   - {fileID: 4435712837728813322}
   - {fileID: 6499801078871340996}
   - {fileID: 5821070062990170763}
-  - {fileID: 8851453833792895931}
   - {fileID: 9011207146021570260}
   - {fileID: 5485825630463364724}
   - {fileID: 7299901483931728026}
@@ -7691,8 +7606,6 @@ RectTransform:
   - {fileID: 6572924748947892068}
   - {fileID: 5307799162922353654}
   - {fileID: 1215940181449272822}
-  - {fileID: 7961772055803575026}
-  - {fileID: 8914073179918153474}
   m_Father: {fileID: 3415569775241803549}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
@@ -7842,7 +7755,7 @@ GameObject:
   - component: {fileID: 7508896013350898528}
   - component: {fileID: 9123618220348736877}
   m_Layer: 5
-  m_Name: haunted-mediacal-room
+  m_Name: Storm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8133,6 +8046,10 @@ MonoBehaviour:
   items: []
   leftIndicator: {fileID: 8468668999448419438}
   rightIndicator: {fileID: 7229204708172220488}
+  momentumTime: 0.25
+  snapDuration: 0.35
+  inactiveScale: 0.7
+  inactiveFade: 0.5
 --- !u!1 &6706188930324812654
 GameObject:
   m_ObjectHideFlags: 0
@@ -8221,7 +8138,7 @@ GameObject:
   - component: {fileID: 8831516922119498449}
   - component: {fileID: 197950907063465194}
   m_Layer: 5
-  m_Name: Christmas
+  m_Name: Rench
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8332,7 +8249,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 17, y: 0.0000038147}
-  m_SizeDelta: {x: 1080, y: 903.7}
+  m_SizeDelta: {x: 752, y: 652}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6845743211938724004
 CanvasRenderer:
@@ -8362,7 +8279,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f339b695aecb0794fbb96b29e34a146a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 5ca32a9304ae0ab4799cbfe61e28caff, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -8747,7 +8664,7 @@ GameObject:
   - component: {fileID: 3851457940083436387}
   - component: {fileID: 1144685351787833790}
   m_Layer: 5
-  m_Name: poisonous-neuclear
+  m_Name: Fiarytale
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8836,7 +8753,7 @@ GameObject:
   - component: {fileID: 549703110614157023}
   - component: {fileID: 4373790513707531087}
   m_Layer: 5
-  m_Name: haunted-castle
+  m_Name: HauntedCastle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9000,7 +8917,7 @@ GameObject:
   - component: {fileID: 1117371859176405056}
   - component: {fileID: 248596614790476674}
   m_Layer: 5
-  m_Name: fairy-land
+  m_Name: Christmas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9076,6 +8993,81 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!1 &7764901597871265901
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4537238785843581100}
+  - component: {fileID: 1380442907616987706}
+  - component: {fileID: 4023874651012455242}
+  m_Layer: 5
+  m_Name: LevelImage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &4537238785843581100
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7764901597871265901}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 226964624367439805}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.5, y: -0.000030517578}
+  m_SizeDelta: {x: 795, y: 736}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &1380442907616987706
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7764901597871265901}
+  m_CullTransparentMesh: 1
+--- !u!114 &4023874651012455242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7764901597871265901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: a419aeda7f0a2344d88558b8962b1392, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &7824506566548558666
 GameObject:
   m_ObjectHideFlags: 0
@@ -9114,81 +9106,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -414}
   m_SizeDelta: {x: 1080, y: 368.57874}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &7841484484401326242
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4540095620618902936}
-  - component: {fileID: 7027106436037285880}
-  - component: {fileID: 3758712569859743018}
-  m_Layer: 5
-  m_Name: LevelImage
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &4540095620618902936
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7841484484401326242}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 1
-  m_Children: []
-  m_Father: {fileID: 8914073179918153474}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.5, y: -0.000030517578}
-  m_SizeDelta: {x: 795, y: 736}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &7027106436037285880
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7841484484401326242}
-  m_CullTransparentMesh: 1
---- !u!114 &3758712569859743018
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7841484484401326242}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 8479335f3b3f26d4e9eba85b5707f9be, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &7902823452401988294
 GameObject:
   m_ObjectHideFlags: 0
@@ -9377,7 +9294,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.5, y: -0.000030517578}
+  m_AnchoredPosition: {x: -0.0000033677, y: 31}
   m_SizeDelta: {x: 795, y: 736}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2358050457105795672
@@ -9408,84 +9325,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1675e6b58d311d547b648aa9a284b1b9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 542915e3283335a448ef33daa644944a, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!1 &8093485369461098949
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 999703754880983632}
-  - component: {fileID: 5211081727900668182}
-  - component: {fileID: 2875925745290624309}
-  m_Layer: 5
-  m_Name: LevelImage
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &999703754880983632
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8093485369461098949}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 1
-  m_Children: []
-  m_Father: {fileID: 7961772055803575026}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.5, y: -0.000030517578}
-  m_SizeDelta: {x: 810, y: 775}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &5211081727900668182
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8093485369461098949}
-  m_CullTransparentMesh: 1
---- !u!114 &2875925745290624309
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8093485369461098949}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 9609632bc9bcf9a419c9e8a56d6ad48d, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -10411,7 +10253,7 @@ GameObject:
   - component: {fileID: 2667029756199387848}
   - component: {fileID: 1640294589866801674}
   m_Layer: 5
-  m_Name: Candyland
+  m_Name: IceAge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10897,7 +10739,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cbe02dfd4d6cd2d4b83dcc08c22a9c41, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7a514fcdb29c16a42b001abec9d5641f, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

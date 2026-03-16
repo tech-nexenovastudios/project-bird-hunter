@@ -1,33 +1,4 @@
-//using UnityEngine;
-//using UnityEngine.SceneManagement;
-
-//public class ChapterSelector : MonoBehaviour
-//{ 
-//    int currentChapter;
-
-//    private void OnEnable()
-//    {
-//        ScrollCarouselEffect.currentLevelChange += ChangeChapter;
-//    }
-
-//    private void OnDisable()
-//    {
-//        ScrollCarouselEffect.currentLevelChange -= ChangeChapter;
-//    }
-
-//    public void ChangeChapter(int chapterNumber)
-//    {
-//        currentChapter = chapterNumber;
-//    }
-//    public void LoadChapter(int chapterNumber)
-//    {
-//        Debug.Log(currentChapter);
-//        PlayerPrefs.SetInt("SelectedChapter", chapterNumber);
-//        PlayerPrefs.SetInt("SelectedLevel", 1); // Start with level 1
-//        SceneManager.LoadScene("GameScene"); // Name of your gameplay scene
-//    }
-//}
-
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -44,20 +15,10 @@ public class ChapterSelector : MonoBehaviour
 
     int currentIndex;
 
-    private void OnEnable()
-    {
-        ScrollCarouselEffect.currentLevelChange += ChangeWorld;
-    }
+    private void OnEnable() => ScrollCarouselEffect.currentLevelChange += ChangeWorld;
+    private void OnDisable() => ScrollCarouselEffect.currentLevelChange -= ChangeWorld;
 
-    private void OnDisable()
-    {
-        ScrollCarouselEffect.currentLevelChange -= ChangeWorld;
-    }
-
-    private void Start()
-    {
-        ChangeWorld(1);
-    }
+    private void Start() => ChangeWorld(1);
 
     public void ChangeWorld(int index)
     {
@@ -72,7 +33,13 @@ public class ChapterSelector : MonoBehaviour
 
     public void LoadCurrentWorld()
     {
-        //ToDo: Save remotely in cloud
+        // Guard: block navigation if chapter is locked
+        if (ChapterUnlockManager.Instance != null && !ChapterUnlockManager.Instance.IsUnlocked(currentIndex))
+        {
+            Debug.Log($"[ChapterSelector] Chapter {currentIndex} is locked.");
+            return;
+        }
+
         PlayerPrefs.SetInt("SelectedWorld", currentIndex);
         PlayerPrefs.SetInt("SelectedLevel", 1);
         SceneManager.LoadScene("GamePlay");
