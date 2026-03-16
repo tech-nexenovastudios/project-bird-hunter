@@ -1,3 +1,5 @@
+
+
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
@@ -157,7 +159,7 @@ public class PowerupLockTesterWindow : EditorWindow
 
     private void DrawChapterSimulator(PowerupLockManager mgr)
     {
-        EditorGUILayout.LabelField("── Chapter Gate Simulator ──", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Chapter Gate Simulator", EditorStyles.boldLabel);
         using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
             using (new EditorGUILayout.HorizontalScope())
@@ -168,13 +170,22 @@ public class PowerupLockTesterWindow : EditorWindow
                 _simChapterLevel = EditorGUILayout.IntField(_simChapterLevel, GUILayout.Width(40));
             }
 
-            EditorGUILayout.HelpBox(
-                "Simulates arriving at Chapter " + _simChapter + ", Level " + _simChapterLevel +
-                ". Any card whose gate is met will be unlocked.",
-                MessageType.None);
+            string resetNote = _simChapterLevel == 0
+                ? "Level 0 will RESET gated cards first, then unlock eligible ones."
+                : "Unlocks cards where unlockFromChapter <= " + _simChapter + " AND spinUnlockLevel <= " + _simChapterLevel;
+            EditorGUILayout.HelpBox(resetNote, MessageType.None);
 
-            if (GUILayout.Button("▶  Evaluate Gates for This Chapter / Level"))
-                mgr.EvaluateForChapter(_simChapter, _simChapterLevel);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Simulate Level Complete"))
+                    mgr.OnLevelCompleted(_simChapter, _simChapterLevel);
+
+                EditorGUILayout.LabelField("Quick:", GUILayout.Width(38));
+                if (GUILayout.Button("L0", GUILayout.Width(28))) { _simChapterLevel = 0; mgr.OnLevelCompleted(_simChapter, 0); }
+                if (GUILayout.Button("L6", GUILayout.Width(28))) { _simChapterLevel = 6; mgr.OnLevelCompleted(_simChapter, 6); }
+                if (GUILayout.Button("L11", GUILayout.Width(32))) { _simChapterLevel = 11; mgr.OnLevelCompleted(_simChapter, 11); }
+                if (GUILayout.Button("L16", GUILayout.Width(32))) { _simChapterLevel = 16; mgr.OnLevelCompleted(_simChapter, 16); }
+            }
         }
     }
 

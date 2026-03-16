@@ -318,7 +318,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 15234ff1b753755428bce97860bc7fb4, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 891a18772494ab9418356fd745470192, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4015,24 +4015,25 @@ MonoBehaviour:
   layoutGroup: {fileID: 5336455015322883781}
   items:
   - {fileID: 3911884923698951536}
+  - {fileID: 5309283275560230419}
+  - {fileID: 226964624367439805}
+  - {fileID: 4367600246449091710}
   - {fileID: 7362610074443552247}
-  - {fileID: 5831594060592922702}
   - {fileID: 5562862067156504126}
   - {fileID: 5297088313020979188}
+  - {fileID: 5831594060592922702}
+  - {fileID: 8851453833792895931}
   - {fileID: 5062109322629655522}
   - {fileID: 8586630687083353342}
   - {fileID: 9093161482294451531}
   - {fileID: 6614701329396227655}
   - {fileID: 3973705646472333374}
   - {fileID: 3792467022790280106}
-  - {fileID: 4367600246449091710}
   - {fileID: 639132449971305521}
-  - {fileID: 5309283275560230419}
   - {fileID: 4198732271824255051}
   - {fileID: 4435712837728813322}
   - {fileID: 6499801078871340996}
   - {fileID: 5821070062990170763}
-  - {fileID: 8851453833792895931}
   - {fileID: 9011207146021570260}
   - {fileID: 5485825630463364724}
   - {fileID: 7299901483931728026}
@@ -4043,13 +4044,12 @@ MonoBehaviour:
   - {fileID: 6572924748947892068}
   - {fileID: 5307799162922353654}
   - {fileID: 1215940181449272822}
-  - {fileID: 0}
-  - {fileID: 0}
   leftIndicator: {fileID: 6410674443473440283}
   rightIndicator: {fileID: 8722356968957676215}
-  velocityPerStep: 500
-  maxSkipSteps: 6
+  momentumTime: 0.25
   snapDuration: 0.35
+  inactiveScale: 0.7
+  inactiveFade: 0.5
 --- !u!1 &3591359283446385626
 GameObject:
   m_ObjectHideFlags: 0
@@ -5134,7 +5134,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5332101c2b3a7244aad2112d056001f7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 253a199fe73890946922306dabda7a84, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5464,7 +5464,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: b72b773d671235143bf61989b17c8b0b, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e5ed44c6e372c7c4e86a7deae75a2418, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6406,7 +6406,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 99949c3a825dd354c9808164523525e5, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e20081ef54d7cba489a84c2bd9a9cd34, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8046,9 +8046,10 @@ MonoBehaviour:
   items: []
   leftIndicator: {fileID: 8468668999448419438}
   rightIndicator: {fileID: 7229204708172220488}
-  velocityPerStep: 500
-  maxSkipSteps: 6
+  momentumTime: 0.25
   snapDuration: 0.35
+  inactiveScale: 0.7
+  inactiveFade: 0.5
 --- !u!1 &6706188930324812654
 GameObject:
   m_ObjectHideFlags: 0
@@ -8278,7 +8279,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: fcf0101efc7586544b489efe13d12c6b, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 5ca32a9304ae0ab4799cbfe61e28caff, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -9057,7 +9058,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 2a4981836e665624d836398b5879cf16, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a419aeda7f0a2344d88558b8962b1392, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -9324,7 +9325,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 81428a77c18a59a48a611afa628c5b13, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 542915e3283335a448ef33daa644944a, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1

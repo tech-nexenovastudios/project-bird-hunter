@@ -315,7 +315,7 @@ public class ChapterUnlockManager : MonoBehaviour
         _unlockMap.Clear();
         if (defaultUnlockedChapters != null)
             foreach (int i in defaultUnlockedChapters)
-                _unlockMap[i] = true;
+                _unlockMap[i] = true;  
     }
 
     // ═════════════════════════════════════════════════════════════════════════
