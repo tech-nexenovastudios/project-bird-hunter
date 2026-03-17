@@ -1338,22 +1338,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4435712837728813322, guid: 3357e75e90558a8479cee64b40b4ca5c, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4435712837728813322, guid: 3357e75e90558a8479cee64b40b4ca5c, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4435712837728813322, guid: 3357e75e90558a8479cee64b40b4ca5c, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4435712837728813322, guid: 3357e75e90558a8479cee64b40b4ca5c, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4941618309234179158, guid: 3357e75e90558a8479cee64b40b4ca5c, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -1372,10 +1356,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5062109322629655522, guid: 3357e75e90558a8479cee64b40b4ca5c, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5150956227011486724, guid: 3357e75e90558a8479cee64b40b4ca5c, type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5297088313020979188, guid: 3357e75e90558a8479cee64b40b4ca5c, type: 3}
@@ -4855,8 +4835,13 @@ MonoBehaviour:
   cannonNameText: {fileID: 1866527830}
   actionButton: {fileID: 1981647662}
   actionButtonText: {fileID: 94076322}
-  xpContainer: {fileID: 0}
-  xpRequiredText: {fileID: 0}
+  unlockPopupPanel: {fileID: 45488367}
+  popupCannonImage: {fileID: 1610783600}
+  popupCannonNameText: {fileID: 484041973}
+  popupCoinCostText: {fileID: 501640083}
+  popupGemCostText: {fileID: 649261914}
+  popupConfirmButton: {fileID: 478950075}
+  popupCancelButton: {fileID: 1832578423}
   activeBgSprite: {fileID: 21300000, guid: 778647b5b0eb4e64794ddc271270946b, type: 3}
   inactiveBgSprite: {fileID: 21300000, guid: fb2cabb8227fefa4d9d6b93a016fd83d, type: 3}
 --- !u!114 &463252216
@@ -21567,7 +21552,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3496849434684935008, guid: 8e0c2dbd6464c43d9a2e3a955c2a6b8f, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 674.24976
+      value: 674.2501
       objectReference: {fileID: 0}
     - target: {fileID: 3859693901068475215, guid: 8e0c2dbd6464c43d9a2e3a955c2a6b8f, type: 3}
       propertyPath: m_AnchorMax.y

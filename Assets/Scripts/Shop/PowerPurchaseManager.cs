@@ -56,8 +56,6 @@ public class PowerPurchaseManager : MonoBehaviour
         }
     }
 
-    // ==================== Button Setup ====================
-
     private void SetupPurchaseButtons()
     {
         for (int i = 0; i < purchaseCards.Length; i++)
@@ -71,15 +69,12 @@ public class PowerPurchaseManager : MonoBehaviour
     private void SetButtonsInteractable(bool state)
     {
         if (purchaseCards == null) return;
-
         foreach (var card in purchaseCards)
         {
             if (card.purchaseButton != null)
                 card.purchaseButton.interactable = state;
         }
     }
-
-    // ==================== Purchase ====================
 
     private void OnPurchaseClicked(int index)
     {
@@ -101,11 +96,25 @@ public class PowerPurchaseManager : MonoBehaviour
             {
                 Debug.Log($"[PowerPurchase] Purchase '{card.purchaseName}' successful!");
 
+                // ═══ POWER FLOW EFFECT — from this button ═══
+                Vector2 buttonPos = card.purchaseButton.transform.position;
+                int powerAmount = 0;
+                if (result.Rewards != null)
+                {
+                    foreach (var curr in result.Rewards.Currency)
+                    {
+                        if (curr.Id == "POWER")
+                            powerAmount = (int)curr.Amount;
+                    }
+                }
+                if (powerAmount > 0)
+                    GameEvent.CurrencyCollected(CurrencyType.Power, buttonPos, powerAmount);
+                // ═════════════════════════════════════════════
+
                 if (result.Rewards != null)
                 {
                     foreach (var item in result.Rewards.Inventory)
                         Debug.Log($"  Received item: {item.Id}");
-
                     foreach (var curr in result.Rewards.Currency)
                         Debug.Log($"  Received currency: {curr.Amount} {curr.Id}");
                 }
@@ -143,28 +152,21 @@ public class PowerPurchaseManager : MonoBehaviour
         }
     }
 
-    // ==================== Loading UI ====================
-
     private void ShowLoading()
     {
         isLoading = true;
-        if (loadingPanel != null)
-            loadingPanel.SetActive(true);
+        if (loadingPanel != null) loadingPanel.SetActive(true);
     }
 
     private void HideLoading()
     {
         isLoading = false;
-        if (loadingPanel != null)
-            loadingPanel.SetActive(false);
+        if (loadingPanel != null) loadingPanel.SetActive(false);
     }
-
-    // ==================== Cleanup ====================
 
     private void OnDestroy()
     {
         if (purchaseCards == null) return;
-
         foreach (var card in purchaseCards)
         {
             if (card.purchaseButton != null)

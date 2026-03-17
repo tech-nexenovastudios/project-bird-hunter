@@ -242,6 +242,10 @@ public class CurrencyManager
     public async UniTask Refresh()
     {
         await LoadBalances(true);
+        // Inside CurrencyManager, at the END of Refresh() after balances are loaded:
+        GameEvent.BalanceSynced(CurrencyType.Gold, (int)Gold);
+        GameEvent.BalanceSynced(CurrencyType.Gems, (int)Gems);
+        GameEvent.BalanceSynced(CurrencyType.Power, (int)Power);
     }
 
     // ==================== Internal ====================

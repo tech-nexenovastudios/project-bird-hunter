@@ -1,63 +1,41 @@
 ﻿using System;
 
-// ───────────────────────────────────────────────────────────
-// PURPOSE: Central event hub. Any system can fire or listen.
-//          NO script needs a direct reference to another.
-//
-// PATTERN: Observer Pattern via C# events.
-//
-// HOW TO LISTEN (from any script):
-//     void OnEnable()  => GameEvents.OnCoinArrived += HandleCoinArrived;
-//     void OnDisable() => GameEvents.OnCoinArrived -= HandleCoinArrived;
-//     void HandleCoinArrived(int amount) { /* update UI */ }
-//
-// HOW TO FIRE (from any script):
-//     GameEvents.CoinArrived(1);
-//
-// FUTURE-PROOFING: Add new events here as your game grows.
-//     public static event Action OnBossDefeated;
-//     public static event Action<string> OnAchievementUnlocked;
-//     ...and so on. Nothing else changes.
-// ───────────────────────────────────────────────────────────
-
 public static class GameEvent
 {
-    // ── Coin Events ──────────────────────────────────────
+    // ── Changed: now carries CurrencyType ────────────────
+    // PARAMS: CurrencyType = which currency to animate
+    //         Vector2      = screen position to spawn FROM
+    //         int          = total value earned
 
-    /// <summary>
-    /// Fired when ANY system wants to trigger the coin fly effect.
-    /// Parameters: (screenPosition where coins burst from, total coin value)
-    /// </summary>
-    public static event Action<UnityEngine.Vector2, int> OnCoinCollected;
+    // ── Balance Sync (fired after CurrencyManager refreshes) ──
+    public static event Action<CurrencyType, int> OnBalanceSynced;
 
-    /// <summary>
-    /// Fired each time ONE coin icon reaches the counter UI.
-    /// Parameter: coin value this single coin represents.
-    /// </summary>
-    public static event Action<int> OnCoinArrived;
-
-    /// <summary>
-    /// Fired after ALL coins from a single burst have arrived.
-    /// Useful for: playing a final "cha-ching" sound, saving, etc.
-    /// </summary>
-    public static event Action OnCoinBurstComplete;
-
-
-    // ── Safe Invoke Methods ──────────────────────────────
-    // These null-check so callers never crash if nobody is listening.
-
-    public static void CoinCollected(UnityEngine.Vector2 screenPos, int totalValue)
+    public static void BalanceSynced(CurrencyType type, int balance)
     {
-        OnCoinCollected?.Invoke(screenPos, totalValue);
+        OnBalanceSynced?.Invoke(type, balance);
+    }
+    public static event Action<CurrencyType, UnityEngine.Vector2, int> OnCurrencyCollected;
+
+    // Each icon arrives at its counter
+    // CurrencyType tells the correct counter to increment
+    public static event Action<CurrencyType, int> OnCurrencyArrived;
+
+    // All icons from one burst finished
+    public static event Action<CurrencyType> OnCurrencyBurstComplete;
+
+
+    public static void CurrencyCollected(CurrencyType type, UnityEngine.Vector2 screenPos, int totalValue)
+    {
+        OnCurrencyCollected?.Invoke(type, screenPos, totalValue);
     }
 
-    public static void CoinArrived(int value)
+    public static void CurrencyArrived(CurrencyType type, int value)
     {
-        OnCoinArrived?.Invoke(value);
+        OnCurrencyArrived?.Invoke(type, value);
     }
 
-    public static void CoinBurstComplete()
+    public static void CurrencyBurstComplete(CurrencyType type)
     {
-        OnCoinBurstComplete?.Invoke();
+        OnCurrencyBurstComplete?.Invoke(type);
     }
 }
