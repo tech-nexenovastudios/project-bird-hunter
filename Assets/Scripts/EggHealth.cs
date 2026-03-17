@@ -72,13 +72,13 @@ public class EggHealth : MonoBehaviour, IHealthManager, IDamageEffect
     private void OnEnable()
     {
         EggManager.EggsAdd(this.gameObject);
-        GameManager.LevelEnd += DestroyEggs;
+        //GameManager.LevelEnd += DestroyEggs;
         IntialValueSet();
     }
 
     private void OnDisable()
     {
-        GameManager.LevelEnd -= DestroyEggs;
+        //GameManager.LevelEnd -= DestroyEggs;
 
     }
 

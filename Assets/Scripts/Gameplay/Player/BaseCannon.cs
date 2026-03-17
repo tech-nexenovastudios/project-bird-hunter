@@ -1,3 +1,4 @@
+using Gameplay.Eggs;
 using Gameplay.Events;
 using Gameplay.Interfaces;
 using TMPro;
@@ -14,10 +15,6 @@ namespace Gameplay.Player
         [SerializeField] protected ParticleSystem[] fireParticles;
         [SerializeField] protected Transform[] wheels;
         [SerializeField] protected float wheelRadius = 0.5f;
-        
-        [Header("Runtime UI (Assigned by Spawner)")]
-        [SerializeField] private Image cannonHealthBar;
-        [SerializeField] private TextMeshProUGUI cannonHealthText;
 
         public int CurrentHp { get; private set; }
         public int MaxHp => CannonStats != null ? Mathf.RoundToInt(CannonStats.currentMaxHealth) : 100;
@@ -53,8 +50,6 @@ namespace Gameplay.Player
             CurrentHp = MaxHp;
 
             var (bar, text) = references.GetCannonHealth();
-            cannonHealthBar = bar;
-            cannonHealthText = text;
 
             var (left, right) = references.GetWall();
             leftWall = left;
@@ -326,21 +321,7 @@ namespace Gameplay.Player
 
         protected virtual void UpdateUI()
         {
-            if (cannonHealthBar != null)
-            {
-                float fill = (float)CurrentHp / MaxHp;
-                cannonHealthBar.fillAmount = fill;
-                
-                // Color shift based on health
-                if (fill > 0.6f) cannonHealthBar.color = Color.green;
-                else if (fill > 0.3f) cannonHealthBar.color = Color.yellow;
-                else cannonHealthBar.color = Color.red;
-            }
-
-            if (cannonHealthText != null)
-            {
-                cannonHealthText.text = $"{CurrentHp}/{MaxHp}";
-            }
+            
         }
 
         protected virtual void Die()
@@ -362,6 +343,8 @@ namespace Gameplay.Player
                 // We don't take damage here because EggDamage script should be on the Egg
                 // and it calls TakeDamage(damage, hitPoint) on us.
                 // This method is just a fallback or for non-damageable trigger logic.
+                collision.gameObject.TryGetComponent(out Egg egg);
+                TakeDamage(egg.config.cannonDamage);
             }
         }
 

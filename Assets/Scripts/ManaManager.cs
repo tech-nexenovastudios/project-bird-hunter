@@ -34,13 +34,13 @@ public class ManaManager : MonoBehaviour
     private void OnEnable()
     {
         IncreaseManaFillRate += IncreaseManaFill;
-        GameManager.LevelEnd += ResetMana;
+        //GameManager.LevelEnd += ResetMana;
     }
 
     private void OnDisable()
     {
         IncreaseManaFillRate += IncreaseManaFill;
-        GameManager.LevelEnd -= ResetMana;
+        //GameManager.LevelEnd -= ResetMana;
 
 
     }

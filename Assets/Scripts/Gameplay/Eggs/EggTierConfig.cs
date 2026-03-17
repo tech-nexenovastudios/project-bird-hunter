@@ -12,6 +12,13 @@ namespace Gameplay.Eggs
         public int scorePerHit;
         public int scoreOnDestroy;
         
+        [Header("Damage Settings")]
+        public SpriteRenderer spriteRenderer;
+        public ParticleSystem hitEffect;
+        public ParticleSystem destroyEffect;
+        public AudioClip hitSound;
+        public AudioClip[] destroySounds;
+        
         //public Sprite sprite;
         public GameObject eggPrefab;
         
@@ -30,7 +37,8 @@ namespace Gameplay.Eggs
         public float splitForce = 4f;
         public EggTierConfig splitInto;  // null for E1
         public int splitCount = 2;       // 2 for E4→E3×2, etc.
-        
+        public int cannonDamage = 10;
+
         public Vector2 GetSplitImpulse(int splitIndex)
         {
             Vector2 dir = splitIndex == 0 ? Vector2.left : Vector2.right;

@@ -2981,10 +2981,10 @@ RectTransform:
   - {fileID: 1319390827}
   m_Father: {fileID: 2084077380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 428.3333, y: 0}
-  m_SizeDelta: {x: 163.33333, y: 340}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &920810653
 MonoBehaviour:
@@ -3089,10 +3089,10 @@ RectTransform:
   - {fileID: 1909644860}
   m_Father: {fileID: 2084077380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 255, y: 0}
-  m_SizeDelta: {x: 163.33333, y: 340}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &939261853
 MonoBehaviour:
@@ -3642,6 +3642,7 @@ MonoBehaviour:
   startGameCanvas: {fileID: 0}
   slotMachineScreen: {fileID: 0}
   levelDetailPopup: {fileID: 0}
+  gameplayHUD: {fileID: 0}
 --- !u!1 &1050823781
 GameObject:
   m_ObjectHideFlags: 0
@@ -4887,10 +4888,10 @@ RectTransform:
   - {fileID: 1551743859}
   m_Father: {fileID: 2084077380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 81.66666, y: 0}
-  m_SizeDelta: {x: 163.33333, y: 340}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1449064625
 MonoBehaviour:
@@ -6964,6 +6965,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1856956552}
   - component: {fileID: 1856956553}
+  - component: {fileID: 1856956555}
+  - component: {fileID: 1856956554}
   m_Layer: 0
   m_Name: SlotMachine
   m_TagString: Untagged
@@ -7038,6 +7041,44 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fe6e966ce9d611340815d2614e4d1b2a, type: 2}
   - {fileID: 11400000, guid: acf89800014271c4c8f42d15ca4d5708, type: 2}
   - {fileID: 11400000, guid: a56dd120d7e73a744bd581f9612da150, type: 2}
+--- !u!114 &1856956554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1856956551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1856956555
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1856956551}
+  m_CullTransparentMesh: 1
 --- !u!1 &1902880297
 GameObject:
   m_ObjectHideFlags: 0

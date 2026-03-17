@@ -1,34 +1,100 @@
+using System;
+using DG.Tweening;
 using Gameplay.Player;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Gameplay.Player
 {
     public class SingleCannon : BaseCannon
     {
+        [SerializeField] private ParticleSystem muzzleFlash;
+        [SerializeField] private Transform muzzleTransform;
+        
+        private Vector3 muzzleStartPosition;
+        [SerializeField] private Vector3 muzzleEndPosition;
+        
+        private Vector3 muzzleStartScale;
+        [SerializeField]private Vector3 muzzleEndScale;
+        private float muzzleStartY;
+        
+        private Sequence muzzleSequence;
+
+        protected override void Awake()
+        {
+            muzzleStartPosition = muzzleTransform.localPosition;
+            muzzleStartScale = muzzleTransform.localScale;
+            
+            muzzleStartY = muzzleTransform.localPosition.y;
+            
+            muzzleTransform.localPosition = muzzleStartPosition;
+            
+            muzzleTransform.localScale = muzzleStartScale;
+            
+            muzzleTransform.gameObject.SetActive(true);
+            muzzleFlash.gameObject.SetActive(false);
+            muzzleFlash.Stop();
+            muzzleFlash.Clear();
+            base.Awake();
+        }
+
         protected override void UpdateUI()
         {
-            base.UpdateUI();
-            if (fireParticles is { Length: > 0 })
-            {
-                fireParticles[0].Play();
-            }
+            
         }
         protected override void Shoot()
         {
-            // Standard behavior: One bullet from the main gun tip or center
-            if (gunTips == null || gunTips.Length == 0)
-            {
-                SpawnBullet(transform.position, transform.rotation);
-            }
-            else
-            {
-                // Single cannon usually only has one tip, but we follow the array pattern
-                SpawnBullet(gunTips[0].position, gunTips[0].rotation);
-            }
+            muzzleSequence?.Kill();
+            muzzleSequence = null;
+            
+            muzzleSequence = DOTween.Sequence();
+            
+            muzzleSequence.AppendCallback(()=> muzzleFlash.Play());
+            muzzleSequence.Append(muzzleTransform.DOLocalMove(muzzleEndPosition, 0.1f).SetEase(Ease.OutSine));
+            muzzleSequence.AppendCallback(()=> muzzleTransform.localPosition = muzzleStartPosition);
+            muzzleSequence.AppendCallback(() => muzzleFlash.Stop());
+            muzzleSequence.AppendCallback(() => fireParticles[0].Play(true));
+            muzzleSequence.Append(muzzleTransform.DOScale(muzzleEndScale, 0.1f).SetEase(Ease.Flash));
+            muzzleSequence.AppendCallback(()=> muzzleTransform.localScale = muzzleStartScale );
+            muzzleSequence.AppendCallback(() => fireParticles[0].Stop(true));
+            
+            muzzleSequence.Play();
+            
+            
+            // if (muzzleTransform != null)
+            // {
+            //     muzzleFlash.gameObject.SetActive(true);
+            //     
+            //     muzzleTransform.localRotation = Quaternion.identity;
+            //     muzzleTransform.localScale = Vector3.one;
+            //     
+            //     muzzleTransform.DOMoveY(-0.25f, 0.1f).SetEase(Ease.OutSine).OnComplete(() =>
+            //     {
+            //         muzzleTransform.DOMoveY(0, 0.1f).SetEase(Ease.OutSine);
+            //     });
+            //     
+            //     muzzleTransform.DOPunchScale(new Vector3(1, 1.1f, 1), 0.1f).SetEase(Ease.Flash).OnStart(() =>
+            //     {
+            //         
+            //         muzzleFlash.Play();
+            //     }).OnComplete(() =>
+            //     {
+            //         muzzleTransform.DOPunchScale(new Vector3(1, 1, 1), 0.1f).SetEase(Ease.Flash);
+            //         muzzleFlash.Stop();
+            //         muzzleFlash.gameObject.SetActive(false);
+            //     });
+            // }
+            
+            base.Shoot();
+        }
 
-            if (fireParticles != null && fireParticles.Length > 0)
+        private void OnDrawGizmos()
+        {
+            foreach (var wheel in wheels)
             {
-                fireParticles[0].Play();
+                //Draw circle of wheel Radius
+                Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
             }
         }
     }

@@ -79,6 +79,8 @@ namespace Gameplay.Player
             currentLifetime += Time.deltaTime;
             if (currentLifetime >= lifetime)
                 Deactivate();
+            else
+                HandleMovement();
         }
 
         protected void OnCollisionEnter2D(Collision2D other)
