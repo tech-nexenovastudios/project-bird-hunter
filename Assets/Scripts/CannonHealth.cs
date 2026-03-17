@@ -92,10 +92,10 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
 
     public void SetHealthUI(Image healthBar, TextMeshProUGUI healthText)
     {
-        healthBarSlider =  healthBar;
+        healthBarSlider = healthBar;
         this.healthText = healthText;
     }
-    
+
     //Call This funcion everytime level change
     public void resetInvincibleCount()
     {
@@ -119,7 +119,7 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
     public void TakeDamage(int damage, Vector3 hitPoint)
     {
         currentHealth = Mathf.Clamp(currentHealth - damage, 0, maxHealth);
-        UpdateUI() ;
+        UpdateUI();
         if (currentHealth <= 0)
         {
             Die();
@@ -130,7 +130,7 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
     {
         if (revivePlayer)
         {
-            currentHealth = Mathf.Clamp((maxHealth * revivePlayerHealth) / 100,0,maxHealth);
+            currentHealth = Mathf.Clamp((maxHealth * revivePlayerHealth) / 100, 0, maxHealth);
             UpdateUI();
             revivePlayer = false;
         }
@@ -146,7 +146,7 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
     public void InvincibleEffect()
     {
 
-        if(materials == null) Debug.Log("Materials is null");
+        if (materials == null) Debug.Log("Materials is null");
         else
         {
             foreach (var mat in materials)
@@ -210,7 +210,7 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
     {
         if (!invincible && currentInvincibleCount <= 0)
         {
-            TakeDamage((int)health.Health,  health.transform.position);
+            TakeDamage((int)health.Health, health.transform.position);
         }
         else
         {
@@ -241,7 +241,7 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
 
 
     }
-    
+
     IEnumerator InvincibleAgain()
     {
         yield return new WaitForSeconds(invincibleDuration);
@@ -294,7 +294,7 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
 
     public void igniteDamage(float applyDamage, float effectTime)
     {
-        StartCoroutine(FireDamageCoroutine(applyDamage,effectTime));
+        StartCoroutine(FireDamageCoroutine(applyDamage, effectTime));
         Debug.Log("Ignite");
     }
 
@@ -308,15 +308,15 @@ public class CannonHealthOld : MonoBehaviour, IDamageable, IDamageEffect
         this.GetComponent<CannonMove>().FreezeEffect(effectTime);
     }
 
-    IEnumerator FireDamageCoroutine(float applyDamage,float effectTime)
+    IEnumerator FireDamageCoroutine(float applyDamage, float effectTime)
     {
         float damage = 0;
         yield return null;
         float time = effectTime;
-        while(time > 0)
+        while (time > 0)
         {
             time -= 1;
-            TakeDamage((int)(applyDamage/effectTime), transform.position);
+            TakeDamage((int)(applyDamage / effectTime), transform.position);
             damage += applyDamage / effectTime;
             yield return new WaitForSeconds(1);
         }

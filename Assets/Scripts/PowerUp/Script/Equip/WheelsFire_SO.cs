@@ -7,11 +7,11 @@ public class WheelsFire_SO : PowerUp_SO
     public float[] duration;
     public override void GrantAbility(CannonPower power)
     {
-    base.GrantAbility(power);
-    power.WheelFire(true,1f,3f, duration[tempPowerLevel]);
+        base.GrantAbility(power);
+        power.WheelFire(true, 1f, 3f, duration[tempPowerLevel]);
     }
-   public override void UpgradePower()
+    public override void UpgradePower()
     {
-       base.UpgradePower();
+        base.UpgradePower();
     }
 }

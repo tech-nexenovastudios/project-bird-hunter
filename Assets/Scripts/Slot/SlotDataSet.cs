@@ -1,6 +1,6 @@
 using System.Collections;
 using Gameplay.Managers;
-using Unity.VisualScripting;
+  
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,7 +34,7 @@ public class SlotDataSet : MonoBehaviour
             if (i != index)
             {
 
-                var objicon = itemContainer.GetChild(i).AddComponent<SlotIcon>();
+                var objicon = itemContainer.GetChild(i).gameObject.AddComponent<SlotIcon>();
                 
                 objicon.SetIcon(power[Random.Range(0, power.Length)]);
             }

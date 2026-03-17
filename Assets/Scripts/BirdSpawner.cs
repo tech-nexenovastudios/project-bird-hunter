@@ -8,7 +8,7 @@ using Random = UnityEngine.Random;
 
 public class BirdSpawner : MonoBehaviour
 {
-    public GameManager gameManager;
+   // public GameManager gameManager;
 
     private int totalBirds;
     private int birdsDestroyed;
@@ -320,7 +320,7 @@ public class BirdSpawner : MonoBehaviour
         {
             if (EggManager.eggsList.Count <= 0)
             {
-                gameManager.OnAllBirdsDestroyed();
+                //gameManager.OnAllBirdsDestroyed();
                 alreadyAllBirdDestroy = false;
             }
         }

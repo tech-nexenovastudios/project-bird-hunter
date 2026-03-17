@@ -149,7 +149,7 @@ public class CannonPower : MonoBehaviour
         //ShadowCannon(5);
         //ShadowCannon(50);
 
-       // SteelSpike(50);
+        // SteelSpike(50);
 
 
     }
@@ -175,7 +175,7 @@ public class CannonPower : MonoBehaviour
             {
                 laser.scale = 200;
             }
-        
+
             laser.damage = laserDamage;
             laser.laserDelay = laserDelayTime;
             laser.duration = duration;
@@ -394,12 +394,12 @@ public class CannonPower : MonoBehaviour
 
     public void SteelSpike(float activeArea)
     {
-        if(steelSpikeRef == null)
+        if (steelSpikeRef == null)
         {
             steelSpikeRef = Instantiate(steelSpikeObj);
         }
         float childCount = steelSpikeRef.transform.childCount;
-        for (int i = 0; i < Mathf.RoundToInt((childCount*activeArea)/100); i++)
+        for (int i = 0; i < Mathf.RoundToInt((childCount * activeArea) / 100); i++)
         {
             int RandomNum = Mathf.RoundToInt(UnityEngine.Random.Range(0, childCount));
             if (!steelSpikeRef.transform.GetChild(RandomNum).gameObject.activeSelf)
