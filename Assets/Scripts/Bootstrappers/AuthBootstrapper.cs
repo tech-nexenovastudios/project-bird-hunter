@@ -286,11 +286,11 @@ public class AuthBootstrapper : MonoBehaviour
                 await CurrencyManager.Instance.AddGold(STARTER_GOLD);
                 await CurrencyManager.Instance.AddGems(STARTER_GEMS);
                 await CurrencyManager.Instance.AddPower(STARTER_POWER);
-
                 await CloudSaveManager.Instance.SaveValueAsync(STARTER_GRANTED_KEY, true);
 
                 Debug.Log($"[Auth] Starter currency granted — Gold: {STARTER_GOLD}, Gems: {STARTER_GEMS}, Power: {STARTER_POWER}");
             }
+            await RemoteConfigManager.Instance.FetchConfig();
         }
         catch (System.OperationCanceledException)
         {

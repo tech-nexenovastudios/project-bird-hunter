@@ -1,39 +1,5 @@
-// ============================================================================
-// RewardedAdOffer.cs � Flexible "Watch X Ads for Y Reward" Button
-// ============================================================================
-//
-// HOW TO USE:
-//
-//   1. Attach this script to each reward button/panel (Gold button, Gems button, etc.)
-//
-//   2. In the Inspector, configure:
-//        - Reward Type:    "Gold", "Gems", "Lives", or anything you want
-//        - Reward Amount:  7000, 50, 3, etc.
-//        - Ads Required:   how many ads the player must watch to earn the reward
-//
-//   3. Drag your Button and Text references into the Inspector fields.
-//
-//   4. The script handles everything:
-//        - Tracks how many ads the player has watched
-//        - Updates the button text (e.g., "1/2 Ads Watched")
-//        - Grants the reward after all ads are watched
-//        - Resets automatically so the player can earn again
-//
-//   5. To actually GIVE the reward to the player, subscribe to the static
-//      event OnRewardClaimed from your game's currency/inventory manager:
-//
-//        RewardedAdOffer.OnRewardClaimed += (type, amount) => {
-//            if (type == "Gold") playerGold += amount;
-//            if (type == "Gems") playerGems += amount;
-//        };
-//
-// EXAMPLES:
-//
-//   Button 1: RewardType="Gold", RewardAmount=7000, AdsRequired=2
-//   Button 2: RewardType="Gems", RewardAmount=50,   AdsRequired=2
-//   Button 3: RewardType="Lives", RewardAmount=3,   AdsRequired=1
-//   Button 4: RewardType="Skin",  RewardAmount=1,   AdsRequired=5
-//
+﻿// ============================================================================
+// RewardedAdOffer.cs — Flexible "Watch X Ads for Y Reward" Button
 // ============================================================================
 
 using UnityEngine;
@@ -43,7 +9,7 @@ using System;
 public class RewardedAdOffer : MonoBehaviour
 {
     // ========================================================================
-    // INSPECTOR � Configure each button differently
+    // INSPECTOR — Configure each button differently
     // ========================================================================
 
     [Header("=== Reward Configuration ===")]
@@ -73,7 +39,7 @@ public class RewardedAdOffer : MonoBehaviour
     [SerializeField] private GameObject adNotReadyIndicator;
 
     // ========================================================================
-    // STATIC EVENT � Your game's currency manager subscribes to this ONCE
+    // STATIC EVENT — Your game's currency manager subscribes to this ONCE
     // ========================================================================
 
     /// <summary>
@@ -135,7 +101,17 @@ public class RewardedAdOffer : MonoBehaviour
         if (watchAdButton != null)
             watchAdButton.onClick.RemoveListener(OnButtonClicked);
     }
-
+    //helpere method to get currency type
+    private CurrencyType? GetCurrencyType()
+    {
+        switch (rewardType)
+        {
+            case "Gold": return CurrencyType.Gold;
+            case "Gems": return CurrencyType.Gems;
+            case "Power": return CurrencyType.Power;
+            default: return null;  // non-currency rewards (Skin, Lives, etc.)
+        }
+    }
     // ========================================================================
     // BUTTON CLICK
     // ========================================================================
@@ -160,24 +136,28 @@ public class RewardedAdOffer : MonoBehaviour
 
     private void HandleRewardGranted(string rewardName, int amount)
     {
-        // Only process if THIS button was the one that triggered the ad
         if (!isWaitingForReward) return;
         isWaitingForReward = false;
 
         adsWatched++;
         Debug.Log($"[RewardedAdOffer] {rewardType}: Ad {adsWatched}/{adsRequired} completed.");
 
-        // Notify listeners about progress
         OnAdProgressUpdated?.Invoke(rewardType, adsWatched, adsRequired);
 
-        // Check if all required ads have been watched
         if (adsWatched >= adsRequired)
         {
-            // GRANT THE REWARD
             Debug.Log($"[RewardedAdOffer] Reward claimed: {rewardAmount} {rewardType}!");
             OnRewardClaimed?.Invoke(rewardType, rewardAmount);
 
-            // Reset for next time
+            // ═══ FLOW EFFECT — from this button ═════════════
+            CurrencyType? type = GetCurrencyType();
+            if (type.HasValue && watchAdButton != null)
+            {
+                Vector2 buttonPos = watchAdButton.transform.position;
+                GameEvent.CurrencyCollected(type.Value, buttonPos, rewardAmount);
+            }
+            // ════════════════════════════════════════════════
+
             adsWatched = 0;
         }
 

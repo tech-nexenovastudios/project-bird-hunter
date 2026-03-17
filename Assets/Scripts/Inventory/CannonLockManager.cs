@@ -308,7 +308,7 @@ public class CannonLockManager : MonoBehaviour
         => cannonHolderSO != null && index >= 0 && index < cannonHolderSO.cannonsData.Length;
 
     /// <summary>
-    /// Queries ChapterUnlockManager. If missing (editor/test scenes) falls back to true
+    /// Queries ChapterUnlockManager. If missing (editor/test scenes) falls back to true 
     /// so the cannon panel doesn't silently break while you are building.
     /// </summary>
     private bool IsChapterUnlocked(int chapterIndex)
