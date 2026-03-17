@@ -4,6 +4,7 @@ using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using System.Threading;
 
 //#if UNITY_ANDROID && !UNITY_EDITOR
 #if UNITY_ANDROID
@@ -11,6 +12,19 @@ using GooglePlayGames;
 using GooglePlayGames.BasicApi;
 #endif
 
+/// <summary>
+/// Handles the full authentication boot sequence:
+///   1. Initialize Unity Services
+///   2. Attempt Google Play Games sign-in (Android only)
+///   3. Fallback to anonymous sign-in
+///   4. Grant starter currency on first login
+///   5. Load main menu scene
+///
+/// DISPLAY HINT:
+///   After successful GPGS auth, <see cref="AuthDisplayHint"/> is populated
+///   with the player's Google display name (or email).
+///   <see cref="UserProfileDataManager"/> reads this to generate the initial username.
+/// </summary>
 public class AuthBootstrapper : MonoBehaviour
 {
     public static AuthBootstrapper Instance { get; private set; }
@@ -23,14 +37,32 @@ public class AuthBootstrapper : MonoBehaviour
     [SerializeField] private GameObject retryButton;
     [SerializeField] private GameObject anonymousLoginButton;
 
+    // ───────────────────────── Public Read-Only State ─────────────────────────
+
     public bool IsLoggedIn => AuthenticationService.Instance.IsSignedIn;
     public string PlayerId => AuthenticationService.Instance.PlayerId;
+
+    /// <summary>
+    /// Display name or email retrieved from the auth provider (e.g. Google Play Games).
+    /// Null for anonymous logins.  Read by UserProfileDataManager.
+    /// </summary>
+    public string AuthDisplayHint { get; private set; }
+
+    // ───────────────────────── Internals ─────────────────────────
+
+    private CancellationTokenSource cts;
+
+    // ═══════════════════════════════════════════════════════════════
+    //  LIFECYCLE
+    // ═══════════════════════════════════════════════════════════════
 
     private void Awake()
     {
         if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        cts = new CancellationTokenSource();
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         PlayGamesPlatform.DebugLogEnabled = true;
@@ -42,53 +74,62 @@ public class AuthBootstrapper : MonoBehaviour
 
     private void Start()
     {
-        BootAsync().Forget();
+        BootAsync(cts.Token).Forget();
     }
 
-    // ==================== Boot Sequence ====================
+    private void OnDestroy()
+    {
+        cts?.Cancel();
+        cts?.Dispose();
+    }
 
-    private async UniTaskVoid BootAsync()
+    // ═══════════════════════════════════════════════════════════════
+    //  BOOT SEQUENCE
+    // ═══════════════════════════════════════════════════════════════
+
+    private async UniTaskVoid BootAsync(CancellationToken token)
     {
         HideAllButtons();
 
-        // Step 1: Initialize Unity Services
+        // Step 1 — Initialize Unity Gaming Services
         if (!await InitializeServices())
             return;
 
-        // Already signed in
+        // Already signed in from a previous session
         if (IsLoggedIn)
         {
             Debug.Log("[Auth] Already signed in.");
-            OnSignInSuccess().Forget();
+            OnSignInSuccess(token).Forget();
             return;
         }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        // Android: Try GPGS first
-        bool signedIn = await TryGPGSLogin();
+        // Android: try Google Play Games first
+        bool signedIn = await TryGPGSLogin(token);
 
         if (signedIn)
         {
-            OnSignInSuccess().Forget();
+            OnSignInSuccess(token).Forget();
         }
         else
         {
-            // GPGS failed — show Retry and Anonymous buttons
             SetStatus("Google Play sign-in failed.");
             ShowFallbackButtons();
         }
 #else
-        // Editor / Non-Android: Go straight to anonymous
+        // Editor / Non-Android: straight to anonymous
         bool signedIn = await TryAnonymousLogin();
 
         if (signedIn)
-            OnSignInSuccess().Forget();
+            OnSignInSuccess(token).Forget();
         else
             OnSignInFailed();
 #endif
     }
 
-    // ==================== Initialize ====================
+    // ═══════════════════════════════════════════════════════════════
+    //  INITIALIZE UNITY SERVICES
+    // ═══════════════════════════════════════════════════════════════
 
     private async UniTask<bool> InitializeServices()
     {
@@ -111,23 +152,21 @@ public class AuthBootstrapper : MonoBehaviour
         }
     }
 
-    // ==================== GPGS Login ====================
+    // ═══════════════════════════════════════════════════════════════
+    //  GOOGLE PLAY GAMES LOGIN
+    // ═══════════════════════════════════════════════════════════════
 
-    private async UniTask<bool> TryGPGSLogin()
+    private async UniTask<bool> TryGPGSLogin(CancellationToken token)
     {
-//#if UNITY_ANDROID && !UNITY_EDITOR
+        //#if UNITY_ANDROID && !UNITY_EDITOR
 #if UNITY_ANDROID
         try
         {
             SetStatus("Signing in with Google Play...");
 
+            // ── Authenticate with GPGS ──
             var authTcs = new UniTaskCompletionSource<SignInStatus>();
-
-            PlayGamesPlatform.Instance.Authenticate((status) =>
-            {
-                authTcs.TrySetResult(status);
-            });
-
+            PlayGamesPlatform.Instance.Authenticate(status => authTcs.TrySetResult(status));
             var authStatus = await authTcs.Task;
 
             if (authStatus != SignInStatus.Success)
@@ -138,15 +177,20 @@ public class AuthBootstrapper : MonoBehaviour
 
             Debug.Log($"[Auth] GPGS authenticated: {PlayGamesPlatform.Instance.GetUserId()}");
 
-            var codeTcs = new UniTaskCompletionSource<string>();
-
-            PlayGamesPlatform.Instance.RequestServerSideAccess(true, (code) =>
+            // ── Capture display hint for username generation ──
+            // GetUserDisplayName() returns the player's Google profile name.
+            // If your GPGS console has email scope enabled you could also
+            // try Social.localUser.userName as an alternative source.
+            string displayName = PlayGamesPlatform.Instance.GetUserDisplayName();
+            if (!string.IsNullOrEmpty(displayName))
             {
-                codeTcs.TrySetResult(code);
-            });
+                AuthDisplayHint = displayName;
+                Debug.Log($"[Auth] Display hint captured: {AuthDisplayHint}");
+            }
 
-            
-
+            // ── Request server-side auth code for Unity Authentication ──
+            var codeTcs = new UniTaskCompletionSource<string>();
+            PlayGamesPlatform.Instance.RequestServerSideAccess(true, code => codeTcs.TrySetResult(code));
             string authCode = await codeTcs.Task;
 
             if (string.IsNullOrEmpty(authCode))
@@ -155,11 +199,18 @@ public class AuthBootstrapper : MonoBehaviour
                 return false;
             }
 
+            token.ThrowIfCancellationRequested();
+
             SetStatus("Connecting to server...");
             await AuthenticationService.Instance.SignInWithGooglePlayGamesAsync(authCode);
 
             Debug.Log($"[Auth] GPGS sign-in complete. Player ID: {PlayerId}");
             return true;
+        }
+        catch (System.OperationCanceledException)
+        {
+            Debug.Log("[Auth] GPGS login cancelled.");
+            return false;
         }
         catch (AuthenticationException ex)
         {
@@ -177,7 +228,9 @@ public class AuthBootstrapper : MonoBehaviour
 #endif
     }
 
-    // ==================== Anonymous Login ====================
+    // ═══════════════════════════════════════════════════════════════
+    //  ANONYMOUS LOGIN
+    // ═══════════════════════════════════════════════════════════════
 
     private async UniTask<bool> TryAnonymousLogin()
     {
@@ -200,24 +253,30 @@ public class AuthBootstrapper : MonoBehaviour
         }
     }
 
-    // ==================== Starter Currency ====================
+    // ═══════════════════════════════════════════════════════════════
+    //  STARTER CURRENCY
+    // ═══════════════════════════════════════════════════════════════
 
     private const string STARTER_GRANTED_KEY = "starter_currency_granted";
-
-    private const int STARTER_GOLD = 100;
-    private const int STARTER_GEMS = 10;
+    private const int STARTER_GOLD = 1000000;
+    private const int STARTER_GEMS = 10000;
     private const int STARTER_POWER = 5;
 
-    // ==================== Result Handlers ====================
+    // ═══════════════════════════════════════════════════════════════
+    //  RESULT HANDLERS
+    // ═══════════════════════════════════════════════════════════════
 
-    private async UniTaskVoid OnSignInSuccess()
+    private async UniTaskVoid OnSignInSuccess(CancellationToken token)
     {
         HideAllButtons();
         SetStatus("Loading player data...");
 
         try
         {
-            bool alreadyGranted = await CloudSaveManager.Instance.LoadValueAsync<bool>(STARTER_GRANTED_KEY, false);
+            bool alreadyGranted = await CloudSaveManager.Instance
+                .LoadValueAsync<bool>(STARTER_GRANTED_KEY, false);
+
+            token.ThrowIfCancellationRequested();
 
             if (!alreadyGranted)
             {
@@ -227,11 +286,16 @@ public class AuthBootstrapper : MonoBehaviour
                 await CurrencyManager.Instance.AddGold(STARTER_GOLD);
                 await CurrencyManager.Instance.AddGems(STARTER_GEMS);
                 await CurrencyManager.Instance.AddPower(STARTER_POWER);
-
                 await CloudSaveManager.Instance.SaveValueAsync(STARTER_GRANTED_KEY, true);
 
                 Debug.Log($"[Auth] Starter currency granted — Gold: {STARTER_GOLD}, Gems: {STARTER_GEMS}, Power: {STARTER_POWER}");
             }
+            await RemoteConfigManager.Instance.FetchConfig();
+        }
+        catch (System.OperationCanceledException)
+        {
+            Debug.Log("[Auth] Sign-in success handler cancelled.");
+            return;
         }
         catch (System.Exception ex)
         {
@@ -240,7 +304,6 @@ public class AuthBootstrapper : MonoBehaviour
 
         SetStatus("Signed in! Loading...");
         Debug.Log($"[Auth] Loading {mainMenuSceneName}. Player ID: {PlayerId}");
-        //IAnalyticsService.TrackNewUserFirstLogin(PlayerId);
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
@@ -251,7 +314,9 @@ public class AuthBootstrapper : MonoBehaviour
         ShowRetryOnly();
     }
 
-    // ==================== Button Visibility ====================
+    // ═══════════════════════════════════════════════════════════════
+    //  UI HELPERS
+    // ═══════════════════════════════════════════════════════════════
 
     private void HideAllButtons()
     {
@@ -271,35 +336,35 @@ public class AuthBootstrapper : MonoBehaviour
         if (anonymousLoginButton != null) anonymousLoginButton.SetActive(false);
     }
 
-    // ==================== UI Helpers ====================
-
     private void SetStatus(string message)
     {
         if (statusText != null) statusText.text = message;
     }
 
-    // ==================== Public API (Wire to UI Buttons) ====================
+    // ═══════════════════════════════════════════════════════════════
+    //  PUBLIC API  (Wire to UI Buttons via Inspector)
+    // ═══════════════════════════════════════════════════════════════
 
-    /// <summary>Wire to Retry button. Restarts GPGS login attempt.</summary>
+    /// <summary>Wire to Retry button. Restarts the full boot sequence.</summary>
     public void RetrySignIn()
     {
-        BootAsync().Forget();
+        BootAsync(cts.Token).Forget();
     }
 
-    /// <summary>Wire to Anonymous Login button. Signs in without Google Play.</summary>
+    /// <summary>Wire to Anonymous Login button.</summary>
     public void LoginAnonymously()
     {
-        LoginAnonymouslyAsync().Forget();
+        LoginAnonymouslyAsync(cts.Token).Forget();
     }
 
-    private async UniTaskVoid LoginAnonymouslyAsync()
+    private async UniTaskVoid LoginAnonymouslyAsync(CancellationToken token)
     {
         HideAllButtons();
 
         bool signedIn = await TryAnonymousLogin();
 
         if (signedIn)
-            OnSignInSuccess().Forget();
+            OnSignInSuccess(token).Forget();
         else
             OnSignInFailed();
     }
@@ -307,6 +372,7 @@ public class AuthBootstrapper : MonoBehaviour
     public void SignOut()
     {
         AuthenticationService.Instance.SignOut();
+        AuthDisplayHint = null;
         Debug.Log("[Auth] Signed out.");
     }
 }

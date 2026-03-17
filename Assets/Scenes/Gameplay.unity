@@ -3525,7 +3525,6 @@ GameObject:
   - component: {fileID: 1034553499}
   - component: {fileID: 1034553498}
   - component: {fileID: 1034553497}
-  - component: {fileID: 1034553500}
   m_Layer: 5
   m_Name: PlayerCanvas_01
   m_TagString: PlayerCanvas
@@ -3626,23 +3625,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
---- !u!114 &1034553500
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1034553495}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6ab30b40d25b6d04a9d90e4a9c24b436, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.UI.GameplayUIHandler
-  hudCanvas: {fileID: 0}
-  startGameCanvas: {fileID: 0}
-  slotMachineScreen: {fileID: 0}
-  levelDetailPopup: {fileID: 0}
-  gameplayHUD: {fileID: 0}
 --- !u!1 &1050823781
 GameObject:
   m_ObjectHideFlags: 0

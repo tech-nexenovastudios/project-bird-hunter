@@ -1,8 +1,7 @@
 ﻿using System;
-using DG.Tweening;
-using Gameplay.Events;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 [RequireComponent(typeof(RectTransform))]
 [RequireComponent(typeof(Image))]
@@ -13,6 +12,9 @@ public class CoinEntity : MonoBehaviour
     private CanvasGroup canvasGroup;
     private Sequence currentSequence;
 
+    // Stores which currency this coin represents for this flight
+    private CurrencyType currencyType;
+
     private void Awake()
     {
         rect = GetComponent<RectTransform>();
@@ -20,6 +22,7 @@ public class CoinEntity : MonoBehaviour
     }
 
     public void Launch(
+        CurrencyType type,
         Vector2 origin,
         Vector2 target,
         CoinFlowConfig cfg,
@@ -27,14 +30,11 @@ public class CoinEntity : MonoBehaviour
         Action<CoinEntity> onComplete)
     {
         currentSequence?.Kill();
+        currencyType = type;
 
         rect.position = origin;
         rect.localScale = Vector3.one * cfg.startScale;
         canvasGroup.alpha = 1f;
-
-        // ── Straight line with tiny random offset ────────
-        // No big arcs. Just a small horizontal nudge so
-        // coins don't perfectly overlap each other.
 
         float tinyOffset = UnityEngine.Random.Range(-cfg.spreadWidth, cfg.spreadWidth);
 
@@ -69,7 +69,8 @@ public class CoinEntity : MonoBehaviour
 
         currentSequence.OnComplete(() =>
         {
-            GameEvent.CoinArrived(value);
+            // ── Now fires with currency type ─────────────
+            GameEvent.CurrencyArrived(currencyType, value);
             onComplete?.Invoke(this);
         });
     }

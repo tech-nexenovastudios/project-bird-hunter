@@ -16,22 +16,25 @@ MonoBehaviour:
   - cannonIndex: 0
     cannonName: Single Cannon
     cannonDescription: Reliable single shot. High damage, balanced fire rate.
-    cannonSprite: {fileID: 21300000, guid: c60d4aa2cb37a53409271e5bdf38fcaa, type: 3}
+    cannonSprite: {fileID: 21300000, guid: 91118fec8e560634380a11088c43f3a8, type: 3}
     cannonUnlock: 1
     cannonPrefab: {fileID: 1457896673400263469, guid: 3310ccdafd54ed448bedaef30c9197e7, type: 3}
     bulletPrefab: {fileID: 7505696441944762806, guid: 3d6a3db42409949c48204e51bb15ac79, type: 3}
     cannonStats: {fileID: 11400000, guid: faa4ba72d6350364abe2966d5071b28a, type: 2}
-    cannonLevel: 4
-    coinsRequired: 110
-    cardsRequired: 11
-    coinIncrement: 5
+    cannonLevel: 1
+    coinsRequired: 841
+    cardsRequired: 59
+    coinIncrement: 39
     normalCardIncrement: 1
     specificNumberCardIncrement: 3
     moduloForCardUpgrade: 5
-    baseCoinsRequired: 110
-    baseCoinIncrement: 5
-    baseCardsRequired: 11
-    baseCannonLevel: 4
+    unlockChapterRequired: 0
+    coinCost: 0
+    gemCost: 0
+    baseCoinsRequired: 841
+    baseCoinIncrement: 39
+    baseCardsRequired: 59
+    baseCannonLevel: 38
   - cannonIndex: 1
     cannonName: Rapid Fire
     cannonDescription: One massive shot destroys everything. Slow but unstoppable.
@@ -40,13 +43,16 @@ MonoBehaviour:
     cannonPrefab: {fileID: 5482615771359566797, guid: 9cdc321ee0c08fa45837b4dfa0073f93, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 81e3d909f676fd441bb0c8887c296035, type: 3}
     cannonStats: {fileID: 11400000, guid: 28f90ab1f0afb9a4f9991991806d87a4, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 5000
     cardsRequired: 80
     coinIncrement: 5
     normalCardIncrement: 3
     specificNumberCardIncrement: 10
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 1
+    coinCost: 1500
+    gemCost: 40
     baseCoinsRequired: 5000
     baseCoinIncrement: 5
     baseCardsRequired: 80
@@ -54,18 +60,21 @@ MonoBehaviour:
   - cannonIndex: 2
     cannonName: Shotgun Cannon
     cannonDescription: Random 1-5 bullets per shot. High risk, high reward.
-    cannonSprite: {fileID: 21300000, guid: 46b70c3767b88a14fa50c1c4d321f08a, type: 3}
+    cannonSprite: {fileID: 21300000, guid: 4a6ddfbe00eb50c4e856fb11b790fb3f, type: 3}
     cannonUnlock: 0
     cannonPrefab: {fileID: 2364492470350389745, guid: 6f6ef8cf059e1ae4599bc74f02094317, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: b28b8d4bc385d054cabb477901c4f859, type: 3}
     cannonStats: {fileID: 11400000, guid: 6c922df6897ae6641a5ae97d646871c9, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 2000
     cardsRequired: 50
     coinIncrement: 3.5
     normalCardIncrement: 3
     specificNumberCardIncrement: 8
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 3
+    coinCost: 4000
+    gemCost: 80
     baseCoinsRequired: 2000
     baseCoinIncrement: 3.5
     baseCardsRequired: 50
@@ -73,18 +82,21 @@ MonoBehaviour:
   - cannonIndex: 3
     cannonName: Lucky Cannon
     cannonDescription: Random 1-5 bullets per shot. High risk, high reward.
-    cannonSprite: {fileID: 21300000, guid: a5d40e8f02cd82b45993d531ef7d379a, type: 3}
+    cannonSprite: {fileID: 21300000, guid: e71653dfdf51fb4479dcb2374d48f330, type: 3}
     cannonUnlock: 0
     cannonPrefab: {fileID: 2602831570025325107, guid: c4e7c909211d14d41aacb95633b43875, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 7ba1df6f2d84bc343a8925bf1eab2843, type: 3}
     cannonStats: {fileID: 11400000, guid: 13eceb3ee0f10c04ba9042f2b993687c, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 2000
     cardsRequired: 50
     coinIncrement: 3.5
     normalCardIncrement: 3
     specificNumberCardIncrement: 8
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 7
+    coinCost: 8000
+    gemCost: 120
     baseCoinsRequired: 2000
     baseCoinIncrement: 3.5
     baseCardsRequired: 50
@@ -97,13 +109,16 @@ MonoBehaviour:
     cannonPrefab: {fileID: 2602831570025325107, guid: ac82ff307fc0ace49a6207ac2e1cb6a0, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 81e3d909f676fd441bb0c8887c296035, type: 3}
     cannonStats: {fileID: 11400000, guid: f94b08c3e9f6f294f956f7228a1ce7de, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 5000
     cardsRequired: 80
     coinIncrement: 5
     normalCardIncrement: 3
     specificNumberCardIncrement: 10
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 11
+    coinCost: 15000
+    gemCost: 240
     baseCoinsRequired: 5000
     baseCoinIncrement: 5
     baseCardsRequired: 80
@@ -111,18 +126,21 @@ MonoBehaviour:
   - cannonIndex: 5
     cannonName: Doubleshot Cannon
     cannonDescription: Random 1-5 bullets per shot. High risk, high reward.
-    cannonSprite: {fileID: 21300000, guid: bc9ade5b80e1b104592affae6e334a06, type: 3}
+    cannonSprite: {fileID: 21300000, guid: 09781bf5d4f09b647b7ceb134b550133, type: 3}
     cannonUnlock: 0
     cannonPrefab: {fileID: 2602831570025325107, guid: b981ecdfbc0ef084a8dced7f063de3cd, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 7ba1df6f2d84bc343a8925bf1eab2843, type: 3}
     cannonStats: {fileID: 11400000, guid: beecf1e7464685f4f94f5c8c3e2981b5, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 2000
     cardsRequired: 50
     coinIncrement: 3.5
     normalCardIncrement: 3
     specificNumberCardIncrement: 8
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 16
+    coinCost: 25000
+    gemCost: 360
     baseCoinsRequired: 2000
     baseCoinIncrement: 3.5
     baseCardsRequired: 50
@@ -130,18 +148,21 @@ MonoBehaviour:
   - cannonIndex: 6
     cannonName: Tripleshot Cannon
     cannonDescription: One massive shot destroys everything. Slow but unstoppable.
-    cannonSprite: {fileID: 21300000, guid: 13a71f68831ecd8449bc1d900cb9c51d, type: 3}
+    cannonSprite: {fileID: 21300000, guid: 5028c4ca876d1f44a95ee2630f00af1b, type: 3}
     cannonUnlock: 0
     cannonPrefab: {fileID: 2602831570025325107, guid: 70a631ca0632c384da7ee879f80326ef, type: 3}
     bulletPrefab: {fileID: 2362509683938174150, guid: 81e3d909f676fd441bb0c8887c296035, type: 3}
     cannonStats: {fileID: 11400000, guid: 8effc3b4b95dd4c429b7df011d049e7c, type: 2}
-    cannonLevel: 0
+    cannonLevel: 1
     coinsRequired: 5000
     cardsRequired: 80
     coinIncrement: 5
     normalCardIncrement: 3
     specificNumberCardIncrement: 10
     moduloForCardUpgrade: 5
+    unlockChapterRequired: 22
+    coinCost: 40000
+    gemCost: 520
     baseCoinsRequired: 5000
     baseCoinIncrement: 5
     baseCardsRequired: 80
