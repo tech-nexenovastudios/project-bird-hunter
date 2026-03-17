@@ -412,8 +412,8 @@ namespace Gameplay
                             continue;
                         }
 
-                        Vector3 offset = egg.config.GetSplitImpulse(i);
-                        
+                        //Vector3 offset = new Vector3(Random.Range(-0.5f, 0.5f), Random.Range(-0.5f, 0.5f), 0f);
+                        var offset = i == 0 ? new Vector3(-0.3f, 0.5f, 0f) : new Vector3(0.3f, 0.5f, 0f);
                         var go     = Instantiate(splitTier.eggPrefab, egg.transform.position + offset, Quaternion.identity);
                         
                         go.TryGetComponent(out Rigidbody2D rb);
