@@ -5,6 +5,8 @@ public class LevelReferences : MonoBehaviour
 {
     [SerializeField] Collider2D leftWall;
     [SerializeField] Collider2D rightWall;
+    
+    
 
     [SerializeField] private Image cannonHealthSlider;
     [SerializeField] private TMPro.TextMeshProUGUI cannonHealthPercent;
