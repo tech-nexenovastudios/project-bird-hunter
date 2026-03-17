@@ -83,6 +83,16 @@ namespace Gameplay.Player
                 HandleMovement();
         }
 
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (isDeactivated) return;
+
+            if (other.gameObject.CompareTag("Bird"))
+            {
+                OnHitTarget(other);
+            }
+        }
+
         protected void OnCollisionEnter2D(Collision2D other)
         {
             if (isDeactivated) return;

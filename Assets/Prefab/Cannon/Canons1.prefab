@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4594453694566474373}
   - component: {fileID: 3400189831909266571}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: middel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 4
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 3f216227d3819014498dd3e1899e9216, type: 3}
@@ -101,7 +101,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7736985753102457253}
   - component: {fileID: 7342089418324416129}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Canons1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -160,7 +160,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3090945473354348864}
   - component: {fileID: 1402085554288051028}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: SHOT_GUN
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -228,8 +228,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 4
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: d1ad8dce6927aa74dba03470dccff6a3, type: 3}
@@ -251,7 +251,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9139594669514531632}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Wheels
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -285,7 +285,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7302994082672350299}
   - component: {fileID: 7526731559972171882}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: wheel_02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -352,8 +352,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 4
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: ee0ec3fc528e18e49b239e83a1c33846, type: 3}
@@ -376,7 +376,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6557629579210602280}
   - component: {fileID: 1770377627084453875}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: wheel_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -443,8 +443,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 4
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 0175456e8d458d84ca3aa4661bb1a20d, type: 3}
@@ -465,9 +465,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3090945473354348864}
     m_Modifications:
+    - target: {fileID: 1199387749997026, guid: 0e56aef02a6fcc6408400ea7c75e13a7, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
     - target: {fileID: 1792092052645256, guid: 0e56aef02a6fcc6408400ea7c75e13a7, type: 3}
       propertyPath: m_Name
       value: FX_Gunshot_Shotgun_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 1792092052645256, guid: 0e56aef02a6fcc6408400ea7c75e13a7, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 1880413776039800, guid: 0e56aef02a6fcc6408400ea7c75e13a7, type: 3}
+      propertyPath: m_Layer
+      value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 4573121468440114, guid: 0e56aef02a6fcc6408400ea7c75e13a7, type: 3}
       propertyPath: m_LocalPosition.x
