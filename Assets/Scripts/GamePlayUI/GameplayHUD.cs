@@ -150,10 +150,10 @@ namespace Gameplay.UI
     {
         [Header("Health")]
         [SerializeField] private Slider cannonHealthSlider;
-        [SerializeField] private TextMeshProUGUI cannonHealthText;
+       // [SerializeField] private TextMeshProUGUI cannonHealthText;
 
         [Header("HUD Buttons")]
-        [SerializeField] private Button backToMenuButton;
+        //[SerializeField] private Button backToMenuButton;
         [SerializeField] private Button pauseButton;
 
         [Header("Pause Panel")]
@@ -172,7 +172,7 @@ namespace Gameplay.UI
             GameEvents.OnGameLevelUpdated += OnGameLevelUpdated;
 
             pauseButton.onClick.AddListener(OnPauseClicked);
-            backToMenuButton.onClick.AddListener(OnBackToMenuClicked);
+         //   backToMenuButton.onClick.AddListener(OnBackToMenuClicked);
             continueButton.onClick.AddListener(OnContinueClicked);
         }
 
@@ -181,7 +181,7 @@ namespace Gameplay.UI
             GameEvents.OnGameLevelUpdated -= OnGameLevelUpdated;
 
             pauseButton.onClick.RemoveListener(OnPauseClicked);
-            backToMenuButton.onClick.RemoveListener(OnBackToMenuClicked);
+          //  backToMenuButton.onClick.RemoveListener(OnBackToMenuClicked);
             continueButton.onClick.RemoveListener(OnContinueClicked);
         }
 
@@ -258,10 +258,10 @@ namespace Gameplay.UI
         }
 
         // ───────── back to menu ─────────
-        private void OnBackToMenuClicked()
-        {
-            if (_isPaused) ResumeGame();
-            GameEvents.FireBackToMenu();
-        }
+        //private void OnBackToMenuClicked()
+        //{
+        //    if (_isPaused) ResumeGame();
+        //    GameEvents.FireBackToMenu();
+        //}
     }
 }

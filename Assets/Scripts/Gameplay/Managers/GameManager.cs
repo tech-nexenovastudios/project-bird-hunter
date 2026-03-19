@@ -271,7 +271,7 @@ namespace Gameplay.Managers
             GameProgressManager.OnSpinTriggered += OnSpinTriggered;
             GameEvents.OnPlayerDeath += OnPlayerDeath;
             GameEvents.OnPauseToggled += OnPauseToggled;
-            GameEvents.OnBackToMenu += OnBackToMenu;
+          //  GameEvents.OnBackToMenu += OnBackToMenu;
             XPManager.Instance.OnXPAdded += OnXPAdded;
             XPManager.Instance.OnPlayerLevelUp += OnPlayerLevelUp;
         }
@@ -282,7 +282,7 @@ namespace Gameplay.Managers
             GameProgressManager.OnSpinTriggered -= OnSpinTriggered;
             GameEvents.OnPlayerDeath -= OnPlayerDeath;
             GameEvents.OnPauseToggled -= OnPauseToggled;
-            GameEvents.OnBackToMenu -= OnBackToMenu;
+          //  GameEvents.OnBackToMenu -= OnBackToMenu;
         }
 
         // ───────── XP / Level display ─────────
@@ -411,11 +411,11 @@ namespace Gameplay.Managers
         }
 
         // ───────── Back to menu ─────────
-        private void OnBackToMenu()
-        {
-            state = GameState.Loading;
-            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
-        }
+        //private void OnBackToMenu()
+        //{
+        //    state = GameState.Loading;
+        //    UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        //}
 
         // ───────── Reset ─────────
         public void ResetGame()

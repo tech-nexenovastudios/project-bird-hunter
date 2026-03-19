@@ -107,7 +107,7 @@ namespace Gameplay.Events
         public static void FireSpinStarted(List<PowerupConfig> options)
             => OnSpinStarted?.Invoke(options);
         // ───────── UI ─────────
-        public static event Action OnBackToMenu;
+        // public static event Action OnBackToMenu;
         public static event Action<bool> OnPauseToggled;   // true = paused
 
         // ───────── Fire helpers ─────────
@@ -156,8 +156,8 @@ namespace Gameplay.Events
         public static void FirePlayerConfirmedSpin()
             => OnPlayerConfirmedSpin?.Invoke();
 
-        public static void FireBackToMenu()
-            => OnBackToMenu?.Invoke();
+        //public static void FireBackToMenu()
+        //    => OnBackToMenu?.Invoke();
 
         public static void FirePauseToggled(bool isPaused)
             => OnPauseToggled?.Invoke(isPaused);
