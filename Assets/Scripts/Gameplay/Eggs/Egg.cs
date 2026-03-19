@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Gameplay.Eggs
 {
@@ -20,10 +21,12 @@ namespace Gameplay.Eggs
         private Rigidbody2D _rb;
         private float _dynamicMinX;
         private float _dynamicMaxX;
+        private SortingGroup _sortingGroup;
         
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
+            _sortingGroup = GetComponent<SortingGroup>();
 
             if (mainCam == null)
                 mainCam = Camera.main;
@@ -32,9 +35,10 @@ namespace Gameplay.Eggs
             halfWidth = col.bounds.extents.x;
         }
         
-        public void Init(EggTierConfig tierConfig, int hp)
+        public void Init(EggTierConfig tierConfig, int hp, int sortingIndex)
         {
             config = tierConfig;
+            _sortingGroup.sortingOrder = sortingIndex;
 
             var eggHealth = GetComponent<Health.EggHealth>();
             eggHealth.Init(tierConfig, hp);

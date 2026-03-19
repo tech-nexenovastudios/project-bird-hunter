@@ -39,6 +39,8 @@ namespace Gameplay
         public int   ActiveEggCount    => _activeEggs.Count;
         public int   ActiveBirdCount   => _activeBirds.Count;
 
+        private int _sortingIndex = 10;
+
         void Awake()
         {
             Instance         = this;
@@ -367,7 +369,7 @@ namespace Gameplay
             var rb = egg.GetComponent<Rigidbody2D>();
             rb.AddForce(new Vector2(-2f, 0f), ForceMode2D.Impulse);
 
-            egg.Init(tier, hp);
+            egg.Init(tier, hp, sortingIndex: _sortingIndex++);
             egg.OnDestroyed += HandleEggDestroyed;
 
             _activeEggs.Add(egg);
@@ -425,7 +427,7 @@ namespace Gameplay
                         int baseHp = Random.Range(splitTier.baseHpMin, splitTier.baseHpMax + 1);
                         int hp     = Mathf.RoundToInt(baseHp * levelProfile.hpMultiplier);
                         
-                        newEgg.Init(splitTier, hp);
+                        newEgg.Init(splitTier, hp,_sortingIndex++);
                         newEgg.OnDestroyed += HandleEggDestroyed;
 
                         _activeEggs.Add(newEgg);

@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 9033385679475359738}
   - component: {fileID: 96112293446289958}
   - component: {fileID: 772841551281367049}
+  - component: {fileID: 2976372626033861520}
   m_Layer: 6
   m_Name: Egg_04
   m_TagString: Egg
@@ -449,6 +450,19 @@ MonoBehaviour:
   eggHealth: {fileID: 96112293446289958}
   hpText: {fileID: 1248958175663909309}
   showPercent: 0
+--- !u!210 &2976372626033861520
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1251663967950569254}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+  m_Sort3DAs2D: 0
 --- !u!1 &3522176344157975600
 GameObject:
   m_ObjectHideFlags: 0
@@ -511,7 +525,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -7073165931134622185, guid: 424b1e9c4d6995645b700ddfe36abf7b, type: 2}
+  - {fileID: 2100000, guid: 299d1f63fd5a64ead9b1251ecec1d9cc, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
