@@ -28,7 +28,9 @@ namespace Gameplay.Player
         protected Rigidbody2D rb;
         private Collider2D leftWall;
         private Collider2D rightWall;
-        
+
+        private CannonHealthBar _healthBar;
+
         private float fireTimer;
         private Vector2 movementInput;
         private ObjectPool<BaseBullet> bulletPool;
@@ -41,15 +43,31 @@ namespace Gameplay.Player
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         }
 
+        //public virtual void Configure(CannonStats stats, LevelReferences references, GameObject bulletPrefab)
+        //{
+        //    CannonStats = stats;
+        //    BulletPrefab = bulletPrefab;
+
+        //    CannonStats.InitRuntime();
+        //    CurrentHp = MaxHp;
+
+        //    var (bar, text) = references.GetCannonHealth();
+
+        //    var (left, right) = references.GetWall();
+        //    leftWall = left;
+        //    rightWall = right;
+
         public virtual void Configure(CannonStats stats, LevelReferences references, GameObject bulletPrefab)
         {
             CannonStats = stats;
             BulletPrefab = bulletPrefab;
-
             CannonStats.InitRuntime();
             CurrentHp = MaxHp;
 
-            var (bar, text) = references.GetCannonHealth();
+            // Health bar
+            var (healthImg, damageImg ) = references.GetCannonHealth();
+            _healthBar = gameObject.AddComponent<CannonHealthBar>();
+            _healthBar.Init(healthImg, damageImg );
 
             var (left, right) = references.GetWall();
             leftWall = left;
@@ -319,11 +337,15 @@ namespace Gameplay.Player
             }
         }
 
+        //protected virtual void UpdateUI()
+        //{
+
+        //}
+
         protected virtual void UpdateUI()
         {
-            
+            _healthBar?.UpdateHealth(CurrentHp, MaxHp);
         }
-
         protected virtual void Die()
         {
             Debug.Log("Cannon Destroyed!");
