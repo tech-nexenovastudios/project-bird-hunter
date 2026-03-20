@@ -1,68 +1,6 @@
-﻿//using System;
-//using UnityEngine;
-//using Gameplay.Interfaces;
-
-//namespace Gameplay.Events
-//{
-//    public static class GameEvents
-//    {
-//        // Egg events
-//        public static event Action<IDamageable, int, Vector3> OnEggHit;
-//        public static event Action<IDamageable, int, Vector3> OnEggDestroyed;
-
-//        // Bird events
-//        public static event Action<IDamageable, int, Vector3> OnBirdHit;
-//        public static event Action<IDamageable, int, Vector3> OnBirdDestroyed;
-
-//        // Cannon hit (for combo/feedback)
-//        public static event Action<int> OnCannonHit;
-
-//        // Score
-//        public static event Action<int, int> OnLevelScoreUpdated;
-
-//        // Meta-progression (XP / player level)
-//        public static event Action<int> OnPlayerLevelUp;
-
-//        // Level completion (score-based)
-//        public static event Action<int> OnLevelCompleted;
-
-//        // Player death
-//        public static event Action OnPlayerDeath;
-//        public static event Action OnAllEggsCleared;
-//        public static void FireAllEggsCleared() => OnAllEggsCleared?.Invoke();
-
-//        public static void FireEggHit(IDamageable egg, int damage, Vector3 hitPoint) =>
-//            OnEggHit?.Invoke(egg, damage, hitPoint);
-
-//        public static void FireEggDestroyed(IDamageable egg, int scoreAwarded, Vector3 position) =>
-//            OnEggDestroyed?.Invoke(egg, scoreAwarded, position);
-
-//        public static void FireBirdHit(IDamageable bird, int damage, Vector3 hitPoint) =>
-//            OnBirdHit?.Invoke(bird, damage, hitPoint);
-
-//        public static void FireBirdDestroyed(IDamageable bird, int scoreAwarded, Vector3 position) =>
-//            OnBirdDestroyed?.Invoke(bird, scoreAwarded, position);
-
-//        public static void FireCannonHit(int damage) =>
-//            OnCannonHit?.Invoke(damage);
-
-//        public static void FireLevelScoreUpdated(int currentScore, int delta) =>
-//            OnLevelScoreUpdated?.Invoke(currentScore, delta);
-
-//        public static void FirePlayerLevelUp(int newLevel) =>
-//            OnPlayerLevelUp?.Invoke(newLevel);
-
-//        public static void FireLevelCompleted(int scoreAchieved) =>
-//            OnLevelCompleted?.Invoke(scoreAchieved);
-
-//        public static void FirePlayerDeath() =>
-//            OnPlayerDeath?.Invoke();
-//    }
-//}
-
-
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Gameplay.Birds;
 using Gameplay.Interfaces;
 using Gameplay.Levels;
 using Gameplay.PowerUps;
@@ -163,5 +101,30 @@ namespace Gameplay.Events
             => OnPauseToggled?.Invoke(isPaused);
 
 
+        /// <summary>Fired by BossBird.InitBoss() when the boss enters the scene.</summary>
+        public static event Action<BossBird> OnBossSpawned;
+ 
+        /// <summary>Fired by BossBird.EnterPhase2() when HP crosses the phase threshold.</summary>
+        public static event Action<BossBird> OnBossPhase2;
+ 
+        /// <summary>Fired by BossBird.Die() when the boss is killed by the player.</summary>
+        public static event Action<BossBird> OnBossDefeated;
+ 
+        /// <summary>Fired by BossBird.TriggerBurstAttack().</summary>
+        public static event Action<BossBird, int> OnBossBurstAttack; // (boss, eggCount)
+ 
+        public static void FireBossSpawned(BossBird boss)        => OnBossSpawned?.Invoke(boss);
+        public static void FireBossPhase2(BossBird boss)         => OnBossPhase2?.Invoke(boss);
+        public static void FireBossDefeated(BossBird boss)       => OnBossDefeated?.Invoke(boss);
+        public static void FireBossBurstAttack(BossBird boss, int count) => OnBossBurstAttack?.Invoke(boss, count);
+ 
+// ── Attacking Bird Events ─────────────────────────────────────────────────
+ 
+        /// <summary>Fired by AttackingBird.Die() when an attacking bird is killed by the player.</summary>
+        public static event Action<AttackingBird, int> OnAttackingBirdDestroyed; // (bird, score)
+ 
+        public static void FireAttackingBirdDestroyed(AttackingBird bird, int score)
+            => OnAttackingBirdDestroyed?.Invoke(bird, score);
+        
     }
 }

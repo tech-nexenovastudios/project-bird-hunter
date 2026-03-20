@@ -29,7 +29,6 @@ namespace Gameplay.Birds
         public bool       IsPhase2     { get; private set; }
         public bool       IsDefeated   { get; private set; }
 
-        private float _layTimer;
         private float _specialAttackTimer;
 
         // ── Init ──────────────────────────────────────────────────────────

@@ -36,7 +36,7 @@ namespace Gameplay.Birds
         protected bool _isDead;
         protected bool _isInScreen;
 
-        private float _layTimer;
+        protected float _layTimer;
         private float _remainingLifetime;
         private float _noiseOffset;   // unique per bird — add to Init
         private BoxCollider2D _collider;
