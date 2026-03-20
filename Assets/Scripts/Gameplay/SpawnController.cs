@@ -1,10 +1,11 @@
+using UnityEngine;
+
+using System.Collections;
+using System.Collections.Generic;
+
 using Gameplay.Birds;
 using Gameplay.Eggs;
 using Gameplay.Levels;
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using Gameplay.Managers;
 using Gameplay.Events;
 
 namespace Gameplay
@@ -20,10 +21,11 @@ namespace Gameplay
 
         [Header("State (read-only)")] public float elapsedTime;
 
-        PressureTracker         _pressureTracker;
-        readonly List<BaseBird> _activeBirds          = new();
-        readonly List<Egg>      _activeEggs            = new();
-        readonly Dictionary<string, int> _eggTierCounts = new(); // per-tier active count
+        PressureTracker              _pressureTracker;
+        readonly List<BaseBird>      _activeBirds          = new();
+        readonly List<Egg>           _activeEggs           = new();
+        readonly List<AttackingBird> _activeAttackingBirds = new();
+        readonly Dictionary<string, int> _eggTierCounts    = new();
 
         float _spawnTimer;
         bool  _reliefMode;
@@ -34,12 +36,18 @@ namespace Gameplay
         float _performanceExpectedScore;
         float _performanceRatio = 1f;
 
-        // Public accessors for UI
-        public int   TotalTrackedScore => _totalTrackedScore;
-        public int   ActiveEggCount    => _activeEggs.Count;
-        public int   ActiveBirdCount   => _activeBirds.Count;
-
         private int _sortingIndex = 10;
+
+        BossBird _activeBoss;
+        bool     _bossSpawned;
+        bool     _bossDefeated;
+
+        float _attackingBirdTimer;
+
+        public int  TotalTrackedScore => _totalTrackedScore;
+        public int  ActiveEggCount    => _activeEggs.Count;
+        public int  ActiveBirdCount   => _activeBirds.Count;
+        public bool IsBossAlive       => _activeBoss != null && !_activeBoss.IsDefeated;
 
         void Awake()
         {
@@ -66,6 +74,14 @@ namespace Gameplay
             _performanceRatio         = 1f;
             _eggTierCounts.Clear();
 
+            _activeBoss   = null;
+            _bossSpawned  = false;
+            _bossDefeated = false;
+
+            _attackingBirdTimer = levelProfile != null
+                ? levelProfile.attackingBirdSpawnInterval
+                : 20f;
+
             if (levelProfile != null)
                 ValidateProfile();
         }
@@ -85,12 +101,25 @@ namespace Gameplay
                 TrySpawnBird();
                 _spawnTimer = 0f;
             }
+
+            if (levelProfile != null && levelProfile.isBossLevel && !_bossSpawned)
+                TrySpawnBoss();
+
+            if (levelProfile != null
+                && levelProfile.attackingBirdPool != null
+                && levelProfile.attackingBirdPool.Length > 0
+                && levelProfile.attackingBirdSpawnInterval > 0f
+                && !_levelCompleted && !_draining)
+            {
+                _attackingBirdTimer -= Time.deltaTime;
+                if (_attackingBirdTimer <= 0f)
+                {
+                    TrySpawnAttackingBird();
+                    _attackingBirdTimer = levelProfile.attackingBirdSpawnInterval;
+                }
+            }
         }
 
-        // ─────────────────────────────────────────────
-        // Profile Validation — uses expectedDps to catch
-        // misconfigured levels before gameplay starts
-        // ─────────────────────────────────────────────
         private void ValidateProfile()
         {
             if (levelProfile.expectedDps <= 0) return;
@@ -101,10 +130,6 @@ namespace Gameplay
                     $"Needs {estimatedTime:F0}s but maxDuration={levelProfile.maxDuration}s");
         }
 
-        // ─────────────────────────────────────────────
-        // Drain — called when target score is reached
-        // Respects minDuration before clearing
-        // ─────────────────────────────────────────────
         public void StartDrain(int scoreAtTrigger)
         {
             if (_draining) return;
@@ -133,7 +158,7 @@ namespace Gameplay
             _levelCompleted = true;
 
             Debug.Log($"[SpawnController] Drain — killing {_activeBirds.Count} birds, " +
-                      $"{_activeEggs.Count} eggs remaining.");
+                      $"{_activeEggs.Count} eggs, {_activeAttackingBirds.Count} attacking birds remaining.");
 
             for (int i = _activeBirds.Count - 1; i >= 0; i--)
             {
@@ -144,6 +169,21 @@ namespace Gameplay
             }
             _activeBirds.Clear();
 
+            for (int i = _activeAttackingBirds.Count - 1; i >= 0; i--)
+            {
+                var ab = _activeAttackingBirds[i];
+                ab.OnDestroyed -= HandleAttackingBirdDestroyed;
+                ab.ForceKill();
+            }
+            _activeAttackingBirds.Clear();
+
+            if (_activeBoss != null)
+            {
+                _activeBoss.OnDestroyed -= HandleBossDestroyed;
+                _activeBoss.ForceKill();
+                _activeBoss = null;
+            }
+
             if (_activeEggs.Count == 0)
             {
                 Debug.Log("[SpawnController] No eggs — firing AllEggsCleared immediately.");
@@ -151,9 +191,6 @@ namespace Gameplay
             }
         }
 
-        // ─────────────────────────────────────────────
-        // Egg Tier Cap — uses maxE4 / maxE3 / maxE2
-        // ─────────────────────────────────────────────
         private bool IsEggTierAllowed(EggTierConfig tier)
         {
             if (tier == null) return false;
@@ -163,7 +200,7 @@ namespace Gameplay
                 "E4" => levelProfile.maxE4,
                 "E3" => levelProfile.maxE3,
                 "E2" => levelProfile.maxE2,
-                _    => int.MaxValue    // E1 always allowed
+                _    => int.MaxValue
             };
             return current < cap;
         }
@@ -180,9 +217,6 @@ namespace Gameplay
             _eggTierCounts[tier.tierId] = Mathf.Max(0, _eggTierCounts.GetValueOrDefault(tier.tierId, 0) - 1);
         }
 
-        // ─────────────────────────────────────────────
-        // Performance
-        // ─────────────────────────────────────────────
         void UpdatePerformance()
         {
             float t = Mathf.Clamp01(elapsedTime / levelProfile.maxDuration);
@@ -194,11 +228,6 @@ namespace Gameplay
             _performanceRatio = currentScore / expected;
         }
 
-        // ─────────────────────────────────────────────
-        // Relief — uses pressureAvg as steady-state target
-        // instead of raw pressureMax, giving more accurate
-        // breathing room tuned to each level's design
-        // ─────────────────────────────────────────────
         void UpdateReliefMode()
         {
             int steadyPressure = Mathf.Min(levelProfile.pressureAvg, GetCurrentPressureMax());
@@ -235,9 +264,6 @@ namespace Gameplay
             return Mathf.RoundToInt(baseMax * mult);
         }
 
-        // ─────────────────────────────────────────────
-        // Bird Spawning
-        // ─────────────────────────────────────────────
         void TrySpawnBird()
         {
             int maxPressure = GetCurrentPressureMax();
@@ -339,9 +365,137 @@ namespace Gameplay
             _activeBirds.Add(bird);
         }
 
-        // ─────────────────────────────────────────────
-        // Egg Lifecycle
-        // ─────────────────────────────────────────────
+        private void TrySpawnBoss()
+        {
+            if (_bossSpawned) return;
+            if (levelProfile.bossConfig == null)
+            {
+                Debug.LogWarning("[SpawnController] isBossLevel=true but no BossConfig assigned!");
+                _bossSpawned = true;
+                return;
+            }
+
+            _bossSpawned = true;
+
+            var bossConfig = levelProfile.bossConfig;
+            if (bossConfig.bossPrefab == null)
+            {
+                Debug.LogError($"[SpawnController] BossConfig '{bossConfig.bossId}' has no prefab.");
+                return;
+            }
+
+            Vector3 spawnPos = bossConfig.fixedSpawnPoint != null
+                ? bossConfig.fixedSpawnPoint.position
+                : birdSpawnPoints[Random.Range(0, birdSpawnPoints.Length)].position;
+
+            var go   = Instantiate(bossConfig.bossPrefab, spawnPos, Quaternion.identity);
+            var boss = go.GetComponent<BossBird>();
+
+            if (boss == null)
+            {
+                Debug.LogError($"[SpawnController] Boss prefab '{bossConfig.bossPrefab.name}' missing BossBird component.");
+                Destroy(go);
+                return;
+            }
+
+            boss.InitBoss(bossConfig);
+            boss.OnLayEgg    += HandleBossLayEgg;
+            boss.OnBurstLay  += HandleBossBurstLay;
+            boss.OnDestroyed += HandleBossDestroyed;
+
+            _activeBoss = boss;
+            Debug.Log($"[SpawnController] Boss '{bossConfig.bossId}' spawned at {spawnPos} (L{levelProfile.globalLevel})");
+        }
+
+        private void HandleBossLayEgg(BaseBird bird)
+        {
+            if (_activeBoss == null) return;
+            SpawnEggFromPosition(_activeBoss.transform.position, _activeBoss.GetCurrentEggTier());
+        }
+
+        private void HandleBossBurstLay(BossBird boss, int count)
+        {
+            if (boss == null) return;
+            var tier = boss.GetCurrentEggTier();
+            for (int i = 0; i < count; i++)
+            {
+                float xOffset = Random.Range(-1.5f, 1.5f);
+                SpawnEggFromPosition(boss.transform.position + new Vector3(xOffset, 0f, 0f), tier);
+            }
+            Debug.Log($"[SpawnController] Boss burst — spawned {count} eggs.");
+        }
+
+        private void HandleBossDestroyed(BaseBird bird)
+        {
+            if (_activeBoss != null)
+            {
+                _activeBoss.OnLayEgg    -= HandleBossLayEgg;
+                _activeBoss.OnBurstLay  -= HandleBossBurstLay;
+                _activeBoss.OnDestroyed -= HandleBossDestroyed;
+                _bossDefeated = _activeBoss.IsDefeated;
+                _activeBoss   = null;
+            }
+            Destroy(bird.gameObject);
+        }
+
+        private void TrySpawnAttackingBird()
+        {
+            if (levelProfile.attackingBirdPool == null || levelProfile.attackingBirdPool.Length == 0)
+                return;
+
+            if (Random.value > levelProfile.attackingBirdSpawnChance)
+                return;
+
+            var config = PickAttackingBirdConfig();
+            if (config == null || config.prefab == null)
+            {
+                Debug.LogWarning("[SpawnController] Selected AttackingBirdConfig has no prefab.");
+                return;
+            }
+
+            Transform spawnPoint = birdSpawnPoints[Random.Range(0, birdSpawnPoints.Length)];
+            var go = Instantiate(config.prefab, spawnPoint.position, Quaternion.identity);
+
+            var attackingBird = go.GetComponent<AttackingBird>();
+            if (attackingBird == null)
+            {
+                Debug.LogError($"[SpawnController] Prefab for '{config.attackingBirdId}' missing AttackingBird component.");
+                Destroy(go);
+                return;
+            }
+
+            attackingBird.Init(config, levelProfile.hpMultiplier);
+            attackingBird.OnDestroyed += HandleAttackingBirdDestroyed;
+            _activeAttackingBirds.Add(attackingBird);
+
+            Debug.Log($"[SpawnController] Attacking bird '{config.attackingBirdId}' ({config.type}) spawned.");
+        }
+
+        private AttackingBirdConfig PickAttackingBirdConfig()
+        {
+            var pool = levelProfile.attackingBirdPool;
+            float totalWeight = 0f;
+            foreach (var c in pool) totalWeight += c != null ? c.spawnWeight : 0f;
+            if (totalWeight <= 0f) return pool[Random.Range(0, pool.Length)];
+
+            float roll       = Random.Range(0f, totalWeight);
+            float cumulative = 0f;
+            foreach (var c in pool)
+            {
+                if (c == null) continue;
+                cumulative += c.spawnWeight;
+                if (roll <= cumulative) return c;
+            }
+            return pool[pool.Length - 1];
+        }
+
+        private void HandleAttackingBirdDestroyed(AttackingBird bird)
+        {
+            bird.OnDestroyed -= HandleAttackingBirdDestroyed;
+            _activeAttackingBirds.Remove(bird);
+            Destroy(bird.gameObject);
+        }
+
         void HandleBirdLayEgg(BaseBird bird)
         {
             if (_draining) return;
@@ -353,7 +507,6 @@ namespace Gameplay
                 return;
             }
 
-            // Respect per-tier cap from LevelProfile
             if (!IsEggTierAllowed(tier))
             {
                 Debug.Log($"[SpawnController] Egg tier {tier.tierId} at cap — skipping lay.");
@@ -361,6 +514,40 @@ namespace Gameplay
             }
 
             var go  = Instantiate(tier.eggPrefab, bird.transform.position, Quaternion.identity);
+            var egg = go.GetComponent<Egg>();
+
+            int baseHp = Random.Range(tier.baseHpMin, tier.baseHpMax + 1);
+            int hp     = Mathf.RoundToInt(baseHp * levelProfile.hpMultiplier);
+
+            var rb = egg.GetComponent<Rigidbody2D>();
+            rb.AddForce(new Vector2(-2f, 0f), ForceMode2D.Impulse);
+
+            egg.Init(tier, hp, sortingIndex: _sortingIndex++);
+            egg.OnDestroyed += HandleEggDestroyed;
+
+            _activeEggs.Add(egg);
+            _pressureTracker.RegisterEgg(egg);
+            TrackEggAdded(tier);
+            _totalTrackedScore += CalculateEggMaxScore(tier);
+        }
+
+        private void SpawnEggFromPosition(Vector3 worldPos, EggTierConfig tier)
+        {
+            if (_draining) return;
+
+            if (tier == null || tier.eggPrefab == null)
+            {
+                Debug.LogError("[SpawnController] SpawnEggFromPosition: tier or eggPrefab is null.");
+                return;
+            }
+
+            if (!IsEggTierAllowed(tier))
+            {
+                Debug.Log($"[SpawnController] Egg tier {tier.tierId} at cap — skipping lay.");
+                return;
+            }
+
+            var go  = Instantiate(tier.eggPrefab, worldPos, Quaternion.identity);
             var egg = go.GetComponent<Egg>();
 
             int baseHp = Random.Range(tier.baseHpMin, tier.baseHpMax + 1);
@@ -395,7 +582,6 @@ namespace Gameplay
             Debug.Log($"[SpawnController] Egg destroyed tier={egg.config?.tierId}, " +
                       $"splitInto={egg.config?.splitInto?.tierId}, remaining={_activeEggs.Count}");
 
-            // Spawn splits — also respect tier caps
             if (egg.config?.splitInto != null)
             {
                 EggTierConfig splitTier = egg.config.splitInto;
@@ -414,20 +600,17 @@ namespace Gameplay
                             continue;
                         }
 
-                        //Vector3 offset = new Vector3(Random.Range(-0.5f, 0.5f), Random.Range(-0.5f, 0.5f), 0f);
                         var offset = i == 0 ? new Vector3(-0.3f, 0.5f, 0f) : new Vector3(0.3f, 0.5f, 0f);
                         var go     = Instantiate(splitTier.eggPrefab, egg.transform.position + offset, Quaternion.identity);
-                        
+
                         go.TryGetComponent(out Rigidbody2D rb);
-                        
-                        //rb.AddForce(egg.transform.position + offset, ForceMode2D.Impulse);
-                        
+
                         var newEgg = go.GetComponent<Egg>();
 
                         int baseHp = Random.Range(splitTier.baseHpMin, splitTier.baseHpMax + 1);
                         int hp     = Mathf.RoundToInt(baseHp * levelProfile.hpMultiplier);
-                        
-                        newEgg.Init(splitTier, hp,_sortingIndex++);
+
+                        newEgg.Init(splitTier, hp, _sortingIndex++);
                         newEgg.OnDestroyed += HandleEggDestroyed;
 
                         _activeEggs.Add(newEgg);
@@ -439,7 +622,6 @@ namespace Gameplay
 
             Destroy(egg.gameObject);
 
-            // Check AFTER splits added — covers E1 (no split) too
             if (_activeEggs.Count == 0)
             {
                 Debug.Log("[SpawnController] All eggs cleared!");
@@ -447,9 +629,6 @@ namespace Gameplay
             }
         }
 
-        // ─────────────────────────────────────────────
-        // Score estimate — avg HP × scorePerHit + scoreOnDestroy + splits
-        // ─────────────────────────────────────────────
         private int CalculateEggMaxScore(EggTierConfig tier)
         {
             if (tier == null) return 0;

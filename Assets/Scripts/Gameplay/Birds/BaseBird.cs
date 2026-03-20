@@ -26,6 +26,13 @@ namespace Gameplay.Birds
         public event Action<BaseBird> OnLayEgg;
         public event Action<BaseBird> OnDestroyed;
 
+        /// <summary>
+        /// Raises OnLayEgg. Subclasses (e.g. BossBird) must call this instead of
+        /// invoking OnLayEgg directly, because C# events can only be invoked from
+        /// within the declaring class.
+        /// </summary>
+        protected void InvokeLayEgg() => OnLayEgg?.Invoke(this);
+
         protected bool _isDead;
         protected bool _isInScreen;
 

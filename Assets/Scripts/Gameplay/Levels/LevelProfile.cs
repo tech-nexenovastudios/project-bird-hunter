@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Gameplay.Birds;
+using UnityEngine;
 
 namespace Gameplay.Levels
 {
@@ -23,6 +24,17 @@ namespace Gameplay.Levels
 
         public int expectedDps;
         public float hpMultiplier = 1f;   // from spreadsheet
+        
+        public bool       isBossLevel;
+ 
+        public BossConfig bossConfig;
+ 
+        public AttackingBirdConfig[] attackingBirdPool;
+        
+        public float attackingBirdSpawnInterval = 20f;
+ 
+        [Range(0f, 1f)]
+        public float attackingBirdSpawnChance = 0.6f;
     }
 
 }
