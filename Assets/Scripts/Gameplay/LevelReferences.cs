@@ -1,23 +1,21 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+
+using UnityEngine;
+using UnityEngine.UI;
+
 public class LevelReferences : MonoBehaviour
 {
     [SerializeField] Collider2D leftWall;
     [SerializeField] Collider2D rightWall;
-    
-    
 
-    [SerializeField] private Image cannonHealthSlider;
-    [SerializeField] private TMPro.TextMeshProUGUI cannonHealthPercent;
+    [SerializeField] private Image cannonHealthBar;     
+    [SerializeField] private Image cannonDamageBar;     
+    //[SerializeField] private TMPro.TextMeshProUGUI cannonHealthPercent;
 
-    public (Collider2D leftWall,  Collider2D rightWall) GetWall()
-    {
-        return (leftWall, rightWall);
-    }
+    public (Collider2D, Collider2D) GetWall() => (leftWall, rightWall);
 
-    public (Image slider, TMPro.TextMeshProUGUI healthText) GetCannonHealth()
-    {
-        return (cannonHealthSlider, cannonHealthPercent);
-    }
+    public (Image healthBar, Image damageBar ) GetCannonHealth()
+        => (cannonHealthBar, cannonDamageBar );
 }

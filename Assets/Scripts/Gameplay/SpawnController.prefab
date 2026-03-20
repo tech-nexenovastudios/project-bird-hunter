@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 140051764016897300}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.08, y: 3.37, z: 0}
+  m_LocalPosition: {x: -2.84, y: 3.24, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -56,7 +56,7 @@ Transform:
   m_GameObject: {fileID: 518917286332161385}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.64, y: 3.32, z: 0}
+  m_LocalPosition: {x: -3.35, y: 3.32, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -87,7 +87,7 @@ Transform:
   m_GameObject: {fileID: 1944961523399726597}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.37, y: 2.48, z: 0}
+  m_LocalPosition: {x: -2.88, y: 1.91, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -118,7 +118,7 @@ Transform:
   m_GameObject: {fileID: 4024254528642360727}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.98, y: 2.04, z: 0}
+  m_LocalPosition: {x: -3.15, y: 2.04, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -204,6 +204,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 03a9f7608b524feea551c01b72f120a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  levelProfile: {fileID: 0}
   adaptiveConfig: {fileID: 11400000, guid: 9764fffc81a45804e9c1a7de9ee5ed8f, type: 2}
   birds:
   - {fileID: 11400000, guid: 54a7252f4a47c104ebfb1b97a3e8db67, type: 2}
@@ -215,7 +216,4 @@ MonoBehaviour:
   - {fileID: 4769303102368881712}
   - {fileID: 7010285684380644789}
   - {fileID: 5594059791011298721}
-  birdPrefab: {fileID: 7925487483350186610, guid: 98552157326f46842996ef36d90d3b5b, type: 3}
-  eggPrefab: {fileID: 6721225737067000028, guid: c672200f80b03ee46bb7bb539fc9b3c0, type: 3}
-  currentScore: 0
   elapsedTime: 0
