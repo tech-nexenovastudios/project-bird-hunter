@@ -68,6 +68,8 @@
 //        }
 //    }
 //}
+
+
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
@@ -86,9 +88,9 @@ namespace Gameplay.UI
         [SerializeField] private CanvasGroup slotCanvas;
         [SerializeField] private RectTransform slotRect;
 
-        [Header("Info")]
-        [SerializeField] private TextMeshProUGUI levelName;
-        [SerializeField] private TextMeshProUGUI levelDescription;
+        //[Header("Info")]
+        //[SerializeField] private TextMeshProUGUI levelName;
+        //[SerializeField] private TextMeshProUGUI levelDescription;
 
         [Header("Buttons")]
         [SerializeField] private Button spinButton;
@@ -175,4 +177,4 @@ namespace Gameplay.UI
             confirmButton.interactable = false;
         }
     }
-}
+} 

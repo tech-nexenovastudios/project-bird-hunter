@@ -214,7 +214,6 @@
 //}
 
 using System.Collections;
-using System.Linq;
 using Gameplay.PowerUps;
 using UnityEngine;
 using Gameplay.Events;
@@ -271,7 +270,6 @@ namespace Gameplay.Managers
             GameProgressManager.OnSpinTriggered += OnSpinTriggered;
             GameEvents.OnPlayerDeath += OnPlayerDeath;
             GameEvents.OnPauseToggled += OnPauseToggled;
-          //  GameEvents.OnBackToMenu += OnBackToMenu;
             XPManager.Instance.OnXPAdded += OnXPAdded;
             XPManager.Instance.OnPlayerLevelUp += OnPlayerLevelUp;
         }
@@ -282,7 +280,6 @@ namespace Gameplay.Managers
             GameProgressManager.OnSpinTriggered -= OnSpinTriggered;
             GameEvents.OnPlayerDeath -= OnPlayerDeath;
             GameEvents.OnPauseToggled -= OnPauseToggled;
-          //  GameEvents.OnBackToMenu -= OnBackToMenu;
         }
 
         // ───────── XP / Level display ─────────
@@ -295,41 +292,55 @@ namespace Gameplay.Managers
         // ───────── Entry point ─────────
         private void Start()
         {
-            // Wait one frame so all OnEnable subscriptions on UI scripts complete first
             StartCoroutine(InitWithDelay());
         }
 
         private IEnumerator InitWithDelay()
         {
-            yield return null; // one frame delay — guarantees all UI OnEnable has run
+            yield return null;
 
             GameProgressManager.Instance.LoadProgress();
 
             var progress = GameProgressManager.Instance.Data;
 
-            if (IsInitialSpinRequired(progress))
+            if (IsSpinPending(progress))
             {
-                TriggerInitialSpin(progress);
+                TriggerPendingSpin(progress);
                 yield break;
             }
 
             StartGameplay();
         }
 
-        // ───────── Initial spin ─────────
-        private bool IsInitialSpinRequired(GameProgress progress)
+        // ───────── Spin pending check ─────────
+        private bool IsSpinPending(GameProgress progress)
         {
-            Debug.Log($"IsInitialSpinRequired? Ch{progress.currentChapter} L{progress.currentLevel} Spins:{progress.playerSpins}");
-            return progress.playerSpins == 0;
+            Debug.Log($"IsSpinPending? Ch{progress.currentChapter} L{progress.currentLevel} Spins:{progress.playerSpins}");
+
+            if (progress.playerSpins == 0)
+            {
+                Debug.Log("→ Fresh game spin");
+                return true;
+            }
+
+            if (progress.currentLevel == 1)
+            {
+                var slot0 = progress.chapterSlots[0];
+                bool slot0Empty = slot0 == null || string.IsNullOrEmpty(slot0.equippedPowerupId);
+                Debug.Log($"→ At L1, slot0 empty: {slot0Empty}");
+                return slot0Empty;
+            }
+
+            return false;
         }
 
-        private void TriggerInitialSpin(GameProgress progress)
+        private void TriggerPendingSpin(GameProgress progress)
         {
             var options = progress.GetAvailablePowerUpForSpin(
                 progress.currentChapter, 0,
                 GameProgressManager.Instance.allPowerups, 3);
 
-            Debug.Log($"🎰 Initial spin Ch{progress.currentChapter} L{progress.currentLevel}");
+            Debug.Log($"🎰 Pending spin → Ch{progress.currentChapter} L{progress.currentLevel}");
             OnSpinTriggered(0, options);
         }
 
@@ -361,7 +372,8 @@ namespace Gameplay.Managers
 
             state = GameState.Gameplay;
 
-            ScoreManager.Instance?.ResetLevel();
+            // Pass targetScore from LevelProfile to ScoreManager
+            ScoreManager.Instance?.ResetLevel(profile.targetScore);
             LevelCompletionController.Instance?.ResetForNewLevel();
             XPManager.Instance?.ResetForNewLevel();
 
@@ -373,7 +385,6 @@ namespace Gameplay.Managers
 
             GameProgressManager.Instance.ApplyPowerUpsToCurrentCannon(currentCannon);
 
-            // Fire AFTER everything ready — UI is guaranteed subscribed by now
             GameEvents.FireGameLevelUpdated(profile, GameProgressManager.Instance.CurrentLevel);
         }
 
@@ -409,13 +420,6 @@ namespace Gameplay.Managers
             state = isPaused ? GameState.Paused : GameState.Gameplay;
             Debug.Log(isPaused ? "⏸ Paused" : "▶ Resumed");
         }
-
-        // ───────── Back to menu ─────────
-        //private void OnBackToMenu()
-        //{
-        //    state = GameState.Loading;
-        //    UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
-        //}
 
         // ───────── Reset ─────────
         public void ResetGame()

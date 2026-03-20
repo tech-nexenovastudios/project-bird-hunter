@@ -242,7 +242,6 @@
 //    }
 //}
 
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -283,8 +282,24 @@ namespace Gameplay.Managers
         public int TotalScore => _progress?.totalScore ?? 0;
         public PowerUpSlot[] CurrentSlots => _progress?.chapterSlots ?? new PowerUpSlot[0];
 
-        // ───────── Last Selected Powerup (used by SlotMachineController) ─────────
         public PowerupConfig LastSelectedPowerup { get; private set; }
+
+        // ───────── Spin schedule ─────────
+        // Spin triggers: chapter start (L1), after completing L5, L10, L15
+        // Each maps to a slot index (0-3)
+        private static bool IsSpinLevel(int completedLevel)
+            => completedLevel == 5 || completedLevel == 10 || completedLevel == 15;
+
+        private static int GetSpinSlotIndex(int completedLevel)
+        {
+            return completedLevel switch
+            {
+                5 => 1,
+                10 => 2,
+                15 => 3,
+                _ => -1
+            };
+        }
 
         // ───────── Unity ─────────
         private void Awake()
@@ -323,43 +338,38 @@ namespace Gameplay.Managers
             _progress.highScore = Mathf.Max(_progress.highScore, scoreAchieved);
             _progress.totalScore += scoreAchieved;
 
-            int levelIndex = _progress.currentLevel - 1; // 0-based index of level just finished
+            int completedLevel = _progress.currentLevel;
             bool spinTriggered = false;
 
-            // index 0 is ONLY for chapter-start spin — CompleteLevel must never re-fire it
-            if (levelIndex != 0 && _progress.IsSpinLevel(levelIndex))
+            // ── Mid-chapter spins: after L5, L10, L15 ──
+            if (IsSpinLevel(completedLevel))
             {
-                int slotIndex = _progress.GetSpinSlotIndex(levelIndex);
-                if (slotIndex >= 0)
-                {
-                    TriggerSpin(slotIndex);
-                    spinTriggered = true;
-                }
+                int slotIndex = GetSpinSlotIndex(completedLevel);
+                Debug.Log($"🎰 Mid-chapter spin after L{completedLevel} → Slot {slotIndex}");
+                TriggerSpin(slotIndex);
+                spinTriggered = true;
             }
 
-            // Advance level
+            // ── Advance level ──
             if (_progress.currentLevel < 20)
             {
                 _progress.currentLevel++;
             }
             else
             {
-                // Chapter complete
+                // Chapter complete → move to next chapter
                 _progress.currentChapter++;
                 _progress.currentLevel = 1;
                 _progress.ResetSlotsForNewChapter();
 
-                if (!spinTriggered)
-                {
-                    TriggerSpin(0);
-                    spinTriggered = true;
-                }
+                // ── Chapter start spin — fires on EVERY new chapter ──
+                Debug.Log($"🎰 Chapter start spin → Ch{_progress.currentChapter}");
+                TriggerSpin(0);
+                spinTriggered = true;
             }
 
             SaveProgress();
             OnProgressChanged?.Invoke(_progress);
-
-          
         }
 
         public void TriggerSpin(int slotIndex)
@@ -379,14 +389,11 @@ namespace Gameplay.Managers
         {
             if (powerup == null) return;
 
-            LastSelectedPowerup = powerup;          // cache for SlotMachineController
-
+            LastSelectedPowerup = powerup;
             _progress.EquipPowerup(powerup);
             _progress.playerSpins++;
             SaveProgress();
 
-            // NOTE: do NOT fire OnProgressChanged here — GameManager.OnSpinComplete()
-            // calls StartGameplay() directly; firing here would double-start gameplay.
             Debug.Log($"✅ Equipped [{powerup.rarity}] {powerup.displayName}");
         }
 

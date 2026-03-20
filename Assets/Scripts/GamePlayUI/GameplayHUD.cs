@@ -134,84 +134,122 @@
 //        }
 //    }
 //}
-using System.ComponentModel;
+
 using DG.Tweening;
 using Gameplay.Events;
 using Gameplay.Levels;
 using Gameplay.Managers;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using static Unity.Burst.Intrinsics.X86.Avx;
 
 namespace Gameplay.UI
 {
     public class GameplayHUD : MonoBehaviour
     {
-        [Header("Health")]
-        [SerializeField] private Slider cannonHealthSlider;
-       // [SerializeField] private TextMeshProUGUI cannonHealthText;
-
         [Header("HUD Buttons")]
-        //[SerializeField] private Button backToMenuButton;
         [SerializeField] private Button pauseButton;
 
         [Header("Pause Panel")]
         [SerializeField] private GameObject pausePanel;
         [SerializeField] private Button continueButton;
 
-        [Header("Level Detail Popup")]
-        [SerializeField] private RectTransform levelDetailRect;
-        [SerializeField] private TextMeshProUGUI levelPopupText;   // shows "Level 18"
+        [Header("Level Popup")]
+        [SerializeField] private TextMeshProUGUI levelPopupText;
+
+        [Header("Level Progress Bar")]
+        [SerializeField] private Image progressBarFill;   // Image Type: Filled, Horizontal
+       // [SerializeField] private TextMeshProUGUI ScoreText; 
 
         private bool _isPaused = false;
+        private int _targetScore = 0;
 
         // ───────── lifecycle ─────────
         private void OnEnable()
         {
             GameEvents.OnGameLevelUpdated += OnGameLevelUpdated;
-
+            GameEvents.OnLevelScoreUpdated += OnLevelScoreUpdated;
             pauseButton.onClick.AddListener(OnPauseClicked);
-         //   backToMenuButton.onClick.AddListener(OnBackToMenuClicked);
             continueButton.onClick.AddListener(OnContinueClicked);
         }
 
         private void OnDisable()
         {
             GameEvents.OnGameLevelUpdated -= OnGameLevelUpdated;
-
+            GameEvents.OnLevelScoreUpdated -= OnLevelScoreUpdated;
             pauseButton.onClick.RemoveListener(OnPauseClicked);
-          //  backToMenuButton.onClick.RemoveListener(OnBackToMenuClicked);
             continueButton.onClick.RemoveListener(OnContinueClicked);
         }
 
-        // ───────── level updated ─────────
+        // ───────── level started ─────────
         private void OnGameLevelUpdated(LevelProfile profile, int levelIndex)
         {
-            ShowLevelDetailPopup();
+            _targetScore = profile != null ? profile.targetScore : 0;
+
+            // Reset bar instantly to 0 on new level
+            if (progressBarFill != null)
+            {
+                progressBarFill.DOKill();
+                progressBarFill.fillAmount = 0f;
+            }
+
+            //if (ScoreText != null)
+            //    ScoreText.text = $"0 / {_targetScore}";
+
+            ShowLevelPopup();
         }
 
-        // ───────── level detail popup ─────────
-        public void ShowLevelDetailPopup()
+        // ───────── score updated ─────────
+        private void OnLevelScoreUpdated(int levelScore, int delta)
         {
-            if (levelDetailRect == null) return;
+            UpdateProgressBar(levelScore);
+        }
 
-            if (levelPopupText != null)
-                levelPopupText.text = $"Level {GameProgressManager.Instance.CurrentLevel}";
+        // ───────── progress bar ─────────
+        private void UpdateProgressBar(int levelScore)
+        {
+            if (progressBarFill == null) return;
 
-            levelDetailRect.DOKill();
+            float fill = _targetScore > 0
+                ? Mathf.Clamp01((float)levelScore / _targetScore)
+                : 0f;
 
-            levelDetailRect.gameObject.SetActive(true);
-            levelDetailRect
-                .DOAnchorPosX(0, 0.2f)
-                .From(new Vector2(-300, levelDetailRect.anchoredPosition.y))
+            progressBarFill
+                .DOFillAmount(fill, 0.3f)
                 .SetEase(Ease.OutCubic);
 
-            DOVirtual.DelayedCall(2f, () =>
-                levelDetailRect
-                    .DOAnchorPosX(-300, 0.2f)
-                    .SetEase(Ease.InCubic)
-                    .OnComplete(() => levelDetailRect.gameObject.SetActive(false)));
+            //if (progressScoreText != null)
+            //    progressScoreText.text = _targetScore > 0
+            //        ? $"{levelScore} / {_targetScore}"
+            //        : $"{levelScore}";
+        }
+
+        // ───────── level popup ─────────
+        public void ShowLevelPopup()
+        {
+            if (levelPopupText == null) return;
+
+            levelPopupText.text = $"Level {GameProgressManager.Instance.CurrentLevel}";
+            levelPopupText.DOKill();
+
+            levelPopupText.gameObject.SetActive(true);
+            levelPopupText.alpha = 0f;
+            levelPopupText.transform.localScale = Vector3.one * 0.5f;
+
+            DG.Tweening.Sequence popIn = DOTween.Sequence();
+            popIn.Append(levelPopupText.transform
+                    .DOScale(1.2f, 0.2f).SetEase(Ease.OutBack));
+            popIn.Join(levelPopupText
+                    .DOFade(1f, 0.2f));
+            popIn.Append(levelPopupText.transform
+                    .DOScale(1f, 0.1f).SetEase(Ease.InOutSine));
+            popIn.AppendInterval(1.5f);
+            popIn.Append(levelPopupText
+                    .DOFade(0f, 0.3f).SetEase(Ease.InCubic));
+            popIn.Join(levelPopupText.transform
+                    .DOScale(0.5f, 0.3f).SetEase(Ease.InBack));
+            popIn.OnComplete(() => levelPopupText.gameObject.SetActive(false));
         }
 
         // ───────── pause ─────────
@@ -256,12 +294,5 @@ namespace Gameplay.UI
 
             GameEvents.FirePauseToggled(false);
         }
-
-        // ───────── back to menu ─────────
-        //private void OnBackToMenuClicked()
-        //{
-        //    if (_isPaused) ResumeGame();
-        //    GameEvents.FireBackToMenu();
-        //}
     }
 }

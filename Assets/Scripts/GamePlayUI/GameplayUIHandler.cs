@@ -168,7 +168,7 @@ namespace Gameplay.UI
         private void OnPlayerConfirmedSpin()
         {
             slotMachineScreen.HideSlot();
-            gameplayHUD.ShowLevelDetailPopup();
+            //gameplayHUD.ShowLevelDetailPopup();
             GameManager.Instance.StartGameplay();
         }
 
