@@ -33,11 +33,7 @@ namespace Gameplay.Player
             //   true = also stop children particle systems
             //   StopEmittingAndClear = immediately invisible
         }
-
-        protected override void UpdateUI()
-        {
-            
-        }
+        
         protected override void Shoot()
         {
             // Kill any running sequence so rapid-firing doesn't
