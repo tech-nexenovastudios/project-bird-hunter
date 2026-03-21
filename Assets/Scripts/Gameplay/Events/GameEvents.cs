@@ -125,6 +125,11 @@ namespace Gameplay.Events
  
         public static void FireAttackingBirdDestroyed(AttackingBird bird, int score)
             => OnAttackingBirdDestroyed?.Invoke(bird, score);
-        
+
+        public static void FireCannonHealthChanged(int currentHp, int maxHp) => OnCannonHealthChanged?.Invoke(currentHp, maxHp);
+        public static event Action<int, int> OnCannonHealthChanged;
+
+        public static void FireCannonStatsUpdated(CannonStats cannonStats) => OnCannonStatsUpdated?.Invoke(cannonStats);
+        public static event Action<CannonStats> OnCannonStatsUpdated;
     }
 }

@@ -32,14 +32,12 @@ namespace Gameplay.Player
         public GameObject BulletPrefab { get; set; }
 
         protected Rigidbody2D rb;
-        private Collider2D leftWall;
-        private Collider2D rightWall;
-
-        private CannonHealthBar _healthBar;
 
         private float fireTimer;
         private Vector2 movementInput;
         private ObjectPool<BaseBullet> bulletPool;
+        private Camera mainCam;
+        private float halfWidth;
 
         protected virtual void Awake()
         {
@@ -47,6 +45,11 @@ namespace Gameplay.Player
             if (rb == null) rb = gameObject.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Kinematic;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+            mainCam = Camera.main;
+
+            var col = GetComponent<Collider2D>();
+            halfWidth = col.bounds.extents.x;
         }
 
         //public virtual void Configure(CannonStats stats, LevelReferences references, GameObject bulletPrefab)
@@ -63,21 +66,12 @@ namespace Gameplay.Player
         //    leftWall = left;
         //    rightWall = right;
 
-        public virtual void Configure(CannonStats stats, LevelReferences references, GameObject bulletPrefab)
+        public virtual void Configure(CannonStats stats, GameObject bulletPrefab)
         {
             CannonStats = stats;
             BulletPrefab = bulletPrefab;
             CannonStats.InitRuntime();
             CurrentHp = MaxHp;
-
-            // Health bar
-            var (healthImg, damageImg ) = references.GetCannonHealth();
-            _healthBar = gameObject.AddComponent<CannonHealthBar>();
-            _healthBar.Init(healthImg, damageImg );
-
-            var (left, right) = references.GetWall();
-            leftWall = left;
-            rightWall = right;
 
             if (BulletPrefab != null && BulletPrefab.GetComponent<BaseBullet>() != null)
             {
@@ -94,8 +88,9 @@ namespace Gameplay.Player
             {
                 bulletPool = null;
             }
+            GameEvents.FireCannonStatsUpdated(CannonStats);
 
-            UpdateUI();
+            GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp);
 
             GameEvents.OnPlayerLevelUp += OnLevelUp;
         }
@@ -177,7 +172,7 @@ namespace Gameplay.Player
                 CannonStats.ApplyProgression(newLevel);
                 // Optionally heal on level up or just update max HP
                 // CurrentHp = MaxHp; 
-                UpdateUI();
+                //UpdateUI();
             }
         }
 
@@ -215,11 +210,13 @@ namespace Gameplay.Player
 
             Vector2 oldPos = rb.position;
             Vector2 newPos = rb.position + movementInput * (CannonStats.currentMoveSpeed * Time.fixedDeltaTime);
-            
-            // Clamp within walls
-            float leftBound = leftWall != null ? leftWall.bounds.max.x : -float.MaxValue;
-            float rightBound = rightWall != null ? rightWall.bounds.min.x : float.MaxValue;
-            
+
+            Vector3 pos = transform.position;
+
+            // Get camera bounds in world units
+            float leftBound = mainCam.ViewportToWorldPoint(Vector3.zero).x + halfWidth;
+            float rightBound = mainCam.ViewportToWorldPoint(Vector3.right).x - halfWidth;
+
             // Assuming cannon has its own width, we might need an offset. 
             // For now, simple point clamp or use collider bounds if available
             newPos.x = Mathf.Clamp(newPos.x, leftBound, rightBound);
@@ -332,17 +329,14 @@ namespace Gameplay.Player
 
             CurrentHp -= damage;
             CurrentHp = Mathf.Clamp(CurrentHp, 0, MaxHp);
-
+            
             // ── Play hit VFX at the designated position ──
             PlayHitVFX();
 
-            UpdateUI();
             GameEvents.FireCannonHit(damage);
+            GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp); //
 
-            if (CurrentHp <= 0)
-            {
-                Die();
-            }
+            if (CurrentHp <= 0) Die();
         }
 
         private void PlayHitVFX()
@@ -364,11 +358,6 @@ namespace Gameplay.Player
         //{
 
         //}
-
-        protected virtual void UpdateUI()
-        {
-            _healthBar?.UpdateHealth(CurrentHp, MaxHp);
-        }
         protected virtual void Die()
         {
             Debug.Log("Cannon Destroyed!");
@@ -378,20 +367,7 @@ namespace Gameplay.Player
             GameEvents.FirePlayerDeath();
         }
 
-        protected virtual void OnTriggerEnter2D(Collider2D collision)
-        {
-            // Hazard detection is mostly handled by the hazard itself (e.g. EggDamage)
-            // But we ensure it triggers feedback even if not handled elsewhere
-            
-            if (collision.CompareTag("Egg"))
-            {
-                // We don't take damage here because EggDamage script should be on the Egg
-                // and it calls TakeDamage(damage, hitPoint) on us.
-                // This method is just a fallback or for non-damageable trigger logic.
-                collision.gameObject.TryGetComponent(out Egg egg);
-                TakeDamage(egg.config.cannonDamage);
-            }
-        }
+      
 
         #region IDamageEffect Implementation
 

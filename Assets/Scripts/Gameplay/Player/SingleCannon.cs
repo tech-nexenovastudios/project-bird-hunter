@@ -34,6 +34,10 @@ namespace Gameplay.Player
             //   StopEmittingAndClear = immediately invisible
         }
 
+        protected override void UpdateUI()
+        {
+            
+        }
         protected override void Shoot()
         {
             // Kill any running sequence so rapid-firing doesn't
@@ -94,16 +98,15 @@ namespace Gameplay.Player
             // So don't manually play fireParticles in the sequence — let base handle it
             base.Shoot();
         }
-
-        protected override void UpdateUI() { }
-
         private void OnDrawGizmos()
         {
             if (wheels == null) return;
             foreach (var wheel in wheels)
             {
                 if (wheel != null)
-                    Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
+    #if UNITY_EDITOR
+                Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
+#endif
             }
         }
     }
