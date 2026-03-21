@@ -100,9 +100,11 @@ namespace Gameplay.Player
             foreach (var wheel in wheels)
             {
                 if (wheel != null)
-    #if UNITY_EDITOR
-                Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
+                {
+#if UNITY_EDITOR
+                    Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
 #endif
+                }
             }
         }
     }

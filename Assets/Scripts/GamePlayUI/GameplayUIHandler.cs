@@ -132,6 +132,7 @@ using Gameplay.Events;
 using Gameplay.Managers;
 using Gameplay.PowerUps;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Gameplay.UI
 {
@@ -145,6 +146,8 @@ namespace Gameplay.UI
         [Header("Slot")]
         [SerializeField] private SlotMachineScreen slotMachineScreen;
 
+        [SerializeField] private GameObject gameoverUI;
+
         private void Awake()
         {
             Instance = this;
@@ -155,6 +158,7 @@ namespace Gameplay.UI
             GameEvents.OnSpinTriggered += slotMachineScreen.ShowSlot;
             GameEvents.OnPlayerConfirmedSpin += OnPlayerConfirmedSpin;
             GameEvents.OnPowerupSelected += OnPowerupSelected;
+            GameEvents.OnPlayerDeath += OnPlayerDeath;
         }
 
         private void OnDisable()
@@ -162,6 +166,7 @@ namespace Gameplay.UI
             GameEvents.OnSpinTriggered -= slotMachineScreen.ShowSlot;
             GameEvents.OnPlayerConfirmedSpin -= OnPlayerConfirmedSpin;
             GameEvents.OnPowerupSelected -= OnPowerupSelected;
+            GameEvents.OnPlayerDeath -= OnPlayerDeath;
         }
 
         // ───────── spin confirmed ─────────
@@ -176,6 +181,19 @@ namespace Gameplay.UI
         private void OnPowerupSelected(PowerupConfig config)
         {
             // Use config.displayName / config.icon / config.rarity for UI preview
+        }
+
+        private void OnPlayerDeath()
+        {
+            gameoverUI.SetActive(true);
+        }
+        
+        public void OnClickReturnToMenu()
+        {
+            Destroy(GameProgressManager.Instance.gameObject);
+            Destroy(XPManager.Instance.gameObject);
+            
+            SceneManager.LoadScene("MainMenu");
         }
     }
 }

@@ -26,7 +26,7 @@ public class CannonSpawner : MonoBehaviour
         var baseCannon = cannon.GetComponent<BaseCannon>();
         if (baseCannon != null)
         {
-            data.cannonStats.ApplyProgression(GameProgressManager.Instance.GlobalLevel);
+            //data.cannonStats.ApplyProgression(GameProgressManager.Instance.GlobalLevel);
             
             baseCannon.Configure(data.cannonStats, data.bulletPrefab);
             Debug.Log($"[CannonSpawner] Configured new BaseCannon: {data.cannonPrefab.name}");

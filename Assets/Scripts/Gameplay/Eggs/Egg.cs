@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using Gameplay.Interfaces;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -185,7 +186,18 @@ namespace Gameplay.Eggs
                 _rb.linearVelocity = velocity;
             }
         }
-
+        private  void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (collision.CompareTag("Player"))
+            {
+                // We don't take damage here because EggDamage script should be on the Egg
+                // and it calls TakeDamage(damage, hitPoint) on us.
+                // This method is just a fallback or for non-damageable trigger logic.
+                Debug.Log("Cannon entered Egg trigger");
+                collision.gameObject.TryGetComponent(out IDamageable damageable);
+                damageable?.TakeDamage(config.cannonDamage);
+            }
+        }
         public void ApplyBulletHitForce(Vector2 hitDirection, float hitForce)
         {
             if (_isDying) return;
