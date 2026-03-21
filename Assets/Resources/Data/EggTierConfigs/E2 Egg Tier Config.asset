@@ -13,19 +13,25 @@ MonoBehaviour:
   m_Name: E2 Egg Tier Config
   m_EditorClassIdentifier: 
   tierId: E2
-  baseHpMin: 20
-  baseHpMax: 60
+  baseHpMin: 10
+  baseHpMax: 15
   pressureValue: 2
-  scorePerHit: 10
-  scoreOnDestroy: 50
+  scorePerHit: 5
+  scoreOnDestroy: 10
+  spriteRenderer: {fileID: 0}
+  hitEffect: {fileID: 0}
+  destroyEffect: {fileID: 0}
+  hitSound: {fileID: 0}
+  destroySounds: []
   eggPrefab: {fileID: 1251663967950569254, guid: b7955bd3d2dc48c4bb45d83513a6a73f, type: 3}
   bounceVelocity: 11
   bounceIncrease: 1.5
   horizontalIncrease: 1.2
-  maxSpeed: 7
-  gravityScale: 0.5
-  mass: 4
+  maxSpeed: 5
+  gravityScale: 0.4
+  mass: 3
   linearDamping: 0
   splitForce: 4
   splitInto: {fileID: 11400000, guid: 94e21ff081ae30648b414361787f5d04, type: 2}
   splitCount: 2
+  cannonDamage: 5

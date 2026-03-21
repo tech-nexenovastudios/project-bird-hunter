@@ -15,7 +15,13 @@ namespace Gameplay.Player
         [SerializeField] protected ParticleSystem[] fireParticles;
         [SerializeField] protected Transform[] wheels;
         [SerializeField] protected float wheelRadius = 0.5f;
+        
 
+        [Header("Egg Hit VFX")]
+        [SerializeField] private ParticleSystem hitVFX;         // Drag your VFX child here
+        [SerializeField] private Transform hitVFXPosition;       // Drag an empty child Transform here
+        // positioned where you want the effect
+        [Header("Rest")]
         public int CurrentHp { get; private set; }
         public int MaxHp => CannonStats != null ? Mathf.RoundToInt(CannonStats.currentMaxHealth) : 100;
         public bool IsAlive => CurrentHp > 0;
@@ -326,15 +332,32 @@ namespace Gameplay.Player
 
             CurrentHp -= damage;
             CurrentHp = Mathf.Clamp(CurrentHp, 0, MaxHp);
-            
+
+            // ── Play hit VFX at the designated position ──
+            PlayHitVFX();
+
             UpdateUI();
-            
             GameEvents.FireCannonHit(damage);
 
             if (CurrentHp <= 0)
             {
                 Die();
             }
+        }
+
+        private void PlayHitVFX()
+        {
+            if (hitVFX == null) return;
+
+            // Move VFX to the hit position (if you assigned one)
+            if (hitVFXPosition != null)
+            {
+                hitVFX.transform.position = hitVFXPosition.position;
+            }
+
+            // Stop any currently playing instance so rapid hits restart cleanly
+            hitVFX.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            hitVFX.Play(true);
         }
 
         //protected virtual void UpdateUI()

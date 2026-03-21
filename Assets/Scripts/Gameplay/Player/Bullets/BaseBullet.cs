@@ -41,6 +41,10 @@ namespace Gameplay.Player
             releaseToPool = releaseAction;
         }
 
+        // In BaseBullet, add this virtual method (subclasses override it)
+        protected virtual void OnInitComplete() { }
+
+// Then modify Init() — add ONE line at the end:
         public void Init(CannonStats stats)
         {
             bulletSpeed = stats.currentBulletSpeed;
@@ -58,6 +62,8 @@ namespace Gameplay.Player
                 rb.linearVelocity = (Vector2)transform.up * bulletSpeed;
                 rb.angularVelocity = 0f;
             }
+
+            OnInitComplete();  // ← Add only this line
         }
 
         protected virtual void OnEnable()
@@ -182,6 +188,7 @@ namespace Gameplay.Player
                 if (tmp != null)
                 {
                     tmp.text  = $"-{amount:0}";
+                    tmp.fontSize = 8;
                     tmp.color = new Color(tmp.color.r, tmp.color.g, tmp.color.b, 1f);
                     go.transform.DOMoveY(position.y + 2f, 1f);
                     tmp.DOFade(0f, 1f).OnComplete(() =>

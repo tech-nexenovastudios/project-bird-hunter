@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: egg1
-  m_Shader: {fileID: -6465566751694194690, guid: 82737c777abb92f4e8bfd4c9c2418956, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 5a9905d8124c4be418c1f9ff6e56f8a9, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -27,8 +27,12 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _CrackMask:
+        m_Texture: {fileID: 2800000, guid: 4da9f4c6d92abdc4fa39f72c7d39bad5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 10912, guid: 0000000000000000f000000000000000, type: 0}
+        m_Texture: {fileID: 2800000, guid: 23140687b76c57140b1cf668d884c36e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskTex:
@@ -58,15 +62,20 @@ Material:
     m_Ints: []
     m_Floats:
     - _Crack: 0
+    - _DissolveAmount: 1.2
+    - _Edgewidth: 0
     - _ElectricShock: 0
     - _EnableExternalAlpha: 0
+    - _GlowStrength: 1
     - _HitEffect: 0
     - _ZWrite: 0
     m_Colors:
     - White: {r: 1, g: 1, b: 1, a: 1}
+    - _Basecolor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _CrackTilingAndOffset: {r: 0.4, g: 0.4, b: 0, a: 0}
     - _ElectricColor: {r: 0, g: 0.7330372, b: 1, a: 0}
+    - _Glowcolor: {r: 0, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

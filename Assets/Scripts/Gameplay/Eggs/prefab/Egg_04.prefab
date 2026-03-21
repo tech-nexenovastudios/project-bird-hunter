@@ -38,6 +38,8 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8035134874195891316}
+  - {fileID: 935567150769914758}
+  - {fileID: 4892082496443086485}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3925981863337499154
@@ -421,7 +423,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   config: {fileID: 11400000, guid: 94e21ff081ae30648b414361787f5d04, type: 2}
   mainCam: {fileID: 0}
+  minorHitVFXPrefab: {fileID: 1003475684366793137, guid: f88d00996742fab429d503d9d4aec2a8, type: 3}
+  blastVFXPrefab: {fileID: 761963168719914604, guid: 55d17c361fc373d488c9690aaa136e49, type: 3}
+  hitVFXPoint: {fileID: 935567150769914758}
+  blastVFXPoint: {fileID: 4892082496443086485}
   smokeParticle: {fileID: 2815520671769793254, guid: 23a256d34d4de1444b7c3353c2de03fb, type: 3}
+  hitScaleMultiplier: 1.1
+  hitPushUpForce: 2
+  hitScaleUpDuration: 0.08
+  hitScaleDownDuration: 0.12
+  deathScaleTarget: 0.1
+  deathScaleDuration: 0.1
 --- !u!114 &96112293446289958
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -463,6 +475,37 @@ SortingGroup:
   m_SortingOrder: 0
   m_SortAtRoot: 0
   m_Sort3DAs2D: 0
+--- !u!1 &3278563002229955920
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4892082496443086485}
+  m_Layer: 6
+  m_Name: blastFXspawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4892082496443086485
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3278563002229955920}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.49, y: -0.84, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4004106734786309899}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3522176344157975600
 GameObject:
   m_ObjectHideFlags: 0
@@ -497,7 +540,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.008, y: -0.036}
+  m_AnchoredPosition: {x: -0.35, y: -0.61}
   m_SizeDelta: {x: 32.9181, y: 36.1002}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &2365132064550331210
@@ -525,7 +568,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 299d1f63fd5a64ead9b1251ecec1d9cc, type: 2}
+  - {fileID: -7073165931134622185, guid: 424b1e9c4d6995645b700ddfe36abf7b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -644,3 +687,34 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 2365132064550331210}
   m_maskType: 0
+--- !u!1 &7301928206584485750
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 935567150769914758}
+  m_Layer: 6
+  m_Name: HitFXspawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &935567150769914758
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7301928206584485750}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.49, y: -3.76, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4004106734786309899}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

@@ -1,9 +1,6 @@
-using System;
 using DG.Tweening;
-using Gameplay.Player;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Gameplay.Player
 {
@@ -11,90 +8,102 @@ namespace Gameplay.Player
     {
         [SerializeField] private ParticleSystem muzzleFlash;
         [SerializeField] private Transform muzzleTransform;
-        
-        private Vector3 muzzleStartPosition;
+
         [SerializeField] private Vector3 muzzleEndPosition;
-        
+        [SerializeField] private Vector3 muzzleEndScale;
+
+        private Vector3 muzzleStartPosition;
         private Vector3 muzzleStartScale;
-        [SerializeField]private Vector3 muzzleEndScale;
-        private float muzzleStartY;
-        
         private Sequence muzzleSequence;
 
         protected override void Awake()
         {
+            base.Awake();  
+            // ↑ Call base FIRST — it sets up Rigidbody2D
+            //   Your original called base.Awake() last,
+            //   which is fine here but bad habit if base
+            //   ever initializes something you depend on
+
             muzzleStartPosition = muzzleTransform.localPosition;
             muzzleStartScale = muzzleTransform.localScale;
-            
-            muzzleStartY = muzzleTransform.localPosition.y;
-            
-            muzzleTransform.localPosition = muzzleStartPosition;
-            
-            muzzleTransform.localScale = muzzleStartScale;
-            
-            muzzleTransform.gameObject.SetActive(true);
-            muzzleFlash.gameObject.SetActive(false);
-            muzzleFlash.Stop();
-            muzzleFlash.Clear();
-            base.Awake();
+
+            // Keep the GameObject ACTIVE — just make sure particles aren't playing
+            muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            // ↑ Stop + Clear in one call
+            //   true = also stop children particle systems
+            //   StopEmittingAndClear = immediately invisible
         }
 
-        protected override void UpdateUI()
-        {
-            
-        }
         protected override void Shoot()
         {
+            // Kill any running sequence so rapid-firing doesn't
+            // stack tweens and leave the muzzle in a broken state
             muzzleSequence?.Kill();
-            muzzleSequence = null;
-            
+
+            // Reset to known state before starting new sequence
+            muzzleTransform.localPosition = muzzleStartPosition;
+            muzzleTransform.localScale = muzzleStartScale;
+
             muzzleSequence = DOTween.Sequence();
-            
-            muzzleSequence.AppendCallback(()=> muzzleFlash.Play());
-            muzzleSequence.Append(muzzleTransform.DOLocalMove(muzzleEndPosition, 0.1f).SetEase(Ease.OutSine));
-            muzzleSequence.AppendCallback(()=> muzzleTransform.localPosition = muzzleStartPosition);
-            muzzleSequence.AppendCallback(() => muzzleFlash.Stop());
-            muzzleSequence.AppendCallback(() => fireParticles[0].Play(true));
-            muzzleSequence.Append(muzzleTransform.DOScale(muzzleEndScale, 0.1f).SetEase(Ease.Flash));
-            muzzleSequence.AppendCallback(()=> muzzleTransform.localScale = muzzleStartScale );
-            muzzleSequence.AppendCallback(() => fireParticles[0].Stop(true));
-            
+
+            // ── Recoil phase (0.1s) ──
+            // Muzzle flash plays, barrel kicks back
+            muzzleSequence.AppendCallback(() =>
+            {
+                muzzleFlash.Play(true);
+            });
+            muzzleSequence.Append(
+                muzzleTransform
+                    .DOLocalMove(muzzleEndPosition, 0.1f)
+                    .SetEase(Ease.OutSine)
+            );
+
+            // ── Recovery phase (0.1s) ──
+            // Barrel returns, flash stops, scale punch plays
+            muzzleSequence.AppendCallback(() =>
+            {
+                muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            });
+            muzzleSequence.Append(
+                muzzleTransform
+                    .DOLocalMove(muzzleStartPosition, 0.1f)
+                    .SetEase(Ease.OutBack)
+            );
+            muzzleSequence.Append(
+                muzzleTransform
+                    .DOScale(muzzleEndScale, 0.05f)
+                    .SetEase(Ease.OutSine)
+            );
+            muzzleSequence.Append(
+                muzzleTransform
+                    .DOScale(muzzleStartScale, 0.05f)
+                    .SetEase(Ease.InSine)
+            );
+
+            // Ensure clean state if sequence gets killed mid-way
+            muzzleSequence.OnKill(() =>
+            {
+                muzzleTransform.localPosition = muzzleStartPosition;
+                muzzleTransform.localScale = muzzleStartScale;
+                muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            });
+
             muzzleSequence.Play();
-            
-            
-            // if (muzzleTransform != null)
-            // {
-            //     muzzleFlash.gameObject.SetActive(true);
-            //     
-            //     muzzleTransform.localRotation = Quaternion.identity;
-            //     muzzleTransform.localScale = Vector3.one;
-            //     
-            //     muzzleTransform.DOMoveY(-0.25f, 0.1f).SetEase(Ease.OutSine).OnComplete(() =>
-            //     {
-            //         muzzleTransform.DOMoveY(0, 0.1f).SetEase(Ease.OutSine);
-            //     });
-            //     
-            //     muzzleTransform.DOPunchScale(new Vector3(1, 1.1f, 1), 0.1f).SetEase(Ease.Flash).OnStart(() =>
-            //     {
-            //         
-            //         muzzleFlash.Play();
-            //     }).OnComplete(() =>
-            //     {
-            //         muzzleTransform.DOPunchScale(new Vector3(1, 1, 1), 0.1f).SetEase(Ease.Flash);
-            //         muzzleFlash.Stop();
-            //         muzzleFlash.gameObject.SetActive(false);
-            //     });
-            // }
-            
+
+            // base.Shoot() spawns bullets AND plays fireParticles
+            // So don't manually play fireParticles in the sequence — let base handle it
             base.Shoot();
         }
 
+        protected override void UpdateUI() { }
+
         private void OnDrawGizmos()
         {
+            if (wheels == null) return;
             foreach (var wheel in wheels)
             {
-                //Draw circle of wheel Radius
-                Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
+                if (wheel != null)
+                    Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
             }
         }
     }

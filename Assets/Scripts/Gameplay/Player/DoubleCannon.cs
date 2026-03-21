@@ -1,24 +1,30 @@
-using Gameplay.Player;
 using UnityEngine;
 
 namespace Gameplay.Player
 {
     public class DoubleCannon : BaseCannon
     {
+        [Header("Spread Settings")]
+        [SerializeField, Range(0f, 45f)] private float spreadAngle = 5f;
+        // ↑ Exposed in Inspector with a slider
+        //   Change it anytime without touching code
+        //   Works for 5°, 10°, 15° — whatever feels best during playtesting
+
         protected override void Shoot()
         {
-            // Shoot from two tips
             if (gunTips == null || gunTips.Length < 2)
             {
-                // Fallback if not properly configured in inspector
                 base.Shoot();
                 return;
             }
 
-            for (int i = 0; i < 2; i++)
-            {
-                SpawnBullet(gunTips[i].position, gunTips[i].rotation);
-            }
+            // Left tip → rotate negatively (spread left)
+            Quaternion leftRotation = gunTips[0].rotation * Quaternion.Euler(0f, 0f, spreadAngle);
+            SpawnBullet(gunTips[0].position, leftRotation);
+
+            // Right tip → rotate positively (spread right)
+            Quaternion rightRotation = gunTips[1].rotation * Quaternion.Euler(0f, 0f, -spreadAngle);
+            SpawnBullet(gunTips[1].position, rightRotation);
 
             if (fireParticles != null)
             {

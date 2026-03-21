@@ -1,17 +1,17 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Gameplay.Events;
-using Gameplay.Eggs;
 using Gameplay.Interfaces;
 using Gameplay.PowerUps;
 using UnityEngine;
 
 namespace Gameplay.Health
 {
-    [RequireComponent(typeof(Egg))]
+    [RequireComponent(typeof(Eggs.Egg))]
     public class EggHealth : MonoBehaviour, IDamageable, IDamageEffect
     {
-        [SerializeField] private EggTierConfig config;
+        [SerializeField] private Eggs.EggTierConfig config;
         private int _currentHp;
         private int _maxHp;
         private bool _isDead;
@@ -20,35 +20,35 @@ namespace Gameplay.Health
         private bool _isHitEffectRunning;
         private Coroutine _statusEffectCoroutine;
 
+        private Eggs.Egg _egg;
+
         public int CurrentHp => _currentHp;
         public int MaxHp => _maxHp;
         public bool IsAlive => !_isDead;
         private readonly List<IEffect<IDamageable>> activeEffects = new();
 
-        /// <summary>
-        /// Fired whenever HP changes: (oldHp, newHp).
-        /// </summary>
         public event Action<int, int> OnHpChanged;
 
         private void Awake()
         {
-            var egg = GetComponent<Egg>();
-            if (egg != null && egg.config != null)
-                config = egg.config;
+            _egg = GetComponent<Eggs.Egg>();
+
+            if (_egg != null && _egg.config != null)
+                config = _egg.config;
 
             var sr = GetComponent<SpriteRenderer>();
             if (sr != null)
                 _mat = sr.material;
         }
 
-        public void Init(EggTierConfig tierConfig, int hp)
+        public void Init(Eggs.EggTierConfig tierConfig, int hp)
         {
             config = tierConfig;
             _maxHp = hp;
             int oldHp = _currentHp;
             _currentHp = hp;
             _isDead = false;
-            
+
             if (_statusEffectCoroutine != null)
             {
                 StopCoroutine(_statusEffectCoroutine);
@@ -75,14 +75,17 @@ namespace Gameplay.Health
             GameEvents.FireEggHit(this, actualDamage, transform.position);
             OnHpChanged?.Invoke(oldHp, _currentHp);
 
-            Debug.Log($"[Gameplay] took {damage} damage. Health now {CurrentHp}");
-            
             if (_currentHp <= 0)
             {
                 Die();
             }
             else
             {
+                float healthPercent = (float)_currentHp / _maxHp;
+
+                if (_egg != null)
+                    _egg.PlayHitReaction(healthPercent);
+
                 StartHitEffect();
             }
         }
@@ -93,11 +96,23 @@ namespace Gameplay.Health
             _isDead    = true;
             _currentHp = 0;
 
+            if (_statusEffectCoroutine != null)
+            {
+                StopCoroutine(_statusEffectCoroutine);
+                _statusEffectCoroutine = null;
+            }
+
+            if (_mat != null)
+            {
+                _mat.SetFloat("_HitEffect", 0f);
+                _mat.SetInt("_ElectricShock", 0);
+            }
+
             int scoreAwarded = config != null ? config.scoreOnDestroy : 0;
             GameEvents.FireEggDestroyed(this, scoreAwarded, transform.position);
 
-            var egg = GetComponent<Egg>();
-            egg?.OnDestroyed?.Invoke(egg); // ← this already notifies SpawnController
+            if (_egg != null)
+                _egg.PlayDeathSequence();
         }
 
         private void StartHitEffect()
@@ -106,19 +121,19 @@ namespace Gameplay.Health
             StartCoroutine(PlayHitEffect());
         }
 
-        private System.Collections.IEnumerator PlayHitEffect()
+        private IEnumerator PlayHitEffect()
         {
             _isHitEffectRunning = true;
             float duration = 0.2f;
             float time = 0;
-            
+
             while (time < duration)
             {
                 _mat.SetFloat("_HitEffect", Mathf.Lerp(0, 1, time / duration));
                 time += Time.deltaTime;
                 yield return null;
             }
-            
+
             time = duration;
             while (time > 0)
             {
@@ -158,7 +173,7 @@ namespace Gameplay.Health
             StartCoroutine(FreezeRoutine(effectTime));
         }
 
-        private System.Collections.IEnumerator TickDamage(float damage, float duration, float interval)
+        private IEnumerator TickDamage(float damage, float duration, float interval)
         {
             float elapsed = 0;
             while (elapsed < duration && !_isDead)
@@ -167,11 +182,11 @@ namespace Gameplay.Health
                 TakeDamage(Mathf.RoundToInt(damage));
                 elapsed += interval;
             }
-            
+
             if (_mat != null) _mat.SetInt("_ElectricShock", 0);
         }
 
-        private System.Collections.IEnumerator FreezeRoutine(float duration)
+        private IEnumerator FreezeRoutine(float duration)
         {
             var rb = GetComponent<Rigidbody2D>();
             if (rb == null) yield break;
