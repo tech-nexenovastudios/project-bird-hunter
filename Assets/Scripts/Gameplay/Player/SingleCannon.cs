@@ -39,10 +39,10 @@ namespace Gameplay.Player
             base.Awake();
         }
 
-        protected override void UpdateUI()
-        {
+        //protected override void UpdateUI()
+        //{
             
-        }
+        //}
         protected override void Shoot()
         {
             muzzleSequence?.Kill();
@@ -94,7 +94,9 @@ namespace Gameplay.Player
             foreach (var wheel in wheels)
             {
                 //Draw circle of wheel Radius
+#if UNITY_EDITOR
                 Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
+#endif
             }
         }
     }

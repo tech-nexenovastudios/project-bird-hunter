@@ -135,14 +135,11 @@
 //    }
 //}
 
-
-
 using DG.Tweening;
 using Gameplay.Events;
 using Gameplay.Levels;
 using Gameplay.Managers;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -161,8 +158,13 @@ namespace Gameplay.UI
         [SerializeField] private TextMeshProUGUI levelPopupText;
 
         [Header("Level Progress Bar")]
-        [SerializeField] private Image progressBarFill;   // Image Type: Filled, Horizontal
-       // [SerializeField] private TextMeshProUGUI ScoreText; 
+        [SerializeField] private Image progressBarFill;
+
+        [Header("Progress Bar Icon")]
+       //[SerializeField] private Image progressBarIcon;
+        [SerializeField] private Image normalEggImage;
+        [SerializeField] private Image crackedEggImage;
+        private int[] bossLevels = { 10, 20 };
 
         private bool _isPaused = false;
         private int _targetScore = 0;
@@ -189,18 +191,31 @@ namespace Gameplay.UI
         {
             _targetScore = profile != null ? profile.targetScore : 0;
 
-            // Reset bar instantly to 0 on new level
             if (progressBarFill != null)
             {
                 progressBarFill.DOKill();
                 progressBarFill.fillAmount = 0f;
             }
 
-            //if (ScoreText != null)
-            //    ScoreText.text = $"0 / {_targetScore}";
-
+           // UpdateProgressBarIcon(levelIndex);
             ShowLevelPopup();
         }
+
+        // ───────── progress bar icon ─────────
+        //private void UpdateProgressBarIcon(int currentLevel)
+        //{
+        //    if (progressBarIcon == null) return;
+
+        //    bool isBossLevel = System.Array.IndexOf(bossLevels, currentLevel) >= 0;
+        //    Sprite targetSprite = isBossLevel ? crackedEggImage.sprite : normalEggImage.sprite;
+
+        //    progressBarIcon.DOKill();
+        //    progressBarIcon.sprite = targetSprite;
+        //    progressBarIcon.transform
+        //        .DOPunchScale(Vector3.one * 0.3f, 0.4f, 6, 0.5f)
+        //        .SetEase(Ease.OutBack)
+        //        .SetUpdate(true);
+        //}
 
         // ───────── score updated ─────────
         private void OnLevelScoreUpdated(int levelScore, int delta)
@@ -220,11 +235,6 @@ namespace Gameplay.UI
             progressBarFill
                 .DOFillAmount(fill, 0.3f)
                 .SetEase(Ease.OutCubic);
-
-            //if (progressScoreText != null)
-            //    progressScoreText.text = _targetScore > 0
-            //        ? $"{levelScore} / {_targetScore}"
-            //        : $"{levelScore}";
         }
 
         // ───────── level popup ─────────
@@ -239,7 +249,7 @@ namespace Gameplay.UI
             levelPopupText.alpha = 0f;
             levelPopupText.transform.localScale = Vector3.one * 0.5f;
 
-            DG.Tweening.Sequence popIn = DOTween.Sequence();
+            Sequence popIn = DOTween.Sequence();
             popIn.Append(levelPopupText.transform
                     .DOScale(1.2f, 0.2f).SetEase(Ease.OutBack));
             popIn.Join(levelPopupText
