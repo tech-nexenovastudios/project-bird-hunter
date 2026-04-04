@@ -74,7 +74,7 @@ namespace Gameplay.Health
 
             GameEvents.FireEggHit(this, actualDamage, transform.position);
             OnHpChanged?.Invoke(oldHp, _currentHp);
-
+            Debug.Log($"Egg took {actualDamage} damage, HP: {_currentHp}/{_maxHp}");
             if (_currentHp <= 0)
             {
                 Die();

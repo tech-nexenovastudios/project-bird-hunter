@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Gameplay.Interfaces;
 using Gameplay.PowerUps;
 using UnityEditor;
 using UnityEditorInternal;
@@ -9,62 +8,57 @@ using UnityEngine;
 [CustomPropertyDrawer(typeof(CannonPowerUp))]
 public class CannonPowerUpDrawer : PropertyDrawer
 {
-    private const float VerticalSpacing = 4f;
+    private const float Spacing = 4f;
+
+    private static readonly string[] SimpleFields = { "config", "castSfx", "castVfx", "runningVfx" };
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         EditorGUI.BeginProperty(position, label, property);
 
-        var castSfx = property.FindPropertyRelative("castSfx");
-        var castVfx = property.FindPropertyRelative("castVfx");
-        var runningVfx = property.FindPropertyRelative("runningVfx");
-        var effects = property.FindPropertyRelative("effects");
-
         var rect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-
         property.isExpanded = EditorGUI.Foldout(rect, property.isExpanded, label, true);
-        if (!property.isExpanded)
-        {
-            EditorGUI.EndProperty();
-            return;
-        }
+
+        if (!property.isExpanded) { EditorGUI.EndProperty(); return; }
 
         EditorGUI.indentLevel++;
+        rect.y += EditorGUIUtility.singleLineHeight + Spacing;
 
-        rect.y += EditorGUIUtility.singleLineHeight + VerticalSpacing;
+        foreach (string fieldName in SimpleFields)
+        {
+            var prop = property.FindPropertyRelative(fieldName);
+            if (prop != null) DrawProperty(ref rect, prop);
+        }
 
-        DrawProperty(ref rect, castSfx);
-        DrawProperty(ref rect, castVfx);
-        DrawProperty(ref rect, runningVfx);
-
-        var list = CreateList(effects);
-        rect.height = list.GetHeight();
-        list.DoList(rect);
+        var listProp = property.FindPropertyRelative("effects");
+        if (listProp != null)
+        {
+            var list = CreateList(listProp);
+            rect.height = list.GetHeight();
+            list.DoList(rect);
+            rect.y += rect.height + Spacing;
+        }
 
         EditorGUI.indentLevel--;
-
         EditorGUI.EndProperty();
     }
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        if (!property.isExpanded)
+        if (!property.isExpanded) return EditorGUIUtility.singleLineHeight;
+
+        float height = EditorGUIUtility.singleLineHeight + Spacing;
+
+        foreach (string fieldName in SimpleFields)
         {
-            return EditorGUIUtility.singleLineHeight;
+            var prop = property.FindPropertyRelative(fieldName);
+            if (prop != null)
+                height += EditorGUI.GetPropertyHeight(prop, true) + Spacing;
         }
 
-        var castSfx = property.FindPropertyRelative("castSfx");
-        var castVfx = property.FindPropertyRelative("castVfx");
-        var runningVfx = property.FindPropertyRelative("runningVfx");
-        var effects = property.FindPropertyRelative("effects");
-
-        float height = EditorGUIUtility.singleLineHeight + VerticalSpacing;
-        height += EditorGUI.GetPropertyHeight(castSfx, true) + VerticalSpacing;
-        height += EditorGUI.GetPropertyHeight(castVfx, true) + VerticalSpacing;
-        height += EditorGUI.GetPropertyHeight(runningVfx, true) + VerticalSpacing;
-
-        var list = CreateList(effects);
-        height += list.GetHeight();
+        var listProp = property.FindPropertyRelative("effects");
+        if (listProp != null)
+            height += CreateList(listProp).GetHeight() + Spacing;
 
         return height;
     }
@@ -73,125 +67,131 @@ public class CannonPowerUpDrawer : PropertyDrawer
     {
         rect.height = EditorGUI.GetPropertyHeight(property, true);
         EditorGUI.PropertyField(rect, property, true);
-        rect.y += rect.height + VerticalSpacing;
+        rect.y += rect.height + Spacing;
     }
 
-    private static ReorderableList CreateList(SerializedProperty effectsProperty)
+    private static ReorderableList CreateList(SerializedProperty listProp)
     {
-        var list = new ReorderableList(
-            effectsProperty.serializedObject,
-            effectsProperty,
-            true,
-            true,
-            true,
-            true);
+        var list = new ReorderableList(listProp.serializedObject, listProp, true, true, true, true);
 
         list.drawHeaderCallback = rect =>
-        {
-            EditorGUI.LabelField(rect, "Effects");
-        };
+            EditorGUI.LabelField(rect, "Effects", EditorStyles.boldLabel);
 
         list.elementHeightCallback = index =>
         {
-            if (index < 0 || index >= effectsProperty.arraySize)
-            {
+            if (index < 0 || index >= listProp.arraySize)
                 return EditorGUIUtility.singleLineHeight + 6f;
-            }
-
-            var element = effectsProperty.GetArrayElementAtIndex(index);
-            return EditorGUI.GetPropertyHeight(element, true) + 6f;
+            return EditorGUI.GetPropertyHeight(listProp.GetArrayElementAtIndex(index), true) + 6f;
         };
 
         list.drawElementCallback = (rect, index, isActive, isFocused) =>
         {
-            if (index < 0 || index >= effectsProperty.arraySize)
-            {
-                return;
-            }
-
-            var element = effectsProperty.GetArrayElementAtIndex(index);
-
+            if (index < 0 || index >= listProp.arraySize) return;
+            var element = listProp.GetArrayElementAtIndex(index);
             rect.y += 2f;
             rect.height = EditorGUI.GetPropertyHeight(element, true);
 
-            string itemLabel = GetManagedReferenceTypeName(element, index);
-            EditorGUI.PropertyField(rect, element, new GUIContent(itemLabel), true);
+            string typeName = GetTypeName(element, index);
+            string category = GetCategory(element);
+            string displayLabel = category.Length > 0 ? $"[{category}] {typeName}" : typeName;
+
+            EditorGUI.PropertyField(rect, element, new GUIContent(displayLabel), true);
         };
 
-        list.onAddDropdownCallback = (buttonRect, reorderableList) =>
-        {
-            ShowAddMenu(buttonRect, effectsProperty);
-        };
+        list.onAddDropdownCallback = (buttonRect, _) =>
+            ShowAddMenu(buttonRect, listProp);
 
         list.onRemoveCallback = reorderableList =>
         {
-            if (reorderableList.index < 0 || reorderableList.index >= effectsProperty.arraySize)
-            {
-                return;
-            }
-
-            effectsProperty.serializedObject.Update();
-            effectsProperty.DeleteArrayElementAtIndex(reorderableList.index);
-            effectsProperty.serializedObject.ApplyModifiedProperties();
+            if (reorderableList.index < 0 || reorderableList.index >= listProp.arraySize) return;
+            listProp.serializedObject.Update();
+            listProp.DeleteArrayElementAtIndex(reorderableList.index);
+            listProp.serializedObject.ApplyModifiedProperties();
         };
 
         return list;
     }
 
-    private static void ShowAddMenu(Rect buttonRect, SerializedProperty effectsProperty)
+    private static void ShowAddMenu(Rect buttonRect, SerializedProperty listProp)
     {
         var menu = new GenericMenu();
 
-        var effectTypes = TypeCache.GetTypesDerivedFrom<IEffect<IDamageable>>()
-            .Where(type => !type.IsAbstract && !type.IsInterface && type.IsSerializable)
-            .OrderBy(type => type.Name)
+        var types = TypeCache.GetTypesDerivedFrom<IPowerUpEffect>()
+            .Where(t => !t.IsAbstract && !t.IsInterface && t.IsSerializable)
+            .OrderBy(t => GetCategoryForType(t))
+            .ThenBy(t => t.Name)
             .ToArray();
 
-        if (effectTypes.Length == 0)
+        if (types.Length == 0)
         {
-            menu.AddDisabledItem(new GUIContent("No serializable effect types found"));
+            menu.AddDisabledItem(new GUIContent("No effect types found"));
             menu.DropDown(buttonRect);
             return;
         }
 
-        foreach (var type in effectTypes)
+        foreach (var type in types)
         {
-            menu.AddItem(new GUIContent(type.Name), false, () =>
+            string category = GetCategoryForType(type);
+            string path = $"{category}/{type.Name}";
+
+            menu.AddItem(new GUIContent(path), false, () =>
             {
-                effectsProperty.serializedObject.Update();
-
-                int index = effectsProperty.arraySize;
-                effectsProperty.InsertArrayElementAtIndex(index);
-
-                var element = effectsProperty.GetArrayElementAtIndex(index);
-                element.managedReferenceValue = Activator.CreateInstance(type);
-
-                effectsProperty.serializedObject.ApplyModifiedProperties();
+                listProp.serializedObject.Update();
+                int index = listProp.arraySize;
+                listProp.InsertArrayElementAtIndex(index);
+                listProp.GetArrayElementAtIndex(index).managedReferenceValue = Activator.CreateInstance(type);
+                listProp.serializedObject.ApplyModifiedProperties();
             });
         }
 
         menu.DropDown(buttonRect);
     }
 
-    private static string GetManagedReferenceTypeName(SerializedProperty property, int index)
+    private static string GetCategoryForType(Type type)
+    {
+        if (typeof(Gameplay.Interfaces.IEntity).IsAssignableFrom(type)) return "Enemy";
+
+        var interfaces = type.GetInterfaces();
+        foreach (var iface in interfaces)
+        {
+            if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IEffect<>))
+                return "Enemy";
+        }
+
+        if (typeof(ICannonModifier).IsAssignableFrom(type)) return "Cannon";
+        if (typeof(IProjectileModifier).IsAssignableFrom(type)) return "Projectile";
+        if (typeof(IReactiveEffect).IsAssignableFrom(type)) return "Reactive";
+        if (typeof(ISummonEffect).IsAssignableFrom(type)) return "Summon";
+        return "Other";
+    }
+
+    private static string GetCategory(SerializedProperty property)
+    {
+        if (string.IsNullOrEmpty(property.managedReferenceFullTypename)) return "";
+
+        string fullName = property.managedReferenceFullTypename;
+        int lastSpace = fullName.LastIndexOf(' ');
+        string qualifiedName = lastSpace >= 0 ? fullName[(lastSpace + 1)..] : fullName;
+
+        Type type = null;
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            type = asm.GetType(qualifiedName);
+            if (type != null) break;
+        }
+
+        return type != null ? GetCategoryForType(type) : "";
+    }
+
+    private static string GetTypeName(SerializedProperty property, int index)
     {
         if (string.IsNullOrEmpty(property.managedReferenceFullTypename))
-        {
-            return $"Effect {index}";
-        }
+            return $"Element {index}";
 
-        string fullTypeName = property.managedReferenceFullTypename;
-        int lastSpace = fullTypeName.LastIndexOf(' ');
-        string typeName = lastSpace >= 0
-            ? fullTypeName[(lastSpace + 1)..]
-            : fullTypeName;
-
-        int lastDot = typeName.LastIndexOf('.');
-        if (lastDot >= 0)
-        {
-            typeName = typeName[(lastDot + 1)..];
-        }
-
-        return typeName;
+        string full = property.managedReferenceFullTypename;
+        int lastSpace = full.LastIndexOf(' ');
+        string name = lastSpace >= 0 ? full[(lastSpace + 1)..] : full;
+        int lastDot = name.LastIndexOf('.');
+        return lastDot >= 0 ? name[(lastDot + 1)..] : name;
     }
 }

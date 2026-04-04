@@ -1,111 +1,138 @@
 using DG.Tweening;
-using UnityEditor;
+using Gameplay.VFX;
 using UnityEngine;
 
 namespace Gameplay.Player
 {
     public class SingleCannon : BaseCannon
     {
-        [SerializeField] private ParticleSystem muzzleFlash;
-        [SerializeField] private Transform muzzleTransform;
+        [Header("Muzzle Flash")]
+        [SerializeField] private GameObject muzzleFlashPrefab;
+        [SerializeField] private Transform muzzleFlashPoint;
 
+        [Header("Muzzle Recoil")]
+        [SerializeField] private Transform muzzleTransform;
         [SerializeField] private Vector3 muzzleEndPosition;
         [SerializeField] private Vector3 muzzleEndScale;
+
+        [Header("Hit VFX")]
+        [SerializeField] private GameObject hitVFXPrefab;
+        [SerializeField] private Transform hitVFXPoint;
+
+        [Header("Death VFX")]
+        [SerializeField] private GameObject deathVFXPrefab;
+        [SerializeField] private Transform deathVFXPoint;
+
+        [Header("Power-Up VFX")]
+        [SerializeField] private GameObject healVFXPrefab;
+        [SerializeField] private GameObject shieldAbsorbVFXPrefab;
+        [SerializeField] private GameObject reviveVFXPrefab;
 
         private Vector3 muzzleStartPosition;
         private Vector3 muzzleStartScale;
         private Sequence muzzleSequence;
+        private ParticleSystem _currentFlash;
 
         protected override void Awake()
         {
-            base.Awake();  
-            // ↑ Call base FIRST — it sets up Rigidbody2D
-            //   Your original called base.Awake() last,
-            //   which is fine here but bad habit if base
-            //   ever initializes something you depend on
-
-            muzzleStartPosition = muzzleTransform.localPosition;
-            muzzleStartScale = muzzleTransform.localScale;
-
-            // Keep the GameObject ACTIVE — just make sure particles aren't playing
-            muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            // ↑ Stop + Clear in one call
-            //   true = also stop children particle systems
-            //   StopEmittingAndClear = immediately invisible
+            base.Awake();
+            if (muzzleTransform != null)
+            {
+                muzzleStartPosition = muzzleTransform.localPosition;
+                muzzleStartScale = muzzleTransform.localScale;
+            }
+            
         }
-        
+
         protected override void Shoot()
         {
-            // Kill any running sequence so rapid-firing doesn't
-            // stack tweens and leave the muzzle in a broken state
             muzzleSequence?.Kill();
 
-            // Reset to known state before starting new sequence
-            muzzleTransform.localPosition = muzzleStartPosition;
-            muzzleTransform.localScale = muzzleStartScale;
-
-            muzzleSequence = DOTween.Sequence();
-
-            // ── Recoil phase (0.1s) ──
-            // Muzzle flash plays, barrel kicks back
-            muzzleSequence.AppendCallback(() =>
-            {
-                muzzleFlash.Play(true);
-            });
-            muzzleSequence.Append(
-                muzzleTransform
-                    .DOLocalMove(muzzleEndPosition, 0.1f)
-                    .SetEase(Ease.OutSine)
-            );
-
-            // ── Recovery phase (0.1s) ──
-            // Barrel returns, flash stops, scale punch plays
-            muzzleSequence.AppendCallback(() =>
-            {
-                muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            });
-            muzzleSequence.Append(
-                muzzleTransform
-                    .DOLocalMove(muzzleStartPosition, 0.1f)
-                    .SetEase(Ease.OutBack)
-            );
-            muzzleSequence.Append(
-                muzzleTransform
-                    .DOScale(muzzleEndScale, 0.05f)
-                    .SetEase(Ease.OutSine)
-            );
-            muzzleSequence.Append(
-                muzzleTransform
-                    .DOScale(muzzleStartScale, 0.05f)
-                    .SetEase(Ease.InSine)
-            );
-
-            // Ensure clean state if sequence gets killed mid-way
-            muzzleSequence.OnKill(() =>
+            if (muzzleTransform != null)
             {
                 muzzleTransform.localPosition = muzzleStartPosition;
                 muzzleTransform.localScale = muzzleStartScale;
-                muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            muzzleSequence = DOTween.Sequence();
+
+            muzzleSequence.AppendCallback(() =>
+            {
+                if (muzzleFlashPrefab != null && muzzleFlashPoint != null)
+                    _currentFlash = VFXPoolManager.Instance.PlayAttached(muzzleFlashPrefab, muzzleFlashPoint);
+            });
+
+            if (muzzleTransform != null)
+                muzzleSequence.Append(muzzleTransform.DOLocalMove(muzzleEndPosition, 0.1f).SetEase(Ease.OutSine));
+
+            muzzleSequence.AppendCallback(() =>
+            {
+                if (_currentFlash != null && muzzleFlashPrefab != null)
+                {
+                    VFXPoolManager.Instance.StopAndReturn(muzzleFlashPrefab, _currentFlash);
+                    _currentFlash = null;
+                }
+            });
+
+            if (muzzleTransform != null)
+            {
+                muzzleSequence.Append(muzzleTransform.DOLocalMove(muzzleStartPosition, 0.1f).SetEase(Ease.OutBack));
+                muzzleSequence.Append(muzzleTransform.DOScale(muzzleEndScale, 0.05f).SetEase(Ease.OutSine));
+                muzzleSequence.Append(muzzleTransform.DOScale(muzzleStartScale, 0.05f).SetEase(Ease.InSine));
+            }
+
+            muzzleSequence.OnKill(() =>
+            {
+                if (muzzleTransform != null)
+                {
+                    muzzleTransform.localPosition = muzzleStartPosition;
+                    muzzleTransform.localScale = muzzleStartScale;
+                }
+                if (_currentFlash != null && muzzleFlashPrefab != null)
+                {
+                    VFXPoolManager.Instance.StopAndReturn(muzzleFlashPrefab, _currentFlash);
+                    _currentFlash = null;
+                }
             });
 
             muzzleSequence.Play();
-
-            // base.Shoot() spawns bullets AND plays fireParticles
-            // So don't manually play fireParticles in the sequence — let base handle it
             base.Shoot();
+           
         }
-        private void OnDrawGizmos()
+
+        protected override void OnShootVFX() { }
+
+        protected override void OnDamageTakenVFX(int damage)
         {
-            if (wheels == null) return;
-            foreach (var wheel in wheels)
-            {
-                if (wheel != null)
-                {
-#if UNITY_EDITOR
-                    Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
-#endif
-                }
-            }
+            if (hitVFXPrefab != null && hitVFXPoint != null)
+                VFXPoolManager.Instance.Play(hitVFXPrefab, hitVFXPoint.position);
+        }
+
+        protected override void OnDeathVFX()
+        {
+            if (deathVFXPrefab == null) return;
+            Vector3 pos = deathVFXPoint != null ? deathVFXPoint.position : transform.position;
+            VFXPoolManager.Instance.Play(deathVFXPrefab, pos);
+        }
+
+        protected override void OnHealVFX(int amount)
+        {
+            Vector3 spawnPos = transform.position;
+            spawnPos.y = -3.75f;
+            if (healVFXPrefab != null)
+                VFXPoolManager.Instance.Play(healVFXPrefab, spawnPos);
+        }
+
+        protected override void OnShieldAbsorbVFX()
+        {
+            if (shieldAbsorbVFXPrefab != null)
+                VFXPoolManager.Instance.Play(shieldAbsorbVFXPrefab, transform.position);
+        }
+
+        protected override void OnReviveVFX()
+        {
+            if (reviveVFXPrefab != null)
+                VFXPoolManager.Instance.Play(reviveVFXPrefab, transform.position);
         }
     }
 }

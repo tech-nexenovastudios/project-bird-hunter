@@ -1,0 +1,349 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4004106543655240848
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1878391078587338851}
+  - component: {fileID: 6941769183845318933}
+  m_Layer: 0
+  m_Name: PowerUpDebugger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1878391078587338851
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4004106543655240848}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.13004, y: 0.12709, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6941769183845318933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4004106543655240848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 543d71cb38cba3a488ecf2d2e17a33b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.PowerUps.Debug.PowerUpDebugTester
+  testPowerUps:
+  - config: {fileID: 11400000, guid: 80dcc16ffd3f7114ba8572ce4ae8c943, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 6247126491472812468, guid: 5ed085b2839f23641b6deb8cb4e9e511, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558306990
+  - config: {fileID: 11400000, guid: 0e6cc0f2d88fb3741a38c4f953ae546e, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 6247126491472812468, guid: 5ed085b2839f23641b6deb8cb4e9e511, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558306997
+  - config: {fileID: 11400000, guid: 9b38d381a6e7b464a969c9a307132e81, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 6247126491472812468, guid: 5ed085b2839f23641b6deb8cb4e9e511, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558306997
+  - config: {fileID: 11400000, guid: a56dd120d7e73a744bd581f9612da150, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 6247126491472812468, guid: 5ed085b2839f23641b6deb8cb4e9e511, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307000
+  - config: {fileID: 11400000, guid: db0ceb9dc475c47429113f1169af3938, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 6247126491472812468, guid: 5ed085b2839f23641b6deb8cb4e9e511, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307003
+  - config: {fileID: 11400000, guid: acf89800014271c4c8f42d15ca4d5708, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 6247126491472812468, guid: 5ed085b2839f23641b6deb8cb4e9e511, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307004
+  - config: {fileID: 11400000, guid: 5d3b15f4ccc3518439ec61a0f42916ac, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307005
+  - config: {fileID: 11400000, guid: 62fa9e6aee2e9384694c5d85a16ba94e, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307007
+  - config: {fileID: 11400000, guid: 1dc07979121e1584dbec23d2448cd85e, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307008
+  - config: {fileID: 11400000, guid: 8eef448fa5f7fee438f624a095046637, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307009
+  - config: {fileID: 11400000, guid: 7bf1af38f256c89439aec4ad8c7d25e9, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307011
+  - config: {fileID: 11400000, guid: 6218d96b82e1ab642b4444b2b51c97b1, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307012
+  - config: {fileID: 11400000, guid: 1d45efd499da4504a80c0e04d19b3038, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307012
+  - config: {fileID: 11400000, guid: 4d1711643d353254d91e412f6ca522d7, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307188
+  - config: {fileID: 11400000, guid: a0e6643d5b96deb48ac11f4e3156fda5, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307189
+  - config: {fileID: 11400000, guid: 4994c2a4c6133b84b971623abc961954, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307190
+  - config: {fileID: 11400000, guid: 1dd00d1833219954ba8d9cec14506652, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307192
+  - config: {fileID: 11400000, guid: 0c2ba33ad5fdbaa4195a36dc810472b7, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307193
+  - config: {fileID: 11400000, guid: 420a20d2df90e2c41b8cbcc2e09d6252, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307195
+  - config: {fileID: 11400000, guid: de66140e9bb10264ca1e7f7f0cb4ad18, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307196
+  - config: {fileID: 11400000, guid: 566055c84a4994443bc2b160d24951e8, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307197
+  - config: {fileID: 11400000, guid: ef74dee78b096a14ab3a0d5e5b581490, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307198
+  - config: {fileID: 11400000, guid: ef74dee78b096a14ab3a0d5e5b581490, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects:
+    - rid: 1861421009558307199
+  - config: {fileID: 11400000, guid: fe6e966ce9d611340815d2614e4d1b2a, type: 2}
+    castSfx: {fileID: 0}
+    castVfx: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+    runningVfx: {fileID: 0}
+    effects: []
+  toggleKey: 32
+  startOpen: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1861421009558306990
+      type: {class: BladeStrikeEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        strikePrefab: {fileID: 6558925124617225918, guid: f890c6f8a6108ea4b804e6e63c1884fe, type: 3}
+        strikeInterval: 2
+        strikeLifetime: 0.5
+    - rid: 1861421009558306997
+      type: {class: BulletElementModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        effectTemplate:
+          rid: -2
+        overrideDamage: 1
+        damageOverride: 30
+        elementVfxPrefab: {fileID: 4135085659552123607, guid: f6ddc0f41cb4d7b49ae7a4742da195cb, type: 3}
+    - rid: 1861421009558307000
+      type: {class: CannonStatModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        stat: 1
+        value: 20
+        duration: 0
+        healCooldown: 20
+        invincibleCooldown: 30
+    - rid: 1861421009558307003
+      type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        mode: 0
+        value: 1
+        rocketPrefab: {fileID: 0}
+        rocketSpeeed: 10
+        rocketInterval: 4
+        intervalVariance: 1
+    - rid: 1861421009558307004
+      type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        mode: 2
+        value: 30
+        rocketPrefab: {fileID: 0}
+        rocketSpeeed: 10
+        rocketInterval: 4
+        intervalVariance: 1
+    - rid: 1861421009558307005
+      type: {class: CannonStatModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        stat: 0
+        value: 30
+        duration: 0
+        healCooldown: 20
+        invincibleCooldown: 30
+    - rid: 1861421009558307007
+      type: {class: CannonStatModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        stat: 1
+        value: 15
+        duration: 0
+        healCooldown: 0
+        invincibleCooldown: 30
+    - rid: 1861421009558307008
+      type: {class: LowHpAttackBoostModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        hpThreshold: 0.5
+        percentBonus: 0.5
+    - rid: 1861421009558307009
+      type: {class: CannonStatModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        stat: 3
+        value: 1
+        duration: 30
+        healCooldown: 20
+        invincibleCooldown: 30
+    - rid: 1861421009558307011
+      type: {class: LaserEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        fireDuration: 20
+        cooldown: 20
+        damagePerSecond: 20
+        maxBeamLength: 50
+        beamWidth: 0.2
+    - rid: 1861421009558307012
+      type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        mode: 1
+        value: 0.5
+        rocketPrefab: {fileID: 0}
+        rocketSpeeed: 10
+        rocketInterval: 4
+        intervalVariance: 1
+    - rid: 1861421009558307188
+      type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        mode: 4
+        value: 4
+        rocketPrefab: {fileID: 6354247109572606826, guid: c4d0e1374de823f45a2c373f06d0f863, type: 3}
+        rocketSpeeed: 10
+        rocketInterval: 3
+        intervalVariance: 0.1
+    - rid: 1861421009558307189
+      type: {class: FlameTrailEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        firePatchPrefab: {fileID: 938087872314129887, guid: e31962cc4d9d52b44a9acad2cde53c1e, type: 3}
+        patchLifetime: 6
+        dropInterval: 0.3
+        minMoveDistance: 0.01
+    - rid: 1861421009558307190
+      type: {class: RetaliationEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        attackBoostPercent: 200
+        boostDuration: 5
+    - rid: 1861421009558307192
+      type: {class: PreBossHealModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        healPercent: 50
+    - rid: 1861421009558307193
+      type: {class: LifeStealEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        healPercent: 50
+        procChance: 50
+    - rid: 1861421009558307195
+      type: {class: CannonStatModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        stat: 7
+        value: 0.5
+        duration: 0
+        healCooldown: 0
+        invincibleCooldown: 0
+    - rid: 1861421009558307196
+      type: {class: CannonStatModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        stat: 4
+        value: 0.6
+        duration: 0
+        healCooldown: 0
+        invincibleCooldown: 0
+    - rid: 1861421009558307197
+      type: {class: GroundSpikeEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        spikePrefab: {fileID: 998505748421400717, guid: ad266eb5bd0720a49a12541ee7b62c26, type: 3}
+        damagePercent: 50
+        groundCoverPercent: 0.25
+        spikeSpacing: 0.1
+        groundY: -3.7
+    - rid: 1861421009558307198
+      type: {class: ShadowTurretEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        spawnOffset: {x: 0.44, y: -0.05, z: 0}
+        damagePercent: 50
+        scaleMultiplier: 0.8
+        followSpeed: 5
+    - rid: 1861421009558307199
+      type: {class: StationaryDamageRampEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        stayTime: 3
+        attackBoostPercent: 0.5

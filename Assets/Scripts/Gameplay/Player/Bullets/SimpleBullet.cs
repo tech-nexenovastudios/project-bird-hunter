@@ -32,7 +32,7 @@ namespace Gameplay.Player
         }
 
         protected override void HandleMovement()
-        {
+        {  
             // Pure movement — never touch the trail here
             transform.position += transform.up * bulletSpeed * Time.deltaTime;
         }
@@ -49,9 +49,6 @@ namespace Gameplay.Player
             base.Deactivate();
         }
 
-        protected override void ApplyElementalEffects(GameObject target)
-        {
-            // Simple bullet — no elemental effects
-        }
+      
     }
 }

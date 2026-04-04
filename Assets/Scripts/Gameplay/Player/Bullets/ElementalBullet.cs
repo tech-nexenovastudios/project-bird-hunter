@@ -17,26 +17,26 @@ namespace Gameplay.Player
             //
         }
 
-        protected override void ApplyElementalEffects(GameObject target)
-        {
-            if (target.TryGetComponent<IDamageEffect>(out var damageEffect))
-            {
-                switch (element)
-                {
-                    case ElementType.Fire:
-                        damageEffect.igniteDamage(damage, effectDuration);
-                        break;
-                    case ElementType.Electric:
-                        damageEffect.ElectricDamage(damage, effectDuration);
-                        break;
-                    case ElementType.Poison:
-                        damageEffect.PoisonDamage(damage, effectDuration);
-                        break;
-                    case ElementType.Ice:
-                        damageEffect.FreezeEffect(effectDuration);
-                        break;
-                }
-            }
-        }
+        //protected override void ApplyElementalEffects(GameObject target)
+        //{
+        //    if (target.TryGetComponent<IDamageEffect>(out var damageEffect))
+        //    {
+        //        switch (element)
+        //        {
+        //            case ElementType.Fire:
+        //                damageEffect.igniteDamage(damage, effectDuration);
+        //                break;
+        //            case ElementType.Electric:
+        //                damageEffect.ElectricDamage(damage, effectDuration);
+        //                break;
+        //            case ElementType.Poison:
+        //                damageEffect.PoisonDamage(damage, effectDuration);
+        //                break;
+        //            case ElementType.Ice:
+        //                damageEffect.FreezeEffect(effectDuration);
+        //                break;
+        //        }
+        //    }
+        //}
     }
 }

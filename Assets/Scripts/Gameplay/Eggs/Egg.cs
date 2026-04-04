@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Gameplay.Interfaces;
+using Gameplay.PowerUps;
+using System;
 using System.Collections;
-using Gameplay.Interfaces;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -474,5 +475,20 @@ namespace Gameplay.Eggs
             if (smokeParticle == null) return;
             Destroy(Instantiate(smokeParticle, position, Quaternion.identity), 3f);
         }
+
+
+        //public void ApplyEffect(IEffect<IDamageable> effect)
+        //{
+        //    if (CurrentHp <= 0) return; // Dead enemies should't receive effects
+
+        //    effect.OnCompleted += RemoveEffect;
+        //    activeEffects.Add(effect);
+        //    effect.Apply(this);
+        //}
+        //void RemoveEffect(IEffect<IDamageable> effect)
+        //{
+        //    effect.OnCompleted -= RemoveEffect;
+        //    activeEffects.Remove(effect);
+        //}
     }
 }

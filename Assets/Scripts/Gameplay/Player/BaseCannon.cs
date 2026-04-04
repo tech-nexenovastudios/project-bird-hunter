@@ -1,34 +1,75 @@
-using Gameplay.Eggs;
+using System.Collections.Generic;
 using Gameplay.Events;
 using Gameplay.Interfaces;
-using TMPro;
+using Gameplay.PowerUps;
 using UnityEngine;
 using UnityEngine.Pool;
-using UnityEngine.UI;
 
 namespace Gameplay.Player
 {
-    public abstract class BaseCannon : MonoBehaviour, IDamageable, IDamageEffect
+    public abstract class BaseCannon : MonoBehaviour, ICannon
     {
         [Header("References")]
         [SerializeField] protected Transform[] gunTips;
-        [SerializeField] protected ParticleSystem[] fireParticles;
         [SerializeField] protected Transform[] wheels;
         [SerializeField] protected float wheelRadius = 0.5f;
-        
 
-        [Header("Egg Hit VFX")]
-        [SerializeField] private ParticleSystem hitVFX;         // Drag your VFX child here
-        [SerializeField] private Transform hitVFXPosition;       // Drag an empty child Transform here
-        // positioned where you want the effect
-        [Header("Rest")]
+        // ── Health ───────────────────────────────────────────
         public int CurrentHp { get; private set; }
-        public int MaxHp => CannonStats != null ? Mathf.RoundToInt(CannonStats.currentMaxHealth) : 100;
+
+        private int maxHpBonus;
+        public int MaxHp
+        {
+            get
+            {
+                int baseMax = CannonStats != null ? Mathf.RoundToInt(CannonStats.currentMaxHealth) : 100;
+                return baseMax + maxHpBonus;
+            }
+        }
+
         public bool IsAlive => CurrentHp > 0;
-
         public bool IsFiring { get; private set; } = true;
+        public bool SuppressBullets { get; set; }
 
+        // ── Attack modifiers ─────────────────────────────────
+        public int BaseAttack => CannonStats != null
+            ? Mathf.RoundToInt(CannonStats.currentBulletDamage) : 1;
+
+        private float flatAttackBonus;
+        private float percentAttackBonus;
+
+        public int CurrentAttack
+        {
+            get
+            {
+                float modified = (BaseAttack + flatAttackBonus) * (1f + percentAttackBonus);
+                return Mathf.Max(1, Mathf.RoundToInt(modified));
+            }
+        }
+
+        // ── Defensive properties ─────────────────────────────
+        public bool IsInvincible { get; set; }
+        private Vector3 originalLocalScale;  // originalBoxSize(cannon)
+        private float originalWheelRadius ;
+        private float hitboxScale = 1f;
+        public float HitboxScale
+        {
+            get => hitboxScale;
+            set
+            {
+                hitboxScale = Mathf.Clamp(value, 0.1f, 2f);
+                ApplyHitboxScale();
+            }
+        }
+
+        public int ShieldHits { get; set; }
+        public bool HasRevive { get; set; }
+        public float ReviveHealthPercent { get; set; }
+        public Transform Transform => transform;
+
+        // ── Stats & Prefab ───────────────────────────────────
         public CannonStats CannonStats { get; private set; }
+        public float ManaFillRateBonus { get; set; }
         public GameObject BulletPrefab { get; set; }
 
         protected Rigidbody2D rb;
@@ -39,6 +80,25 @@ namespace Gameplay.Player
         private Camera mainCam;
         private float halfWidth;
 
+        private Collider2D cannonCollider;
+        private Vector2 originalBoxSize;
+        private float originalCircleRadius;
+
+        private readonly List<IProjectileModifier> activeProjectileMods = new();
+
+        // ── VFX hooks ────────────────────────────────────────
+        protected virtual void OnShootVFX() { }
+        protected virtual void OnDamageTakenVFX(int damage) { }
+        protected virtual void OnDeathVFX() { }
+        protected virtual void OnHealthChanged(int currentHp, int maxHp) { }
+        protected virtual void OnHealVFX(int amount) { }
+        protected virtual void OnShieldAbsorbVFX() { }
+        protected virtual void OnReviveVFX() { }
+
+        // ════════════════════════════════════════════════════════
+        //  LIFECYCLE
+        // ════════════════════════════════════════════════════════
+
         protected virtual void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
@@ -48,108 +108,54 @@ namespace Gameplay.Player
 
             mainCam = Camera.main;
 
-            var col = GetComponent<Collider2D>();
-            halfWidth = col.bounds.extents.x;
+            cannonCollider = GetComponent<Collider2D>();
+            halfWidth = cannonCollider != null ? cannonCollider.bounds.extents.x : 0.5f;
+
+            if (cannonCollider is BoxCollider2D box)
+                originalBoxSize = box.size;
+            else if (cannonCollider is CircleCollider2D circle)
+                originalCircleRadius = circle.radius;
+            originalLocalScale = transform.localScale;
+            originalWheelRadius = wheelRadius;
         }
-
-        //public virtual void Configure(CannonStats stats, LevelReferences references, GameObject bulletPrefab)
-        //{
-        //    CannonStats = stats;
-        //    BulletPrefab = bulletPrefab;
-
-        //    CannonStats.InitRuntime();
-        //    CurrentHp = MaxHp;
-
-        //    var (bar, text) = references.GetCannonHealth();
-
-        //    var (left, right) = references.GetWall();
-        //    leftWall = left;
-        //    rightWall = right;
 
         public virtual void Configure(CannonStats stats, GameObject bulletPrefab)
         {
+            ManaFillRateBonus = 0f;
             CannonStats = stats;
             BulletPrefab = bulletPrefab;
             CannonStats.InitRuntime();
+
+            flatAttackBonus = 0f;
+            percentAttackBonus = 0f;
+            maxHpBonus = 0;
+            IsInvincible = false;
+            hitboxScale = 1f;
+            transform.localScale = originalLocalScale;
+            wheelRadius = originalWheelRadius;
+            ShieldHits = 0;
+            HasRevive = false;
+            ReviveHealthPercent = 0f;
+
             CurrentHp = MaxHp;
 
             if (BulletPrefab != null && BulletPrefab.GetComponent<BaseBullet>() != null)
             {
                 bulletPool = new ObjectPool<BaseBullet>(
-                    CreateProjectile,
-                    OnGetFromPool,
-                    OnReleaseToPool,
-                    OnDestroyPooledObject,
-                    collectionCheck: true,
-                    defaultCapacity: 10,
-                    maxSize: 20);
+                    CreateProjectile, OnGetFromPool, OnReleaseToPool, OnDestroyPooledObject,
+                    collectionCheck: true, defaultCapacity: 10, maxSize: 20);
             }
             else
             {
                 bulletPool = null;
             }
+
             GameEvents.FireCannonStatsUpdated(CannonStats);
-
             GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp);
-
             GameEvents.OnPlayerLevelUp += OnLevelUp;
         }
 
-        private void OnDestroyPooledObject(BaseBullet obj)
-        {
-            if (obj != null)
-            {
-                Destroy(obj.gameObject);
-            }
-        }
-
-        private void OnReleaseToPool(BaseBullet obj)
-        {
-            if (obj == null) return;
-
-            var bulletTransform = obj.transform;
-            bulletTransform.SetParent(null);
-
-            if (obj.TryGetComponent<Rigidbody2D>(out var bulletRb))
-            {
-                bulletRb.linearVelocity = Vector2.zero;
-                bulletRb.angularVelocity = 0f;
-            }
-
-            obj.gameObject.SetActive(false);
-        }
-
-        private void OnGetFromPool(BaseBullet obj)
-        {
-            if (obj == null) return;
-
-            obj.gameObject.SetActive(true);
-        }
-
-        private BaseBullet CreateProjectile()
-        {
-            GameObject go = Instantiate(BulletPrefab);
-            BaseBullet bullet = go.GetComponent<BaseBullet>();
-
-            bullet.SetReleaseAction(ReleaseBulletToPool);
-            go.SetActive(false);
-
-            return bullet;
-        }
-
-        private void ReleaseBulletToPool(BaseBullet bullet)
-        {
-            if (bulletPool != null)
-            {
-                bulletPool.Release(bullet);
-            }
-            else if (bullet != null)
-            {
-                Destroy(bullet.gameObject);
-            }
-        }
-
-        private void OnDestroy()
+        protected virtual void OnDestroy()
         {
             GameEvents.OnPlayerLevelUp -= OnLevelUp;
         }
@@ -165,33 +171,147 @@ namespace Gameplay.Player
             HandleMovement();
         }
 
-        private void OnLevelUp(int newLevel)
+        // ════════════════════════════════════════════════════════
+        //  ICannon — ATTACK MODIFIERS
+        // ════════════════════════════════════════════════════════
+
+        public void AddAttackModifier(float flatBonus, float percentBonus)
         {
-            if (CannonStats != null)
-            {
-                CannonStats.ApplyProgression(newLevel);
-                // Optionally heal on level up or just update max HP
-                // CurrentHp = MaxHp; 
-                //UpdateUI();
-            }
+            flatAttackBonus += flatBonus;
+            percentAttackBonus += percentBonus/100;
+            Debug.Log($"Damage per bullet increased by - {percentBonus} % ");
         }
+
+        public void RemoveAttackModifier(float flatBonus, float percentBonus)
+        {
+            flatAttackBonus -= flatBonus;
+            percentAttackBonus -= percentBonus/100;
+        }
+
+        public void IncreaseMaxHp(int amount)
+        {
+            if (amount <= 0) return;
+            maxHpBonus += amount;
+            CurrentHp += amount;
+            OnHealthChanged(CurrentHp, MaxHp);
+            GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp);
+            Debug.Log("Max HP increased by " + amount + ". New Max HP: " + MaxHp);
+        }
+
+        // ════════════════════════════════════════════════════════
+        //  IEntity — HEAL
+        // ════════════════════════════════════════════════════════
+
+        public void Heal(int amount)
+        {
+            if (!IsAlive || amount <= 0) return;
+            CurrentHp = Mathf.Min(CurrentHp + amount, MaxHp);
+            OnHealVFX(amount);
+            OnHealthChanged(CurrentHp, MaxHp);
+            GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp);
+        }
+
+        // ════════════════════════════════════════════════════════
+        //  DAMAGE & DEATH
+        // ════════════════════════════════════════════════════════
+
+        public virtual void TakeDamage(int damage)
+        {
+            if (!IsAlive) return;
+            if (IsInvincible)
+            {
+                Debug.Log("Cannon is invincible -> Not taking any damage!");
+                return;
+            }
+            if (ShieldHits > 0)
+            {
+                ShieldHits--;
+                OnShieldAbsorbVFX();
+                return;
+            }
+
+            CurrentHp -= damage;
+            CurrentHp = Mathf.Clamp(CurrentHp, 0, MaxHp);
+
+            OnDamageTakenVFX(damage);
+            OnHealthChanged(CurrentHp, MaxHp);
+            GameEvents.FireCannonHit(damage);
+            GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp);
+
+            if (CurrentHp <= 0) Die();
+        }
+
+        protected virtual void Die()
+        {
+            if (HasRevive)
+            {
+                HasRevive = false;
+                CurrentHp = Mathf.Max(1, Mathf.CeilToInt(MaxHp * ReviveHealthPercent));
+                OnReviveVFX();
+                OnHealthChanged(CurrentHp, MaxHp);
+                GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp);
+                return;
+            }
+
+            IsFiring = false;
+            movementInput = Vector2.zero;
+            OnDeathVFX();
+            GameEvents.FirePlayerDeath();
+        }
+
+        // ════════════════════════════════════════════════════════
+        //  HITBOX SCALING
+        // ════════════════════════════════════════════════════════
+
+        private void ApplyHitboxScale()
+        {
+            // Scale the visual (transform)
+            transform.localScale = originalLocalScale * hitboxScale;
+
+            // Scale the collider independently (since transform scale
+            // already affects collider bounds, we reset collider to
+            // original values so we don't double-scale)
+            if (cannonCollider is BoxCollider2D box)
+                box.size = originalBoxSize;
+            else if (cannonCollider is CircleCollider2D circle)
+                circle.radius = originalCircleRadius;
+            wheelRadius = originalWheelRadius * hitboxScale;
+        }
+
+        // ════════════════════════════════════════════════════════
+        //  PROJECTILE MODIFIER REGISTRATION
+        // ════════════════════════════════════════════════════════
+
+        public void RegisterProjectileModifier(IProjectileModifier mod)
+        {
+            if (mod != null && !activeProjectileMods.Contains(mod))
+                activeProjectileMods.Add(mod);
+        }
+
+        public void UnregisterProjectileModifier(IProjectileModifier mod)
+        {
+            if (mod != null) activeProjectileMods.Remove(mod);
+        }
+
+        // ════════════════════════════════════════════════════════
+        //  INPUT & MOVEMENT
+        // ════════════════════════════════════════════════════════
 
         protected virtual void HandleInput()
         {
-            if (Gameplay.Managers.GameManager.Instance != null && Gameplay.Managers.GameManager.Instance.state != GameState.Gameplay)
+            if (Gameplay.Managers.GameManager.Instance != null &&
+                Gameplay.Managers.GameManager.Instance.state != GameState.Gameplay)
             {
                 movementInput = Vector2.zero;
                 return;
             }
 
-            // Simple touch/mouse input for movement
             if (Input.GetMouseButton(0))
             {
                 StartFiring();
-                Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 mousePos = mainCam.ScreenToWorldPoint(Input.mousePosition);
                 float direction = mousePos.x > transform.position.x ? 1f : -1f;
-                
-                // If very close to mouse, stop jittering
+
                 if (Mathf.Abs(mousePos.x - transform.position.x) < 0.1f)
                     movementInput = Vector2.zero;
                 else
@@ -211,31 +331,26 @@ namespace Gameplay.Player
             Vector2 oldPos = rb.position;
             Vector2 newPos = rb.position + movementInput * (CannonStats.currentMoveSpeed * Time.fixedDeltaTime);
 
-            Vector3 pos = transform.position;
-
-            // Get camera bounds in world units
             float leftBound = mainCam.ViewportToWorldPoint(Vector3.zero).x + halfWidth;
             float rightBound = mainCam.ViewportToWorldPoint(Vector3.right).x - halfWidth;
 
-            // Assuming cannon has its own width, we might need an offset. 
-            // For now, simple point clamp or use collider bounds if available
             newPos.x = Mathf.Clamp(newPos.x, leftBound, rightBound);
-            
             rb.MovePosition(newPos);
 
-            // Rotate wheels based on distance moved
             if (wheels != null && wheels.Length > 0)
             {
                 float distanceMoved = newPos.x - oldPos.x;
                 float rotationAngle = -(distanceMoved / (2 * Mathf.PI * wheelRadius)) * 360f;
 
-                foreach (var wheel in wheels)
-                {
-                    if (wheel != null)
-                        wheel.Rotate(0, 0, rotationAngle);
-                }
+                for (int i = 0; i < wheels.Length; i++)
+                    if (wheels[i] != null)
+                        wheels[i].Rotate(0, 0, rotationAngle);
             }
         }
+
+        // ════════════════════════════════════════════════════════
+        //  FIRING
+        // ════════════════════════════════════════════════════════
 
         public void StartFiring() => IsFiring = true;
         public void StopFiring() => IsFiring = false;
@@ -243,6 +358,7 @@ namespace Gameplay.Player
         protected virtual void HandleFiring()
         {
             if (CannonStats == null || BulletPrefab == null || !IsFiring) return;
+            if (SuppressBullets) return;
 
             fireTimer += Time.deltaTime;
             float interval = 1f / CannonStats.currentFireRate;
@@ -262,141 +378,140 @@ namespace Gameplay.Player
             }
             else
             {
-                foreach (var tip in gunTips)
-                {
-                    if (tip != null)
-                        SpawnBullet(tip.position, tip.rotation);
-                }
+                for (int i = 0; i < gunTips.Length; i++)
+                    if (gunTips[i] != null)
+                        SpawnBullet(gunTips[i].position, gunTips[i].rotation);
             }
-
-            if (fireParticles != null)
-            {
-                foreach (var p in fireParticles)
-                {
-                    if (p != null) p.Play();
-                }
-            }
+            OnShootVFX();
         }
 
+        /// <summary>
+        /// Spawns a bullet, applies all projectile modifiers, spawns extras.
+        /// Protected virtual so subclasses (TripleCannon, etc.) can call it.
+        /// </summary>
         protected virtual void SpawnBullet(Vector3 position, Quaternion rotation)
         {
+            BaseBullet bullet = CreateBullet(position, rotation);
+            if (bullet == null) return;
+
+            for (int i = 0; i < activeProjectileMods.Count; i++)
+            {
+                IProjectileModifier mod = activeProjectileMods[i];
+                if (mod == null || !mod.IsActive) continue;
+
+                mod.ModifyBullet(bullet, CurrentAttack);
+
+                int extras = mod.ExtraProjectiles;
+                if (extras <= 0) continue;
+
+                float[] angles = mod.GetExtraAngles();
+                for (int e = 0; e < extras && e < angles.Length; e++)
+                {
+                    Quaternion extraRot = rotation * Quaternion.Euler(0, 0, angles[e]);
+                    CreateBullet(position, extraRot);
+                }
+            }
+        }
+
+        private BaseBullet CreateBullet(Vector3 position, Quaternion rotation)
+        {
+            BaseBullet bullet;
+
             if (bulletPool != null)
             {
-                BaseBullet pooledBullet = bulletPool.Get();
-                Transform bulletTransform = pooledBullet.transform;
-
-                bulletTransform.SetPositionAndRotation(position, rotation);
-                pooledBullet.Init(CannonStats);
-                pooledBullet.damage = CannonStats.currentBulletDamage;
-                pooledBullet.bulletSpeed = CannonStats.currentBulletSpeed;
-
-                if (pooledBullet is BouncingBullet bouncing)
-                {
-                    bouncing.bounceCount = CannonStats.bulletBounce;
-                }
-
-                return;
+                bullet = bulletPool.Get();
+                bullet.transform.SetPositionAndRotation(position, rotation);
             }
-
-            GameObject go = Instantiate(BulletPrefab, position, rotation);
-
-            if (go.TryGetComponent<BaseBullet>(out var newBullet))
+            else
             {
-                newBullet.Init(CannonStats);
-                newBullet.damage = CannonStats.currentBulletDamage;
-                newBullet.bulletSpeed = CannonStats.currentBulletSpeed;
-
-                if (newBullet is BouncingBullet bouncing)
-                {
-                    bouncing.bounceCount = CannonStats.bulletBounce;
-                }
-
-                if (newBullet is ElementalBullet)
-                {
-                }
+                GameObject go = Instantiate(BulletPrefab, position, rotation);
+                bullet = go.GetComponent<BaseBullet>();
+                if (bullet == null) return null;
             }
-            else if (go.TryGetComponent<Bullet>(out var bullet))
+
+            bullet.Init(CannonStats);
+            bullet.damage = CurrentAttack;
+            bullet.bulletSpeed = CannonStats.currentBulletSpeed;
+
+            if (bullet is BouncingBullet bouncing)
+                bouncing.bounceCount = CannonStats.bulletBounce;
+
+            return bullet;
+        }
+
+        // ════════════════════════════════════════════════════════
+        //  PROGRESSION
+        // ════════════════════════════════════════════════════════
+
+        private void OnLevelUp(int newLevel)
+        {
+            if (CannonStats != null)
             {
-                bullet.Damage = CannonStats.currentBulletDamage;
-                bullet.bulletSpeed = CannonStats.currentBulletSpeed;
-                bullet.bulletBounce = CannonStats.bulletBounce;
+                CannonStats.ApplyProgression(newLevel);
+                OnHealthChanged(CurrentHp, MaxHp);
             }
         }
 
-        public virtual void TakeDamage(int damage)
+        // ════════════════════════════════════════════════════════
+        //  POOL CALLBACKS
+        // ════════════════════════════════════════════════════════
+
+        private void OnDestroyPooledObject(BaseBullet obj)
         {
-            if (!IsAlive) return;
-
-            CurrentHp -= damage;
-            CurrentHp = Mathf.Clamp(CurrentHp, 0, MaxHp);
-            
-            // ── Play hit VFX at the designated position ──
-            PlayHitVFX();
-
-            GameEvents.FireCannonHit(damage);
-            GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp); //
-
-            if (CurrentHp <= 0) Die();
+            if (obj != null) Destroy(obj.gameObject);
         }
 
-        private void PlayHitVFX()
+        private void OnReleaseToPool(BaseBullet obj)
         {
-            if (hitVFX == null) return;
-
-            // Move VFX to the hit position (if you assigned one)
-            if (hitVFXPosition != null)
+            if (obj == null) return;
+            obj.transform.SetParent(null);
+            if (obj.TryGetComponent<Rigidbody2D>(out var bulletRb))
             {
-                hitVFX.transform.position = hitVFXPosition.position;
+                bulletRb.linearVelocity = Vector2.zero;
+                bulletRb.angularVelocity = 0f;
             }
-
-            // Stop any currently playing instance so rapid hits restart cleanly
-            hitVFX.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            hitVFX.Play(true);
+            obj.gameObject.SetActive(false);
         }
 
-        //protected virtual void UpdateUI()
-        //{
-
-        //}
-        protected virtual void Die()
+        private void OnGetFromPool(BaseBullet obj)
         {
-            Debug.Log("Cannon Destroyed!");
-            IsFiring = false;
-            movementInput = Vector2.zero;
-            
-            GameEvents.FirePlayerDeath();
+            if (obj == null) return;
+            obj.gameObject.SetActive(true);
         }
 
-      
-
-        #region IDamageEffect Implementation
-
-        public virtual void ElectricDamage(float applyDamage, float effectTime)
+        private BaseBullet CreateProjectile()
         {
-            // Apply damage over time or immediate electric effect
-            TakeDamage(Mathf.RoundToInt(applyDamage));
-            // Additional electric effect logic (e.g. visual or slowdown) can be added here
+            GameObject go = Instantiate(BulletPrefab);
+            BaseBullet bullet = go.GetComponent<BaseBullet>();
+            bullet.SetReleaseAction(ReleaseBulletToPool);
+            go.SetActive(false);
+            return bullet;
         }
 
-        public virtual void igniteDamage(float applyDamage, float effectTime)
+        private void ReleaseBulletToPool(BaseBullet bullet)
         {
-            // Apply fire/burn effect
-            TakeDamage(Mathf.RoundToInt(applyDamage));
-            // Additional ignite effect logic can be added here
+            if (bulletPool != null)
+                bulletPool.Release(bullet);
+            else if (bullet != null)
+                Destroy(bullet.gameObject);
         }
 
-        public virtual void PoisonDamage(float applyDamage, float effectTime)
+        // ════════════════════════════════════════════════════════
+        //  GIZMOS
+        // ════════════════════════════════════════════════════════
+
+        protected virtual void OnDrawGizmos()
         {
-            // Apply poison damage
-            TakeDamage(Mathf.RoundToInt(applyDamage));
+            if (wheels == null) return;
+            for (int i = 0; i < wheels.Length; i++)
+            {
+                if (wheels[i] != null)
+                {
+#if UNITY_EDITOR
+                    UnityEditor.Handles.DrawWireDisc(wheels[i].position, Vector3.back, wheelRadius);
+#endif
+                }
+            }
         }
-
-        public virtual void FreezeEffect(float effectTime)
-        {
-            // Apply freeze effect (e.g. slow down movement)
-            // We could reduce moveSpeed for effectTime
-        }
-
-        #endregion
     }
 }

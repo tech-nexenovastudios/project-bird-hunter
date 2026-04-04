@@ -29,7 +29,7 @@ TagManager:
   - HurtBox
   - Player
   - PlayerHurt
-  - 
+  - Bullet
   - 
   - 
   - 
@@ -49,6 +49,9 @@ TagManager:
   m_SortingLayers:
   - name: Background
     uniqueID: 1749679551
+    locked: 0
+  - name: LASER
+    uniqueID: 336380321
     locked: 0
   - name: Ground
     uniqueID: 1335775815
@@ -70,6 +73,9 @@ TagManager:
     locked: 0
   - name: Main Cannon
     uniqueID: 171004211
+    locked: 0
+  - name: PowerUpVFX
+    uniqueID: 2466800315
     locked: 0
   - name: CameraSortingLayerTexture
     uniqueID: 3891424887
