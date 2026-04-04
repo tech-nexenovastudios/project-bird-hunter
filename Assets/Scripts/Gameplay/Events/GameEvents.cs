@@ -36,12 +36,20 @@ namespace Gameplay.Events
         // ───────── Player ─────────
         public static event Action OnPlayerDeath;
 
+
+        //public static event Action OnSlotPanelClosed ;
+
         // ───────── Spin / Powerup ─────────
         public static event Action<PowerupConfig[]> OnSpinTriggered;
         public static event Action<PowerupConfig> OnPowerupSelected;
-        public static event Action OnPlayerConfirmedSpin;
-     
+        public static event Action<PowerupConfig> OnPowerupCommitted;
+        //public static event Action<PowerupConfig> OnPlayerConfirmedSpin;
+
         public static event Action<List<PowerupConfig>> OnSpinStarted;
+
+        //notification panel
+        //public static void FireSlotPanelClosed()
+        //    => OnSlotPanelClosed?.Invoke();
         public static void FireSpinStarted(List<PowerupConfig> options)
             => OnSpinStarted?.Invoke(options);
         // ───────── UI ─────────
@@ -91,8 +99,8 @@ namespace Gameplay.Events
         public static void FirePowerupSelected(PowerupConfig config)
             => OnPowerupSelected?.Invoke(config);
 
-        public static void FirePlayerConfirmedSpin()
-            => OnPlayerConfirmedSpin?.Invoke();
+        //public static void FirePlayerConfirmedSpin(PowerupConfig config)
+        //    => OnPlayerConfirmedSpin?.Invoke(config);
 
         //public static void FireBackToMenu()
         //    => OnBackToMenu?.Invoke();
@@ -103,26 +111,26 @@ namespace Gameplay.Events
 
         /// <summary>Fired by BossBird.InitBoss() when the boss enters the scene.</summary>
         public static event Action<BossBird> OnBossSpawned;
- 
+
         /// <summary>Fired by BossBird.EnterPhase2() when HP crosses the phase threshold.</summary>
         public static event Action<BossBird> OnBossPhase2;
- 
+
         /// <summary>Fired by BossBird.Die() when the boss is killed by the player.</summary>
         public static event Action<BossBird> OnBossDefeated;
- 
+
         /// <summary>Fired by BossBird.TriggerBurstAttack().</summary>
         public static event Action<BossBird, int> OnBossBurstAttack; // (boss, eggCount)
- 
-        public static void FireBossSpawned(BossBird boss)        => OnBossSpawned?.Invoke(boss);
-        public static void FireBossPhase2(BossBird boss)         => OnBossPhase2?.Invoke(boss);
-        public static void FireBossDefeated(BossBird boss)       => OnBossDefeated?.Invoke(boss);
+
+        public static void FireBossSpawned(BossBird boss) => OnBossSpawned?.Invoke(boss);
+        public static void FireBossPhase2(BossBird boss) => OnBossPhase2?.Invoke(boss);
+        public static void FireBossDefeated(BossBird boss) => OnBossDefeated?.Invoke(boss);
         public static void FireBossBurstAttack(BossBird boss, int count) => OnBossBurstAttack?.Invoke(boss, count);
- 
-// ── Attacking Bird Events ─────────────────────────────────────────────────
- 
+
+        // ── Attacking Bird Events ─────────────────────────────────────────────────
+
         /// <summary>Fired by AttackingBird.Die() when an attacking bird is killed by the player.</summary>
         public static event Action<AttackingBird, int> OnAttackingBirdDestroyed; // (bird, score)
- 
+
         public static void FireAttackingBirdDestroyed(AttackingBird bird, int score)
             => OnAttackingBirdDestroyed?.Invoke(bird, score);
 
@@ -130,6 +138,9 @@ namespace Gameplay.Events
         public static event Action<int, int> OnCannonHealthChanged;
 
         public static void FireCannonStatsUpdated(CannonStats cannonStats) => OnCannonStatsUpdated?.Invoke(cannonStats);
+
+        internal static void FirePowerupCommitted(PowerupConfig results) => OnPowerupCommitted?.Invoke(results);
+
         public static event Action<CannonStats> OnCannonStatsUpdated;
     }
 }

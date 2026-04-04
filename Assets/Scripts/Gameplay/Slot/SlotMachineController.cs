@@ -1,61 +1,4 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using UnityEngine;
-//using DG.Tweening;
-//using Gameplay.Managers;
-//using Gameplay.PowerUps;
-
-//namespace Gameplay.Slot
-//{
-//    public class SlotMachineController : MonoBehaviour
-//    {
-//        [SerializeField] private ReelController[] reels;  // Assign 3 reels
-//        [SerializeField] private List<PowerupConfig> symbolLibrary;  // All icons
-
-//        void Start()
-//        {
-//            foreach (var reel in reels)
-//            {
-//                reel.symbolList = symbolLibrary;  // Share library
-//                reel.InitializeReel();
-//            }
-//        }
-
-//        // Call this with your predetermined results!
-//        public void Spin(List<PowerupConfig> resultsPerReel)
-//        {
-//            for (int i = 0; i < reels.Length; i++)
-//            {
-//                var reel       = reels[i];
-//                var reelResult = resultsPerReel[i];
-//                var delay = i * 0.12f;
-//                var i1 = i;
-
-//                reel.OnPowerupSelected = null;
-//                reel.OnPowerupSelected += OnPowerupSelected;
-
-//                DOVirtual.DelayedCall(delay, () => reels[i1].SpinToResult(reelResult));
-//            }
-//        }
-
-//        private void OnPowerupSelected(PowerupConfig selected)
-//        {
-//            GameProgressManager.Instance.PlayerSelectedPowerup(selected);
-//            foreach (var reel in reels)
-//            {
-//                reel.OnPowerupSelected = null;
-//            }
-//            Managers.GameManager.Instance.OnSpinComplete();
-//        }
-
-//        private void OnDisable()
-//        {
-//            DOTween.KillAll();
-//        }
-//    }
-
-//}
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using DG.Tweening;
 using Gameplay.Events;
 using Gameplay.Managers;
@@ -68,6 +11,9 @@ namespace Gameplay.Slot
     {
         [SerializeField] private ReelController[] reels;
         [SerializeField] private List<PowerupConfig> symbolLibrary;
+
+        // Tracks which reel the player last selected so we can un-highlight it
+        private ReelController _selectedReel;
 
         private void Start()
         {
@@ -88,35 +34,61 @@ namespace Gameplay.Slot
             GameEvents.OnSpinStarted -= Spin;
 
             foreach (var reel in reels)
+            {
                 reel.OnPowerupSelected = null;
+                reel.SetHighlight(false);
+                // Kill only this reel's scroll tween, not everything in the scene
+                if (reel.content != null)
+                    reel.content.DOKill();
+            }
 
-            DOTween.KillAll();
+            _selectedReel = null;
+            // ← DOTween.KillAll() removed — it was killing the notification panel tween
         }
 
         // ───────── Spin ─────────
         private void Spin(List<PowerupConfig> resultsPerReel)
         {
+            // Reset selection state for a fresh spin
+            if (_selectedReel != null)
+            {
+                _selectedReel.SetHighlight(false);
+                _selectedReel = null;
+            }
+
             for (int i = 0; i < reels.Length; i++)
             {
                 var result = resultsPerReel[i];
                 var index = i;
+                var reel = reels[i]; // capture for lambda
 
                 reels[i].OnPowerupSelected = null;
-                reels[i].OnPowerupSelected += OnReelStopped;
+
+                // Capture reel reference so OnReelSelected knows which reel was clicked.
+                // NOTE: We intentionally do NOT clear this listener after first selection
+                // so the player can change their mind and pick a different reel.
+                reels[i].OnPowerupSelected += (config) => OnReelSelected(reel, config);
 
                 DOVirtual.DelayedCall(i * 0.12f, () => reels[index].SpinToResult(result));
             }
         }
 
-        // ───────── Reel stops ─────────
-        private void OnReelStopped(PowerupConfig selected)
+        // ───────── Player selects / re-selects a reel ─────────
+        private void OnReelSelected(ReelController clickedReel, PowerupConfig selected)
         {
-            foreach (var reel in reels)
-                reel.OnPowerupSelected = null;
+            // Un-highlight previously selected reel (if different)
+            if (_selectedReel != null && _selectedReel != clickedReel)
+                _selectedReel.SetHighlight(false);
 
-            GameEvents.FirePowerupSelected(selected);
+            // Highlight the newly selected reel
+            _selectedReel = clickedReel;
+            clickedReel.SetHighlight(true);
+
+            // GameEvents.FirePowerupCommitted is already fired inside ReelController's
+            // click listener — no need to fire it again here.
         }
 
+        // ───────── Called by UI confirm button via SlotMachineScreen ─────────
         public void CommitSelection()
         {
             var selected = GameProgressManager.Instance.LastSelectedPowerup;
@@ -125,7 +97,6 @@ namespace Gameplay.Slot
                 Debug.LogWarning("⚠️ CommitSelection: LastSelectedPowerup is null.");
                 return;
             }
-
             GameProgressManager.Instance.ClearLastSelectedPowerup();
             GameManager.Instance.OnSpinComplete();
         }

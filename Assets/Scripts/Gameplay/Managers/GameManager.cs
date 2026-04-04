@@ -241,10 +241,6 @@ namespace Gameplay.Managers
 
         public GameState state;
 
-        public TextMeshProUGUI playerLevelupText;
-        public TextMeshProUGUI playerXPText;
-        public TextMeshProUGUI currentLevelText;
-
         public GameObject currentCannon;
 
         private bool _pendingLevelStart = false;
@@ -270,8 +266,6 @@ namespace Gameplay.Managers
             GameProgressManager.OnSpinTriggered += OnSpinTriggered;
             GameEvents.OnPlayerDeath += OnPlayerDeath;
             GameEvents.OnPauseToggled += OnPauseToggled;
-            XPManager.Instance.OnXPAdded += OnXPAdded;
-            XPManager.Instance.OnPlayerLevelUp += OnPlayerLevelUp;
         }
 
         private void OnDisable()
@@ -281,13 +275,6 @@ namespace Gameplay.Managers
             GameEvents.OnPlayerDeath -= OnPlayerDeath;
             GameEvents.OnPauseToggled -= OnPauseToggled;
         }
-
-        // ───────── XP / Level display ─────────
-        private void OnPlayerLevelUp(int level)
-            => playerLevelupText.text = $"Level Up! {level}";
-
-        private void OnXPAdded(int xp, int amountAdded)
-            => playerXPText.text = $"XP: {xp}";
 
         // ───────── Entry point ─────────
         private void Start()
@@ -305,6 +292,7 @@ namespace Gameplay.Managers
 
             if (IsSpinPending(progress))
             {
+                Debug.Log("Initial spin pending, showing slot machine before starting gameplay");
                 TriggerPendingSpin(progress);
                 yield break;
             }
@@ -398,7 +386,6 @@ namespace Gameplay.Managers
         private void OnProgressChanged(GameProgress progress)
         {
             Debug.Log($"Progress → Ch{progress.currentChapter} L{progress.currentLevel}");
-            currentLevelText.text = $"Level {progress.currentLevel}";
 
             if (!_pendingLevelStart) return;
             _pendingLevelStart = false;

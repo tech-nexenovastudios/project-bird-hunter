@@ -5,7 +5,7 @@ using UnityEngine;
 public class ScoreManager : MonoBehaviour
 {
     [SerializeField] TMP_Text scoreText;
-    [SerializeField] float totalScore;
+    [SerializeField] public float totalScore;
     public static Action<float> scoreUpdateCallBack;
 
 

@@ -1,0 +1,163 @@
+﻿using System.Collections;
+using DG.Tweening;
+using Gameplay.Events;
+using Gameplay.Levels;
+using Gameplay.Managers;
+using TMPro;
+using UnityEngine;
+
+namespace Gameplay.UI
+{
+    /// <summary>
+    /// Standalone popup that appears:
+    ///   • On level START  → "Level 3"       + countdown ("Starting in 3…2…1…Go!")
+    ///   • On level COMPLETE → "Level 3 Complete!" + countdown ("Next level in 3…2…1…")
+    ///
+    /// Listens to:  GameEvents.OnGameLevelUpdated  (level start)
+    ///              GameEvents.OnLevelCompleted     (level complete)
+
+    public class LevelDetailPopUp : MonoBehaviour
+    {
+        [Header("Panel")]
+        [SerializeField] private CanvasGroup popupCanvasGroup;
+        [SerializeField] private GameObject popupPanel;
+
+        [Header("Texts")]
+        [SerializeField] private TextMeshProUGUI levelTitleText;   // "Level 3" / "Level 3 Complete!"
+        [SerializeField] private TextMeshProUGUI countdownText;    // "Starting in 3..." / "Next level in 3..."
+
+        [Header("Timing")]
+        [SerializeField] private int countdownFrom = 3;
+        [SerializeField] private float fadeInDuration = 0.3f;
+        [SerializeField] private float fadeOutDuration = 0.25f;
+
+        private Coroutine _activeRoutine;
+        private int _currentLevel;
+
+        // True only after OnLevelCompleted fires — reset on every new level start.
+        // Prevents "Level X Complete!" showing again if the player restarts mid-session.
+        private bool _levelCompleted = false;
+
+        // ───────── Lifecycle ─────────
+
+        private void OnEnable()
+        {
+            GameEvents.OnGameLevelUpdated += OnGameLevelUpdated;
+            GameEvents.OnLevelCompleted += OnLevelCompleted;
+        }
+
+        private void OnDisable()
+        {
+            GameEvents.OnGameLevelUpdated -= OnGameLevelUpdated;
+            GameEvents.OnLevelCompleted -= OnLevelCompleted;
+        }
+
+        private void Awake()
+        {
+            HideInstant();
+        }
+
+        // ───────── Event Handlers ─────────
+
+        private void OnGameLevelUpdated(LevelProfile profile, int levelIndex)
+        {
+            _levelCompleted = false;  // reset — this is a fresh level start or restart
+            _currentLevel = GameProgressManager.Instance.CurrentLevel;
+            ShowPopup(
+                title: $"Level {_currentLevel}",
+                countdownPrefix: "Starting in"
+            );
+        }
+
+        private void OnLevelCompleted(int score)
+        {
+            // Guard: only show complete popup if the level actually ran this session.
+            // Prevents firing again when a restart triggers OnGameLevelUpdated.
+            if (_levelCompleted) return;
+            _levelCompleted = true;
+
+            ShowPopup(
+                title: $"Level {_currentLevel} Complete!",
+                countdownPrefix: "Next level in"
+            );
+        }
+
+        // ───────── Core Display ─────────
+
+        private void ShowPopup(string title, string countdownPrefix)
+        {
+            if (_activeRoutine != null)
+                StopCoroutine(_activeRoutine);
+
+            _activeRoutine = StartCoroutine(PopupRoutine(title, countdownPrefix));
+        }
+
+        private IEnumerator PopupRoutine(string title, string countdownPrefix)
+        {
+            // ── Setup ──
+            levelTitleText.text = title;
+            countdownText.text = string.Empty;
+
+            popupPanel.SetActive(true);
+            popupCanvasGroup.alpha = 0f;
+
+            // ── Animate title in ──
+            levelTitleText.transform.localScale = Vector3.one * 0.5f;
+            levelTitleText.alpha = 0f;
+
+            Sequence titleSeq = DOTween.Sequence();
+            titleSeq.Append(popupCanvasGroup.DOFade(1f, fadeInDuration).SetEase(Ease.OutCubic));
+            titleSeq.Join(levelTitleText.transform.DOScale(1.1f, 0.3f).SetEase(Ease.OutBack));
+            titleSeq.Join(levelTitleText.DOFade(1f, 0.25f));
+            titleSeq.Append(levelTitleText.transform.DOScale(1f, 0.15f).SetEase(Ease.InOutSine));
+            titleSeq.SetUpdate(true);
+
+            yield return titleSeq.WaitForCompletion();
+
+            // ── Countdown ──
+            int count = countdownFrom;
+            while (count > 0)
+            {
+                countdownText.text = $"{countdownPrefix} {count}...";
+                PulseCountdown();
+                yield return new WaitForSecondsRealtime(1f);
+                count--;
+            }
+
+            // ── Final beat ──
+            string finalWord = countdownPrefix.Contains("Next") ? "Loading..." : "Go!";
+            countdownText.text = finalWord;
+            PulseCountdown();
+            yield return new WaitForSecondsRealtime(0.6f);
+
+            // ── Fade out ──
+            Sequence fadeOut = DOTween.Sequence();
+            fadeOut.Append(popupCanvasGroup.DOFade(0f, fadeOutDuration).SetEase(Ease.InCubic));
+            fadeOut.Join(levelTitleText.transform.DOScale(0.85f, fadeOutDuration).SetEase(Ease.InBack));
+            fadeOut.SetUpdate(true);
+            fadeOut.OnComplete(HideInstant);
+
+            yield return fadeOut.WaitForCompletion();
+        }
+
+        // ───────── Helpers ─────────
+
+        private void PulseCountdown()
+        {
+            if (countdownText == null) return;
+            countdownText.DOKill();
+            countdownText.transform.localScale = Vector3.one;
+            countdownText.transform
+                .DOPunchScale(Vector3.one * 0.25f, 0.3f, 5, 0.5f)
+                .SetEase(Ease.OutBack)
+                .SetUpdate(true);
+        }
+
+        private void HideInstant()
+        {
+            popupPanel.SetActive(false);
+            popupCanvasGroup.alpha = 0f;
+        }
+    }
+}
+
