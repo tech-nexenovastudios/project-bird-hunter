@@ -2,7 +2,7 @@ using System;
 using TMPro;
 using UnityEngine;
 
-public class ScoreManager : MonoBehaviour
+[Obsolete]public class ScoreManager_old : MonoBehaviour
 {
     [SerializeField] TMP_Text scoreText;
     [SerializeField] public float totalScore;

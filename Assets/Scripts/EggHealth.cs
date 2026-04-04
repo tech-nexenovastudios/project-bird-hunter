@@ -102,7 +102,7 @@ public class EggHealth : MonoBehaviour, IHealthManager, IDamageEffect
     {
         if (!EggDestroyed)
         {
-            ScoreManager.scoreUpdateCallBack?.Invoke(Mathf.Min(Health, ApplyDamage)); // Send Score To scoreManager
+            //ScoreManager.scoreUpdateCallBack?.Invoke(Mathf.Min(Health, ApplyDamage)); // Send Score To scoreManager
             Health -= ApplyDamage;
 
 

@@ -152,7 +152,8 @@ namespace Gameplay.Slot
             if (results?.icon != null) symbols[^2].SetIcon(bottom.icon, "last-mid");
             if (bottom?.icon != null) symbols[^1].SetIcon(results.icon, "last");
 
-            float stopY = symbolSize * (symbols.Count() - 2);
+            float padding = symbolSize / 2 + 10;
+            float stopY = symbolSize * (symbols.Count() - 2) - padding;
 
             spinTween = content.DOAnchorPosY(stopY, spinDuration)
                 .SetEase(Ease.Linear)

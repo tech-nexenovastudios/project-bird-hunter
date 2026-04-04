@@ -37,7 +37,7 @@ public class BirdHealthManager : MonoBehaviour, IHealthManager
     {
 
 
-        ScoreManager.scoreUpdateCallBack?.Invoke(Mathf.Clamp(Mathf.Min(currentHealth, damage), 0, float.MaxValue)); // Send Score To scoreManager
+        //ScoreManager.scoreUpdateCallBack?.Invoke(Mathf.Clamp(Mathf.Min(currentHealth, damage), 0, float.MaxValue)); // Send Score To scoreManager
         currentHealth -= damage;
         if (currentHealth <= 0)
         {
