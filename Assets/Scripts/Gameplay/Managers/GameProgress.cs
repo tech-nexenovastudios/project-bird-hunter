@@ -101,19 +101,20 @@ namespace Gameplay
             }
             return result;
         }
-
-        public void EquipPowerup(PowerupConfig powerup)
+        // Change signature to accept slotIndex explicitly
+        public void EquipPowerup(PowerupConfig powerup, int slotIndex)
         {
-            int slotIndex = GetSpinSlotIndex(currentLevel - 1);
-            if (slotIndex < 0 || slotIndex > 3 || powerup == null) return;
+            if (powerup == null || slotIndex < 0 || slotIndex > 3) return;
 
             chapterSlots[slotIndex].equippedPowerupId = powerup.id;
-            chapterSlots[slotIndex].isOnCooldown      = false;
+            chapterSlots[slotIndex].isOnCooldown = false;
             chapterSlots[slotIndex].cooldownRemaining = 0f;
-            playerSpins++;
+            // NOTE: playerSpins++ removed here — GameProgressManager.PlayerSelectedPowerup handles it
 
             if (!globalUnlockedPowerupIds.Contains(powerup.id))
                 globalUnlockedPowerupIds.Add(powerup.id);
+
+            Debug.Log($"[GameProgress] EquipPowerup — slot[{slotIndex}] = '{powerup.id}'");
         }
 
         public void ResetSlotsForNewChapter()

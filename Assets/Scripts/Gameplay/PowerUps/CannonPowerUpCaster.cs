@@ -9,7 +9,7 @@ namespace Gameplay.PowerUps
 {
     public class CannonPowerUpCaster : Singleton<CannonPowerUpCaster>
     {
-        [Tooltip("Power-ups the player can cast with number keys.")]
+        [Tooltip("All CannonPowerUp assets. Each must have config.id matching its PowerupConfig.id")]
         public CannonPowerUp[] hotbar;
 
         [Header("VFX Settings")]
@@ -23,87 +23,134 @@ namespace Gameplay.PowerUps
 
         private void Start()
         {
-            var cannonMb = FindFirstObjectByType<BaseCannon>();
-            cannonRef = cannonMb as ICannon;
+            UnityEngine.Debug.Log($"[PowerUpCaster] Start — hotbar size: {hotbar?.Length ?? 0}");
+            for (int i = 0; i < hotbar.Length; i++)
+            {
+                var pu = hotbar[i];
+                if (pu == null)
+                    UnityEngine.Debug.LogWarning($"[PowerUpCaster]   hotbar[{i}]: NULL entry.");
+                else if (pu.config == null)
+                    UnityEngine.Debug.LogWarning($"[PowerUpCaster]   hotbar[{i}]: CannonPowerUp has no config assigned.");
+                else
+                    UnityEngine.Debug.Log($"[PowerUpCaster]   hotbar[{i}]: '{pu.config.id}' → {pu.config.displayName}");
+            }
+        }
+
+        // ───────── Cannon injection ─────────
+        public void SetCannon(BaseCannon cannon)
+        {
+            if (cannon == null)
+            {
+                UnityEngine.Debug.LogError("[PowerUpCaster] ❌ SetCannon called with null cannon.");
+                return;
+            }
+            cannonRef = cannon as ICannon;
+            UnityEngine.Debug.Log($"[PowerUpCaster] SetCannon — cannon set to '{cannon.gameObject.name}'. cannonRef null? {cannonRef == null}");
         }
 
         private void Update()
         {
-            HandleHotbarInput();
-
             for (int i = 0; i < equippedPowerUps.Count; i++)
             {
                 equippedPowerUps[i].TickReactives();
                 equippedPowerUps[i].TickSummons();
-                equippedPowerUps[i].TickProjectiles(cannonRef);  //laser part
+                equippedPowerUps[i].TickProjectiles(cannonRef);
             }
         }
 
-        private void HandleHotbarInput()
+        // ───────── ID lookup ─────────
+        public CannonPowerUp FindByID(string id)
         {
-            for (int i = 0, len = hotbar.Length; i < len; i++)
+            if (string.IsNullOrEmpty(id))
             {
-                if (!Input.GetKeyDown(KeyCode.Alpha1 + i)) continue;
-                if (hotbar[i] == null) continue;
-
-                CannonPowerUp powerUp = hotbar[i];
-
-                if (powerUp.HasEnemyEffects())
-                {
-                    IEntity target = GetTarget();
-                    if (target != null) Cast(powerUp, target);
-                }
-
-                if (powerUp.HasCannonEffects())
-                    Equip(powerUp);
+                UnityEngine.Debug.LogWarning("[PowerUpCaster] FindByID called with null or empty id.");
+                return null;
             }
+
+            foreach (var pu in hotbar)
+            {
+                if (pu == null) continue;
+                if (pu.config == null)
+                {
+                    UnityEngine.Debug.LogWarning("[PowerUpCaster] A hotbar entry has no config assigned — skipping.");
+                    continue;
+                }
+                if (pu.config.id == id)
+                {
+                    UnityEngine.Debug.Log($"[PowerUpCaster] FindByID '{id}' → ✅ Found '{pu.config.displayName}'");
+                    return pu;
+                }
+            }
+
+            UnityEngine.Debug.LogError($"[PowerUpCaster] FindByID '{id}' → ❌ Not found in hotbar. Check that a CannonPowerUp with config.id = '{id}' exists in the hotbar array.");
+            return null;
         }
 
-        public void Cast(CannonPowerUp powerUp, IEntity target)
-        {
-            if (powerUp == null || target == null) return;
-            powerUp.ExecuteOnEnemy(target);
-            PlayFeedback(powerUp, target as MonoBehaviour);
-        }
-
+        // ───────── Equip / Unequip ─────────
         public void Equip(CannonPowerUp powerUp)
         {
-            if (powerUp == null || cannonRef == null) return;
+            if (powerUp == null)
+            {
+                UnityEngine.Debug.LogError("[PowerUpCaster] Equip called with null powerUp.");
+                return;
+            }
+
+            if (cannonRef == null)
+            {
+                UnityEngine.Debug.LogError($"[PowerUpCaster] ❌ Equip '{powerUp.config?.id}' failed — cannonRef is null. SetCannon() was not called before Equip.");
+                return;
+            }
+
+            UnityEngine.Debug.Log($"[PowerUpCaster] Equipping '{powerUp.config?.id}'... effects count: {powerUp.effects?.Count ?? 0}");
             powerUp.ActivateOnCannon(cannonRef);
             equippedPowerUps.Add(powerUp);
 
-            // Register projectile modifiers on cannon so SpawnBullet applies them
             var cannonMb = cannonRef as BaseCannon;
             if (cannonMb != null)
             {
                 for (int i = 0; i < powerUp.effects.Count; i++)
+                {
                     if (powerUp.effects[i] is IProjectileModifier pm)
+                    {
                         cannonMb.RegisterProjectileModifier(pm);
+                        UnityEngine.Debug.Log($"[PowerUpCaster]   Registered IProjectileModifier: {pm.GetType().Name}");
+                    }
+                }
             }
+            else
+            {
+                UnityEngine.Debug.LogWarning("[PowerUpCaster] cannonRef is not a BaseCannon — IProjectileModifier registration skipped.");
+            }
+
+            UnityEngine.Debug.Log($"[PowerUpCaster] ✅ Equip complete. Total equipped: {equippedPowerUps.Count}");
         }
 
         public void Unequip(CannonPowerUp powerUp)
         {
             if (powerUp == null) return;
+
+            UnityEngine.Debug.Log($"[PowerUpCaster] Unequipping '{powerUp.config?.id}'");
             powerUp.DeactivateAll();
             equippedPowerUps.Remove(powerUp);
 
             var cannonMb = cannonRef as BaseCannon;
             if (cannonMb != null)
-            {
                 for (int i = 0; i < powerUp.effects.Count; i++)
                     if (powerUp.effects[i] is IProjectileModifier pm)
                         cannonMb.UnregisterProjectileModifier(pm);
-            }
         }
 
         public void UnequipAll()
         {
+            UnityEngine.Debug.Log($"[PowerUpCaster] UnequipAll — currently equipped: {equippedPowerUps.Count}");
+
             var cannonMb = cannonRef as BaseCannon;
             for (int i = equippedPowerUps.Count - 1; i >= 0; i--)
             {
                 var pu = equippedPowerUps[i];
                 if (pu == null) continue;
+
+                UnityEngine.Debug.Log($"[PowerUpCaster]   Deactivating '{pu.config?.id}'");
                 pu.DeactivateAll();
 
                 if (cannonMb != null)
@@ -112,8 +159,10 @@ namespace Gameplay.PowerUps
                             cannonMb.UnregisterProjectileModifier(pm);
             }
             equippedPowerUps.Clear();
+            UnityEngine.Debug.Log("[PowerUpCaster] UnequipAll done.");
         }
 
+        // ───────── Helpers ─────────
         private IEntity GetTarget()
         {
             if (cachedTargetMb != null && cachedTarget != null && cachedTarget.IsAlive)

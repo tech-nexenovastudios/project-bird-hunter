@@ -111,7 +111,7 @@ namespace Gameplay.Slot
             rt.sizeDelta = new Vector2(symbolSize, symbolSize);
             rt.pivot = Vector2.one * 0.5f;
 
-            float halfHeight = 1.5f * symbolSize;
+            float halfHeight = 1.5f * symbolSize - 100f;
             rt.anchoredPosition = new Vector2(0, halfHeight - (row + 0.5f) * symbolSize);
 
             var image = go.GetComponent<Image>();
@@ -152,8 +152,7 @@ namespace Gameplay.Slot
             if (results?.icon != null) symbols[^2].SetIcon(bottom.icon, "last-mid");
             if (bottom?.icon != null) symbols[^1].SetIcon(results.icon, "last");
 
-            float padding = symbolSize / 2 + 10;
-            float stopY = symbolSize * (symbols.Count() - 2) - padding;
+            float stopY = symbolSize * (symbols.Count() - 2);
 
             spinTween = content.DOAnchorPosY(stopY, spinDuration)
                 .SetEase(Ease.Linear)

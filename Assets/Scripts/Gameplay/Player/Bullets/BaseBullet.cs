@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Gameplay.Player
 {
-    public abstract class BaseBullet : MonoBehaviour
+    public abstract class BaseBullet : MonoBehaviour 
     {
         [HideInInspector] public float instantKillChance;
         [Header("Base Settings")]

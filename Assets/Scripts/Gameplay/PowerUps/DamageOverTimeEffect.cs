@@ -64,6 +64,7 @@ namespace Gameplay.PowerUps
     {
         [Header("Config")]
         public PowerupConfig config;
+       
 
         [Header("Feedback")]
         public AudioClip castSfx;

@@ -201,6 +201,9 @@ MonoBehaviour:
         strikePrefab: {fileID: 6558925124617225918, guid: f890c6f8a6108ea4b804e6e63c1884fe, type: 3}
         strikeInterval: 2
         strikeLifetime: 0.5
+        bladeSpeed: 8
+        rotationSpeed: 360
+        searchRadius: 20
     - rid: 1861421009558306997
       type: {class: BulletElementModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:

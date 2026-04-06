@@ -42,6 +42,6 @@ public class ChapterSelector : MonoBehaviour
 
         PlayerPrefs.SetInt("SelectedWorld", currentIndex);
         PlayerPrefs.SetInt("SelectedLevel", 1);
-        SceneManager.LoadScene("GamePlay");
+        SceneManager.LoadScene("GamePlayScene");
     }
 }

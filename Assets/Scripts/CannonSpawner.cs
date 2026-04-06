@@ -16,7 +16,8 @@ public class CannonSpawner : MonoBehaviour
     {
         await UniTask.Yield();
 
-        var index = PlayerPrefs.GetInt(SELECTEDCANNONKEY, 0);
+        //var index = PlayerPrefs.GetInt(SELECTEDCANNONKEY, 0);
+        int index = 0;
         index = Mathf.Clamp(index, 0, cannons.cannonsData.Length - 1);
 
         var data = cannons.cannonsData[index];

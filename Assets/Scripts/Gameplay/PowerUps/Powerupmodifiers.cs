@@ -603,44 +603,110 @@ namespace Gameplay.PowerUps
             cannon = null;
         }
     }
-    // ═════════════════════════════════════════════════════════
-    //  SUMMON EFFECTS  (split — each has different spawn
-    //  timing, lifecycle management, and cleanup logic)
-    // ═════════════════════════════════════════════════════════
-
-    // ── #1 Blade Summoner ────────────────────────────────────
-    // Periodic: spawns every N seconds, auto-destroys after lifetime
-
+    /// <summary>
+    /// SUMMON EFFECTS
+    /// </summary>
     [Serializable]
     public class BladeStrikeEffect : ISummonEffect
     {
         public GameObject strikePrefab;
-        [Min(0.1f)] public float strikeInterval = 2f;
-        [Min(0.1f)] public float strikeLifetime = 0.5f;
+
+        [Min(0.1f)] public float checkInterval = 0.5f;  // how often to scan for eggs
+        [Min(1f)] public float bladeSpeed = 12f;
+        [Min(90f)] public float rotationSpeed = 720f;
+        [Min(0.5f)] public float searchRadius = 50f;
+        [Min(0)] public int bladeDamage = 30;
+
+        [Tooltip("Local offset from cannon where blade sits when attached")]
+        public Vector3 localAttachOffset = new Vector3(1f, 0f, 0f);
 
         private ICannon cannon;
-        private float timer;
+        private SpinningSword activeBlade;
+        private float checkTimer;
+
+        private static readonly Collider2D[] searchBuffer = new Collider2D[16];
 
         public void Activate(ICannon cannon)
         {
             this.cannon = cannon;
-            timer = strikeInterval;
+            checkTimer = 0f;   // scan immediately on first tick
+
+            SpawnBlade();
         }
 
         public void Tick()
         {
-            if (cannon == null || strikePrefab == null) return;
-            timer -= Time.deltaTime;
-            if (timer <= 0f)
+            if (cannon == null) return;
+
+            // Blade was destroyed externally — respawn
+            if (activeBlade == null)
+                SpawnBlade();
+
+            // Only launch if blade is currently attached (idle)
+            if (activeBlade == null) return;
+
+            checkTimer -= Time.deltaTime;
+            if (checkTimer > 0f) return;
+            checkTimer = checkInterval;
+
+            // Blade is already flying or returning — don't launch again
+            // SpinningSword.Launch() guards against double-launch internally
+
+            Transform nearestEgg = FindNearestEgg(cannon.Transform.position);
+            if (nearestEgg != null)
             {
-                var go = UnityEngine.Object.Instantiate(
-                    strikePrefab, cannon.Transform.position, Quaternion.identity);
-                UnityEngine.Object.Destroy(go, strikeLifetime);
-                timer = strikeInterval;
+                UnityEngine.Debug.Log($"[BladeStrike] Egg found at {nearestEgg.position} — launching blade.");
+                activeBlade.Launch(nearestEgg.position);
             }
         }
 
-        public void Deactivate() => cannon = null;
+        private void SpawnBlade()
+        {
+            if (strikePrefab == null || cannon == null) return;
+
+            Vector3 spawnPos = cannon.Transform.TransformPoint(localAttachOffset);
+            var go = UnityEngine.Object.Instantiate(strikePrefab, spawnPos, Quaternion.Euler(0f, 0f, -11f));
+
+            // Attach to cannon immediately
+            go.transform.SetParent(cannon.Transform);
+
+            activeBlade = go.AddComponent<SpinningSword>();
+            activeBlade.Init(cannon.Transform, localAttachOffset, bladeSpeed, rotationSpeed, bladeDamage);
+
+            UnityEngine.Debug.Log("[BladeStrike] Blade spawned and attached to cannon.");
+        }
+
+        private Transform FindNearestEgg(Vector3 from)
+        {
+            int count = Physics2D.OverlapCircleNonAlloc(from, searchRadius, searchBuffer);
+
+            Transform nearest = null;
+            float nearestDist = float.MaxValue;
+
+            for (int i = 0; i < count; i++)
+            {
+                if (searchBuffer[i] == null) continue;
+                if (!searchBuffer[i].CompareTag("Egg")) continue;
+
+                float dist = ((Vector2)searchBuffer[i].transform.position - (Vector2)from).sqrMagnitude;
+                if (dist < nearestDist)
+                {
+                    nearestDist = dist;
+                    nearest = searchBuffer[i].transform;
+                }
+            }
+
+            return nearest;
+        }
+
+        public void Deactivate()
+        {
+            if (activeBlade != null)
+                UnityEngine.Object.Destroy(activeBlade.gameObject);
+
+            activeBlade = null;
+            cannon = null;
+        }
     }
 
     // ── #22 Shadow Turret ────────────────────────────────────

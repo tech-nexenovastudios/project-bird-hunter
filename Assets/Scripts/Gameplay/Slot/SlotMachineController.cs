@@ -12,7 +12,6 @@ namespace Gameplay.Slot
         [SerializeField] private ReelController[] reels;
         [SerializeField] private List<PowerupConfig> symbolLibrary;
 
-        // Tracks which reel the player last selected so we can un-highlight it
         private ReelController _selectedReel;
 
         private void Start()
@@ -27,29 +26,30 @@ namespace Gameplay.Slot
         private void OnEnable()
         {
             GameEvents.OnSpinStarted += Spin;
+            Debug.Log("[SlotMachine] OnEnable — subscribed to OnSpinStarted.");
         }
 
         private void OnDisable()
         {
             GameEvents.OnSpinStarted -= Spin;
+            Debug.Log("[SlotMachine] OnDisable — unsubscribed from OnSpinStarted.");
 
             foreach (var reel in reels)
             {
                 reel.OnPowerupSelected = null;
                 reel.SetHighlight(false);
-                // Kill only this reel's scroll tween, not everything in the scene
                 if (reel.content != null)
                     reel.content.DOKill();
             }
 
             _selectedReel = null;
-            // ← DOTween.KillAll() removed — it was killing the notification panel tween
         }
 
         // ───────── Spin ─────────
         private void Spin(List<PowerupConfig> resultsPerReel)
         {
-            // Reset selection state for a fresh spin
+            Debug.Log($"[SlotMachine] Spin() called. Results count: {resultsPerReel?.Count}");
+
             if (_selectedReel != null)
             {
                 _selectedReel.SetHighlight(false);
@@ -59,45 +59,53 @@ namespace Gameplay.Slot
             for (int i = 0; i < reels.Length; i++)
             {
                 var result = resultsPerReel[i];
+                Debug.Log($"[SlotMachine] Reel[{i}] assigned result: {result?.displayName ?? "NULL"}");
+
                 var index = i;
-                var reel = reels[i]; // capture for lambda
+                var reel = reels[i];
 
                 reels[i].OnPowerupSelected = null;
-
-                // Capture reel reference so OnReelSelected knows which reel was clicked.
-                // NOTE: We intentionally do NOT clear this listener after first selection
-                // so the player can change their mind and pick a different reel.
                 reels[i].OnPowerupSelected += (config) => OnReelSelected(reel, config);
 
                 DOVirtual.DelayedCall(i * 0.12f, () => reels[index].SpinToResult(result));
             }
         }
 
-        // ───────── Player selects / re-selects a reel ─────────
         private void OnReelSelected(ReelController clickedReel, PowerupConfig selected)
         {
-            // Un-highlight previously selected reel (if different)
-            if (_selectedReel != null && _selectedReel != clickedReel)
-                _selectedReel.SetHighlight(false);
+            Debug.Log($"[SlotMachine] OnReelSelected — powerup: {selected?.displayName ?? "NULL"} | id: {selected?.id ?? "NULL"}");
 
-            // Highlight the newly selected reel
+            if (_selectedReel != null && _selectedReel != clickedReel)
+            {
+                Debug.Log("[SlotMachine] Un-highlighting previously selected reel.");
+                _selectedReel.SetHighlight(false);
+            }
+
             _selectedReel = clickedReel;
             clickedReel.SetHighlight(true);
 
-            // GameEvents.FirePowerupCommitted is already fired inside ReelController's
-            // click listener — no need to fire it again here.
+            // ── THIS was the missing call ──
+            GameProgressManager.Instance.PlayerSelectedPowerup(selected);
         }
 
-        // ───────── Called by UI confirm button via SlotMachineScreen ─────────
+        // ───────── Confirm button ─────────
         public void CommitSelection()
         {
+            Debug.Log("[SlotMachine] CommitSelection() called.");
+
             var selected = GameProgressManager.Instance.LastSelectedPowerup;
+
             if (selected == null)
             {
-                Debug.LogWarning("⚠️ CommitSelection: LastSelectedPowerup is null.");
+                Debug.LogWarning("[SlotMachine] ⚠️ CommitSelection: LastSelectedPowerup is NULL — player hasn't selected a reel yet.");
                 return;
             }
+
+            Debug.Log($"[SlotMachine] Committing powerup: '{selected.displayName}' (id: {selected.id})");
+
             GameProgressManager.Instance.ClearLastSelectedPowerup();
+            Debug.Log("[SlotMachine] LastSelectedPowerup cleared. Calling OnSpinComplete...");
+
             GameManager.Instance.OnSpinComplete();
         }
     }
