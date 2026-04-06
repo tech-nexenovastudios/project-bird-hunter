@@ -103,9 +103,9 @@ public class PanelOpener : MonoBehaviour
     //     cg.DOFade(1f, openDuration).SetUpdate(true);
     // }
 
-    // ==================== Close Animations ====================
+   // ==================== Close Animations ====================
 
-    /// <summary>Scales child down, then deactivates parent.</summary>
+    /// <summary>Scales child down to 0.8f, then deactivates parent.</summary>
     public void ClosePanel(GameObject parent)
     {
         var child = GetChild(parent);
@@ -113,11 +113,13 @@ public class PanelOpener : MonoBehaviour
         if (!parent.activeSelf) return;
 
         child.DOKill();
-        child.DOScale(Vector3.zero, closeDuration).SetEase(closeEase).SetUpdate(true)
+
+        // Tween to 0.8f scale instead of 0
+        child.DOScale(Vector3.one * 0.8f, closeDuration).SetEase(closeEase).SetUpdate(true)
             .OnComplete(() =>
             {
                 parent.SetActive(false);
-                child.localScale = Vector3.one;
+                child.localScale = Vector3.one; // Reset scale for the next time it opens
             });
     }
 
