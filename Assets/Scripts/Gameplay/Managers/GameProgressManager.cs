@@ -93,6 +93,7 @@ namespace Gameplay.Managers
 
             _progress.highScore = Mathf.Max(_progress.highScore, scoreAchieved);
             _progress.totalScore += scoreAchieved;
+            _progress.MarkFirstTimeClear(_progress.currentChapter, _progress.currentLevel);
 
             int completedLevel = _progress.currentLevel;
 
@@ -257,6 +258,10 @@ namespace Gameplay.Managers
             public int playerLevel;
             public int lastLevelUpXP;
             public int playerSpins;
+            public int totalCoins;
+            public int totalGems;
+            public int totalPower;
+            public List<string> firstTimeClearedLevels = new();
         }
 
         public void SaveProgress()
@@ -273,7 +278,11 @@ namespace Gameplay.Managers
                 playerXP = _progress.playerXP,
                 playerLevel = _progress.playerLevel,
                 lastLevelUpXP = _progress.lastLevelUpXP,
-                playerSpins = _progress.playerSpins
+                playerSpins = _progress.playerSpins,
+                totalCoins = _progress.totalCoins,
+                totalGems = _progress.totalGems,
+                totalPower = _progress.totalPower,
+                firstTimeClearedLevels = _progress.firstTimeClearedLevels ?? new()
             };
 
             for (int i = 0; i < 4; i++)
@@ -319,7 +328,11 @@ namespace Gameplay.Managers
                     playerXP = data.playerXP,
                     playerLevel = Mathf.Max(1, data.playerLevel),
                     lastLevelUpXP = data.lastLevelUpXP,
-                    playerSpins = data.playerSpins
+                    playerSpins = data.playerSpins,
+                    totalCoins = data.totalCoins,
+                    totalGems = data.totalGems,
+                    totalPower = data.totalPower,
+                    firstTimeClearedLevels = data.firstTimeClearedLevels ?? new()
                 };
 
                 for (int i = 0; i < 4; i++)

@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10188d1dc44fa4c75aad7b1cb5b9d106, type: 3}
+  m_Name: New Gameplay Reward Config
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Rewards.GameplayRewardConfig
+  coinDropPhases:
+  - phase: Early
+    chapters: "1\u201310"
+    minCoins: 30
+    maxCoins: 80
+    notes: Mostly kills/combos
+  - phase: Mid
+    chapters: "11\u201320"
+    minCoins: 100
+    maxCoins: 200
+    notes: Denser spawns
+  - phase: Late
+    chapters: "21\u201330"
+    minCoins: 250
+    maxCoins: 400
+    notes: More elite enemies sources
+  gemDropPhases:
+  - phase: Early
+    chapters: "1\u201310"
+    dropChancePercent: 3
+    minGemsPerDrop: 1
+    maxGemsPerDrop: 1
+  - phase: Mid
+    chapters: "11\u201320"
+    dropChancePercent: 5
+    minGemsPerDrop: 1
+    maxGemsPerDrop: 2
+  - phase: Late
+    chapters: "21\u201330"
+    dropChancePercent: 8
+    minGemsPerDrop: 2
+    maxGemsPerDrop: 3
+  completionPhases:
+  - phase: Early
+    chapters: "1\u201310"
+    baseCoins: 550
+    performanceBonusMin: 50
+    performanceBonusMax: 100
+  - phase: Mid
+    chapters: "11\u201320"
+    baseCoins: 1320
+    performanceBonusMin: 120
+    performanceBonusMax: 240
+  - phase: Late
+    chapters: "21\u201330"
+    baseCoins: 2750
+    performanceBonusMin: 250
+    performanceBonusMax: 500
+  gemsOnFirstTimeClear: 10
+  powerCostPerAttempt: 5
+  powerRefundChance: 0.25
+  powerRefundAmount: 5
+  expectedPowerReturnRatio: 0.25
+  coinMultiplierForAd: 2
+  powerPerAdRefill: 5
+  gemsPerAdReward: 10

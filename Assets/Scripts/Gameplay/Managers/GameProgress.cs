@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Gameplay
 {
     [Serializable]
-    public class GameProgress
+    public partial class GameProgress
     {
         public int currentChapter = 1;
         public int currentLevel   = 1;
@@ -19,6 +19,27 @@ namespace Gameplay
         public int playerLevel   = 1;
         public int lastLevelUpXP = 0;
         public int playerSpins   = 0;
+        
+        public int totalCoins = 0;
+        public int totalGems = 0;
+        public int totalPower = 0;
+
+        public List<string> firstTimeClearedLevels = new();
+        
+        public bool HasFirstTimeClear(int chapter, int level)
+        {
+            string key = $"Ch{chapter}_L{level}";
+            return firstTimeClearedLevels.Contains(key);
+        }
+
+        public void MarkFirstTimeClear(int chapter, int level)
+        {
+            string key = $"Ch{chapter}_L{level}";
+            if (!firstTimeClearedLevels.Contains(key))
+            {
+                firstTimeClearedLevels.Add(key);
+            }
+        }
 
         // 4 slots per chapter, reset on new chapter
         public PowerUpSlot[] chapterSlots = new PowerUpSlot[4]
@@ -121,5 +142,58 @@ namespace Gameplay
         {
             chapterSlots = new PowerUpSlot[4] { new(0), new(1), new(2), new(3) };
         }
+        
+        
+        public void AddCoins(int amount)
+        {
+            if (amount > 0) totalCoins += amount;
+        }
+
+        public bool SpendCoins(int amount)
+        {
+            if (totalCoins >= amount)
+            {
+                totalCoins -= amount;
+                return true;
+            }
+            return false;
+        }
+
+        public void AddGems(int amount)
+        {
+            if (amount > 0) totalGems += amount;
+        }
+
+        public bool SpendGems(int amount)
+        {
+            if (totalGems >= amount)
+            {
+                totalGems -= amount;
+                return true;
+            }
+            return false;
+        }
+
+
+        public void AddPower(int amount)
+        {
+            if (amount > 0) totalPower += amount;
+        }
+
+        public bool SpendPower(int amount)
+        {
+            if (totalPower >= amount)
+            {
+                totalPower -= amount;
+                return true;
+            }
+            return false;
+        }
+
+        public int GetCoins() => totalCoins;
+
+        public int GetGems() => totalGems;
+
+        public int GetPower() => totalPower;
     }
 }
