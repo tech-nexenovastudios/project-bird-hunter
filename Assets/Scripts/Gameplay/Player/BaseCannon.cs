@@ -170,7 +170,20 @@ namespace Gameplay.Player
         {
             HandleMovement();
         }
+        // ── Speed modifier ────────────────────────────────────
+        private float moveSpeedMultiplier = 1f;
 
+        public void ApplySpeedMultiplier(float multiplier)
+        {
+            Debug.Log("Applying speed multiplier: " + multiplier);
+            moveSpeedMultiplier = Mathf.Max(0f, multiplier);
+        }
+
+        public void ResetSpeedMultiplier()
+        {
+            Debug.Log("Resetting speed multiplier to 1");
+            moveSpeedMultiplier = 1f;
+        }
         // ════════════════════════════════════════════════════════
         //  ICannon — ATTACK MODIFIERS
         // ════════════════════════════════════════════════════════
@@ -232,7 +245,7 @@ namespace Gameplay.Player
 
             CurrentHp -= damage;
             CurrentHp = Mathf.Clamp(CurrentHp, 0, MaxHp);
-
+            Debug.Log("Cannon took " + damage + "damage");
             OnDamageTakenVFX(damage);
             OnHealthChanged(CurrentHp, MaxHp);
             GameEvents.FireCannonHit(damage);
@@ -299,8 +312,7 @@ namespace Gameplay.Player
 
         protected virtual void HandleInput()
         {
-            if (Gameplay.Managers.GameManager.Instance != null &&
-                Gameplay.Managers.GameManager.Instance.state != GameState.Gameplay)
+            if (Gameplay.Managers.GameManager.Instance != null && Gameplay.Managers.GameManager.Instance.state != GameState.Gameplay)
             {
                 movementInput = Vector2.zero;
                 return;
@@ -309,13 +321,18 @@ namespace Gameplay.Player
             if (Input.GetMouseButton(0))
             {
                 StartFiring();
-                Vector3 mousePos = mainCam.ScreenToWorldPoint(Input.mousePosition);
-                float direction = mousePos.x > transform.position.x ? 1f : -1f;
+                Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                float delta = mousePos.x - transform.position.x;
 
-                if (Mathf.Abs(mousePos.x - transform.position.x) < 0.1f)
+                if (Mathf.Abs(delta) < 0.1f)
+                {
                     movementInput = Vector2.zero;
+                }
                 else
-                    movementInput = new Vector2(direction, 0);
+                {
+                    float inputStrength = Mathf.InverseLerp(0.1f, 1.5f, Mathf.Abs(delta));
+                    movementInput = new Vector2(Mathf.Sign(delta) * inputStrength, 0);
+                }
             }
             else
             {
@@ -329,7 +346,8 @@ namespace Gameplay.Player
             if (CannonStats == null) return;
 
             Vector2 oldPos = rb.position;
-            Vector2 newPos = rb.position + movementInput * (CannonStats.currentMoveSpeed * Time.fixedDeltaTime);
+            // was:  movementInput * (CannonStats.currentMoveSpeed * Time.fixedDeltaTime)
+            Vector2 newPos = rb.position + movementInput * (CannonStats.currentMoveSpeed * moveSpeedMultiplier * Time.fixedDeltaTime);
 
             float leftBound = mainCam.ViewportToWorldPoint(Vector3.zero).x + halfWidth;
             float rightBound = mainCam.ViewportToWorldPoint(Vector3.right).x - halfWidth;
@@ -429,7 +447,12 @@ namespace Gameplay.Player
                 if (bullet == null) return null;
             }
 
-            bullet.Init(CannonStats);
+            // Derive the fire direction from the spawn rotation so Init
+            // gets the exact direction the bullet is aimed at, regardless
+            // of when transform.up is read later.
+            Vector2 fireDirection = rotation * Vector2.up;
+
+            bullet.Init(CannonStats, fireDirection);   // ← updated signature
             bullet.damage = CurrentAttack;
             bullet.bulletSpeed = CannonStats.currentBulletSpeed;
 

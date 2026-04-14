@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4717cec3377f42a4da8a0146359e137c, type: 3}
+  m_Name: Drone Swarm Config
+  m_EditorClassIdentifier: Assembly-CSharp::DroneSwarmConfig
+  cooldown: 3
+  duration: 2
+  damage: 10
+  warningPrefab: {fileID: 0}
+  warningDuration: 0.5
+  vfxPrefab: {fileID: 0}
+  droneCount: 2
+  spawnInterval: 4
+  spawnRadius: 1
+  scaleRatio: 0.3
+  healthRatio: 0.3
+  dronePrefab: {fileID: 163310292118945550, guid: 0845be16d3d741e48993a096434d3438, type: 3}
+  moveSpeed: 2
+  trackingStiffness: 3
+  separationRadius: 1
+  separationForce: 2
+  hoverAmplitude: 0.3
+  hoverSpeed: 2
+  contactDamage: 10
+  damageCooldown: 1
+  deathVfxPrefab: {fileID: 0}

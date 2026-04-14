@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b13a49a9c22fcb641871c3cd7a81f974, type: 3}
+  m_Name: 1-GorgonGriffin
+  m_EditorClassIdentifier: Assembly-CSharp::BossBirdConfig
+  bossName: Gorgon Griffin
+  bossSprite: {fileID: 0}
+  animatorController: {fileID: 0}
+  maxHealth: 500
+  contactDamage: 20
+  phase2HealthMultiplier: 1.5
+  phase1Movement: {fileID: 11400000, guid: 246487c970c93eb4786599a70911bed7, type: 2}
+  phase2Movement: {fileID: 11400000, guid: 246487c970c93eb4786599a70911bed7, type: 2}
+  phase1Attack: {fileID: 11400000, guid: e5de08bf4d32be3488a0928d7e7aa4e7, type: 2}
+  phase2Attack: {fileID: 11400000, guid: ebcea2f5e6dc9ce42877e247f6185348, type: 2}
+  enrageThreshold: 0.3
+  enrageSpeedMultiplier: 1.3
+  scoreValue: 1000
+  deathVFX: {fileID: 0}

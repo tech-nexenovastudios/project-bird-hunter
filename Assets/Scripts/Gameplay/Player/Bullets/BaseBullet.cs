@@ -77,19 +77,18 @@ namespace Gameplay.Player
 
         protected virtual void OnInitComplete() { }
 
-        public void Init(CannonStats stats)
+        public void Init(CannonStats stats, Vector2 fireDirection)
         {
             bulletSpeed = stats.currentBulletSpeed;
             damage = stats.currentBulletDamage;
 
-            if (rb != null)
-                rb.mass = stats.baseBulletMass;
+            if (rb != null) rb.mass = stats.baseBulletMass;
 
             startPosition = transform.position;
 
             if (rb != null)
             {
-                rb.linearVelocity = (Vector2)transform.up * bulletSpeed;
+                rb.linearVelocity = fireDirection.normalized * bulletSpeed;
                 rb.angularVelocity = 0f;
             }
 
@@ -101,11 +100,13 @@ namespace Gameplay.Player
             currentLifetime = 0f;
             isDeactivated = false;
             instantKillChance = 0f;
-            startPosition = transform.position;
+           
 
             if (rb != null)
+            {
                 rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
+                rb.angularVelocity = 0f;
+            }
 
             ClearOldVfx();
             onHitEffects.Clear();
@@ -160,6 +161,21 @@ namespace Gameplay.Player
 
             if (other.gameObject.CompareTag("Bird"))
                 OnHitTarget(other);
+            else if (other.gameObject.CompareTag("BossWeapons"))
+                OnHitBossWeapon(other);          // separate path — uses IDamageablee
+        }
+
+        // Handles boss-side objects that implement IDamageablee (double-e)
+        private void OnHitBossWeapon(Collider2D collision)
+        {
+            if (collision.TryGetComponent<IDamageablee>(out var damageable))
+            {
+                //damageable.TakeDamage(damage);
+                Destroy(gameObject);
+                //ShowDamageText(collision.ClosestPoint(transform.position), damage);
+            }
+
+            //Deactivate();
         }
 
         protected void OnCollisionEnter2D(Collision2D other)
@@ -175,6 +191,7 @@ namespace Gameplay.Player
             if (other.gameObject.CompareTag("Egg"))
                 OnHitTarget(other.collider);
         }
+      
 
         protected virtual void OnHitTarget(Collider2D collision)
         {

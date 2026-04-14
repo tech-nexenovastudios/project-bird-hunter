@@ -13,6 +13,7 @@ TagManager:
   - Fire
   - ForceField
   - PlayerCanvas
+  - BossWeapons
   layers:
   - Default
   - TransparentFX
@@ -30,7 +31,7 @@ TagManager:
   - Player
   - PlayerHurt
   - Bullet
-  - 
+  - Laser
   - 
   - 
   - 
@@ -50,14 +51,17 @@ TagManager:
   - name: Background
     uniqueID: 1749679551
     locked: 0
+  - name: Default
+    uniqueID: 0
+    locked: 0
   - name: LASER
     uniqueID: 336380321
     locked: 0
+  - name: Bird
+    uniqueID: 3238067205
+    locked: 0
   - name: Ground
     uniqueID: 1335775815
-    locked: 0
-  - name: Default
-    uniqueID: 0
     locked: 0
   - name: Egg
     uniqueID: 3987065495

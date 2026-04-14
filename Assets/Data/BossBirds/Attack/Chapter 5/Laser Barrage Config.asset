@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a40e62f91689a4ab0441999fdb85c2, type: 3}
+  m_Name: Laser Barrage Config
+  m_EditorClassIdentifier: Assembly-CSharp::LaserBarrageConfig
+  cooldown: 0
+  duration: 1
+  damage: 10
+  warningPrefab: {fileID: 0}
+  warningDuration: 0.5
+  vfxPrefab: {fileID: 0}
+  fireRate: 4
+  laserShotPrefab: {fileID: 3524382415825208812, guid: 73b15b7b2550ba84cb4e6c9aa3db5afe, type: 3}
+  shotSpeed: 12
+  shotDamage: 15
+  leftLaserDropPosition: LaserDropPos1
+  rightLaserDropPosition: LaserDropPos2
+  spreadAngle: 12

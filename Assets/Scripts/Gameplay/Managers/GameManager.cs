@@ -152,6 +152,8 @@ namespace Gameplay.Managers
             spawnController.levelProfile = profile;
             spawnController.ResetLevel();
 
+            RewardManager.Instance?.ResetForNewLevel();
+
             if (currentCannon == null)
                 currentCannon = await cannonSpawner.CannonSpawn();
 

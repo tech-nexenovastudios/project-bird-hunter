@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd6dc95a03221a644a436c6e744d40cd, type: 3}
+  m_Name: Hellfire Dive Config
+  m_EditorClassIdentifier: Assembly-CSharp::HellfireDiveConfig
+  cooldown: 3
+  duration: 2
+  damage: 10
+  warningPrefab: {fileID: 0}
+  warningDuration: 0.5
+  vfxPrefab: {fileID: 0}
+  diveSpeed: 6
+  diveTargetY: -1
+  hoverDurationAtBottom: 0.5
+  returnSpeed: 3
+  fireColumnPrefab: {fileID: 652019301415996210, guid: 1a52472de14ea8544aa5f286876cd46c, type: 3}
+  columnLifetime: 3
+  columnWidth: 2
+  columnDamagePerTick: 10
+  columnTicksPerSecond: 1

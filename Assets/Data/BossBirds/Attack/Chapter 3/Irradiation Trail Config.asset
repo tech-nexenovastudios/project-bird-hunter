@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7edae68ab5ea71741a104ca45bdb1b97, type: 3}
+  m_Name: Irradiation Trail Config
+  m_EditorClassIdentifier: Assembly-CSharp::IrradiationTrailConfig
+  cooldown: 3
+  duration: 2
+  damage: 10
+  warningPrefab: {fileID: 0}
+  warningDuration: 0.5
+  vfxPrefab: {fileID: 0}
+  radiationCloudPrefab: {fileID: 1515403435480556047, guid: 0e16c6583f2e3a44ba3062692de8f67e, type: 3}
+  spawnInterval: 0.8
+  maxCloudsActive: 6
+  cloudStartRadius: 2
+  cloudShrinkSpeed: 0.15
+  cloudMinRadius: 0.3
+  cloudLifetime: 8
+  cloudDamagePerTick: 5
+  cloudTicksPerSecond: 1

@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8649193065470689215}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: TrailHolder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,7 +44,7 @@ GameObject:
   - component: {fileID: 8219800597233442474}
   - component: {fileID: 5804126439959256294}
   - component: {fileID: 4253012646127871091}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: DamageText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -227,9 +227,9 @@ GameObject:
   - component: {fileID: 9069083662064751974}
   - component: {fileID: 7173554452605538288}
   - component: {fileID: -7723791738538617700}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: SingleShotBullet
-  m_TagString: Player
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -297,7 +297,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -1538660297
-  m_SortingLayer: 3
+  m_SortingLayer: 7
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: f8f98e9d75dbe4c459caaa1b94d0cf75, type: 3}
@@ -345,7 +345,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.49999997
+  m_Radius: 0.34
 --- !u!114 &7173554452605538288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -358,6 +358,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fb8e6b969194800818bd790da9ea9d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Cannon.SimpleBullet
+  instantKillChance: 0
   bulletSpeed: 0
   damage: 0
   lifetime: 5
@@ -404,7 +405,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1226637380801028, guid: 673011a12ec748844a398a9504a957a4, type: 3}
       propertyPath: m_Layer
-      value: 0
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 1677232327238848, guid: 673011a12ec748844a398a9504a957a4, type: 3}
       propertyPath: m_Name
@@ -412,7 +413,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1677232327238848, guid: 673011a12ec748844a398a9504a957a4, type: 3}
       propertyPath: m_Layer
-      value: 0
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 1677232327238848, guid: 673011a12ec748844a398a9504a957a4, type: 3}
       propertyPath: m_IsActive
@@ -484,7 +485,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 199599168655840488, guid: 673011a12ec748844a398a9504a957a4, type: 3}
       propertyPath: m_SortingLayer
-      value: 2
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 199599168655840488, guid: 673011a12ec748844a398a9504a957a4, type: 3}
       propertyPath: m_SortingLayerID
@@ -515,6 +516,10 @@ PrefabInstance:
     - target: {fileID: 2298215423179618608, guid: ab0aac228b9fc0640817f17a30f9fff5, type: 3}
       propertyPath: m_Name
       value: FX_Fireball_Shooting_Straight_Trail_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 2298215423179618608, guid: ab0aac228b9fc0640817f17a30f9fff5, type: 3}
+      propertyPath: m_Layer
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 2298215423179618608, guid: ab0aac228b9fc0640817f17a30f9fff5, type: 3}
       propertyPath: m_IsActive
@@ -562,7 +567,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5640326841147422707, guid: ab0aac228b9fc0640817f17a30f9fff5, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.01
+      value: 0.06
       objectReference: {fileID: 0}
     - target: {fileID: 5640326841147422707, guid: ab0aac228b9fc0640817f17a30f9fff5, type: 3}
       propertyPath: m_LocalPosition.z
@@ -599,6 +604,10 @@ PrefabInstance:
     - target: {fileID: 5640326841147422707, guid: ab0aac228b9fc0640817f17a30f9fff5, type: 3}
       propertyPath: m_ConstrainProportionsScale
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5738356788898185824, guid: ab0aac228b9fc0640817f17a30f9fff5, type: 3}
+      propertyPath: m_Layer
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 5738356788898185824, guid: ab0aac228b9fc0640817f17a30f9fff5, type: 3}
       propertyPath: m_IsActive

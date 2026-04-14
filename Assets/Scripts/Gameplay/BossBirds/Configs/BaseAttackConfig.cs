@@ -1,16 +1,18 @@
 using UnityEngine;
 
-public class BaseAttackConfig : MonoBehaviour
+public abstract class BaseAttackConfig : ScriptableObject
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [Header("Shared Timing")]
+    public float cooldown = 3f;
+    public float duration = 2f;
+    public float damage = 10f;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    [Header("Telegraphing")]
+    public GameObject warningPrefab;
+    public float warningDuration = 0.5f;
+
+    [Header("VFX")]
+    public GameObject vfxPrefab;
+
+    public abstract BaseAttackBehaviour CreateAttack(GameObject parent);
 }

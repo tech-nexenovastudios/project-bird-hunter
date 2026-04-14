@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e65df89751aa4c47a68e500adfdf0e6, type: 3}
+  m_Name: Spectral Feathers Config
+  m_EditorClassIdentifier: Assembly-CSharp::SpectralFeathersConfig
+  cooldown: 3
+  duration: 2
+  damage: 10
+  warningPrefab: {fileID: 0}
+  warningDuration: 0.5
+  vfxPrefab: {fileID: 0}
+  featherPrefab: {fileID: 7866346888320421732, guid: f9170d1417f9a4b4588cb33dc7708780, type: 3}
+  featherCount: 4
+  spawnInterval: 0.25
+  spawnWidth: 4
+  spawnYOffset: 0.5
+  fallSpeed: 1
+  fallSpeedVariation: 0.1
+  zigzagAmplitude: 1
+  zigzagFrequency: 1
+  zigzagFrequencyVariation: 0.2
+  rotateToMovement: 1
+  spinSpeed: 10
+  contactDamage: 4
+  damageCooldown: 2
+  destroyBelowY: -6
