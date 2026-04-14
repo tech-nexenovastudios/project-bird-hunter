@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 771031598568122623}
   - component: {fileID: 4033468967971328435}
   - component: {fileID: 7489810940935503100}
+  - component: {fileID: 3060192697768168186}
   m_Layer: 5
   m_Name: RarePowerUPCard
   m_TagString: Untagged
@@ -136,6 +137,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PowerupCardController
   PowerupId: 
   Rarity: 0
+--- !u!114 &3060192697768168186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 57752487361367302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
 --- !u!1 &2488295525590367713
 GameObject:
   m_ObjectHideFlags: 0

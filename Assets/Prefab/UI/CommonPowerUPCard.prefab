@@ -227,6 +227,7 @@ GameObject:
   - component: {fileID: 6785574535315809070}
   - component: {fileID: 2044778714347335134}
   - component: {fileID: 1451864756995215842}
+  - component: {fileID: 8076388750714403640}
   m_Layer: 5
   m_Name: CommonPowerUPCard
   m_TagString: Untagged
@@ -348,11 +349,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d49192e284a03f48be5325df529042d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PowerupCardController
-  powerupId: 
-  rarityValue: 0
-  iconImage: {fileID: 0}
-  headerAssetImage: {fileID: 0}
-  headerText: {fileID: 0}
+  PowerupId: 
+  Rarity: 0
+--- !u!114 &8076388750714403640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2385054722748686307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
 --- !u!1 &5307755720929251749
 GameObject:
   m_ObjectHideFlags: 0

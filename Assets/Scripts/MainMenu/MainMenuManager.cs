@@ -17,5 +17,6 @@ public class MainMenuManager : MonoBehaviour
     {
         Application.targetFrameRate = 60;
         StartCoroutine(taskGenerator.GenerateTask());
+      
     }
 }

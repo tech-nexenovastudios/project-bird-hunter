@@ -7302,6 +7302,7 @@ GameObject:
   - component: {fileID: 3145773446641284612}
   - component: {fileID: 7702006438298423112}
   - component: {fileID: 420497146327141609}
+  - component: {fileID: 8262840746090866777}
   m_Layer: 5
   m_Name: Profile
   m_TagString: Untagged
@@ -7457,6 +7458,20 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 744edd5bbb005469e845586be88bb4fa, type: 3}
   - {fileID: 21300000, guid: 16999640cc74b4b899744f3ba70770c2, type: 3}
   - {fileID: 21300000, guid: ec1926eda34c34332b9042c0631c0143, type: 3}
+--- !u!114 &8262840746090866777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6236301607496973594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
 --- !u!1 &6251816508355246930
 GameObject:
   m_ObjectHideFlags: 0

@@ -963,7 +963,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -511.1999, y: 674.249}
+  m_AnchoredPosition: {x: -511.1999, y: 674.2496}
   m_SizeDelta: {x: 1042.7, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &788427903221484847
@@ -1437,8 +1437,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6617687791272993575}
   m_HandleRect: {fileID: 7826170215741318921}
   m_Direction: 2
-  m_Value: 1.0000004
-  m_Size: 0.3233806
+  m_Value: 1
+  m_Size: 0.32336348
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2874,7 +2874,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8076388750714403640, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -6112,7 +6113,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8076388750714403640, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -8716,7 +8718,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8076388750714403640, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -8944,7 +8947,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8076388750714403640, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -9282,7 +9286,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8076388750714403640, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -10094,16 +10099,39 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8076388750714403640, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2385054722748686307, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4409046357951301466}
   m_SourcePrefab: {fileID: 100100000, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
 --- !u!224 &1561805042502275905 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7884854768785813541, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
   m_PrefabInstance: {fileID: 8700959752718836580}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &6474327339232361607 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2385054722748686307, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
+  m_PrefabInstance: {fileID: 8700959752718836580}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4409046357951301466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6474327339232361607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
 --- !u!1001 &8914366364567380444
 PrefabInstance:
   m_ObjectHideFlags: 0
