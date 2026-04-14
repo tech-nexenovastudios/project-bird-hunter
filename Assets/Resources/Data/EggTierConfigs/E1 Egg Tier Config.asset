@@ -24,14 +24,14 @@ MonoBehaviour:
   hitSound: {fileID: 0}
   destroySounds: []
   eggPrefab: {fileID: 1251663967950569254, guid: f66e0802351514cbca329f14bb654164, type: 3}
-  bounceVelocity: 10
-  bounceIncrease: 1.5
-  horizontalIncrease: 1.2
-  maxSpeed: 6
+  bounceIncrease: 1.8
+  horizontalIncrease: 1.6
+  maxSpeed: 7
   gravityScale: 0.6
-  mass: 2.5
-  linearDamping: 0
+  mass: 0.5
+  linearDamping: 0.15
+  desiredBounceHeight: 8
   splitForce: 4
   splitInto: {fileID: 0}
   splitCount: 0
-  cannonDamage: 2
+  cannonDamage: 5

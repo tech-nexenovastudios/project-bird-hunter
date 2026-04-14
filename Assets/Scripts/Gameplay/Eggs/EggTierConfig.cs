@@ -19,19 +19,28 @@ namespace Gameplay.Eggs
         public AudioClip hitSound;
         public AudioClip[] destroySounds;
         
-        //public Sprite sprite;
         public GameObject eggPrefab;
         
-        [Header("Bounce Settings")]
-        public float bounceVelocity = 8f;       // Y velocity on ground hit
-        public float bounceIncrease = 1.5f;     // extra bounce for smaller eggs
-        public float horizontalIncrease = 1.2f; // horizontal push multiplier
-        public float maxSpeed = 12f;            // clamp speed for safety
+        // [Header("Bounce Settings")]
+        // [Tooltip("Base Y velocity applied on ground bounce")]
+        // public float bounceVelocity = 8f;
+        
+        [Tooltip("Extra bounce velocity for smaller eggs (multiplicative)")]
+        public float bounceIncrease = 1.5f;
+        
+        [Tooltip("Horizontal velocity multiplier during bounces")]
+        public float horizontalIncrease = 1.2f;
+        
+        [Tooltip("Maximum velocity clamp for safety")]
+        public float maxSpeed = 12f;
         
         [Header("Physics Settings")]
         public float gravityScale = 1f;
         public float mass;
         public float linearDamping;
+        [Space(10)]
+        public float desiredBounceHeight;
+        
         
         [Header("Split Settings")]
         public float splitForce = 4f;
@@ -45,9 +54,9 @@ namespace Gameplay.Eggs
             return new Vector2(dir.x * splitForce * horizontalIncrease, splitForce);
         }
         
-        public float GetBounceVelocityForSplit()
-        {
-            return bounceVelocity + bounceIncrease;
-        }
+        // public float GetBounceVelocityForSplit()
+        // {
+        //     return bounceVelocity + bounceIncrease;
+        // }
     }
 }

@@ -2,7 +2,7 @@ using UnityEngine;
 
 using System.Collections;
 using System.Collections.Generic;
-
+using DG.Tweening;
 using Gameplay.Birds;
 using Gameplay.Eggs;
 using Gameplay.Levels;
@@ -438,6 +438,8 @@ namespace Gameplay
             Destroy(bird.gameObject);
         }
 
+        #region Attacking Birds
+        
         private void TrySpawnAttackingBird()
         {
             if (levelProfile.attackingBirdPool == null || levelProfile.attackingBirdPool.Length == 0)
@@ -488,14 +490,16 @@ namespace Gameplay
             }
             return pool[pool.Length - 1];
         }
-
+        
         private void HandleAttackingBirdDestroyed(AttackingBird bird)
         {
             bird.OnDestroyed -= HandleAttackingBirdDestroyed;
             _activeAttackingBirds.Remove(bird);
             Destroy(bird.gameObject);
         }
-
+        
+        #endregion
+        
         void HandleBirdLayEgg(BaseBird bird)
         {
             if (_draining) return;
@@ -523,12 +527,64 @@ namespace Gameplay
             rb.AddForce(new Vector2(-2f, 0f), ForceMode2D.Impulse);
 
             egg.Init(tier, hp, sortingIndex: _sortingIndex++);
+            
+            egg.OnTrySplit += HandleEggSplit;
             egg.OnDestroyed += HandleEggDestroyed;
 
             _activeEggs.Add(egg);
             _pressureTracker.RegisterEgg(egg);
             TrackEggAdded(tier);
             _totalTrackedScore += CalculateEggMaxScore(tier);
+        }
+
+        private void HandleEggSplit(Egg egg)
+        {
+            Debug.Log($"[SpawnController] Egg Splitting tier={egg.config?.tierId}, " +
+                      $"splitInto={egg.config?.splitInto?.tierId}, remaining={_activeEggs.Count}");
+            if (egg == null) return;
+            
+            if (egg.config?.splitInto != null)
+            {
+                EggTierConfig splitTier = egg.config.splitInto;
+
+                if (splitTier.eggPrefab == null)
+                {
+                    Debug.LogError($"[SpawnController] No eggPrefab in EggTierConfig '{splitTier.tierId}'.");
+                }
+                else
+                {
+                    for (int i = 0; i < egg.config.splitCount; i++)
+                    {
+                        if (!IsEggTierAllowed(splitTier))
+                        {
+                            Debug.Log($"[SpawnController] Split tier {splitTier.tierId} at cap — skipping.");
+                            continue;
+                        }
+
+                        var offset = i == 0 ? new Vector3(-.5f, 0.5f, 0f) : new Vector3(.5f, 0.5f, 0f);
+                        
+                        var isLeft = i % 2 == 0;
+                        
+                        var go     = Instantiate(splitTier.eggPrefab, egg.transform.position, Quaternion.identity);
+                        
+                        go.transform.DOJump(egg.transform.position + offset, 0.5f, 1, 0.5f).SetEase(Ease.OutBack);
+                        
+                        var newEgg = go.GetComponent<Egg>();
+
+                        int baseHp = Random.Range(splitTier.baseHpMin, splitTier.baseHpMax + 1);
+                        int hp     = Mathf.RoundToInt(baseHp * levelProfile.hpMultiplier);
+
+                        newEgg.Init(splitTier, hp, _sortingIndex++);
+                        
+                        newEgg.OnTrySplit += HandleEggSplit;
+                        newEgg.OnDestroyed += HandleEggDestroyed;
+
+                        _activeEggs.Add(newEgg);
+                        _pressureTracker.RegisterEgg(newEgg);
+                        TrackEggAdded(splitTier);
+                    }
+                }
+            }
         }
 
         private void SpawnEggFromPosition(Vector3 worldPos, EggTierConfig tier)
@@ -557,6 +613,7 @@ namespace Gameplay
             rb.AddForce(new Vector2(-2f, 0f), ForceMode2D.Impulse);
 
             egg.Init(tier, hp, sortingIndex: _sortingIndex++);
+            egg.OnTrySplit += HandleEggSplit;
             egg.OnDestroyed += HandleEggDestroyed;
 
             _activeEggs.Add(egg);
@@ -575,50 +632,12 @@ namespace Gameplay
 
         void HandleEggDestroyed(Egg egg)
         {
+            egg.OnTrySplit -= HandleEggSplit;
             egg.OnDestroyed -= HandleEggDestroyed;
             _activeEggs.Remove(egg);
             TrackEggRemoved(egg.config);
 
-            Debug.Log($"[SpawnController] Egg destroyed tier={egg.config?.tierId}, " +
-                      $"splitInto={egg.config?.splitInto?.tierId}, remaining={_activeEggs.Count}");
-
-            if (egg.config?.splitInto != null)
-            {
-                EggTierConfig splitTier = egg.config.splitInto;
-
-                if (splitTier.eggPrefab == null)
-                {
-                    Debug.LogError($"[SpawnController] No eggPrefab in EggTierConfig '{splitTier.tierId}'.");
-                }
-                else
-                {
-                    for (int i = 0; i < egg.config.splitCount; i++)
-                    {
-                        if (!IsEggTierAllowed(splitTier))
-                        {
-                            Debug.Log($"[SpawnController] Split tier {splitTier.tierId} at cap — skipping.");
-                            continue;
-                        }
-
-                        var offset = i == 0 ? new Vector3(-0.3f, 0.5f, 0f) : new Vector3(0.3f, 0.5f, 0f);
-                        var go     = Instantiate(splitTier.eggPrefab, egg.transform.position + offset, Quaternion.identity);
-
-                        go.TryGetComponent(out Rigidbody2D rb);
-
-                        var newEgg = go.GetComponent<Egg>();
-
-                        int baseHp = Random.Range(splitTier.baseHpMin, splitTier.baseHpMax + 1);
-                        int hp     = Mathf.RoundToInt(baseHp * levelProfile.hpMultiplier);
-
-                        newEgg.Init(splitTier, hp, _sortingIndex++);
-                        newEgg.OnDestroyed += HandleEggDestroyed;
-
-                        _activeEggs.Add(newEgg);
-                        _pressureTracker.RegisterEgg(newEgg);
-                        TrackEggAdded(splitTier);
-                    }
-                }
-            }
+            Debug.Log($"[SpawnController] Egg destroyed tier={egg.config?.tierId}");
 
             Destroy(egg.gameObject);
 

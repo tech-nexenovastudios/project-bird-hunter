@@ -19,6 +19,7 @@ namespace Gameplay.Levels
             _eggPressure[egg] = p;
             CurrentPressure += p;
 
+            //egg.OnTrySplit += HandleEggDestroyed;
             egg.OnDestroyed += HandleEggDestroyed;
         }
 

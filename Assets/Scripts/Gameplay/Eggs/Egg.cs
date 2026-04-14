@@ -1,104 +1,78 @@
-﻿using Gameplay.Interfaces;
-using Gameplay.PowerUps;
-using System;
+﻿using System;
 using System.Collections;
+using DG.Tweening;
+using Gameplay.Interfaces;
+using Gameplay.PowerUps;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Random = UnityEngine.Random;
 
 namespace Gameplay.Eggs
 {
-    [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
     public class Egg : MonoBehaviour
     {
-        public EggTierConfig config;
-        public Action<Egg> OnDestroyed;
-
-        [Header("Bounds Settings")]
+        [SerializeField] public EggTierConfig config;
         [SerializeField] private Camera mainCam;
-        private float halfWidth;
-
-        [Header("VFX Prefabs (from Project folder)")]
-        [Tooltip("Prefab for small hit burst (sparks, dust, shell bits)")]
         [SerializeField] private GameObject minorHitVFXPrefab;
-
-        [Tooltip("Prefab for death explosion")]
         [SerializeField] private GameObject blastVFXPrefab;
-
-        [Header("VFX Spawn Points (empty child Transforms)")]
-        [Tooltip("Where the minor hit effect plays")]
         [SerializeField] private Transform hitVFXPoint;
-
-        [Tooltip("Where the blast explosion plays")]
         [SerializeField] private Transform blastVFXPoint;
-
-        [Header("Other VFX")]
         [SerializeField] private GameObject smokeParticle;
-
-        [Header("Hit Reaction")]
-        [Tooltip("Scale multiplier on each hit (1.1 = 110%)")]
         [SerializeField] private float hitScaleMultiplier = 1.1f;
-
-        [Tooltip("How far the egg gets pushed upward on hit")]
-        [SerializeField] private float hitPushUpForce = 2f;
-
-        [Tooltip("Time to scale up on hit")]
         [SerializeField] private float hitScaleUpDuration = 0.08f;
-
-        [Tooltip("Time to return to original scale after hit")]
         [SerializeField] private float hitScaleDownDuration = 0.12f;
-
-        [Header("Death Sequence")]
-        [Tooltip("Final scale before destruction (0.1 = 10% of original)")]
         [SerializeField] private float deathScaleTarget = 0.1f;
-
-        [Tooltip("Time to shrink to death scale")]
         [SerializeField] private float deathScaleDuration = 0.25f;
+        [SerializeField] private float spawnSlowMovementDuration = 1f;
+        [SerializeField] private float spawnMaxSlowVelocity = 1f;
+        [SerializeField] private float wallBounceDamping = 0.65f;
+        [SerializeField] private float minHorizontalVelocity = 0.3f;
+        [SerializeField] private float bounceDirectionRandomness = 0.3f;
 
-        // ── Cached Components ──
-        private Rigidbody2D    _rb;
-        private SpriteRenderer _spriteRenderer;
-        private SortingGroup   _sortingGroup;
-        private Material       _mat;
-        private Collider2D     _collider;
+        public Action<Egg> OnDestroyed;
+        public Action<Egg> OnTrySplit;
 
-        // ── Cached Visuals (for hide/show) ──
-        private Renderer[] _allRenderers;
-        private Canvas[]   _allCanvases;
-
-        // ── Cached VFX Instance ──
-        // Minor hit is instantiated ONCE on first hit, then reused.
-        // This avoids Instantiate/Destroy every hit on a rapid-fire cannon.
-        private ParticleSystem _minorHitVFXInstance;
-
-        // ── State ──
-        private Vector3   _originalScale;
-        private bool      _isDying;
-        private Coroutine _hitScaleCoroutine;
-
-        // ── Shader Property IDs ──
         private static readonly int EdgeWidthID = Shader.PropertyToID("_EdgeWidth");
 
-        // ════════════════════════════════════════════════════════
-        //  LIFECYCLE
-        // ════════════════════════════════════════════════════════
+        private Rigidbody2D _rb;
+        private SpriteRenderer _spriteRenderer;
+        private SortingGroup _sortingGroup;
+        private Material _mat;
+        private Collider2D _collider;
+        private Renderer[] _allRenderers;
+        private Canvas[] _allCanvases;
+        private ParticleSystem _minorHitVFXInstance;
+        private Vector3 _originalScale;
+        private bool _isDying;
+        private bool _isInSpawnPhase;
+        private float _spawnPhaseTimer;
+        private Coroutine _hitScaleCoroutine;
+        private Vector3 _lastBouncePosition;
+        private float _maxHeightReachedSinceLastBounce;
+        private Health.EggHealth _eggHealth;
 
         private void Awake()
         {
-            _rb             = GetComponent<Rigidbody2D>();
-            _sortingGroup   = GetComponent<SortingGroup>();
+            _rb = GetComponent<Rigidbody2D>();
+            _sortingGroup = GetComponent<SortingGroup>();
             _spriteRenderer = GetComponent<SpriteRenderer>();
-            _collider       = GetComponent<Collider2D>();
+            _collider = GetComponent<Collider2D>();
+            _eggHealth = GetComponent<Health.EggHealth>();
 
             _allRenderers = GetComponentsInChildren<Renderer>(true);
-            _allCanvases  = GetComponentsInChildren<Canvas>(true);
+            _allCanvases = GetComponentsInChildren<Canvas>(true);
 
             if (_spriteRenderer != null)
+            {
                 _mat = _spriteRenderer.material;
+            }
 
             if (mainCam == null)
+            {
                 mainCam = Camera.main;
+            }
 
-            halfWidth = _collider != null ? _collider.bounds.extents.x : 0.5f;
             _originalScale = transform.localScale;
         }
 
@@ -106,170 +80,276 @@ namespace Gameplay.Eggs
         {
             config = tierConfig;
             _sortingGroup.sortingOrder = sortingIndex;
+
             _isDying = false;
+            _isInSpawnPhase = true;
+            _spawnPhaseTimer = 0f;
+            _maxHeightReachedSinceLastBounce = transform.position.y;
+            _lastBouncePosition = transform.position;
 
             transform.localScale = _originalScale;
+            transform.rotation = Quaternion.identity;
 
             if (_mat != null)
+            {
                 _mat.SetFloat(EdgeWidthID, 0f);
+            }
 
             SetVisualsActive(true);
 
             if (_collider != null)
+            {
                 _collider.enabled = true;
+            }
 
             _rb.bodyType = RigidbodyType2D.Dynamic;
+            _rb.angularVelocity = 0f;
+            _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
 
-            var eggHealth = GetComponent<Health.EggHealth>();
-            eggHealth.Init(tierConfig, hp);
+            _eggHealth?.Init(tierConfig, hp);
 
             if (mainCam == null)
+            {
                 mainCam = Camera.main;
+            }
 
             ApplyPhysicsSettings();
         }
 
         private void ApplyPhysicsSettings()
         {
-            _rb.gravityScale  = config.gravityScale;
-            _rb.mass          = config.mass;
+            _rb.gravityScale = config.gravityScale;
+            _rb.mass = config.mass;
             _rb.linearDamping = config.linearDamping;
+            _rb.angularVelocity = 0f;
+            _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
-
-        // ════════════════════════════════════════════════════════
-        //  PHYSICS & MOVEMENT
-        // ════════════════════════════════════════════════════════
 
         private void FixedUpdate()
         {
-            if (_isDying) return;
+            if (_isDying)
+            {
+                return;
+            }
+
+            if (_isInSpawnPhase)
+            {
+                HandleSpawnPhase();
+            }
+
+            if (transform.position.y > _maxHeightReachedSinceLastBounce)
+            {
+                _maxHeightReachedSinceLastBounce = transform.position.y;
+            }
 
             _rb.linearVelocity = Vector2.ClampMagnitude(_rb.linearVelocity, config.maxSpeed);
             HandleScreenEdges();
         }
 
-        private void HandleScreenEdges()
+        private void HandleSpawnPhase()
         {
-            Vector3 pos = transform.position;
+            _spawnPhaseTimer += Time.fixedDeltaTime;
 
-            float leftBound  = mainCam.ViewportToWorldPoint(Vector3.zero).x + halfWidth;
-            float rightBound = mainCam.ViewportToWorldPoint(Vector3.right).x - halfWidth;
-
-            if (pos.x < leftBound)
+            if (_rb.linearVelocity.magnitude > spawnMaxSlowVelocity)
             {
-                pos.x = leftBound;
-                _rb.linearVelocity = new Vector2(Mathf.Abs(_rb.linearVelocity.x), _rb.linearVelocity.y);
-            }
-            else if (pos.x > rightBound)
-            {
-                pos.x = rightBound;
-                _rb.linearVelocity = new Vector2(-Mathf.Abs(_rb.linearVelocity.x), _rb.linearVelocity.y);
+                _rb.linearVelocity = _rb.linearVelocity.normalized * spawnMaxSlowVelocity;
             }
 
-            transform.position = pos;
+            if (_spawnPhaseTimer < spawnSlowMovementDuration)
+            {
+                return;
+            }
+
+            _isInSpawnPhase = false;
+            _spawnPhaseTimer = 0f;
+            _rb.linearVelocity = Vector2.zero;
         }
 
-        // ════════════════════════════════════════════════════════
-        //  COLLISIONS
-        // ════════════════════════════════════════════════════════
+        private void HandleScreenEdges()
+        {
+            if (mainCam == null || _collider == null)
+            {
+                return;
+            }
+
+            Vector3 position = transform.position;
+            Vector3 bottomLeft = mainCam.ViewportToWorldPoint(Vector3.zero);
+            Vector3 topRight = mainCam.ViewportToWorldPoint(Vector3.one);
+
+            float boundsWidth = _collider.bounds.extents.x;
+            float boundsHeight = _collider.bounds.extents.y;
+
+            float leftBound = bottomLeft.x + boundsWidth;
+            float rightBound = topRight.x - boundsWidth;
+            float bottomBound = bottomLeft.y + boundsHeight;
+            float topBound = topRight.y - boundsHeight;
+
+            Vector2 velocity = _rb.linearVelocity;
+
+            if (position.x < leftBound)
+            {
+                position.x = leftBound;
+                velocity.x = Mathf.Abs(velocity.x) * wallBounceDamping;
+            }
+            else if (position.x > rightBound)
+            {
+                position.x = rightBound;
+                velocity.x = -Mathf.Abs(velocity.x) * wallBounceDamping;
+            }
+
+            if (Mathf.Abs(velocity.x) < minHorizontalVelocity)
+            {
+                velocity.x = 0f;
+            }
+
+            if (position.y < bottomBound)
+            {
+                position.y = bottomBound;
+                velocity.y = Mathf.Max(velocity.y, config.maxSpeed * 0.3f);
+            }
+            else if (position.y > topBound)
+            {
+                position.y = topBound;
+                velocity.y = Mathf.Min(velocity.y, -config.maxSpeed * 0.2f);
+            }
+
+            transform.position = position;
+            _rb.linearVelocity = velocity;
+        }
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
-            if (_isDying) return;
-
-            if (collision.gameObject.CompareTag("Ground"))
+            if (_isDying || !collision.gameObject.CompareTag("Ground"))
             {
-                if (collision.contactCount > 0)
-                    SpawnSmoke(collision.contacts[0].point);
-
-                Vector2 velocity = _rb.linearVelocity;
-                velocity.y = config.bounceVelocity;
-                _rb.linearVelocity = velocity;
+                return;
             }
+
+            if (collision.contactCount > 0)
+            {
+                SpawnSmoke(collision.contacts[0].point);
+            }
+
+            ApplyBounceBehavior();
+            _lastBouncePosition = transform.position;
+            _maxHeightReachedSinceLastBounce = transform.position.y;
         }
-        private  void OnTriggerEnter2D(Collider2D collision)
+
+        private void ApplyBounceBehavior()
         {
-            if (collision.CompareTag("Player"))
+            float bounceVelocity = CalculateBounceVelocity();
+            Vector2 randomDirection = GetRandomBounceDirection();
+            _rb.linearVelocity = new Vector2(randomDirection.x, bounceVelocity);
+        }
+
+        private float CalculateBounceVelocity()
+        {
+            float gravity = Physics2D.gravity.y * _rb.gravityScale;
+            float desiredBounceHeight = config.desiredBounceHeight;
+            float requiredVelocity = Mathf.Sqrt(2f * Mathf.Abs(gravity) * desiredBounceHeight);
+
+            float currentHeight = Mathf.Max(0f, transform.position.y - _lastBouncePosition.y);
+            float heightRatio = Mathf.Clamp01(currentHeight / desiredBounceHeight);
+            float heightInfluence = 1f - heightRatio * 0.6f;
+
+            return requiredVelocity * heightInfluence;
+        }
+
+        private Vector2 GetRandomBounceDirection()
+        {
+            float randomAngle = Random.Range(-bounceDirectionRandomness, bounceDirectionRandomness);
+            float maxHorizontalVelocity = config.maxSpeed * config.horizontalIncrease * 0.5f;
+            float horizontalVelocity = Random.Range(-maxHorizontalVelocity, maxHorizontalVelocity);
+
+            return new Vector2(horizontalVelocity * (1f + randomAngle), 0f);
+        }
+
+        private void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (!collision.CompareTag("Player"))
             {
-                // We don't take damage here because EggDamage script should be on the Egg
-                // and it calls TakeDamage(damage, hitPoint) on us.
-                // This method is just a fallback or for non-damageable trigger logic.
-                Debug.Log("Cannon entered Egg trigger");
-                collision.gameObject.TryGetComponent(out IDamageable damageable);
-                damageable?.TakeDamage(config.cannonDamage);
+                return;
+            }
+
+            if (collision.TryGetComponent(out IDamageable damageable))
+            {
+                damageable.TakeDamage(config.cannonDamage);
+                //Invoke(nameof(PlayDeathSequence), 0.1f);
             }
         }
+
         public void ApplyBulletHitForce(Vector2 hitDirection, float hitForce)
         {
-            if (_isDying) return;
-            if (hitDirection.sqrMagnitude <= 0.0001f) return;
-
-            _rb.AddForce(hitDirection.normalized * hitForce, ForceMode2D.Impulse);
-        }
-
-        // ════════════════════════════════════════════════════════
-        //  HIT REACTION
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// Called by EggHealth.TakeDamage() when the egg survives a hit.
-        /// Plays minor hit VFX, scales up temporarily, pushes upward,
-        /// and updates edge cracks based on remaining health.
-        /// </summary>
-        public void PlayHitReaction(float healthPercent)
-        {
-            if (_isDying) return;
-
-            // 1. Update crack shader
-            UpdateEdgeWidth(healthPercent);
-
-            // 2. Play minor hit VFX at hitVFXPoint
-            PlayMinorHitVFX();
-
-            // 3. Push upward
-            _rb.AddForce(Vector2.up * hitPushUpForce, ForceMode2D.Impulse);
-
-            // 4. Scale punch
-            if (_hitScaleCoroutine != null)
+            if (_isDying || hitDirection.sqrMagnitude <= 0.0001f)
             {
-                StopCoroutine(_hitScaleCoroutine);
-                transform.localScale = _originalScale;
+                return;
+            }
+            
+            if (_rb.linearVelocity.sqrMagnitude > 0.0001f)
+            {
+                _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0f);
+                
+                float reducedSpeed = _rb.linearVelocity.magnitude * 0.5f;
+                _rb.linearVelocity = _rb.linearVelocity.normalized * reducedSpeed;
             }
 
-            _hitScaleCoroutine = StartCoroutine(HitScaleRoutine());
+            //_rb.AddForce(Vector2.up * CalculateHeightBasedHitImpulse() * 0.25f, ForceMode2D.Impulse);
         }
 
-        /// <summary>
-        /// Instantiates the minor hit VFX prefab on first hit, then reuses
-        /// the same instance on subsequent hits. Repositions to hitVFXPoint
-        /// each time so it always plays at the correct spot.
-        /// </summary>
+        public void PlayHitReaction(float healthPercent)
+        {
+            if (_isDying)
+            {
+                return;
+            }
+
+            UpdateEdgeWidth(healthPercent);
+            PlayMinorHitVFX();
+            
+            //reduce scale multiplier every time egg is hit
+             var reducedScaleMultiplier = hitScaleMultiplier * (1f - healthPercent);
+            
+            //transform.DOScale(transform.localScale * hitScaleMultiplier, 0.05f).SetEase(Ease.OutBack);
+            transform.DOScale(transform.localScale * hitScaleMultiplier, 0.07f).SetEase(Ease.OutBack).OnComplete(() =>
+            {
+                transform.DOScale(_originalScale, 0.05f).SetEase(Ease.InBack).OnComplete(()=>DOTween.Kill(this));
+            });
+            transform.DOShakeScale(0.05f, 0.05f, 2, 0, false, ShakeRandomnessMode.Harmonic).SetEase(Ease.OutBack);
+        }
+
+        private float CalculateHeightBasedHitImpulse()
+        {
+            float gravity = Physics2D.gravity.y * _rb.gravityScale;
+            float desiredBounceHeight = config.desiredBounceHeight;
+            float neededVelocity = Mathf.Sqrt(2f * Mathf.Abs(gravity) * desiredBounceHeight);
+            float velocityWithDamping = neededVelocity * 0.8f;
+            float currentHeight = Mathf.Max(0f, transform.position.y - _lastBouncePosition.y);
+            float heightRatio = Mathf.Clamp01(currentHeight / desiredBounceHeight);
+            float heightModifier = 1f - heightRatio * 0.2f;
+            float finalVelocity = velocityWithDamping * heightModifier;
+
+            float impulse = _rb.mass * finalVelocity;
+            return impulse;
+        }
+
         private void PlayMinorHitVFX()
         {
-            if (minorHitVFXPrefab == null || hitVFXPoint == null) return;
+            if (minorHitVFXPrefab == null || hitVFXPoint == null)
+            {
+                return;
+            }
 
-            // Lazy instantiate: create once, reuse forever
             if (_minorHitVFXInstance == null)
             {
-                GameObject go = Instantiate(minorHitVFXPrefab, hitVFXPoint.position, Quaternion.identity);
-
-                // NOT parented to egg — lives in world space
-                // so particles don't move with the egg after spawning
+                GameObject go = Instantiate(minorHitVFXPrefab, hitVFXPoint.position, Quaternion.identity, transform);
                 _minorHitVFXInstance = go.GetComponent<ParticleSystem>();
 
                 if (_minorHitVFXInstance == null)
                 {
-                    // Prefab didn't have a ParticleSystem — clean up
                     Destroy(go);
                     return;
                 }
-
-                // Ensure it doesn't auto-play or loop
-                var main = _minorHitVFXInstance.main;
-                // (These should already be set on the prefab, but safety first)
             }
 
-            // Reposition to current hit point and replay
             _minorHitVFXInstance.transform.position = hitVFXPoint.position;
             _minorHitVFXInstance.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             _minorHitVFXInstance.Play(true);
@@ -287,32 +367,27 @@ namespace Gameplay.Eggs
 
         private void UpdateEdgeWidth(float healthPercent)
         {
-            if (_mat == null) return;
-            float edgeWidth = 1f - Mathf.Clamp01(healthPercent);
-            _mat.SetFloat(EdgeWidthID, edgeWidth);
+            if (_mat != null)
+            {
+                _mat.SetFloat(EdgeWidthID, 1f - Mathf.Clamp01(healthPercent));
+            }
         }
 
-        // ════════════════════════════════════════════════════════
-        //  DEATH SEQUENCE
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// Called by EggHealth.Die() after HP reaches 0.
-        /// Scale down → blast → destroy.
-        /// </summary>
         public void PlayDeathSequence()
         {
-            if (_isDying) return;
+            if (_isDying)
+            {
+                return;
+            }
+
             _isDying = true;
 
-            // Kill hit reaction if running
             if (_hitScaleCoroutine != null)
             {
                 StopCoroutine(_hitScaleCoroutine);
                 _hitScaleCoroutine = null;
             }
 
-            // Destroy the cached minor hit VFX instance — no longer needed
             if (_minorHitVFXInstance != null)
             {
                 _minorHitVFXInstance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -320,88 +395,75 @@ namespace Gameplay.Eggs
                 _minorHitVFXInstance = null;
             }
 
-            // Max out cracks
             if (_mat != null)
+            {
                 _mat.SetFloat(EdgeWidthID, 1f);
+            }
+            
+            //invoke egg splitting action
+            OnTrySplit?.Invoke(this);
 
             StartCoroutine(DeathSequenceRoutine());
         }
 
         private IEnumerator DeathSequenceRoutine()
         {
-            // ── Phase 0: Freeze physics ──
-            _rb.linearVelocity  = Vector2.zero;
+            _rb.linearVelocity = Vector2.zero;
             _rb.angularVelocity = 0f;
-            _rb.bodyType        = RigidbodyType2D.Kinematic;
+            _rb.bodyType = RigidbodyType2D.Kinematic;
 
             if (_collider != null)
+            {
                 _collider.enabled = false;
+            }
 
-            // ── Phase 1: Scale DOWN ──
             Vector3 deathScale = _originalScale * deathScaleTarget;
             yield return AnimateScale(transform.localScale, deathScale, deathScaleDuration, EaseType.InBack);
 
-            // ── Phase 2: Hide visuals + spawn blast ──
             SetVisualsActive(false);
 
             if (blastVFXPrefab != null)
             {
-                // Spawn position from the empty child transform
-                Vector3 blastPos = blastVFXPoint != null
-                    ? blastVFXPoint.position
-                    : transform.position;
-
-                // Instantiate in world space — NOT parented to egg
-                // so it survives after egg is destroyed/pooled
+                Vector3 blastPos = blastVFXPoint != null ? blastVFXPoint.position : transform.position;
                 GameObject blastGO = Instantiate(blastVFXPrefab, blastPos, Quaternion.identity);
 
-                var blastPS = blastGO.GetComponent<ParticleSystem>();
-                if (blastPS != null)
+                if (blastGO.TryGetComponent(out ParticleSystem blastPS))
                 {
                     blastPS.Play(true);
-
-                    // Calculate total visible time then auto-destroy
-                    var main = blastPS.main;
+                    ParticleSystem.MainModule main = blastPS.main;
                     float blastTotalTime = main.duration + main.startLifetime.constantMax;
                     Destroy(blastGO, blastTotalTime);
-
                     yield return new WaitForSeconds(blastTotalTime);
                 }
                 else
                 {
-                    // Prefab had no ParticleSystem — destroy immediately
                     Destroy(blastGO);
                 }
             }
 
-            // ── Phase 3: Notify SpawnController ──
             OnDestroyed?.Invoke(this);
         }
 
-        // ════════════════════════════════════════════════════════
-        //  ANIMATION HELPERS
-        // ════════════════════════════════════════════════════════
-
         private IEnumerator AnimateScale(Vector3 from, Vector3 to, float duration, EaseType ease)
         {
+            if (duration <= 0f)
+            {
+                transform.localScale = to;
+                yield break;
+            }
+
             float elapsed = 0f;
 
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
-                float eased = ApplyEase(t, ease);
-
-                transform.localScale = Vector3.LerpUnclamped(from, to, eased);
+                transform.localScale = Vector3.LerpUnclamped(from, to, ApplyEase(t, ease));
                 yield return null;
             }
 
             transform.localScale = to;
         }
-
-        // ════════════════════════════════════════════════════════
-        //  EASING
-        // ════════════════════════════════════════════════════════
 
         private enum EaseType
         {
@@ -425,40 +487,35 @@ namespace Gameplay.Eggs
                     const float c3b = c1b + 1f;
                     return c3b * t * t * t - c1b * t * t;
 
-                case EaseType.Linear:
                 default:
                     return t;
             }
         }
 
-        // ════════════════════════════════════════════════════════
-        //  VISUAL TOGGLING
-        // ════════════════════════════════════════════════════════
-
         private void SetVisualsActive(bool active)
         {
-            foreach (var r in _allRenderers)
+            foreach (Renderer renderer in _allRenderers)
             {
-                if (r == null) continue;
-                if (r is ParticleSystemRenderer) continue;
-                r.enabled = active;
+                if (renderer == null || renderer is ParticleSystemRenderer)
+                {
+                    continue;
+                }
+
+                renderer.enabled = active;
             }
 
-            foreach (var c in _allCanvases)
+            foreach (Canvas canvas in _allCanvases)
             {
-                if (c != null)
-                    c.enabled = active;
+                if (canvas != null)
+                {
+                    canvas.enabled = active;
+                }
             }
         }
 
-        // ════════════════════════════════════════════════════════
-        //  CLEANUP
-        // ════════════════════════════════════════════════════════
-
         private void OnDestroy()
         {
-            // If egg is destroyed unexpectedly (scene unload, etc.)
-            // clean up the cached minor hit VFX instance
+            Debug.Log("Egg destroyed");
             if (_minorHitVFXInstance != null)
             {
                 Destroy(_minorHitVFXInstance.gameObject);
@@ -466,29 +523,14 @@ namespace Gameplay.Eggs
             }
         }
 
-        // ════════════════════════════════════════════════════════
-        //  MISC
-        // ════════════════════════════════════════════════════════
-
         private void SpawnSmoke(Vector2 position)
         {
-            if (smokeParticle == null) return;
+            if (smokeParticle == null)
+            {
+                return;
+            }
+
             Destroy(Instantiate(smokeParticle, position, Quaternion.identity), 3f);
         }
-
-
-        //public void ApplyEffect(IEffect<IDamageable> effect)
-        //{
-        //    if (CurrentHp <= 0) return; // Dead enemies should't receive effects
-
-        //    effect.OnCompleted += RemoveEffect;
-        //    activeEffects.Add(effect);
-        //    effect.Apply(this);
-        //}
-        //void RemoveEffect(IEffect<IDamageable> effect)
-        //{
-        //    effect.OnCompleted -= RemoveEffect;
-        //    activeEffects.Remove(effect);
-        //}
     }
 }

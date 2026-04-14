@@ -26,20 +26,24 @@ namespace Gameplay.Birds
         public event Action<BaseBird> OnDestroyed;
 
         protected void InvokeLayEgg() => OnLayEgg?.Invoke(this);
+        
+        private const float EGG_LAY_COOLDOWN = 1.5f;
+        private const float CANNON_ALIGN_THRESHOLD = 0.5f;
 
         protected bool _isDead;
         protected bool _isInScreen;
 
         protected float _layTimer;
         private float _remainingLifetime;
-        private float _noiseOffset;
         private BoxCollider2D _collider;
         private float _halfWidth;
+        
+        private float _lastLayX;
 
         private float _currentSpeedMultiplier = 1f;
         public float SpeedMultiplier => _currentSpeedMultiplier;
 
-        private IBirdMovementStrategy _movementStrategy;
+        protected IBirdMovementStrategy _movementStrategy;
         private readonly List<IEffect<IEntity>> activeEffects = new();
 
         public virtual void Init(BirdConfig birdConfig, int hp)
@@ -53,13 +57,13 @@ namespace Gameplay.Birds
             var birdHealth = GetComponent<BirdHealth>();
             if (birdHealth != null)
                 birdHealth.Init(birdConfig, hp);
-
-            _layTimer = Random.Range(config.layIntervalMin, config.layIntervalMax);
+            
+            _layTimer = EGG_LAY_COOLDOWN;
             _remainingLifetime = config.lifetime;
-            _noiseOffset = Random.Range(0f, 100f);
 
             _collider = GetComponent<BoxCollider2D>();
             _halfWidth = _collider.bounds.extents.x;
+            _lastLayX = -999f;
 
             _movementStrategy = BirdMovementFactory.Create(BirdMovementType.NormalMove);
             _movementStrategy.Initialize(this, config);
@@ -73,7 +77,7 @@ namespace Gameplay.Birds
             _movementStrategy?.Tick();
         }
 
-        private void HandleScreenTime()
+        protected void HandleScreenTime()
         {
             float x = transform.position.x;
             _isInScreen = (x + _halfWidth) >= ScreenBounds.minX
@@ -82,21 +86,27 @@ namespace Gameplay.Birds
 
         private void HandleTimers()
         {
-            _layTimer -= Time.deltaTime;
+            if (_layTimer > 0f)
+                _layTimer -= Time.deltaTime;
 
-            if (_layTimer <= 0f)
+            if (_isInScreen && _layTimer <= 0f)
             {
-                if (_isInScreen)
-                    OnLayEgg?.Invoke(this);
+                var gm = Managers.GameManager.Instance;
+                if (gm != null && gm.currentCannon != null)
+                {
+                    float cannonX = gm.currentCannon.transform.position.x;
+                    float birdX = transform.position.x;
 
-                float noise = Mathf.PerlinNoise(_noiseOffset, Time.time * 0.5f);
-                float nextDelay = Mathf.Lerp(config.layIntervalMin, config.layIntervalMax, noise);
-
-                if (Random.value < 0.15f)
-                    nextDelay *= 0.25f;
-
-                _layTimer = nextDelay;
-                _noiseOffset += 1.73f;
+                    if (Mathf.Abs(birdX - cannonX) < CANNON_ALIGN_THRESHOLD)
+                    {
+                        if (Mathf.Abs(birdX - _lastLayX) > CANNON_ALIGN_THRESHOLD * 2f)
+                        {
+                            OnLayEgg?.Invoke(this);
+                            _layTimer = EGG_LAY_COOLDOWN;
+                            _lastLayX = birdX;
+                        }
+                    }
+                }
             }
 
             _remainingLifetime -= Time.deltaTime;
