@@ -124,6 +124,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2707516843517583994}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6471263196085846978
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7971718513344402593}
+  m_Layer: 0
+  m_Name: BossSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7971718513344402593
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6471263196085846978}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.15, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7719721129177262795}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7761865005771073238
 GameObject:
   m_ObjectHideFlags: 0
@@ -190,6 +221,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2707516843517583994}
+  - {fileID: 7971718513344402593}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3865765487029352904
@@ -216,4 +248,17 @@ MonoBehaviour:
   - {fileID: 4769303102368881712}
   - {fileID: 7010285684380644789}
   - {fileID: 5594059791011298721}
+  bossSpawnPoint: {fileID: 7971718513344402593}
+  chapterBossConfigs:
+  - {fileID: 11400000, guid: 723e8de91f4488c4485808f7a11a91df, type: 2}
+  - {fileID: 11400000, guid: bc0533c2204c4854487851933b0dcd5f, type: 2}
+  - {fileID: 11400000, guid: eece413d93951cf498e291021c3f41ad, type: 2}
+  - {fileID: 11400000, guid: 81381a0b53805cd4a88486109676b210, type: 2}
+  - {fileID: 11400000, guid: b65265eac81a28d449862e3489fa41c0, type: 2}
+  bossPrefabs:
+  - {fileID: 6220293270616091672, guid: 8e41982fcdcb3b749b8238afd06ddf5b, type: 3}
+  - {fileID: 1174341551097097706, guid: 4340fb9557b8e594bb383a14e8d821d6, type: 3}
+  - {fileID: 8469218338221625383, guid: 1e7ffad8b95a5dc47b50783b18fef74c, type: 3}
+  - {fileID: 6490922792269977210, guid: df3c52b42ad37254597dc426e418a6e1, type: 3}
+  - {fileID: 163310292118945550, guid: 0845be16d3d741e48993a096434d3438, type: 3}
   elapsedTime: 0

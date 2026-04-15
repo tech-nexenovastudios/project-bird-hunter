@@ -17,6 +17,9 @@ public class BossBirdController : MonoBehaviour
     private bool isInitialized;
     private bool hasEnraged;
 
+    // ── NEW: lets SpawnController poll liveness without keeping a BossBird reference ──
+    public bool IsDead => isDead;
+
     private void Start()
     {
         if (directTestConfig != null && !isInitialized)
@@ -133,17 +136,10 @@ public class BossBirdController : MonoBehaviour
 
     // ── Animation callbacks ───────────────────────────────────────────
 
-    private void OnAttackStarted()
-    {
-        animController?.Attack();
-    }
+    private void OnAttackStarted() => animController?.Attack();
+    private void OnAttackComplete() => animController?.FlyNormal();
 
-    private void OnAttackComplete()
-    {
-        animController?.FlyNormal();
-    }
-
-    // ── Health / enrage ───────────────────────────────────────────────
+    // ── Update ────────────────────────────────────────────────────────
 
     private void Update()
     {
@@ -153,6 +149,8 @@ public class BossBirdController : MonoBehaviour
         for (int i = 0; i < attacks.Count; i++)
             attacks[i].Tick(dt);
     }
+
+    // ── Health / enrage ───────────────────────────────────────────────
 
     private void OnHealthChanged(float normalized)
     {
@@ -175,6 +173,7 @@ public class BossBirdController : MonoBehaviour
         if (isDead) return;
         isDead = true;
 
+        // ── Stop all attacks and clean up ──
         for (int i = 0; i < attacks.Count; i++)
         {
             attacks[i].OnAttackStarted -= OnAttackStarted;
@@ -191,8 +190,15 @@ public class BossBirdController : MonoBehaviour
         if (config.deathVFX != null)
             PoolManager.Get(config.deathVFX, transform.position);
 
+        // ── Notify the rest of the game ──
         BossEventBus.RaiseBossDefeated(config.bossName, config.scoreValue);
         Debug.Log($"[BossBird] {config.bossName} DEFEATED", this);
+
+        // ── NEW: destroy this GameObject after a short delay so the death
+        //         animation / VFX has a frame to play before we vanish.
+        //         SpawnController.HandleBossDefeated nulls its reference via
+        //         the event, so there is no dangling pointer concern. ──
+        Destroy(gameObject, 0.1f);
     }
 
     private void OnDisable()

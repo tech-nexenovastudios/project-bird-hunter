@@ -20,9 +20,15 @@ MonoBehaviour:
   pressureMax: 9
   pressureAvg: 5
   maxE4: 0
-  maxE3: 0
+  maxE3: 1
   maxE2: 2
   spawnIntervalMin: 5.993497
   spawnIntervalMax: 7.993497
   expectedDps: 12
   hpMultiplier: 1.05
+  isBossLevel: 0
+  bossBirdConfig: {fileID: 0}
+  bossSpawnDelay: 12
+  attackingBirdPool: []
+  attackingBirdSpawnInterval: 20
+  attackingBirdSpawnChance: 0.6

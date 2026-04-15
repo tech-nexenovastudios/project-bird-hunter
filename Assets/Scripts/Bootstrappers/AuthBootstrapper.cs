@@ -62,10 +62,12 @@ public class AuthBootstrapper : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
+        //Debug.unityLogger.logEnabled = false;
+
         cts = new CancellationTokenSource();
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        PlayGamesPlatform.DebugLogEnabled = true;
+        //PlayGamesPlatform.DebugLogEnabled = true;
         PlayGamesPlatform.Activate();
 #endif
 
