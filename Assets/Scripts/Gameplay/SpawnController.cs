@@ -56,6 +56,7 @@ namespace Gameplay
         float _attackingBirdTimer;
         Coroutine _drainingRoutine;
 
+        public bool IsBossLevel => levelProfile.isBossLevel;
         public int TotalTrackedScore => _totalTrackedScore;
         public int ActiveEggCount => _activeEggs.Count;
         public int ActiveBirdCount => _activeBirds.Count;
@@ -96,7 +97,17 @@ namespace Gameplay
             _totalTrackedScore = 0;
             _performanceExpectedScore = 0f;
             _performanceRatio = 1f;
+            _sortingIndex = 10;
             _eggTierCounts.Clear();
+
+            if (_drainingRoutine != null)
+            {
+                StopCoroutine(_drainingRoutine);
+                _drainingRoutine = null;
+            }
+
+            ClearRegularEnemies();
+            _pressureTracker.Clear();
 
             _activeBossGO = null;
             _activeBossController = null;
@@ -131,8 +142,7 @@ namespace Gameplay
             _spawnTimer += Time.deltaTime;
             float interval = GetCurrentSpawnInterval();
 
-            // MODIFIED: Added !IsBossAlive. No standard birds spawn if boss is out.
-            if (!_reliefMode && !_levelCompleted && !_draining && !IsBossAlive && _spawnTimer >= interval)
+            if (!IsBossLevel && !_reliefMode && !_levelCompleted && !_draining && _spawnTimer >= interval)
             {
                 TrySpawnBird();
                 _spawnTimer = 0f;

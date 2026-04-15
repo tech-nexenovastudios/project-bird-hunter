@@ -142,5 +142,8 @@ namespace Gameplay.Events
         internal static void FirePowerupCommitted(PowerupConfig results) => OnPowerupCommitted?.Invoke(results);
 
         public static event Action<CannonStats> OnCannonStatsUpdated;
+
+        public static void FireLevelCompletedEarly(float remaining) => OnLevelCompletedEarly?.Invoke(remaining);
+        public static event Action<float> OnLevelCompletedEarly;
     }
 }

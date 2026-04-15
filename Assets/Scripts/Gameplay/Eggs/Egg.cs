@@ -2,6 +2,7 @@
 using System.Collections;
 using DG.Tweening;
 using Gameplay.Interfaces;
+using Gameplay.Managers;
 using Gameplay.PowerUps;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -51,6 +52,7 @@ namespace Gameplay.Eggs
         private Vector3 _lastBouncePosition;
         private float _maxHeightReachedSinceLastBounce;
         private Health.EggHealth _eggHealth;
+        private Transform _cannonTransform;
 
         private void Awake()
         {
@@ -90,6 +92,8 @@ namespace Gameplay.Eggs
             transform.localScale = _originalScale;
             transform.rotation = Quaternion.identity;
 
+            _cannonTransform = GameManager.Instance.cannonSpawner.transform;
+
             if (_mat != null)
             {
                 _mat.SetFloat(EdgeWidthID, 0f);
@@ -102,10 +106,6 @@ namespace Gameplay.Eggs
                 _collider.enabled = true;
             }
 
-            _rb.bodyType = RigidbodyType2D.Dynamic;
-            _rb.angularVelocity = 0f;
-            _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-
             _eggHealth?.Init(tierConfig, hp);
 
             if (mainCam == null)
@@ -113,16 +113,16 @@ namespace Gameplay.Eggs
                 mainCam = Camera.main;
             }
 
-            ApplyPhysicsSettings();
         }
 
-        private void ApplyPhysicsSettings()
+        public void ApplyPhysics()
         {
             _rb.gravityScale = config.gravityScale;
             _rb.mass = config.mass;
             _rb.linearDamping = config.linearDamping;
             _rb.angularVelocity = 0f;
             _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            _rb.bodyType = RigidbodyType2D.Dynamic;
         }
 
         private void FixedUpdate()
@@ -273,26 +273,36 @@ namespace Gameplay.Eggs
             if (collision.TryGetComponent(out IDamageable damageable))
             {
                 damageable.TakeDamage(config.cannonDamage);
-                //Invoke(nameof(PlayDeathSequence), 0.1f);
+                _eggHealth?.TakeDamage(Mathf.CeilToInt(config.cannonDamage * 0.5f));
+                Invoke(nameof(ExecuteBounceEffect), 0.05f);
             }
         }
-
-        public void ApplyBulletHitForce(Vector2 hitDirection, float hitForce)
+        
+        public void ApplyBulletHitForce()
         {
-            if (_isDying || hitDirection.sqrMagnitude <= 0.0001f)
-            {
-                return;
-            }
+            if (_isDying || _rb.linearVelocity.sqrMagnitude < 0.0001f) return;
             
-            if (_rb.linearVelocity.sqrMagnitude > 0.0001f)
-            {
-                _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0f);
+            _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0f);
                 
-                float reducedSpeed = _rb.linearVelocity.magnitude * 0.5f;
-                _rb.linearVelocity = _rb.linearVelocity.normalized * reducedSpeed;
-            }
+            float reducedSpeed = _rb.linearVelocity.magnitude * 0.5f;
+            _rb.linearVelocity = _rb.linearVelocity.normalized * reducedSpeed;
+                
+            ExecuteBounceEffect();
+        }
 
-            //_rb.AddForce(Vector2.up * CalculateHeightBasedHitImpulse() * 0.25f, ForceMode2D.Impulse);
+        private void ExecuteBounceEffect()
+        {
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, Mathf.Infinity, 1 << LayerMask.NameToLayer("Ground"));
+
+            if (hit.collider != null && hit.collider.gameObject.CompareTag("Ground") && hit.distance < config.desiredBounceHeight * 0.25f)
+            {
+                float distanceMultiplier = 1f - (hit.distance / config.desiredBounceHeight * 0.5f);
+                distanceMultiplier = Mathf.Max(0, distanceMultiplier);
+
+                float finalImpulse = 5 * distanceMultiplier;
+                
+                _rb.AddForce(Vector2.up * finalImpulse, ForceMode2D.Impulse);
+            }
         }
 
         public void PlayHitReaction(float healthPercent)
@@ -365,10 +375,11 @@ namespace Gameplay.Eggs
             _hitScaleCoroutine = null;
         }
 
-        private void UpdateEdgeWidth(float healthPercent)
+        private void UpdateEdgeWidth(float health)
         {
             if (_mat != null)
             {
+                var healthPercent = health / _eggHealth.MaxHp;
                 _mat.SetFloat(EdgeWidthID, 1f - Mathf.Clamp01(healthPercent));
             }
         }

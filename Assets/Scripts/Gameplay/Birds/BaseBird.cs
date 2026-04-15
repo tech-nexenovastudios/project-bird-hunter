@@ -39,6 +39,8 @@ namespace Gameplay.Birds
         private float _halfWidth;
         
         private float _lastLayX;
+        private Transform _eggSpawnPoint;
+        public Transform EggSpawnPoint => _eggSpawnPoint ??= transform.GetChild(0);
 
         private float _currentSpeedMultiplier = 1f;
         public float SpeedMultiplier => _currentSpeedMultiplier;

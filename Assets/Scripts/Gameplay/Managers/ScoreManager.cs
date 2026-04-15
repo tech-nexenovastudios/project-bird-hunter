@@ -132,6 +132,13 @@ namespace Gameplay.Managers
             GameEvents.OnEggHit += OnEggHit;
             GameEvents.OnEggDestroyed += OnEggDestroyed;
             GameEvents.OnBirdDestroyed += OnBirdDestroyed;
+            GameEvents.OnLevelCompletedEarly += OnLevelCompletedEarly;
+        }
+
+        private void OnLevelCompletedEarly(float remainingTime)
+        {
+            Debug.Log($"[ScoreManager] Level completed early. Remaining time: {remainingTime}");
+            //TODO: Implement early completion Rewards
         }
 
         private void OnDisable()
@@ -139,6 +146,7 @@ namespace Gameplay.Managers
             GameEvents.OnEggHit -= OnEggHit;
             GameEvents.OnEggDestroyed -= OnEggDestroyed;
             GameEvents.OnBirdDestroyed -= OnBirdDestroyed;
+            GameEvents.OnLevelCompletedEarly -= OnLevelCompletedEarly;
         }
 
         public void ResetLevel(int targetScore = 0)

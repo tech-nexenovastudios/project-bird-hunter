@@ -168,7 +168,7 @@ namespace Gameplay.Player
         // Handles boss-side objects that implement IDamageablee (double-e)
         private void OnHitBossWeapon(Collider2D collision)
         {
-            if (collision.TryGetComponent<IDamageablee>(out var damageable))
+            if (collision.TryGetComponent<IDamageable>(out var damageable))
             {
                 //damageable.TakeDamage(damage);
                 Destroy(gameObject);
@@ -240,18 +240,10 @@ namespace Gameplay.Player
         {
             if (!applyHitImpulse) return;
 
-            Egg egg = collision.GetComponent<Egg>();
+            collision.TryGetComponent<Egg>(out var egg);
             if (egg == null) return;
-
-            Vector2 bulletDir = rb != null && rb.linearVelocity.sqrMagnitude > 0.0001f
-                ? rb.linearVelocity.normalized
-                : (Vector2)transform.up.normalized;
-
-            float distance = Vector2.Distance(startPosition, transform.position);
-            float t = maxForceDistance > 0f ? Mathf.Clamp01(distance / maxForceDistance) : 1f;
-            float impulseForce = Mathf.Lerp(maxHitImpulseForce, minHitImpulseForce, t);
-
-            egg.ApplyBulletHitForce(bulletDir, impulseForce);
+            
+            egg.ApplyBulletHitForce();
         }
 
         protected virtual void HandlePostHit(Collider2D collision)

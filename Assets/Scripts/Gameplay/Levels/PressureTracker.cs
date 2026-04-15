@@ -53,6 +53,18 @@ namespace Gameplay.Levels
                 CurrentPressure += egg.config.pressureValue;
             }
         }
-    }
 
+        public void Clear()
+        {
+            foreach (var egg in _eggs)
+            {
+                if (egg != null)
+                    egg.OnDestroyed -= HandleEggDestroyed;
+            }
+
+            _eggs.Clear();
+            _eggPressure.Clear();
+            CurrentPressure = 0;
+        }
+    }
 }
