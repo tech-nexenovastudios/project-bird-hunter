@@ -31,6 +31,8 @@ public class PowerupNotification : MonoBehaviour
         _powerupNameText.text = config.displayName;
         _powerupDescriptionText.text = config.description;
         _powerupImage.sprite = config.icon;
+         Debug.Log($"Showing notification for powerup: {config.displayName}");
+
 
         // Slide in → hold 2 s → slide out
         _notificationPanel.anchoredPosition = _hiddenPos;

@@ -73,10 +73,13 @@ namespace Gameplay.Managers
             string path = $"{levelResourcesPath}/Chapter{chapter}/Levels/Ch{chapter}_L{level:D2}";
             var profile = Resources.Load<LevelProfile>(path);
 
-            Debug.Assert(profile != null, $"Level profile not found at path: {path}");
-            
-            if(profile != null) OnLevelLoaded?.Invoke(profile);
-            GameEvents.FireGameLevelUpdated(profile, level);
+            if (profile == null) Debug.LogWarning($"[ProgressManager] ❌ LevelProfile missing: {path}");
+            else
+            {
+                Debug.Log($"[ProgressManager] ✅ LevelProfile loaded: {path}");
+                OnLevelLoaded?.Invoke(profile);
+                GameEvents.FireGameLevelUpdated(profile, level);
+            }
             return profile;
         }
 

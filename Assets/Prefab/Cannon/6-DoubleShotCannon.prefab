@@ -424,7 +424,7 @@ Transform:
   m_GameObject: {fileID: 3717032301281453329}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.020999968, y: 0.16800004, z: 0}
+  m_LocalPosition: {x: 0.007505322, y: 0.1595534, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -587,13 +587,25 @@ MonoBehaviour:
   gunTips:
   - {fileID: 5156471937432095169}
   - {fileID: 7052298120966043770}
-  fireParticles: []
   wheels:
   - {fileID: 3412045268270389048}
   - {fileID: 1108592655170039773}
   - {fileID: 4650796634608974104}
   wheelRadius: 0.5
   spreadAngle: 0
+  muzzleFlashPrefab: {fileID: 0}
+  leftMuzzleTransform: {fileID: 0}
+  leftMuzzleFlashPoint: {fileID: 0}
+  rightMuzzleTransform: {fileID: 0}
+  rightMuzzleFlashPoint: {fileID: 0}
+  recoilYOffset: -0.25
+  recoilEndScale: {x: 0, y: 0, z: 0}
+  recoilDuration: 0.1
+  recoveryDuration: 0.1
+  hitVFXPrefab: {fileID: 0}
+  hitVFXPoint: {fileID: 0}
+  deathVFXPrefab: {fileID: 0}
+  deathVFXPoint: {fileID: 0}
 --- !u!1 &6723456232055086851
 GameObject:
   m_ObjectHideFlags: 0
@@ -619,7 +631,7 @@ Transform:
   m_GameObject: {fileID: 6723456232055086851}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.016984046, w: 0.99985576}
-  m_LocalPosition: {x: -0.603, y: 0.294, z: 0}
+  m_LocalPosition: {x: -0.5898, y: 0.3029, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
