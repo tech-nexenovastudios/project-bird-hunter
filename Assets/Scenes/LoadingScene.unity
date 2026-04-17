@@ -2368,6 +2368,60 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1260007830}
   m_CullTransparentMesh: 1
+--- !u!1 &1506041230
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1506041232}
+  - component: {fileID: 1506041231}
+  m_Layer: 0
+  m_Name: AdManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1506041231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506041230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51a3b9616750c46408fa0f5cb96e6e13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AdManager
+  appKey: 25785de5d
+  isDevelopmentMode: 1
+  rewardedAdUnitId: 5jobqa30iyk6jdsx
+  interstitialAdUnitId: qi9fh521rc833ggl
+  bannerAdUnitId: 
+  enableDebugLogs: 1
+  retryBaseDelay: 5
+  retryMaxDelay: 120
+  requireConsentBeforeLoading: 0
+  adsDisabled: 0
+--- !u!4 &1506041232
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506041230}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.46052, y: -0.10826, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1687197917
 GameObject:
   m_ObjectHideFlags: 0
@@ -3264,3 +3318,4 @@ SceneRoots:
   - {fileID: 1164380805}
   - {fileID: 450876662}
   - {fileID: 1215611102}
+  - {fileID: 1506041232}

@@ -17,7 +17,18 @@ public class BossBirdController : MonoBehaviour
     private bool isInitialized;
     private bool hasEnraged;
 
-    // ── NEW: lets SpawnController poll liveness without keeping a BossBird reference ──
+    // ── NEW: Invulnerability flag — set by SpawnController during enter/exit tweens ──
+    private bool _invulnerable;
+    public bool IsInvulnerable => _invulnerable;
+
+    // ── NEW: Retreat flag — boss retreats at 50% HP on non-level-20 encounters ──
+    private bool _hasRetreated;
+    public bool HasRetreated => _hasRetreated;
+
+    // ── NEW: Track whether this is the level-20 (phase 2) encounter ──
+    private bool _isLevel20;
+    public bool IsLevel20 => _isLevel20;
+
     public bool IsDead => isDead;
 
     private void Start()
@@ -29,12 +40,30 @@ public class BossBirdController : MonoBehaviour
         }
     }
 
+    // ── NEW: SpawnController calls these during enter/exit tweens ──
+    public void SetInvulnerable(bool value)
+    {
+        _invulnerable = value;
+
+        // Disable all colliders so taps/projectiles pass through
+        var colliders = GetComponents<Collider2D>();
+        foreach (var col in colliders)
+            col.enabled = !value;
+
+        // Also check for 3D colliders just in case
+        var colliders3D = GetComponents<Collider>();
+        foreach (var col in colliders3D)
+            col.enabled = !value;
+    }
+
     public void Initialize(BossBirdConfig cfg, bool isLevel20)
     {
         config = cfg;
         isDead = false;
         isInitialized = false;
         hasEnraged = false;
+        _hasRetreated = false;
+        _isLevel20 = isLevel20;
 
         // ---- Validate required components ----
         health = GetComponent<BossHealthHandler>();
@@ -108,7 +137,55 @@ public class BossBirdController : MonoBehaviour
 
         Debug.Log($"[BossBird] {cfg.bossName} initialized — " +
                   $"HP:{hp} | Attacks:{attacks.Count} | " +
-                  $"Phase:{(isLevel20 ? "1+2" : "1")}", this);
+                  $"Phase:{(isLevel20 ? "2 (Level 20)" : "1 (Pre-20)")}", this);
+    }
+
+    /// <summary>
+    /// Re-initialize for level 20 using remaining HP from phase 1.
+    /// Called by SpawnController when re-spawning a retreated boss.
+    /// </summary>
+    public void ReinitializeForPhase2(float remainingHpNormalized)
+    {
+        isDead = false;
+        isInitialized = false;
+        hasEnraged = false;
+        _hasRetreated = false;
+        _isLevel20 = true;
+
+        // ---- Health: use phase2 multiplier scaled by how much HP was left ----
+        health = GetComponent<BossHealthHandler>();
+        float phase2MaxHp = config.maxHealth * config.phase2HealthMultiplier;
+        float startHp = phase2MaxHp * remainingHpNormalized;
+        health.Initialize(startHp, config.enrageThreshold);
+        health.OnHealthChanged += OnHealthChanged;
+        health.OnDeath += OnDeath;
+
+        // ---- Movement: use phase2 config ----
+        movement = GetComponent<BossMovementHandler>();
+        var moveConfig = config.phase2Movement != null
+            ? config.phase2Movement
+            : config.phase1Movement;
+
+        if (moveConfig != null)
+            movement.Initialize(moveConfig);
+
+        // ---- Animation ----
+        animController = GetComponent<BossBirdAnimationController>();
+
+        // ---- Attacks: add phase2 attack ----
+        var existingAttacks = GetComponents<BaseAttackBehaviour>();
+        for (int i = 0; i < existingAttacks.Length; i++)
+            Destroy(existingAttacks[i]);
+        attacks.Clear();
+
+        SpawnAttack(config.phase1Attack, "Phase1");
+        SpawnAttack(config.phase2Attack, "Phase2");
+
+        isInitialized = true;
+        BossEventBus.RaiseBossSpawned(config.bossName);
+
+        Debug.Log($"[BossBird] {config.bossName} RE-INITIALIZED for Phase 2 — " +
+                  $"HP:{startHp:F0} ({remainingHpNormalized:P0} remaining) | Attacks:{attacks.Count}", this);
     }
 
     private void SpawnAttack(BaseAttackConfig attackConfig, string phaseName)
@@ -143,18 +220,36 @@ public class BossBirdController : MonoBehaviour
 
     private void Update()
     {
-        if (isDead || !isInitialized) return;
+        if (isDead || !isInitialized || _invulnerable) return;
 
         float dt = Time.deltaTime;
         for (int i = 0; i < attacks.Count; i++)
             attacks[i].Tick(dt);
     }
 
-    // ── Health / enrage ───────────────────────────────────────────────
+    // ── Health / enrage / retreat ─────────────────────────────────────
 
     private void OnHealthChanged(float normalized)
     {
+        // If invulnerable, ignore damage (shouldn't happen since colliders are off,
+        // but safety net)
+        if (_invulnerable) return;
+
         BossEventBus.RaiseHealthChanged(normalized);
+
+        // ── NEW: Retreat at 50% HP on non-level-20 encounters ──
+        if (!_isLevel20 && !_hasRetreated && normalized <= 0.5f)
+        {
+            _hasRetreated = true;
+            Debug.Log($"[BossBird] {config.bossName} RETREATING at {normalized:P0} HP", this);
+
+            // Stop all attacks and movement
+            StopAllBehaviours();
+
+            // Fire retreated event — SpawnController listens to this
+            BossEventBus.RaiseBossRetreated(config.bossName, normalized);
+            return;
+        }
 
         if (!hasEnraged && config.enrageThreshold > 0f && normalized <= config.enrageThreshold)
         {
@@ -166,6 +261,20 @@ public class BossBirdController : MonoBehaviour
 
             Debug.Log($"[BossBird] {config.bossName} ENRAGED at {normalized:P0} HP", this);
         }
+    }
+
+    /// <summary>
+    /// Stops all attacks and movement. Used during retreat and death.
+    /// </summary>
+    private void StopAllBehaviours()
+    {
+        for (int i = 0; i < attacks.Count; i++)
+        {
+            attacks[i].OnAttackStarted -= OnAttackStarted;
+            attacks[i].OnAttackComplete -= OnAttackComplete;
+            attacks[i].OnStop();
+        }
+        movement.Stop();
     }
 
     private void OnDeath()
@@ -194,11 +303,10 @@ public class BossBirdController : MonoBehaviour
         BossEventBus.RaiseBossDefeated(config.bossName, config.scoreValue);
         Debug.Log($"[BossBird] {config.bossName} DEFEATED", this);
 
-        // ── NEW: destroy this GameObject after a short delay so the death
-        //         animation / VFX has a frame to play before we vanish.
-        //         SpawnController.HandleBossDefeated nulls its reference via
-        //         the event, so there is no dangling pointer concern. ──
-        Destroy(gameObject, 0.1f);
+        // ── NOTE: No longer self-destroying here.
+        //    SpawnController handles destruction via the exit animation.
+        //    If this is level 20, SpawnController will destroy after exit.
+        //    If not level 20, the boss retreats before death is ever called. ──
     }
 
     private void OnDisable()

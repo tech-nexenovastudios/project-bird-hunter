@@ -56,6 +56,14 @@ namespace Gameplay
         float _attackingBirdTimer;
         Coroutine _drainingRoutine;
 
+        // ── Cached original scale for boss enter/exit animations ──
+        Vector3 _bossOriginalScale;
+
+        // ── Persisted boss state for level-20 re-spawn ──
+        GameObject _parkedBossGO;
+        float _parkedBossHpNormalized;
+        bool _hasBossWaitingForLevel20;
+
         public bool IsBossLevel => levelProfile.isBossLevel;
         public int TotalTrackedScore => _totalTrackedScore;
         public int ActiveEggCount => _activeEggs.Count;
@@ -73,14 +81,20 @@ namespace Gameplay
         {
             GameEvents.OnLevelCompleted += HandleLevelCompleted;
             if (BossEventBus.Instance != null)
+            {
                 BossEventBus.Instance.OnBossDefeated += HandleBossDefeated;
+                BossEventBus.Instance.OnBossRetreated += HandleBossRetreated;
+            }
         }
 
         void OnDisable()
         {
             GameEvents.OnLevelCompleted -= HandleLevelCompleted;
             if (BossEventBus.Instance != null)
+            {
                 BossEventBus.Instance.OnBossDefeated -= HandleBossDefeated;
+                BossEventBus.Instance.OnBossRetreated -= HandleBossRetreated;
+            }
         }
 
         void HandleLevelCompleted(int finalScore) => _levelCompleted = true;
@@ -116,6 +130,9 @@ namespace Gameplay
             _bossTimerRunning = false;
             _bossSpawnTimer = 0f;
 
+            // NOTE: _parkedBossGO / _hasBossWaitingForLevel20 intentionally
+            // persist across level resets so the boss survives until level 20.
+
             _attackingBirdTimer = levelProfile != null
                 ? levelProfile.attackingBirdSpawnInterval
                 : 20f;
@@ -127,7 +144,12 @@ namespace Gameplay
             {
                 _bossSpawnTimer = levelProfile.bossSpawnDelay;
                 _bossTimerRunning = true;
-                Debug.Log($"[SpawnController] Boss level — spawning boss in {_bossSpawnTimer:F1}s.");
+
+                bool isLevel20 = levelProfile.globalLevel % 20 == 0;
+                if (isLevel20 && _hasBossWaitingForLevel20)
+                    Debug.Log($"[SpawnController] Level 20 boss level — re-spawning parked boss in {_bossSpawnTimer:F1}s.");
+                else
+                    Debug.Log($"[SpawnController] Boss level — spawning boss in {_bossSpawnTimer:F1}s.");
             }
         }
 
@@ -158,7 +180,6 @@ namespace Gameplay
                 }
             }
 
-            // MODIFIED: Added !IsBossAlive. No attacking birds spawn if boss is out.
             if (levelProfile != null
                 && levelProfile.attackingBirdPool != null
                 && levelProfile.attackingBirdPool.Length > 0
@@ -182,13 +203,26 @@ namespace Gameplay
                 Debug.LogWarning($"[SpawnController] Level {levelProfile.globalLevel}: targetScore unreachable!");
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        //  BOSS SPAWN / ENTER / EXIT / RETREAT
+        // ═══════════════════════════════════════════════════════════════
+
         private void TrySpawnBoss()
         {
             if (_bossSpawned) return;
 
-            // NEW: Clear the stage so the boss is the only enemy present
             ClearRegularEnemies();
 
+            bool isLevel20 = levelProfile.globalLevel % 20 == 0;
+
+            // ── Level 20 re-spawn of a parked (retreated) boss ──
+            if (isLevel20 && _hasBossWaitingForLevel20 && _parkedBossGO != null)
+            {
+                RespawnParkedBoss();
+                return;
+            }
+
+            // ── Fresh boss spawn ──
             BossBirdConfig cfg = levelProfile.bossBirdConfig;
             if (cfg == null && chapterBossConfigs != null)
             {
@@ -210,22 +244,173 @@ namespace Gameplay
                 return;
             }
 
-            //Vector3 spawnPos = birdSpawnPoints != null && birdSpawnPoints.Length > 0
-            //    ? birdSpawnPoints[0].position
-            //    : Vector3.zero;
+            // Spawn off-screen at top-right corner
+            Vector3 topRight = Camera.main.ViewportToWorldPoint(new Vector3(1.2f, 1.2f, 0f));
+            topRight.z = 0f;
 
-            var go = Instantiate(bossPrefabs[prefabIdx], bossSpawnPoint.position, Quaternion.identity);
+            var go = Instantiate(bossPrefabs[prefabIdx], topRight, Quaternion.identity);
             var controller = go.GetComponent<BossBirdController>();
 
-            bool isLevel20 = levelProfile.globalLevel % 20 == 0;
             controller.Initialize(cfg, isLevel20);
+
+            // Invulnerable during entrance tween
+            controller.SetInvulnerable(true);
+
+            // Cache original scale, start at 70%
+            _bossOriginalScale = go.transform.localScale;
+            go.transform.localScale = _bossOriginalScale * 0.7f;
+
+            Vector3 targetPos = bossSpawnPoint.position;
+            go.transform.DOMove(targetPos, 3f).SetEase(Ease.OutCubic);
+            go.transform.DOScale(_bossOriginalScale, 3f).SetEase(Ease.OutCubic)
+                .OnComplete(() =>
+                {
+                    if (controller != null)
+                        controller.SetInvulnerable(false);
+                });
 
             _activeBossGO = go;
             _activeBossController = controller;
             _bossSpawned = true;
         }
 
-        // NEW: Helper to clear existing mobs when boss arrives
+        /// <summary>
+        /// Re-spawns a boss that retreated at 50% HP.
+        /// The parked GO is re-activated, re-initialized for phase 2,
+        /// and animated in from the top-right corner.
+        /// </summary>
+        private void RespawnParkedBoss()
+        {
+            GameObject go = _parkedBossGO;
+            float remainingHp = _parkedBossHpNormalized;
+
+            _parkedBossGO = null;
+            _hasBossWaitingForLevel20 = false;
+
+            go.SetActive(true);
+
+            var controller = go.GetComponent<BossBirdController>();
+            controller.ReinitializeForPhase2(remainingHp);
+
+            // Invulnerable during entrance tween
+            controller.SetInvulnerable(true);
+
+            // Position at top-right corner off-screen
+            Vector3 topRight = Camera.main.ViewportToWorldPoint(new Vector3(1.2f, 1.2f, 0f));
+            topRight.z = 0f;
+            go.transform.position = topRight;
+
+            _bossOriginalScale = go.transform.localScale;
+            go.transform.localScale = _bossOriginalScale * 0.7f;
+
+            Vector3 targetPos = bossSpawnPoint.position;
+            go.transform.DOMove(targetPos, 3f).SetEase(Ease.OutCubic);
+            go.transform.DOScale(_bossOriginalScale, 3f).SetEase(Ease.OutCubic)
+                .OnComplete(() =>
+                {
+                    if (controller != null)
+                        controller.SetInvulnerable(false);
+                });
+
+            _activeBossGO = go;
+            _activeBossController = controller;
+            _bossSpawned = true;
+
+            Debug.Log($"[SpawnController] Parked boss re-spawned for Level 20 with {remainingHp:P0} HP.");
+        }
+
+        /// <summary>
+        /// Animates the boss exiting toward the bottom-left corner while
+        /// scaling down by 30%. Does NOT destroy — caller decides.
+        /// </summary>
+        private void AnimateBossExit(GameObject bossGO, System.Action onComplete = null)
+        {
+            if (bossGO == null)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            var controller = bossGO.GetComponent<BossBirdController>();
+            if (controller != null)
+                controller.SetInvulnerable(true);
+
+            Vector3 bottomLeft = Camera.main.ViewportToWorldPoint(new Vector3(-0.2f, -0.2f, 0f));
+            bottomLeft.z = 0f;
+
+            Vector3 shrunkScale = bossGO.transform.localScale * 0.7f;
+
+            bossGO.transform.DOMove(bottomLeft, 3f).SetEase(Ease.InCubic);
+            bossGO.transform.DOScale(shrunkScale, 3f).SetEase(Ease.InCubic)
+                .OnComplete(() =>
+                {
+                    onComplete?.Invoke();
+                });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  BOSS EVENT HANDLERS
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Boss reached 50% HP on a non-level-20 encounter.
+        /// Animate exit, then park (hide) the boss for re-use at level 20.
+        /// </summary>
+        private void HandleBossRetreated(string bossName, float hpNormalized)
+        {
+            if (_activeBossGO == null) return;
+
+            GameObject bossGO = _activeBossGO;
+            _activeBossController = null;
+            _activeBossGO = null;
+
+            AnimateBossExit(bossGO, () =>
+            {
+                // Don't destroy — park it for level 20
+                bossGO.SetActive(false);
+                DontDestroyOnLoad(bossGO);
+
+                _parkedBossGO = bossGO;
+                _parkedBossHpNormalized = hpNormalized;
+                _hasBossWaitingForLevel20 = true;
+
+                Debug.Log($"[SpawnController] Boss '{bossName}' parked at {hpNormalized:P0} HP for Level 20.");
+            });
+        }
+
+        /// <summary>
+        /// Boss truly killed (level 20 / phase 2).
+        /// Animate exit, then destroy.
+        /// </summary>
+        private void HandleBossDefeated(string bossName, int score)
+        {
+            _bossDefeated = true;
+
+            if (_activeBossGO != null)
+            {
+                GameObject bossGO = _activeBossGO;
+                _activeBossController = null;
+                _activeBossGO = null;
+
+                AnimateBossExit(bossGO, () =>
+                {
+                    Destroy(bossGO);
+                });
+            }
+            else
+            {
+                _activeBossController = null;
+                _activeBossGO = null;
+            }
+
+            _hasBossWaitingForLevel20 = false;
+            _parkedBossGO = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  CLEAR / DRAIN
+        // ═══════════════════════════════════════════════════════════════
+
         private void ClearRegularEnemies()
         {
             for (int i = _activeBirds.Count - 1; i >= 0; i--)
@@ -249,13 +434,6 @@ namespace Gameplay
                 if (ab != null) ab.ForceKill();
             }
             _activeAttackingBirds.Clear();
-        }
-
-        private void HandleBossDefeated(string bossName, int score)
-        {
-            _bossDefeated = true;
-            _activeBossGO = null;
-            _activeBossController = null;
         }
 
         public void StartDrain(int scoreAtTrigger)
@@ -289,14 +467,25 @@ namespace Gameplay
             if (_activeBossGO != null)
             {
                 if (BossEventBus.Instance != null)
+                {
                     BossEventBus.Instance.OnBossDefeated -= HandleBossDefeated;
+                    BossEventBus.Instance.OnBossRetreated -= HandleBossRetreated;
+                }
 
-                Destroy(_activeBossGO);
+                GameObject bossGO = _activeBossGO;
                 _activeBossGO = null;
                 _activeBossController = null;
 
-                if (BossEventBus.Instance != null)
-                    BossEventBus.Instance.OnBossDefeated += HandleBossDefeated;
+                AnimateBossExit(bossGO, () =>
+                {
+                    Destroy(bossGO);
+
+                    if (BossEventBus.Instance != null)
+                    {
+                        BossEventBus.Instance.OnBossDefeated += HandleBossDefeated;
+                        BossEventBus.Instance.OnBossRetreated += HandleBossRetreated;
+                    }
+                });
             }
 
             if (_activeEggs.Count == 0)
@@ -304,6 +493,10 @@ namespace Gameplay
                 GameEvents.FireAllEggsCleared();
             }
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  EGG TIER TRACKING
+        // ═══════════════════════════════════════════════════════════════
 
         private bool IsEggTierAllowed(EggTierConfig tier)
         {
@@ -330,6 +523,10 @@ namespace Gameplay
             if (tier == null) return;
             _eggTierCounts[tier.tierId] = Mathf.Max(0, _eggTierCounts.GetValueOrDefault(tier.tierId, 0) - 1);
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  PERFORMANCE / RELIEF
+        // ═══════════════════════════════════════════════════════════════
 
         void UpdatePerformance()
         {
@@ -377,6 +574,10 @@ namespace Gameplay
 
             return Mathf.RoundToInt(baseMax * mult);
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  BIRD SPAWNING
+        // ═══════════════════════════════════════════════════════════════
 
         void TrySpawnBird()
         {
@@ -527,9 +728,12 @@ namespace Gameplay
 
         #endregion
 
+        // ═══════════════════════════════════════════════════════════════
+        //  EGG HANDLING
+        // ═══════════════════════════════════════════════════════════════
+
         void HandleBirdLayEgg(BaseBird bird)
         {
-            // MODIFIED: Also check IsBossAlive here to stop ongoing birds from laying.
             if (_draining || IsBossAlive) return;
 
             EggTierConfig tier = bird.config.eggTier;
@@ -557,7 +761,7 @@ namespace Gameplay
 
         private void HandleEggSplit(Egg egg)
         {
-            if (egg == null || IsBossAlive) return; // Stop splits if boss is active
+            if (egg == null || IsBossAlive) return;
 
             if (egg.config?.splitInto != null)
             {

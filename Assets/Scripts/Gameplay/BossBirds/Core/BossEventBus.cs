@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [CreateAssetMenu(menuName = "BossBird/Event Bus")]
 public class BossEventBus : ScriptableObject
@@ -13,6 +13,9 @@ public class BossEventBus : ScriptableObject
             return instance;
         }
     }
+    //boss spawn events
+    public System.Action<string, float> OnBossRetreated;
+    public static void RaiseBossRetreated(string name, float hpNorm)  => Instance?.OnBossRetreated?.Invoke(name, hpNorm);
 
     public event System.Action<string> OnBossSpawned;
     public event System.Action<string, int> OnBossDefeated;
