@@ -793,6 +793,7 @@ GameObject:
   - component: {fileID: 8181403690686454817}
   - component: {fileID: 1029332290969161604}
   - component: {fileID: 8601578958097999395}
+  - component: {fileID: 7370193566758259367}
   m_Layer: 5
   m_Name: POWERCont
   m_TagString: Untagged
@@ -950,6 +951,20 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &7370193566758259367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3328836311100070573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 0
 --- !u!1 &4543821636838681784
 GameObject:
   m_ObjectHideFlags: 0
@@ -1191,6 +1206,7 @@ GameObject:
   - component: {fileID: 3491737154811598574}
   - component: {fileID: 6853146807479907973}
   - component: {fileID: 2019316135468092745}
+  - component: {fileID: 3665010668490389080}
   m_Layer: 5
   m_Name: goldText
   m_TagString: Untagged
@@ -1318,6 +1334,22 @@ MonoBehaviour:
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!114 &2019316135468092745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4990997489630749917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5febc9e0d99fbe445ac74d235b709011, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CoinUICounter
+  currencyType: 0
+  countDuration: 1.5
+  punchScale: 1.2
+  punchSpeed: 8
+--- !u!114 &3665010668490389080
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1773,6 +1805,7 @@ GameObject:
   - component: {fileID: 1586139708790760765}
   - component: {fileID: 5918438229048230733}
   - component: {fileID: 7345812071885251685}
+  - component: {fileID: 6395099768415393767}
   m_Layer: 5
   m_Name: CoinCont
   m_TagString: Untagged
@@ -1930,6 +1963,20 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &6395099768415393767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6330786199564526832}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
 --- !u!1 &8275179692127225331
 GameObject:
   m_ObjectHideFlags: 0
@@ -2079,6 +2126,7 @@ GameObject:
   - component: {fileID: 1317268515769143833}
   - component: {fileID: 3915666394986662899}
   - component: {fileID: 4175412775661711345}
+  - component: {fileID: 6219699793239592704}
   m_Layer: 5
   m_Name: GEMScOUNT
   m_TagString: Untagged
@@ -2236,6 +2284,20 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &6219699793239592704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8751213679003467845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 0
 --- !u!1 &8842998348994533483
 GameObject:
   m_ObjectHideFlags: 0

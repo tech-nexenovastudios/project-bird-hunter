@@ -27,10 +27,10 @@ public class RewardedAdOffer : MonoBehaviour
     [SerializeField] private Button watchAdButton;
 
     [Tooltip("Text showing progress like '1/2 Ads' (optional)")]
-    [SerializeField] private Text progressText;
+    [SerializeField] private TMPro.TextMeshProUGUI progressText;
 
     [Tooltip("Text showing the reward like '7000 Gold' (optional)")]
-    [SerializeField] private Text rewardText;
+    [SerializeField] private TMPro.TextMeshProUGUI rewardText;
 
     [Tooltip("Image or GameObject to show when reward is ready to claim (optional)")]
     [SerializeField] private GameObject claimReadyIndicator;

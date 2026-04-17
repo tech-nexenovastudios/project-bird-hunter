@@ -4,6 +4,7 @@ using Gameplay.Managers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening; // Ensure DOTween is included
 
 namespace Gameplay.UI
 {
@@ -13,14 +14,17 @@ namespace Gameplay.UI
         [SerializeField] private Image[] slots;
 
         [Header("Source Images")]
-        [SerializeField] private Image fillType1Image;   // levels 1-10
-        [SerializeField] private Image fillType2Image;   // levels 11-20
+        [SerializeField] private Image fillType1Image;
+        [SerializeField] private Image fillType2Image;
         [SerializeField] private Image emptyImage;
 
         [Header("Label")]
         [SerializeField] private TextMeshProUGUI levelLabel;
 
-        // ───────── lifecycle ─────────
+        [Header("Animations")]
+        private float animationDuration = 0.5f;
+        private float punchAmount = 0.25f;
+
         private void OnEnable()
         {
             GameEvents.OnGameLevelUpdated += OnLevelUpdated;
@@ -37,29 +41,57 @@ namespace Gameplay.UI
             Refresh(pm.CurrentLevel, pm.CurrentChapter);
         }
 
-        // ───────── core ─────────
         private void Refresh(int currentLevel, int currentChapter)
         {
-            bool isSecondHalf = currentLevel > 10;
-            int filledCount = isSecondHalf ? currentLevel - 10 : currentLevel;
-            Image fillImgSource = isSecondHalf ? fillType2Image : fillType1Image;
+            // Logic: Type 2 fills from bottom, Type 1 stays on top of it
+            int type2Count = currentLevel > 10 ? currentLevel - 10 : 0;
+            int type1Count = currentLevel > 10 ? 10 - type2Count : currentLevel;
 
             for (int i = 0; i < slots.Length; i++)
             {
                 int distanceFromBottom = (slots.Length - 1) - i;
-                bool isFilled = distanceFromBottom < filledCount;
-                Image source = isFilled ? fillImgSource : emptyImage;
+                Image source;
 
-                slots[i].sprite = source.sprite;
-                slots[i].color = source.color;
-                slots[i].material = source.material;
-                slots[i].type = source.type;
-                slots[i].preserveAspect = source.preserveAspect;
-                slots[i].raycastTarget = false;
+                if (distanceFromBottom < type2Count)
+                    source = fillType2Image;
+                else if (distanceFromBottom < type2Count + type1Count)
+                    source = fillType1Image;
+                else
+                    source = emptyImage;
+
+                // Only trigger the "Pop" if the sprite is actually changing to a filled state
+                if (slots[i].sprite != source.sprite && source != emptyImage)
+                {
+                    AnimateSlot(slots[i].transform);
+                }
+
+                UpdateSlotVisuals(slots[i], source);
             }
 
             if (levelLabel != null)
                 levelLabel.text = $"{currentLevel}";
+        }
+
+        private void UpdateSlotVisuals(Image slot, Image source)
+        {
+            slot.sprite = source.sprite;
+            slot.color = source.color;
+            slot.material = source.material;
+            slot.type = source.type;
+            slot.preserveAspect = source.preserveAspect;
+            slot.raycastTarget = false;
+        }
+
+        private void AnimateSlot(Transform slotTransform)
+        {
+            // Reset scale in case an animation was already running
+            slotTransform.DOKill();
+            slotTransform.localScale = Vector3.one;
+
+            // Simple "Punch" effect to make it pop out and back
+            slotTransform.DOPunchScale(Vector3.one * punchAmount, animationDuration, 6, 0.6f)
+                         .SetEase(Ease.OutBack)
+                         .SetUpdate(true); // Works even if game is paused
         }
     }
 }

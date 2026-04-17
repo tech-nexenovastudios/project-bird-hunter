@@ -15,15 +15,18 @@ using UnityEngine.UI;
 /// - Uses UniTask throughout.
 /// - UI is hidden entirely until cloud data is loaded to prevent flash/glitch.
 /// - Supports unlocking ALL chapters via Inspector toggle or public API.
+/// - Tracks the highest unlocked chapter and updates the main menu background
+///   to match that chapter's visual theme.
 /// </summary>
 public class ChapterUnlockManager : MonoBehaviour
 {
     public static ChapterUnlockManager Instance { get; private set; }
-    
+
     // ── Inspector ────────────────────────────────────────────────────────────
     [Header("Shared Chapter UI (one object serves all chapters)")]
     [SerializeField] private GameObject playButton;
-    [SerializeField] private GameObject lockedStatusObject;
+    //[SerializeField] private GameObject lockedStatusObject;
+    [SerializeField] private Material greyScaleMaterial;
 
     [Header("Chapter Item GameObjects (assign in order, 0 = Chapter 1)")]
     [Tooltip("Drag each chapter carousel item here in order. " +
@@ -39,20 +42,46 @@ public class ChapterUnlockManager : MonoBehaviour
              "NEVER ship to production with this enabled.")]
     [SerializeField] private bool devUnlockAll = true;
 
+    [Header("Main Menu Background")]
+    [Tooltip("The ChaptersConfig asset that holds all ChapterData references. " +
+             "Used to pull the background sprite for the latest unlocked chapter.")]
+    [SerializeField] private ChaptersConfig chaptersConfig;
+
+    [Tooltip("The Image component on the main menu background GameObject. " +
+             "Its sprite will change to match the highest unlocked chapter.")]
+    [SerializeField] private Image mainMenuBackgroundImage;
+
     // ── Cloud ────────────────────────────────────────────────────────────────
     private const string CLOUD_KEY = "chapter_unlock_data";
+    private const string LAST_UNLOCKED_KEY = "last_unlocked_chapter";
     private const string LEVEL_IMAGE_NAME = "LevelImage";
 
     // ── Runtime State ────────────────────────────────────────────────────────
     private readonly Dictionary<int, bool> _unlockMap = new();
     private readonly Dictionary<int, Material> _savedMaterial = new();
     private int _currentIndex;
+    private int _lastUnlockedChapter = 0;
     private bool _servicesReady;
     private bool _dataReady;
 
     // ── Events ───────────────────────────────────────────────────────────────
     /// <summary>Raised after any unlock state changes. Args: (chapterIndex, isUnlocked)</summary>
     public static event Action<int, bool> OnChapterUnlockChanged;
+
+    /// <summary>
+    /// Raised when the highest unlocked chapter changes.
+    /// Args: (newHighestChapterIndex)
+    /// Subscribe from any script that needs to react to progression changes.
+    /// </summary>
+    public static event Action<int> OnLastUnlockedChapterChanged;
+
+    // ── Public Read-Only ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// The index of the highest chapter the player has unlocked (0-based).
+    /// Updated automatically whenever a new chapter is unlocked.
+    /// </summary>
+    public int LastUnlockedChapter => _lastUnlockedChapter;
 
     // ═════════════════════════════════════════════════════════════════════════
     // Unity Lifecycle
@@ -112,8 +141,13 @@ public class ChapterUnlockManager : MonoBehaviour
         }
 
         _dataReady = true;
+
+        // ── Recalculate highest unlocked chapter from the loaded data ─────
+        RecalculateLastUnlocked();
+
         ApplyAllLevelImageStates();
         RefreshUI(_currentIndex);
+        ApplyMainMenuBackground();
     }
 
     private async UniTask InitServicesAsync()
@@ -149,12 +183,16 @@ public class ChapterUnlockManager : MonoBehaviour
 
         try
         {
+            // Load both keys in a single batch call for efficiency
+            var keys = new HashSet<string> { CLOUD_KEY, LAST_UNLOCKED_KEY };
             var result = await CloudSaveService.Instance.Data.Player
-                .LoadAsync(new HashSet<string> { CLOUD_KEY }).AsUniTask();
+                .LoadAsync(keys).AsUniTask();
 
-            if (result.TryGetValue(CLOUD_KEY, out var item))
+            // ── Unlock map ────────────────────────────────────────────────
+            if (result.TryGetValue(CLOUD_KEY, out var unlockItem))
             {
-                var saveData = JsonUtility.FromJson<ChapterSaveData>(item.Value.GetAs<string>());
+                var saveData = JsonUtility.FromJson<ChapterSaveData>(
+                    unlockItem.Value.GetAs<string>());
                 _unlockMap.Clear();
                 if (saveData?.entries != null)
                     foreach (var entry in saveData.entries)
@@ -165,9 +203,24 @@ public class ChapterUnlockManager : MonoBehaviour
             else
             {
                 ApplyDefaults();
-                await SaveToCloudAsync();
-                Debug.Log("[ChapterUnlockManager] No cloud data found – defaults applied and saved.");
+                Debug.Log("[ChapterUnlockManager] No cloud data found – defaults applied.");
             }
+
+            // ── Last unlocked chapter ─────────────────────────────────────
+            if (result.TryGetValue(LAST_UNLOCKED_KEY, out var lastItem))
+            {
+                _lastUnlockedChapter = lastItem.Value.GetAs<int>();
+                Debug.Log($"[ChapterUnlockManager] Last unlocked chapter from cloud: {_lastUnlockedChapter}");
+            }
+            else
+            {
+                // First time — will be recalculated from unlock map
+                _lastUnlockedChapter = 0;
+            }
+
+            // Save defaults if this was the first load
+            if (!result.ContainsKey(CLOUD_KEY))
+                await SaveToCloudAsync();
         }
         catch (Exception e)
         {
@@ -187,19 +240,95 @@ public class ChapterUnlockManager : MonoBehaviour
         {
             var saveData = new ChapterSaveData();
             foreach (var kvp in _unlockMap)
-                saveData.entries.Add(new ChapterEntry { chapterIndex = kvp.Key, isUnlocked = kvp.Value });
+                saveData.entries.Add(new ChapterEntry
+                {
+                    chapterIndex = kvp.Key,
+                    isUnlocked = kvp.Value
+                });
 
+            // Save both unlock map and last unlocked chapter in one batch
             var payload = new Dictionary<string, object>
             {
-                { CLOUD_KEY, JsonUtility.ToJson(saveData) }
+                { CLOUD_KEY, JsonUtility.ToJson(saveData) },
+                { LAST_UNLOCKED_KEY, _lastUnlockedChapter }
             };
 
             await CloudSaveService.Instance.Data.Player.SaveAsync(payload).AsUniTask();
-            Debug.Log("[ChapterUnlockManager] Saved to cloud.");
+            Debug.Log($"[ChapterUnlockManager] Saved to cloud. Last unlocked: {_lastUnlockedChapter}");
         }
         catch (Exception e)
         {
             Debug.LogError($"[ChapterUnlockManager] Cloud save error: {e.Message}");
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // Last Unlocked Chapter — Tracking & Background
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Scans the entire unlock map and finds the highest unlocked index.
+    /// Called once after loading cloud data, and after every unlock change.
+    /// </summary>
+    private void RecalculateLastUnlocked()
+    {
+        int highest = 0;
+        foreach (var kvp in _unlockMap)
+        {
+            if (kvp.Value && kvp.Key > highest)
+                highest = kvp.Key;
+        }
+
+        bool changed = highest != _lastUnlockedChapter;
+        _lastUnlockedChapter = highest;
+
+        if (changed)
+        {
+            OnLastUnlockedChapterChanged?.Invoke(_lastUnlockedChapter);
+            Debug.Log($"[ChapterUnlockManager] Highest unlocked chapter updated: {_lastUnlockedChapter}");
+        }
+    }
+
+    /// <summary>
+    /// Applies the background sprite from the highest unlocked chapter's
+    /// ChapterData to the main menu background Image.
+    /// Safe to call at any time — silently does nothing if references are missing.
+    /// </summary>
+    private void ApplyMainMenuBackground()
+    {
+        if (mainMenuBackgroundImage == null)
+        {
+            // Not assigned — might be in a scene without a menu background.
+            // This is normal when the manager persists into the gameplay scene.
+            return;
+        }
+
+        if (chaptersConfig == null)
+        {
+            Debug.LogWarning("[ChapterUnlockManager] ChaptersConfig is not assigned. " +
+                             "Cannot update main menu background.");
+            return;
+        }
+
+        ChapterData data = chaptersConfig.GetWorldData(_lastUnlockedChapter);
+        if (data == null)
+        {
+            Debug.LogWarning($"[ChapterUnlockManager] No ChapterData found for " +
+                             $"chapter index {_lastUnlockedChapter}.");
+            return;
+        }
+
+        Sprite bg = data.ChapterBackground;
+        if (bg != null)
+        {
+            mainMenuBackgroundImage.sprite = bg;
+            Debug.Log($"[ChapterUnlockManager] Main menu BG set to " +
+                      $"'{data.worldName}' (chapter {_lastUnlockedChapter + 1})");
+        }
+        else
+        {
+            Debug.LogWarning($"[ChapterUnlockManager] ChapterData '{data.worldName}' " +
+                             "has no background sprite assigned.");
         }
     }
 
@@ -213,6 +342,8 @@ public class ChapterUnlockManager : MonoBehaviour
 
     /// <summary>
     /// Set unlock state for a chapter. Persists to cloud automatically.
+    /// If this chapter is higher than the previous highest, updates the
+    /// main menu background and saves the new value to cloud.
     /// </summary>
     public async UniTask SetUnlock(int chapterIndex, bool unlocked)
     {
@@ -229,6 +360,16 @@ public class ChapterUnlockManager : MonoBehaviour
         }
 
         OnChapterUnlockChanged?.Invoke(chapterIndex, unlocked);
+
+        // ── Check if this is a new highest unlock ─────────────────────────
+        if (unlocked)
+        {
+            int previousHighest = _lastUnlockedChapter;
+            RecalculateLastUnlocked();
+
+            if (_lastUnlockedChapter != previousHighest)
+                ApplyMainMenuBackground();
+        }
 
         // Skip cloud write when running in dev-unlock-all mode
         if (!devUnlockAll)
@@ -254,10 +395,28 @@ public class ChapterUnlockManager : MonoBehaviour
         for (int i = 0; i < chapterItems.Length; i++)
             OnChapterUnlockChanged?.Invoke(i, true);
 
+        // Update last unlocked to the final chapter
+        int previousHighest = _lastUnlockedChapter;
+        RecalculateLastUnlocked();
+
+        if (_lastUnlockedChapter != previousHighest)
+            ApplyMainMenuBackground();
+
         if (!devUnlockAll)
             await SaveToCloudAsync();
 
         Debug.Log("[ChapterUnlockManager] All chapters unlocked.");
+    }
+
+    /// <summary>
+    /// Re-applies the main menu background based on current data.
+    /// Call this when returning to the main menu scene if the background
+    /// Image reference needs to be reassigned (e.g. after scene reload).
+    /// </summary>
+    public void RefreshMainMenuBackground(Image newBackgroundImage)
+    {
+        mainMenuBackgroundImage = newBackgroundImage;
+        ApplyMainMenuBackground();
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -277,15 +436,32 @@ public class ChapterUnlockManager : MonoBehaviour
 
     private void HideAllUI()
     {
-        if (playButton) playButton.SetActive(false);
-        if (lockedStatusObject) lockedStatusObject.SetActive(false);
+        if (playButton)
+        {
+            playButton.GetComponent<Button>().enabled = false;
+            playButton.GetComponent<Image>().material = greyScaleMaterial;
+        }
+        
+        //if (lockedStatusObject) lockedStatusObject.SetActive(false);
     }
 
     private void RefreshUI(int chapterIndex)
     {
         bool unlocked = IsUnlocked(chapterIndex);
-        if (playButton) playButton.SetActive(unlocked);
-        if (lockedStatusObject) lockedStatusObject.SetActive(!unlocked);
+        if (playButton)
+        {
+                playButton.GetComponent<Button>().enabled = unlocked;
+            if (!unlocked)
+            {
+                playButton.GetComponent<Image>().material = greyScaleMaterial;
+            }
+            else // if chapter is unlocked
+            {
+                playButton.GetComponent<Image>().material = null;
+            }
+            
+        }
+        //if (lockedStatusObject) lockedStatusObject.SetActive(!unlocked);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -334,7 +510,7 @@ public class ChapterUnlockManager : MonoBehaviour
         _unlockMap.Clear();
         if (defaultUnlockedChapters != null)
             foreach (int i in defaultUnlockedChapters)
-                _unlockMap[i] = true;  
+                _unlockMap[i] = true;
     }
 
     /// <summary>Fills _unlockMap with true for every chapter slot without touching cloud.</summary>
@@ -356,5 +532,3 @@ public class ChapterUnlockManager : MonoBehaviour
     [Serializable]
     private class ChapterEntry { public int chapterIndex; public bool isUnlocked; }
 }
-
-

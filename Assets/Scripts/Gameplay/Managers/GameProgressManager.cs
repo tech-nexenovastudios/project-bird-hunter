@@ -76,6 +76,7 @@ namespace Gameplay.Managers
             Debug.Assert(profile != null, $"Level profile not found at path: {path}");
             
             if(profile != null) OnLevelLoaded?.Invoke(profile);
+            GameEvents.FireGameLevelUpdated(profile, level);
             return profile;
         }
 

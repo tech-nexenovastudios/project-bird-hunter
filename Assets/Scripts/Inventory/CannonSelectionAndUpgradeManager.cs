@@ -87,7 +87,8 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
     // ═════════════════════════════════════════════════════════════════════════
     // Inspector — Data
     // ═════════════════════════════════════════════════════════════════════════
-
+    [Header("Button Animator")]
+    [SerializeField] private ButtonAnimator buttonAnimator;
     [Header("Data")]
     [SerializeField] private CannonHolder_SO cannonHolderSO;
 
@@ -138,14 +139,19 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TextMeshProUGUI upgradeButtonText;
 
-    [Header("Cost Display")]
-    [SerializeField] private GameObject costContainer;
-    [SerializeField] private TextMeshProUGUI costText;
+   
 
     [Header("Not Enough Gold Text")]
     [SerializeField] private TextMeshProUGUI notEnoughGoldText;
     [SerializeField] private float fadeDuration = 0.4f;
     [SerializeField] private float holdDuration = 1.0f;
+
+    [Header("Cannon Tab Filters")]
+    [SerializeField] private ScrollRect scrollRect;
+    [SerializeField] private Button allTabButton;
+    [SerializeField] private Button unlockedButton;
+    [SerializeField] private Button lockedButton;
+
 
     // ═════════════════════════════════════════════════════════════════════════
     // Inspector — Unlock Popup
@@ -279,6 +285,12 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
         if (popupConfirmButton != null) popupConfirmButton.onClick.AddListener(OnPopupConfirmed);
         if (popupCancelButton != null) popupCancelButton.onClick.AddListener(OnPopupCancelled);
 
+        if (allTabButton != null) allTabButton.onClick.AddListener(() => FilterCannonItems("All"));
+
+        if (lockedButton != null) lockedButton.onClick.AddListener(() => FilterCannonItems("Locked"));
+        if (unlockedButton != null) unlockedButton.onClick.AddListener(() => FilterCannonItems("Unlocked"));
+
+
         if (unlockPopupPanel != null) unlockPopupPanel.SetActive(false);
 
         if (notEnoughGoldText != null)
@@ -286,6 +298,63 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
             notEnoughGoldText.text = "Not enough Gold!";
             SetTextAlpha(notEnoughGoldText, 0f);
         }
+    }
+
+    private void FilterCannonItems(string filter)
+    {
+        if (string.IsNullOrEmpty(filter))
+            filter = "All";
+
+        switch (filter)
+        {
+            case "All":
+                SetAllCannonItemsActive(true);
+                break;
+
+            case "Locked":
+                SetCannonItemsActiveByLockState(unlocked: false);
+                break;
+
+            case "Unlocked":
+                SetCannonItemsActiveByLockState(unlocked: true);
+                break;
+
+            default:
+                SetAllCannonItemsActive(true);
+                break;
+        }
+    }
+
+    private void SetAllCannonItemsActive(bool active)
+    {
+        foreach (var item in cannonItems)
+            if (item.button != null)
+                item.button.gameObject.SetActive(active);
+    }
+
+    private void SetCannonItemsActiveByLockState(bool unlocked)
+    {
+        for (int i = 0; i < cannonItems.Count; i++)
+        {
+            bool isUnlocked = IsUnlocked(i);
+            bool shouldShow = isUnlocked == unlocked;
+            
+            if (cannonItems[i].button != null)
+                cannonItems[i].button.gameObject.SetActive(shouldShow);
+        }
+    }
+    private void OnEnable()
+    {
+        ResetScrollAndTabs();
+    }
+
+    private void ResetScrollAndTabs()
+    {
+        if (scrollRect != null)
+            scrollRect.verticalNormalizedPosition = 1f;
+        // Reset tab buttons to "All"
+        if (allTabButton != null)
+            allTabButton.onClick.Invoke();
     }
 
     private void Start()
@@ -350,12 +419,21 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
                     Transform lt = root.Find("LockImage");
                     if (lt != null) item.lockImageObj = lt.gameObject;
                 }
-
+                if (item.unlockRequirementContainer == null)
+                {
+                    Transform urt = root.Find("UnlockRequirementContainer");
+                    if (urt != null)
+                    {
+                        item.unlockRequirementContainer = urt.gameObject;
+                        item.unlockRequirementText = urt.GetComponentInChildren<TextMeshProUGUI>();
+                    }
+                }
                 // Start disabled — RefreshAllLockVisuals() will enable
                 // unlocked ones after cloud data finishes loading.
-                item.button.interactable = false;
+                item.button.interactable = true;
                 item.button.onClick.AddListener(() => SelectCannon(index));
             }
+          
         }
     }
 
@@ -450,12 +528,14 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
         _isDataLoaded = true;
 
         // ── Refresh all visuals ───────────────────────────────────────────
- 
+
         RefreshAllLockVisuals();
         SelectCannon(_equippedIndex >= 0 ? _equippedIndex : 0);
 
         // ── Notify listeners ──────────────────────────────────────────────
+        OnEquipped?.Invoke(_equippedIndex);
         OnAllDataLoaded?.Invoke();
+
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -489,6 +569,7 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
     /// </summary>
     public bool IsChapterRequirementMet(int index)
     {
+        return true; // TEMP OVERRIDE — disable chapter gating for now while we test other systems.
         if (!ValidateIndex(index)) return false;
 
         int requiredChapter = cannonHolderSO.cannonsData[index].unlockChapterRequired;
@@ -525,9 +606,41 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
             else
                 ApplyLockedVisual(i);
 
-            // Locked = not tappable, Unlocked = tappable
+            // ALL cannons are tappable so the player can preview them.
+            // The equip button handles the actual lock state (UNLOCK / Ch.X Required).
             if (cannonItems[i].button != null)
-                cannonItems[i].button.interactable = unlocked;
+                cannonItems[i].button.interactable = true;
+
+            RefreshUnlockRequirement(i, unlocked);
+        }
+    }
+
+    private void RefreshUnlockRequirement(int index, bool unlocked)
+    {
+        if (index < 0 || index >= cannonItems.Count) return;
+        var item = cannonItems[index];
+
+        if (item.unlockRequirementContainer == null) return;
+
+        if (unlocked)
+        {
+            item.unlockRequirementContainer.SetActive(false);
+        }
+        else
+        {
+            bool chapterMet = IsChapterRequirementMet(index);
+            if (!chapterMet)
+            {
+                int requiredChapter = GetRequiredChapter(index) + 1; // 1-based display
+                item.unlockRequirementContainer.SetActive(true);
+                if (item.unlockRequirementText != null)
+                    item.unlockRequirementText.text = $"Unlocks at Ch. {requiredChapter}";
+            }
+            else
+            {
+                // Chapter met but not yet purchased — hide the requirement text
+                item.unlockRequirementContainer.SetActive(false);
+            }
         }
     }
 
@@ -613,11 +726,12 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
         // ── Mark unlocked ─────────────────────────────────────────────────
         _unlockedState[index] = true;
         ApplyUnlockedVisual(index);
-  
+        RefreshUnlockRequirement(index, true);
+
 
         // ── Re-enable the button now that it's unlocked ───────────────────
-        if (index < cannonItems.Count && cannonItems[index].button != null)
-            cannonItems[index].button.interactable = true;
+        //if (index < cannonItems.Count && cannonItems[index].button != null)
+        //    cannonItems[index].button.interactable = true;
 
         // ── Save to cloud ─────────────────────────────────────────────────
         SaveUnlockAsync(index).Forget();
@@ -642,11 +756,12 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
 
         _unlockedState[index] = true;
         ApplyUnlockedVisual(index);
-       
+        RefreshUnlockRequirement(index, true);
+
 
         // Re-enable the button
-        if (index < cannonItems.Count && cannonItems[index].button != null)
-            cannonItems[index].button.interactable = true;
+        //if (index < cannonItems.Count && cannonItems[index].button != null)
+        //    cannonItems[index].button.interactable = true;
 
         SaveUnlockAsync(index).Forget();
         OnCannonUnlocked?.Invoke(index);
@@ -674,7 +789,7 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
     // Level Text Helpers
     // ═════════════════════════════════════════════════════════════════════════
 
- 
+
 
 
 
@@ -686,11 +801,10 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
     {
         if (index < 0 || index >= cannonItems.Count) return;
 
-        // Block selection of locked cannons — their buttons are disabled,
-        // but this guard catches any programmatic calls too.
-        if (!IsUnlocked(index)) return;
+        // Allow selection of locked cannons too — the top panel preview
+        // will show their UNLOCK / Ch.X Required button state.
+        // (removed the IsUnlocked guard here)
 
-        // Deselect previous
         if (_selectedIndex >= 0 && _selectedIndex < cannonItems.Count)
             SetItemVisualState(_selectedIndex, false);
 
@@ -741,7 +855,7 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
         // ── Buttons ───────────────────────────────────────────────────────
         RefreshEquipButton(index, unlocked);
         RefreshUpgradeButton(index, unlocked);
-        RefreshCostText(index, unlocked);
+
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -756,6 +870,7 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
         {
             equipButtonText.text = "SAVING...";
             equipButton.interactable = false;
+            StopPulse(equipButton.gameObject);
             return;
         }
 
@@ -765,14 +880,16 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
 
             if (!chapterMet)
             {
-                int req = GetRequiredChapter(index) + 1; // display as 1-based
+                int req = GetRequiredChapter(index) + 1;
                 equipButtonText.text = $"Ch.{req} Required";
                 equipButton.interactable = false;
+                StopPulse(equipButton.gameObject);
             }
             else
             {
                 equipButtonText.text = "UNLOCK";
                 equipButton.interactable = true;
+                StopPulse(equipButton.gameObject);
             }
             return;
         }
@@ -781,11 +898,13 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
         {
             equipButtonText.text = "EQUIPPED";
             equipButton.interactable = false;
+            StopPulse(equipButton.gameObject);
         }
         else
         {
             equipButtonText.text = "EQUIP";
             equipButton.interactable = true;
+            StartPulse(equipButton.gameObject);
         }
     }
 
@@ -824,6 +943,7 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
             upgradeButton.interactable = false;
+            StopPulse(upgradeButton.gameObject);
             return;
         }
 
@@ -831,12 +951,14 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADING...";
             upgradeButton.interactable = false;
+            StopPulse(upgradeButton.gameObject);
             return;
         }
 
         if (index < 0 || index >= cannonHolderSO.cannonsData.Length)
         {
             upgradeButton.interactable = false;
+            StopPulse(upgradeButton.gameObject);
             return;
         }
 
@@ -845,35 +967,25 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "MAX LEVEL";
             upgradeButton.interactable = false;
+            StopPulse(upgradeButton.gameObject);
         }
         else
         {
+            int cost = GetUpgradeCost(index);
+            bool canAfford = CurrencyManager.Instance != null
+                             && CurrencyManager.Instance.Gold >= cost;
+
             if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
-            upgradeButton.interactable = true;
+            upgradeButton.interactable = canAfford;
+
+            if (canAfford)
+                StartPulse(upgradeButton.gameObject);
+            else
+                StopPulse(upgradeButton.gameObject);
         }
     }
 
-    private void RefreshCostText(int index, bool unlocked)
-    {
-        if (costContainer == null) return;
 
-        if (!unlocked || index < 0 || index >= cannonHolderSO.cannonsData.Length)
-        {
-            costContainer.SetActive(false);
-            return;
-        }
-
-        var data = cannonHolderSO.cannonsData[index];
-        if (data.cannonLevel >= maxCannonLevel)
-        {
-            costContainer.SetActive(false);
-            return;
-        }
-
-        costContainer.SetActive(true);
-        if (costText != null)
-            costText.text = $"{GetUpgradeCost(index):N0}";
-    }
 
     private void OnUpgradePressed()
     {
@@ -917,7 +1029,7 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
             if (previewLevelText != null)
                 previewLevelText.text = $"Level {data.cannonLevel}";
 
-            RefreshCostText(index, true);
+ 
             RefreshUpgradeButton(index, true);
             await AnimateFills(index);
         }
@@ -1180,7 +1292,17 @@ public class CannonSelectionAndUpgradeManager : MonoBehaviour
     // ═════════════════════════════════════════════════════════════════════════
     // Helpers
     // ═════════════════════════════════════════════════════════════════════════
+    private void StartPulse(GameObject target)
+    {
+        if (buttonAnimator != null)
+            buttonAnimator.AttentionPulse(target);
+    }
 
+    private void StopPulse(GameObject target)
+    {
+        if (buttonAnimator != null)
+            buttonAnimator.StopAttentionPulse(target);
+    }
     private bool ValidateIndex(int index)
         => cannonHolderSO != null && index >= 0 && index < cannonHolderSO.cannonsData.Length;
 
@@ -1221,4 +1343,7 @@ public class CannonItemUI
     [HideInInspector] public Image cannonBgComp;       // child "CannonBg"
     [HideInInspector] public Image frameComp;          // child "Frame"
     [HideInInspector] public GameObject lockImageObj;   // child "LockImage"
+                                                        // In CannonItemUI class, add:
+    [HideInInspector] public GameObject unlockRequirementContainer; // child "UnlockRequirementContainer"
+    [HideInInspector] public TextMeshProUGUI unlockRequirementText; // child "UnlockRequirementText"
 }

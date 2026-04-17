@@ -33,7 +33,6 @@ public class ChapterSelector : MonoBehaviour
 
     public void LoadCurrentWorld()
     {
-        // Guard: block navigation if chapter is locked
         if (ChapterUnlockManager.Instance != null && !ChapterUnlockManager.Instance.IsUnlocked(currentIndex))
         {
             Debug.Log($"[ChapterSelector] Chapter {currentIndex} is locked.");
@@ -42,6 +41,10 @@ public class ChapterSelector : MonoBehaviour
 
         PlayerPrefs.SetInt("SelectedWorld", currentIndex);
         PlayerPrefs.SetInt("SelectedLevel", 1);
+
+        ChapterData data = worlds.GetWorldData(currentIndex);
+        ChapterEnvironmentApplier.SetChapterData(data);
+
         SceneManager.LoadScene("GamePlayScene");
     }
 }

@@ -82,4 +82,25 @@ public class ButtonAnimator : MonoBehaviour
                 image.DOColor(originalColor, duration * 0.4f);
         });
     }
+    /// <summary>
+    /// Continuously pulses the target's scale up by 15% and back to original.
+    /// Call once to start; call StopAttentionPulse to stop.
+    /// </summary>
+    public void AttentionPulse(GameObject target)
+    {
+        target.transform.DOKill();
+        target.transform.localScale = Vector3.one;
+        target.transform.DOScale(1f + strength, 0.6f)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(-1, LoopType.Yoyo);
+    }
+
+    /// <summary>
+    /// Stops the pulse and resets scale to original.
+    /// </summary>
+    public void StopAttentionPulse(GameObject target)
+    {
+        target.transform.DOKill();
+        target.transform.localScale = Vector3.one;
+    }
 }

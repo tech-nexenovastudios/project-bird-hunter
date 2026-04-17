@@ -304,8 +304,7 @@ public class AdManager : MonoBehaviour
             return false;
         }
 
-        if (!string.IsNullOrEmpty(placement)
-            && LevelPlayRewardedAd.IsPlacementCapped(placement))
+        if (!string.IsNullOrEmpty(placement) && LevelPlayRewardedAd.IsPlacementCapped(placement))
         {
             LogWarning($"Rewarded placement '{placement}' is capped.");
             OnRewardedUnavailable?.Invoke();

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2621039738671334914}
   - component: {fileID: 954988530951073637}
   - component: {fileID: 973570941318022712}
+  - component: {fileID: 217233937638237914}
   m_Layer: 5
   m_Name: powerupbtn
   m_TagString: Untagged
@@ -155,6 +156,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &217233937638237914
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1145164543012389488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 1
+  hoverSound: 1
 --- !u!1 &1614117285052720953
 GameObject:
   m_ObjectHideFlags: 0
@@ -168,6 +183,7 @@ GameObject:
   - component: {fileID: 1435281820379821892}
   - component: {fileID: 7947381213644094988}
   - component: {fileID: 2294059629177031997}
+  - component: {fileID: 4902951694994691028}
   m_Layer: 5
   m_Name: inventorybtn
   m_TagString: Untagged
@@ -310,6 +326,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &4902951694994691028
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1614117285052720953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 1
+  hoverSound: 1
 --- !u!1 &1882832731808523515
 GameObject:
   m_ObjectHideFlags: 0
@@ -473,6 +503,7 @@ GameObject:
   - component: {fileID: 3182895279447858271}
   - component: {fileID: 246093612031866191}
   - component: {fileID: 7290559467657649899}
+  - component: {fileID: 1008708395885140341}
   m_Layer: 5
   m_Name: shopbtn
   m_TagString: Untagged
@@ -615,6 +646,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &1008708395885140341
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2170722873430194259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 1
+  hoverSound: 1
 --- !u!1 &2469556659251852600
 GameObject:
   m_ObjectHideFlags: 0
@@ -703,6 +748,7 @@ GameObject:
   - component: {fileID: 2664562714501676128}
   - component: {fileID: 445539423728139777}
   - component: {fileID: 4314383606723625583}
+  - component: {fileID: 3803606584835593977}
   m_Layer: 5
   m_Name: eventsbtn
   m_TagString: Untagged
@@ -845,6 +891,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &3803606584835593977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3209390472122972939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 1
+  hoverSound: 1
 --- !u!1 &3400465511425921592
 GameObject:
   m_ObjectHideFlags: 0
@@ -1060,7 +1120,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 2f4560024f42abf419135ba2c983df30, type: 3}
+  m_Sprite: {fileID: 21300000, guid: bd8834f9067212d468f9c80d42bf414d, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -1083,6 +1143,7 @@ GameObject:
   - component: {fileID: 1653484206469293846}
   - component: {fileID: 4298066308714928037}
   - component: {fileID: 2641470987211868874}
+  - component: {fileID: 231420167570055624}
   m_Layer: 5
   m_Name: HomeBtn
   m_TagString: Untagged
@@ -1225,6 +1286,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &231420167570055624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5710198047868921955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 1
+  hoverSound: 1
 --- !u!1 &6113166905863947783
 GameObject:
   m_ObjectHideFlags: 0
