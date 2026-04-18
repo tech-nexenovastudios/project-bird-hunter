@@ -25,6 +25,7 @@ public class ChapterUnlockManager : MonoBehaviour
     // ── Inspector ────────────────────────────────────────────────────────────
     [Header("Shared Chapter UI (one object serves all chapters)")]
     [SerializeField] private GameObject playButton;
+    [SerializeField] private Image powerImage;
     //[SerializeField] private GameObject lockedStatusObject;
     [SerializeField] private Material greyScaleMaterial;
 
@@ -440,6 +441,7 @@ public class ChapterUnlockManager : MonoBehaviour
         {
             playButton.GetComponent<Button>().enabled = false;
             playButton.GetComponent<Image>().material = greyScaleMaterial;
+            powerImage.GetComponent<Image>().material = greyScaleMaterial;
         }
         
         //if (lockedStatusObject) lockedStatusObject.SetActive(false);
@@ -454,10 +456,12 @@ public class ChapterUnlockManager : MonoBehaviour
             if (!unlocked)
             {
                 playButton.GetComponent<Image>().material = greyScaleMaterial;
+                powerImage.GetComponent<Image>().material = greyScaleMaterial;
             }
             else // if chapter is unlocked
             {
                 playButton.GetComponent<Image>().material = null;
+                powerImage.GetComponent<Image>().material = null;
             }
             
         }

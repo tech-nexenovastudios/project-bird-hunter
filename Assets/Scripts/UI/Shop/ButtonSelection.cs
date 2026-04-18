@@ -16,7 +16,7 @@ public class ButtonSelection : MonoBehaviour
         }
 
         currentSelectedBtn = btn;
-        currentSelectedBtn.transform.DOScale(1.3f, 0.2f);
+        currentSelectedBtn.transform.DOScale(1.15f, 0.2f);
         currentSelectedBtn.transform.GetChild(0).gameObject.SetActive(true);
 
     }

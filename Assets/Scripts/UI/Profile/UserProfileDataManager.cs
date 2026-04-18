@@ -57,6 +57,7 @@ public class UserProfileDataManager : MonoBehaviour
     private const string USERNAME_KEY = "username";
     private const string AVATAR_KEY = "avatarIndex";
     private const int MIN_USERNAME_LENGTH = 7;
+    private const int MAX_USERNAME_LENGTH = 15;  
 
     // ───────────────────────── Runtime State ─────────────────────────
 
@@ -229,6 +230,8 @@ public class UserProfileDataManager : MonoBehaviour
         isEditing = true;
         ClearValidation();
 
+        usernameInputField.characterLimit = MAX_USERNAME_LENGTH;
+
         usernameInputField.interactable = true;
         usernameInputField.Select();
         usernameInputField.ActivateInputField();
@@ -311,7 +314,7 @@ public class UserProfileDataManager : MonoBehaviour
         if (previewedAvatarIndex == index) return;
 
         previewedAvatarIndex = index;
-        ApplyAvatar(index);
+       // ApplyAvatar(index);
         HighlightAvatar(index);
     }
 
@@ -364,6 +367,7 @@ public class UserProfileDataManager : MonoBehaviour
             token.ThrowIfCancellationRequested();
 
             savedAvatarIndex = previewedAvatarIndex;
+            ApplyAvatar(savedAvatarIndex);
             Debug.Log($"[UserProfile] Avatar saved: {savedAvatarIndex}");
         }
         catch (System.OperationCanceledException)
@@ -387,7 +391,9 @@ public class UserProfileDataManager : MonoBehaviour
     /// </summary>
     private bool IsValidUsername(string username)
     {
-        if (string.IsNullOrEmpty(username) || username.Length < MIN_USERNAME_LENGTH)
+        if (string.IsNullOrEmpty(username) ||
+             username.Length < MIN_USERNAME_LENGTH ||
+             username.Length > MAX_USERNAME_LENGTH)
             return false;
 
         for (int i = 0; i < username.Length; i++)
