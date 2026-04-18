@@ -15,11 +15,43 @@ MonoBehaviour:
   performanceWindowSeconds: 15
   highPerformanceThreshold: 1.25
   lowPerformanceThreshold: 0.75
+  performanceCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  performanceCurveShift: 0.05
+  baseSpawnInterval: 1
+  basePressureMax: 1
+  baseWeightShift: 0.05
+  reliefWeightShift: 0.05
+  reliefScoreShift: 0.25
+  reliefMultiplier: 1.25
+  reliefThreshold: 0.75
   spawnIntervalMultiplierHigh: {x: 0.8, y: 0.9}
   pressureMaxMultiplierHigh: {x: 1.1, y: 1.15}
   b4WeightShiftHigh: 0.02
   b3WeightShiftHigh: 0.03
-  spawnIntervalMultiplierLow: {x: 1.15, y: 1.35}
+  spawnIntervalMultiplierLow: {x: 0.1, y: 1.35}
   pressureMaxMultiplierLow: {x: 0.85, y: 0.9}
   b1WeightShiftLow: 0.15
   b2WeightShiftLow: 0.05

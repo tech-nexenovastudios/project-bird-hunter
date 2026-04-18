@@ -1,4 +1,5 @@
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using Gameplay.PowerUps;
 using UnityEngine;
 using Gameplay.Events;
@@ -66,21 +67,24 @@ namespace Gameplay.Managers
         // ───────── Entry point ─────────
         private void Start()
         {
-            StartCoroutine(InitWithDelay());
+            // ── FIXED: UniTaskVoid replaces IEnumerator so we can await LoadProgress ──
+            InitWithDelay().Forget();
         }
 
-        private IEnumerator InitWithDelay()
+        // ── FIXED: async UniTaskVoid replaces IEnumerator — enables awaiting UniTask ──
+        private async UniTaskVoid InitWithDelay()
         {
-            yield return null;
+            await UniTask.Yield(); // replaces "yield return null"
 
-            GameProgressManager.Instance.LoadProgress();
+            // ── FIXED: properly awaited — Data is guaranteed populated after this line ──
+            await GameProgressManager.Instance.LoadProgress();
 
             var progress = GameProgressManager.Instance.Data;
 
             if (IsSpinPending(progress))
             {
                 TriggerPendingSpin(progress);
-                yield break;
+                return; // replaces "yield break"
             }
 
             StartGameplay();

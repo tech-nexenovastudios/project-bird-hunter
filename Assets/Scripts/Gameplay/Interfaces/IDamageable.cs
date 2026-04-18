@@ -21,6 +21,7 @@ namespace Gameplay.Interfaces
     /// </summary>
     public interface ICannon : IEntity
     {
+        bool IsMoving { get; }
         float ManaFillRateBonus { get; set; }
         bool IsFiring { get; }
         bool SuppressBullets { get; set; }

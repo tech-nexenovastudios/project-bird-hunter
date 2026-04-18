@@ -67,17 +67,21 @@ namespace Gameplay
 
         public PowerupConfig[] GetAvailablePowerUpForSpin(int chapter, int slotIndex, PowerupConfig[] allPowerups, int maxOptions = 3)
         {
-            // IDs already equipped in slots this chapter — don't offer duplicates
-            var equippedThisChapter = new HashSet<string>(
-                chapterSlots.Where(s => !s.IsEmpty).Select(s => s.equippedPowerupId)
-            );
+            // Only exclude the currently equipped one (if any) — player shouldn't re-pick same powerup
+            string currentlyEquippedId = null;
+            for (int i = 0; i < chapterSlots.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(chapterSlots[i]?.equippedPowerupId))
+                {
+                    currentlyEquippedId = chapterSlots[i].equippedPowerupId;
+                    break;
+                }
+            }
 
-            // All powerups unlocked so far = unlockFromChapter <= current chapter
-            // Exclude already equipped ones this chapter
             var candidates = allPowerups
                 .Where(p => p != null
                             && p.unlockFromChapter <= chapter
-                            && !equippedThisChapter.Contains(p.id))
+                            && p.id != currentlyEquippedId)
                 .ToList();
 
             if (candidates.Count == 0)
@@ -127,15 +131,23 @@ namespace Gameplay
         {
             if (powerup == null || slotIndex < 0 || slotIndex > 3) return;
 
+            // Clear ALL slots first — only one powerup active at a time
+            for (int i = 0; i < chapterSlots.Length; i++)
+            {
+                chapterSlots[i].equippedPowerupId = null;
+                chapterSlots[i].isOnCooldown = false;
+                chapterSlots[i].cooldownRemaining = 0f;
+            }
+
+            // Equip new powerup in the target slot
             chapterSlots[slotIndex].equippedPowerupId = powerup.id;
             chapterSlots[slotIndex].isOnCooldown = false;
             chapterSlots[slotIndex].cooldownRemaining = 0f;
-            // NOTE: playerSpins++ removed here — GameProgressManager.PlayerSelectedPowerup handles it
 
             if (!globalUnlockedPowerupIds.Contains(powerup.id))
                 globalUnlockedPowerupIds.Add(powerup.id);
 
-            Debug.Log($"[GameProgress] EquipPowerup — slot[{slotIndex}] = '{powerup.id}'");
+            Debug.Log($"[GameProgress] EquipPowerup — cleared all slots, equipped '{powerup.id}' in slot[{slotIndex}]");
         }
 
         public void ResetSlotsForNewChapter()

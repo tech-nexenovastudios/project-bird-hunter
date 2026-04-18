@@ -94,34 +94,34 @@ namespace Gameplay
             {
                 string levelsFolder = $"{baseFolder}/Chapter{chapter}/Levels";
 
-                EnsureFolder("Assets",                                           "Resources");
-                EnsureFolder("Assets/Resources",                                 "Data");
-                EnsureFolder("Assets/Resources/Data",                            "GeneratedLevels");
-                EnsureFolder("Assets/Resources/Data/GeneratedLevels",            $"Chapter{chapter}");
+                EnsureFolder("Assets", "Resources");
+                EnsureFolder("Assets/Resources", "Data");
+                EnsureFolder("Assets/Resources/Data", "GeneratedLevels");
+                EnsureFolder("Assets/Resources/Data/GeneratedLevels", $"Chapter{chapter}");
                 EnsureFolder($"Assets/Resources/Data/GeneratedLevels/Chapter{chapter}", "Levels");
 
                 for (int level = 1; level <= 20; level++)
                 {
                     int globalLevel = (chapter - 1) * 20 + level;
-                    int levelIndex  = level - 1;
+                    int levelIndex = level - 1;
 
                     var profile = ScriptableObject.CreateInstance<LevelProfile>();
-                    var v       = CalculateLevelValues(globalLevel, chapter, levelIndex);
+                    var v = CalculateLevelValues(globalLevel, chapter, levelIndex);
 
-                    profile.chapter          = chapter;
-                    profile.globalLevel      = globalLevel;
-                    profile.targetScore      = v.score;
-                    profile.minDuration      = v.minDuration;
-                    profile.maxDuration      = v.maxDuration;
-                    profile.pressureMax      = v.pMax;
-                    profile.pressureAvg      = v.pAvg;
-                    profile.maxE4            = v.maxE4;
-                    profile.maxE3            = v.maxE3;
-                    profile.maxE2            = v.maxE2;
+                    profile.chapter = chapter;
+                    profile.globalLevel = globalLevel;
+                    profile.targetScore = v.score;
+                    profile.minDuration = v.minDuration;
+                    profile.maxDuration = v.maxDuration;
+                    profile.pressureMax = v.pMax;
+                    profile.pressureAvg = v.pAvg;
+                    profile.maxE4 = v.maxE4;
+                    profile.maxE3 = v.maxE3;
+                    profile.maxE2 = v.maxE2;
                     profile.spawnIntervalMin = v.spawnMin;
                     profile.spawnIntervalMax = v.spawnMax;
-                    profile.expectedDps      = v.dps;
-                    profile.hpMultiplier     = v.hpMult;
+                    profile.expectedDps = v.dps;
+                    profile.hpMultiplier = v.hpMult;
 
                     string assetPath = $"{levelsFolder}/Ch{chapter}_L{level:D2}.asset";
                     AssetDatabase.CreateAsset(profile, assetPath);
@@ -162,10 +162,10 @@ namespace Gameplay
                 sb.AppendLine("--------");
                 for (int level = 1; level <= 20; level++)
                 {
-                    int  globalLevel = (chapter - 1) * 20 + level;
-                    int  levelIndex  = level - 1;
-                    var  v           = CalculateLevelValues(globalLevel, chapter, levelIndex);
-                    bool isSpin      = System.Array.IndexOf(SpinLevelIndices, levelIndex) >= 0;
+                    int globalLevel = (chapter - 1) * 20 + level;
+                    int levelIndex = level - 1;
+                    var v = CalculateLevelValues(globalLevel, chapter, levelIndex);
+                    bool isSpin = System.Array.IndexOf(SpinLevelIndices, levelIndex) >= 0;
 
                     sb.AppendLine($"  L{level:D2} (G{globalLevel}){(isSpin ? " 🎰 SPIN" : "")}:");
                     sb.AppendLine($"    Score={v.score}  DPS={v.dps}  HP×{v.hpMult:F2}");
@@ -204,7 +204,7 @@ namespace Gameplay
         CalculateLevelValues(int globalLevel, int chapter, int levelIndex)
         {
             float chapterT = (chapter - 1) / 29f;
-            float intraT   = GetIntraDifficultyMultiplier(levelIndex);
+            float intraT = GetIntraDifficultyMultiplier(levelIndex);
 
             // Combined difficulty: chapterT is dominant, intraT adds local spikes
             float diff = chapterT * 0.75f + intraT * 0.25f;
@@ -215,20 +215,20 @@ namespace Gameplay
 
             // ── Expected DPS: scales with hpMult so score stays reachable ──
             float dpsMult = 1.0f + 9.5f * EaseInOutCubic(diff) * (1f + 0.08f * intraT);
-            int   dps     = Mathf.RoundToInt(12f * dpsMult);
+            int dps = Mathf.RoundToInt(12f * dpsMult);
 
-            // ── Spawn Interval: 6.0s (Ch1 L1) → 0.3s (Ch30 L20) ──
-            float spawnBase = Mathf.Lerp(6.0f, 0.35f, EaseInCubic(diff * (1f + 0.12f * intraT)));
-            spawnBase       = Mathf.Max(0.3f, spawnBase);
-            float spawnMin  = spawnBase;
-            float spawnMax  = Mathf.Max(spawnMin + 0.3f, spawnBase + Mathf.Lerp(2.0f, 0.3f, chapterT));
+            // ── Spawn Interval: 2.0s (Ch1 L1) → 0.3s (Ch30 L20) ──
+            float spawnBase = Mathf.Lerp(2.0f, 0.25f, EaseInCubic(diff * (1f + 0.12f * intraT)));
+            spawnBase = Mathf.Max(0.2f, spawnBase);
+            float spawnMin = spawnBase;
+            float spawnMax = Mathf.Max(spawnMin + 0.3f, spawnBase + Mathf.Lerp(2.0f, 0.3f, chapterT));
 
             // ── Pressure Max: calibrated to concurrent egg pressure, not lifetime ──
             // Range: 8 (Ch1 L1) → 52 (Ch30 L20)
             // Keeps birds spawning at a rate that fills but never floods the screen
             float pBase = Mathf.Lerp(8f, 48f, EaseInOutCubic(diff));
-            int   pMax  = Mathf.Clamp(Mathf.RoundToInt(pBase * (1f + 0.18f * intraT)), 8, 56);
-            int   pAvg  = Mathf.RoundToInt(pMax * 0.60f);
+            int pMax = Mathf.Clamp(Mathf.RoundToInt(pBase * (1f + 0.18f * intraT)), 8, 56);
+            int pAvg = Mathf.RoundToInt(pMax * 0.60f);
 
             // ── Egg Tier Caps — screen budget: maxE4×1 + maxE3×2 + maxE2×4 ≤ 12 ──
             int maxE4, maxE3, maxE2;
@@ -277,15 +277,13 @@ namespace Gameplay
             }
 
             // ── Target Score ──
-            float avgDuration = Mathf.Lerp(35f, 62f, chapterT);
-            int   score       = Mathf.RoundToInt(dps * avgDuration * (1f + 0.15f * intraT));
 
-            if      (score < 1000)  score = (score / 50)   * 50;
-            else if (score < 5000)  score = (score / 100)  * 100;
-            else if (score < 20000) score = (score / 250)  * 250;
-            else if (score < 50000) score = (score / 500)  * 500;
-            else                    score = (score / 1000) * 1000;
+            // Score uses exponential progression: 80 (Ch1 L1) → 2500 (Ch30 L20)
+            float progressT = (globalLevel - 1) / 599f; // normalize to 0..1
+            float expFactor = Mathf.Log(2500f / 80f);
+            int score = Mathf.RoundToInt(80f * Mathf.Exp(progressT * expFactor) * (1f + 0.15f * intraT));
 
+            score = (score / 10) * 10; // round to nearest 10 for clean UI
             score = Mathf.Max(50, score); // never zero
 
             // ── Duration ──
@@ -293,7 +291,7 @@ namespace Gameplay
             if (chapter == 1 && levelIndex == 0)
             {
                 minDuration = 20f;  // Ch1 L1: very short — instant win feeling
-                maxDuration = 40f;
+                maxDuration = 30f;
             }
             else if (chapter <= 5)
             {
@@ -302,13 +300,13 @@ namespace Gameplay
             }
             else if (chapter <= 15)
             {
-                float t     = (chapterT - 0.138f) / 0.448f;
+                float t = (chapterT - 0.138f) / 0.448f;
                 minDuration = Mathf.Lerp(38f, 50f, t) + 5f * intraT;
                 maxDuration = Mathf.Lerp(60f, 78f, t);
             }
             else
             {
-                float t     = (chapterT - 0.483f) / 0.517f;
+                float t = (chapterT - 0.483f) / 0.517f;
                 minDuration = Mathf.Lerp(50f, 60f, t) + 5f * intraT;
                 maxDuration = Mathf.Lerp(78f, 95f, t);
             }
@@ -340,16 +338,16 @@ namespace Gameplay
         {
             return levelIndex switch
             {
-                0  => 0.00f,
-                1  => 0.10f,
-                2  => 0.22f,
-                3  => 0.35f,
-                4  => 0.50f,  // 🎰 Spin 1
-                5  => 0.10f,  // relief
-                6  => 0.28f,
-                7  => 0.40f,
-                8  => 0.52f,
-                9  => 0.65f,  // 🎰 Spin 2
+                0 => 0.00f,
+                1 => 0.10f,
+                2 => 0.22f,
+                3 => 0.35f,
+                4 => 0.50f,  // 🎰 Spin 1
+                5 => 0.10f,  // relief
+                6 => 0.28f,
+                7 => 0.40f,
+                8 => 0.52f,
+                9 => 0.65f,  // 🎰 Spin 2
                 10 => 0.20f,  // relief
                 11 => 0.42f,
                 12 => 0.55f,
@@ -360,7 +358,7 @@ namespace Gameplay
                 17 => 0.75f,
                 18 => 0.88f,
                 19 => 1.00f,  // 👑 Chapter boss
-                _  => 0f
+                _ => 0f
             };
         }
 

@@ -142,8 +142,18 @@ namespace Gameplay.Events
         internal static void FirePowerupCommitted(PowerupConfig results) => OnPowerupCommitted?.Invoke(results);
 
         public static event Action<CannonStats> OnCannonStatsUpdated;
+        // ───────── Powerup Cooldown ─────────
+        public static event Action<float> OnPowerupCooldownStarted;
 
+        public static void FirePowerupCooldownStarted(float duration)
+            => OnPowerupCooldownStarted?.Invoke(duration);
+        public static event Action OnPowerupUnequipped;
+        public static void FirePowerupUnequipped() => OnPowerupUnequipped?.Invoke();
         public static void FireLevelCompletedEarly(float remaining) => OnLevelCompletedEarly?.Invoke(remaining);
         public static event Action<float> OnLevelCompletedEarly;
+
+        public static event Action<int> OnChapterCompleted;  // int = new chapter number
+        public static void FireChapterCompleted(int newChapter)
+            => OnChapterCompleted?.Invoke(newChapter);
     }
 }

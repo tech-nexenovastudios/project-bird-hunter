@@ -154,7 +154,7 @@ namespace Gameplay.Player
             GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp);
             GameEvents.OnPlayerLevelUp += OnLevelUp;
         }
-
+        public bool IsMoving => movementInput.sqrMagnitude > 0.0001f;
         protected virtual void OnDestroy()
         {
             GameEvents.OnPlayerLevelUp -= OnLevelUp;

@@ -32,6 +32,7 @@ public class BossHealthHandler : MonoBehaviour, IDamageablee
             return;
 
         currentHealth -= amount;
+        Debug.Log("Boss took damage: " + amount + ", current health: " + currentHealth);
         float normalized = Mathf.Clamp01(currentHealth / maxHealth);
         OnHealthChanged?.Invoke(normalized);
 

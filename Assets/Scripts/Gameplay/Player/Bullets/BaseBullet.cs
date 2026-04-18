@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Gameplay.Player
 {
-    public abstract class BaseBullet : MonoBehaviour 
+    public abstract class BaseBullet : MonoBehaviour
     {
         [HideInInspector] public float instantKillChance;
         [Header("Base Settings")]
@@ -100,7 +100,6 @@ namespace Gameplay.Player
             currentLifetime = 0f;
             isDeactivated = false;
             instantKillChance = 0f;
-           
 
             if (rb != null)
             {
@@ -155,27 +154,20 @@ namespace Gameplay.Player
                 HandleMovement();
         }
 
+        // ─────────────────────────────────────────────────────────────────────
+        // Collision routing
+        // ─────────────────────────────────────────────────────────────────────
+
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (isDeactivated) return;
 
             if (other.gameObject.CompareTag("Bird"))
                 OnHitTarget(other);
+            else if (other.gameObject.CompareTag("Boss"))
+                OnHitBoss(other);
             else if (other.gameObject.CompareTag("BossWeapons"))
-                OnHitBossWeapon(other);          // separate path — uses IDamageablee
-        }
-
-        // Handles boss-side objects that implement IDamageablee (double-e)
-        private void OnHitBossWeapon(Collider2D collision)
-        {
-            if (collision.TryGetComponent<IDamageable>(out var damageable))
-            {
-                //damageable.TakeDamage(damage);
-                Destroy(gameObject);
-                //ShowDamageText(collision.ClosestPoint(transform.position), damage);
-            }
-
-            //Deactivate();
+                OnHitBossWeapon(other);
         }
 
         protected void OnCollisionEnter2D(Collision2D other)
@@ -190,8 +182,20 @@ namespace Gameplay.Player
 
             if (other.gameObject.CompareTag("Egg"))
                 OnHitTarget(other.collider);
+
+            if (other.gameObject.CompareTag("Bird"))
+                OnHitTarget(other.collider);
+            else if (other.gameObject.CompareTag("Boss"))
+                OnHitBoss(other.collider);
+            else if (other.gameObject.CompareTag("BossWeapons"))
+                OnHitBossWeapon(other.collider);
         }
-      
+
+        protected void OnCollisionEnter(Collision other) { }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Hit handlers
+        // ─────────────────────────────────────────────────────────────────────
 
         protected virtual void OnHitTarget(Collider2D collision)
         {
@@ -200,8 +204,6 @@ namespace Gameplay.Player
             if (collision.TryGetComponent<IDamageable>(out var damageable))
             {
                 // ── Instant kill check (Pierce power-up) ─────
-                // Roll once per hit. If it procs, deal damage
-                // equal to the target's remaining HP = guaranteed kill.
                 bool instantKilled = false;
                 if (instantKillChance > 0f && UnityEngine.Random.value <= instantKillChance)
                 {
@@ -222,7 +224,6 @@ namespace Gameplay.Player
 
                 ShowDamageText(hitPoint, shownDamage);
 
-                // Apply on-hit effects from power-ups (chain lightning, burn, freeze, etc.)
                 if (onHitEffects.Count > 0 && collision.TryGetComponent<IEntity>(out var entity))
                 {
                     for (int i = 0; i < onHitEffects.Count; i++)
@@ -236,13 +237,70 @@ namespace Gameplay.Player
             HandlePostHit(collision);
         }
 
+        // ── Boss hit — IDamageablee (double-e), full damage pipeline ─────────
+        private void OnHitBoss(Collider2D collision)
+        {
+            Vector3 hitPoint = collision.ClosestPoint(transform.position);
+
+            if (collision.TryGetComponent<IDamageablee>(out var damageable))
+            {
+                // ── Instant kill check ────────────────────────
+                bool instantKilled = false;
+                if (instantKillChance > 0f && UnityEngine.Random.value <= instantKillChance)
+                {
+                    if (collision.TryGetComponent<BossHealthHandler>(out var bossHp))
+                    {
+                        damageable.TakeDamage(bossHp.MaxHealth);
+                        instantKilled = true;
+                    }
+                    else
+                    {
+                        damageable.TakeDamage(damage);
+                    }
+                }
+                else
+                {
+                    damageable.TakeDamage(damage);
+                }
+
+                float shownDamage = instantKilled
+                    ? (collision.TryGetComponent<BossHealthHandler>(out var h) ? h.MaxHealth : damage)
+                    : damage;
+
+                ShowDamageText(hitPoint, shownDamage);
+
+                // Apply on-hit effects (burn, freeze, chain lightning, etc.)
+                if (onHitEffects.Count > 0 && collision.TryGetComponent<IEntity>(out var entity))
+                {
+                    for (int i = 0; i < onHitEffects.Count; i++)
+                        onHitEffects[i]?.Apply(entity);
+                }
+            }
+
+            HandlePostHit(collision);
+        }
+
+        // ── Boss weapon hit — damages the weapon object itself, bullet deactivates ──
+        private void OnHitBossWeapon(Collider2D collision)
+        {
+            if (collision.TryGetComponent<IDamageablee>(out var damageable))
+            {
+                damageable.TakeDamage(damage);
+                ShowDamageText(collision.ClosestPoint(transform.position), damage);
+            }
+
+            Deactivate();
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+
         protected virtual void ApplyHitImpulse(Collider2D collision)
         {
             if (!applyHitImpulse) return;
 
             collision.TryGetComponent<Egg>(out var egg);
             if (egg == null) return;
-            
+
             egg.ApplyBulletHitForce();
         }
 
@@ -284,16 +342,6 @@ namespace Gameplay.Player
                     });
                 }
             }
-        }
-
-        private void DestroyAttachedVfx()
-        {
-            for (int i = attachedVfx.Count - 1; i >= 0; i--)
-            {
-                if (attachedVfx[i] != null)
-                    Destroy(attachedVfx[i]);
-            }
-            attachedVfx.Clear();
         }
     }
 }

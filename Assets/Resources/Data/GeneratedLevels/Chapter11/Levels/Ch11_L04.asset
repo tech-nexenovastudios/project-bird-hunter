@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Levels.LevelProfile
   chapter: 11
   globalLevel: 204
-  targetScore: 1400
+  targetScore: 270
   minDuration: 45.290024
   maxDuration: 68.310036
   pressureMax: 16
@@ -22,7 +22,13 @@ MonoBehaviour:
   maxE4: 1
   maxE3: 2
   maxE2: 2
-  spawnIntervalMin: 5.7349463
-  spawnIntervalMax: 7.1487393
+  spawnIntervalMin: 1.9179037
+  spawnIntervalMax: 3.3316967
   expectedDps: 31
   hpMultiplier: 2.55
+  isBossLevel: 0
+  bossBirdConfig: {fileID: 0}
+  bossSpawnDelay: 12
+  attackingBirdPool: []
+  attackingBirdSpawnInterval: 20
+  attackingBirdSpawnChance: 0.6

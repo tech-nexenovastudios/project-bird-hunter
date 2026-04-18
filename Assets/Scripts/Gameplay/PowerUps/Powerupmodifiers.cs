@@ -102,29 +102,31 @@ namespace Gameplay.PowerUps
                 }
             }
 
-            private void TryHeal()
-            {
-                if (Time.time < lastHealTime + healCooldown)
-                    return;
+        private void TryHeal()
+        {
+            if (Time.time < lastHealTime + healCooldown)
+                return;
 
-                cannon.Heal(Mathf.RoundToInt(value));
-                lastHealTime = Time.time;
-            }
+            cannon.Heal(Mathf.RoundToInt(value));
+            lastHealTime = Time.time;
 
-            private void TryActivateInvincible()
-            {
-                // Block activation if we are still on cooldown
-                if (Time.time < lastInvincibleTime + invincibleCooldown)
-                    return;
+            GameEvents.FirePowerupCooldownStarted(healCooldown);
+        }
 
-                cannon.IsInvincible = true;
-                lastInvincibleTime = Time.time;
+        private void TryActivateInvincible()
+        {
+            if (Time.time < lastInvincibleTime + invincibleCooldown)
+                return;
 
-                // Start the duration timer that will eventually turn off invincibility
-                if (duration > 0f) StartTimer();
-            }
+            cannon.IsInvincible = true;
+            lastInvincibleTime = Time.time;
 
-            public void Deactivate()
+            GameEvents.FirePowerupCooldownStarted(invincibleCooldown);
+
+            if (duration > 0f) StartTimer();
+        }
+
+        public void Deactivate()
             {
                 if (timer != null)
                 {
@@ -264,29 +266,26 @@ namespace Gameplay.PowerUps
             }
         }
 
+        //Tick
         public void Tick(ICannon cannon)
         {
-            if (!IsActive)
-            {
-                // Uncomment below if you never see ANY log from Tick
-                // UnityEngine.Debug.Log("[BulletModifier] Tick skipped — not active");
-                return;
-            }
-            if (cannon == null)
-            {
-                UnityEngine.Debug.Log("[BulletModifier] Tick skipped — cannon is null");
-                return;
-            }
+            if (!IsActive) return;
+            if (cannon == null) return;
             if (mode != BulletModType.SetRocket) return;
 
             this.cannon = cannon;
+
+            // ★ Only tick timer while cannon is actively moving
+            if (!cannon.IsMoving)
+            {
+                return;  // pause timer when stationary
+            }
 
             rocketTimer -= Time.deltaTime;
             if (rocketTimer <= 0f)
             {
                 SpawnRocket();
                 rocketTimer = rocketInterval + UnityEngine.Random.Range(-intervalVariance, intervalVariance);
-                UnityEngine.Debug.Log($"[BulletModifier] Next rocket in {rocketTimer:F1}s");
             }
         }
 
@@ -294,17 +293,19 @@ namespace Gameplay.PowerUps
         {
             if (rocketPrefab == null || cannon == null) return;
 
+            // Spawn with 24° visual tilt so sprite appears straight.
+            // Rocket's HandleMovement ignores transform.up and moves world-up.
             GameObject go = UnityEngine.Object.Instantiate(
                 rocketPrefab,
                 cannon.Transform.position,
-                Quaternion.identity
+                Quaternion.Euler(0f, 0f, 24f)
             );
 
             BaseBullet bullet = go.GetComponent<BaseBullet>();
             if (bullet != null)
             {
                 bullet.damage = cannon.CurrentAttack * value;
-                bullet.bulletSpeed = rocketSpeeed; ;  // ← ADD THIS (or whatever speed you want)
+                bullet.bulletSpeed = rocketSpeeed;
             }
         }
     }

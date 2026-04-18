@@ -199,11 +199,12 @@ MonoBehaviour:
       type: {class: BladeStrikeEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
         strikePrefab: {fileID: 6558925124617225918, guid: f890c6f8a6108ea4b804e6e63c1884fe, type: 3}
-        strikeInterval: 2
-        strikeLifetime: 0.5
+        checkInterval: 0.5
         bladeSpeed: 8
         rotationSpeed: 360
         searchRadius: 20
+        bladeDamage: 30
+        localAttachOffset: {x: 1, y: 0, z: 0}
     - rid: 1861421009558306997
       type: {class: BulletElementModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
@@ -288,9 +289,9 @@ MonoBehaviour:
       type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
         mode: 4
-        value: 4
+        value: 10
         rocketPrefab: {fileID: 6354247109572606826, guid: c4d0e1374de823f45a2c373f06d0f863, type: 3}
-        rocketSpeeed: 10
+        rocketSpeeed: 7
         rocketInterval: 3
         intervalVariance: 0.1
     - rid: 1861421009558307189
