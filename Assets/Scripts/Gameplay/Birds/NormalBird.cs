@@ -1,6 +1,4 @@
-﻿using System;
-using Cysharp.Threading.Tasks;
-using DG.Tweening;
+using Spine;
 using Spine.Unity;
 using UnityEngine;
 
@@ -13,12 +11,11 @@ namespace Gameplay.Birds
 
         private string currentAnimation;
 
-        // Animation names (safe constants)
         public const string FLY_NORMAL = "fly_N";
         public const string FLY_FAST = "fly_Fast";
         public const string LAY_EGG = "lay_egg";
         public const string DEATH = "death";
-        
+
         private void PlayAnimation(string animationName, bool loop)
         {
             if (currentAnimation == animationName)
@@ -27,22 +24,28 @@ namespace Gameplay.Birds
             animationState.SetAnimation(0, animationName, loop);
             currentAnimation = animationName;
         }
-        
+
         private void Awake()
         {
             skeletonAnimation = GetComponent<SkeletonAnimation>();
             animationState = skeletonAnimation.state;
         }
 
-        private void Start()
-        {
-            FlyNormal();
-        }
-
         private void OnEnable()
         {
             OnLayEgg += LayEgg;
             OnDestroyed += Death;
+
+            // Reset animator state so pooled reuse replays the fly clip.
+            currentAnimation = null;
+            if (animationState != null) FlyNormal();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            OnLayEgg -= LayEgg;
+            OnDestroyed -= Death;
         }
 
         void FlyNormal()
@@ -64,8 +67,15 @@ namespace Gameplay.Birds
 
         public void Death(BaseBird bird)
         {
-            PlayAnimation(DEATH, false);
+            TrackEntry track = animationState.SetAnimation(0, DEATH, false);
+            track.Complete += OnDeathTrackComplete;
+            currentAnimation = DEATH;
         }
 
+        private void OnDeathTrackComplete(TrackEntry track)
+        {
+            track.Complete -= OnDeathTrackComplete;
+            NotifyDespawnReady();
+        }
     }
 }

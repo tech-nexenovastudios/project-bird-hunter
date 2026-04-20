@@ -24,8 +24,12 @@ namespace Gameplay.Birds
 
         public event Action<BaseBird> OnLayEgg;
         public event Action<BaseBird> OnDestroyed;
+        public event Action<BaseBird> OnDespawnReady;
 
         protected void InvokeLayEgg() => OnLayEgg?.Invoke(this);
+
+        /// <summary>Raised by subclasses once the death animation has finished — owner should return to pool.</summary>
+        protected void NotifyDespawnReady() => OnDespawnReady?.Invoke(this);
         
         private const float EGG_LAY_COOLDOWN = 1.5f;
         private const float CANNON_ALIGN_THRESHOLD = 0.5f;

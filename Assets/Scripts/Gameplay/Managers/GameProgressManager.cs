@@ -31,6 +31,14 @@ namespace Gameplay.Managers
         public int TotalScore => _progress?.totalScore ?? 0;
         public PowerUpSlot[] CurrentSlots => _progress?.chapterSlots ?? new PowerUpSlot[0];
 
+        public int GetChapterPlays(int chapter) => _progress?.GetChapterPlays(chapter) ?? 0;
+
+        public void IncrementChapterPlays(int chapter)
+        {
+            if (_progress == null) _progress = new GameProgress();
+            _progress.IncrementChapterPlays(chapter);
+        }
+
         public PowerupConfig LastSelectedPowerup { get; private set; }
         private int _currentSpinSlotIndex = 0;
 
@@ -218,6 +226,7 @@ namespace Gameplay.Managers
             public int totalGems;
             public int totalPower;
             public List<string> firstTimeClearedLevels = new();
+            public Dictionary<int, int> chapterPlays = new();
         }
 
         public async void SaveProgress()
@@ -240,7 +249,8 @@ namespace Gameplay.Managers
                     totalCoins = _progress.totalCoins,
                     totalGems = _progress.totalGems,
                     totalPower = _progress.totalPower,
-                    firstTimeClearedLevels = _progress.firstTimeClearedLevels ?? new()
+                    firstTimeClearedLevels = _progress.firstTimeClearedLevels ?? new(),
+                    chapterPlays = _progress.chapterPlays ?? new()
                 };
 
                 for (int i = 0; i < 4; i++)
@@ -262,6 +272,7 @@ namespace Gameplay.Managers
                     { "total_power",                data.totalPower },
                     { "slot_powerup_ids",           JsonConvert.SerializeObject(data.slotPowerupIds) },
                     { "first_time_cleared_levels",  JsonConvert.SerializeObject(data.firstTimeClearedLevels) },
+                    { "chapter_plays",              JsonConvert.SerializeObject(data.chapterPlays) },
                 });
             }
             catch (Exception ex)
@@ -280,7 +291,7 @@ namespace Gameplay.Managers
                     "chapter_progress", "level_progress", "high_score", "total_score",
                     "global_unlocked", "player_xp", "player_level", "last_level_up_xp",
                     "player_spins", "total_coins", "total_gems", "total_power",
-                    "slot_powerup_ids", "first_time_cleared_levels"
+                    "slot_powerup_ids", "first_time_cleared_levels", "chapter_plays"
                 });
 
                 if (res.Count == 0)
@@ -317,6 +328,7 @@ namespace Gameplay.Managers
                     globalUnlocked = JsonConvert.DeserializeObject<List<string>>(Get("global_unlocked", "[]")) ?? new(),
                     slotPowerupIds = JsonConvert.DeserializeObject<string[]>(Get("slot_powerup_ids", "[\"\",\"\",\"\",\"\"]")) ?? new string[4],
                     firstTimeClearedLevels = JsonConvert.DeserializeObject<List<string>>(Get("first_time_cleared_levels", "[]")) ?? new(),
+                    chapterPlays = JsonConvert.DeserializeObject<Dictionary<int, int>>(Get("chapter_plays", "{}")) ?? new(),
                 };
 
                 _progress = new GameProgress
@@ -333,7 +345,8 @@ namespace Gameplay.Managers
                     totalCoins = data.totalCoins,
                     totalGems = data.totalGems,
                     totalPower = data.totalPower,
-                    firstTimeClearedLevels = data.firstTimeClearedLevels
+                    firstTimeClearedLevels = data.firstTimeClearedLevels,
+                    chapterPlays = data.chapterPlays ?? new()
                 };
 
                 for (int i = 0; i < 4 && i < data.slotPowerupIds.Length; i++)

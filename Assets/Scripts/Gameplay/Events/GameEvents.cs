@@ -109,22 +109,7 @@ namespace Gameplay.Events
             => OnPauseToggled?.Invoke(isPaused);
 
 
-        /// <summary>Fired by BossBird.InitBoss() when the boss enters the scene.</summary>
-        public static event Action<BossBird> OnBossSpawned;
-
-        /// <summary>Fired by BossBird.EnterPhase2() when HP crosses the phase threshold.</summary>
-        public static event Action<BossBird> OnBossPhase2;
-
-        /// <summary>Fired by BossBird.Die() when the boss is killed by the player.</summary>
-        public static event Action<BossBird> OnBossDefeated;
-
-        /// <summary>Fired by BossBird.TriggerBurstAttack().</summary>
-        public static event Action<BossBird, int> OnBossBurstAttack; // (boss, eggCount)
-
-        public static void FireBossSpawned(BossBird boss) => OnBossSpawned?.Invoke(boss);
-        public static void FireBossPhase2(BossBird boss) => OnBossPhase2?.Invoke(boss);
-        public static void FireBossDefeated(BossBird boss) => OnBossDefeated?.Invoke(boss);
-        public static void FireBossBurstAttack(BossBird boss, int count) => OnBossBurstAttack?.Invoke(boss, count);
+        // ── Boss events moved to BossEventBus (ScriptableObject). See Gameplay.BossBirds.Core.BossEventBus. ──
 
         // ── Attacking Bird Events ─────────────────────────────────────────────────
 

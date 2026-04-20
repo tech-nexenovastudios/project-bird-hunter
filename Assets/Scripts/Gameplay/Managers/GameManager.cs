@@ -22,7 +22,7 @@ namespace Gameplay.Managers
         public static GameManager Instance;
 
         public Slot.SlotMachineController slotMachine;
-        public SpawnController spawnController;
+        public SpawnEngine spawnEngine;
         public CannonSpawner cannonSpawner;
 
         public GameState state;
@@ -153,8 +153,13 @@ namespace Gameplay.Managers
             ScoreManager.Instance?.ResetLevel(profile.targetScore);
             LevelCompletionController.Instance?.ResetForNewLevel();
 
-            spawnController.levelProfile = profile;
-            spawnController.ResetLevel();
+            int chapter = GameProgressManager.Instance.CurrentChapter;
+            int level = GameProgressManager.Instance.CurrentLevel;
+            GameProgressManager.Instance.IncrementChapterPlays(chapter);
+            int plays = GameProgressManager.Instance.GetChapterPlays(chapter);
+
+            spawnEngine.levelProfile = profile;
+            spawnEngine.InitLevel(chapter, level, plays);
 
             RewardManager.Instance?.ResetForNewLevel();
 

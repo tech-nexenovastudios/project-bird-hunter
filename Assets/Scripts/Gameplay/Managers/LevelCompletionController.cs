@@ -8,7 +8,7 @@ namespace Gameplay.Managers
 {
     /// <summary>
     /// Level completes when BOTH conditions are met in order:
-    /// 1. LevelScore >= targetScore → triggers SpawnController.StartDrain()
+    /// 1. LevelScore >= targetScore → triggers SpawnEngine.StartDrain()
     /// 2. All active eggs cleared   → fires level completed
     /// </summary>
     public class LevelCompletionController : MonoBehaviour
@@ -60,7 +60,7 @@ namespace Gameplay.Managers
             {
                 _targetScoreReached = true;
                 Debug.Log($"[LevelCompletion] Target score {targetScore} reached — starting drain.");
-                SpawnController.Instance?.StartDrain(levelScore);
+                GameManager.Instance?.spawnEngine?.StartDrain();
             }
         }
 
@@ -85,7 +85,8 @@ namespace Gameplay.Managers
 
         private int GetTargetScore()
         {
-            var profile = SpawnController.Instance?.levelProfile ?? GameProgressManager.Instance?.GetCurrentLevelProfile();
+            var profile = GameManager.Instance?.spawnEngine?.levelProfile
+                          ?? GameProgressManager.Instance?.GetCurrentLevelProfile();
             return profile != null ? Mathf.Max(1, profile.targetScore) : fallbackTargetScore;
         }
 

@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using Gameplay.Managers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -18,13 +19,17 @@ public class ChapterSelector : MonoBehaviour
     private void OnEnable() => ScrollCarouselEffect.currentLevelChange += ChangeWorld;
     private void OnDisable() => ScrollCarouselEffect.currentLevelChange -= ChangeWorld;
 
-    private void Start() => ChangeWorld(1);
+    private void Start()
+    {
+        PersistantData.Instance.UpdateChaptersConfig(worlds);
+        ChangeWorld(1);
+    }
 
     public void ChangeWorld(int index)
     {
         currentIndex = index - 1;
 
-        ChapterData data = worlds.GetWorldData(currentIndex);
+        ChapterData data = worlds.GetChapterData(currentIndex);
 
         worldText.text = $"WORLD: {data.worldName.ToUpper()}";
         chapterText.text = $"CHAPTER {currentIndex + 1}";
@@ -38,13 +43,9 @@ public class ChapterSelector : MonoBehaviour
             Debug.Log($"[ChapterSelector] Chapter {currentIndex} is locked.");
             return;
         }
-
-        PlayerPrefs.SetInt("SelectedWorld", currentIndex);
-        PlayerPrefs.SetInt("SelectedLevel", 1);
-
-        ChapterData data = worlds.GetWorldData(currentIndex);
-        ChapterEnvironmentApplier.SetChapterData(data);
-
+        
+        PersistantData.Instance.SetChapterIndex(currentIndex);
+        
         SceneManager.LoadScene("GamePlayScene");
     }
 }

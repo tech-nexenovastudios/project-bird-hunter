@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using Gameplay.Events;
 using Gameplay.Interfaces;
 
 namespace Gameplay.Birds
@@ -61,7 +60,6 @@ namespace Gameplay.Birds
             _specialAttackTimer  = bossConfig.specialAttackInterval;
 
             Debug.Log($"[BossBird] {bossConfig.bossId} spawned — HP {bossConfig.totalHp}");
-            GameEvents.FireBossSpawned(this);
         }
 
         // ── Update ────────────────────────────────────────────────────────
@@ -122,7 +120,6 @@ namespace Gameplay.Birds
             // when it handles our OnLayEgg event.
             // We fire a dedicated event so UI / VFX can react.
             OnPhase2Entered?.Invoke(this);
-            GameEvents.FireBossPhase2(this);
         }
 
         /// <summary>
@@ -138,7 +135,6 @@ namespace Gameplay.Birds
         {
             Debug.Log($"[BossBird] {BossConfig.bossId} BURST — dropping {BossConfig.burstEggCount} eggs.");
             OnBurstLay?.Invoke(this, BossConfig.burstEggCount);
-            GameEvents.FireBossBurstAttack(this, BossConfig.burstEggCount);
         }
 
         // ── Death ─────────────────────────────────────────────────────────
@@ -154,7 +150,6 @@ namespace Gameplay.Birds
             {
                 Debug.Log($"[BossBird] {BossConfig.bossId} DEFEATED by player!");
                 OnBossDefeated?.Invoke(this);
-                GameEvents.FireBossDefeated(this);
             }
             else
             {

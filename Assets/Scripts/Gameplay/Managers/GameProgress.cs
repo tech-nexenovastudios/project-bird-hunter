@@ -25,7 +25,19 @@ namespace Gameplay
         public int totalPower = 0;
 
         public List<string> firstTimeClearedLevels = new();
-        
+
+        // Per-chapter play count. Feeds the PC term of the Difficulty Index.
+        // Stored per-chapter so grinding early chapters can't inflate later-chapter difficulty.
+        public Dictionary<int, int> chapterPlays = new();
+
+        public int GetChapterPlays(int chapter)
+            => chapterPlays.TryGetValue(chapter, out var p) ? p : 0;
+
+        public void IncrementChapterPlays(int chapter)
+        {
+            chapterPlays[chapter] = GetChapterPlays(chapter) + 1;
+        }
+
         public bool HasFirstTimeClear(int chapter, int level)
         {
             string key = $"Ch{chapter}_L{level}";
