@@ -28,7 +28,7 @@ namespace BirdHunter.Inventory.Services
         [SerializeField] private float moveSpeedPerLevelPct = 0.02f;
 
         [Header("Defaults")]
-        [SerializeField] private string[] defaultUnlockedKeys = { "SingleCannon" };
+        [SerializeField] private string[] defaultUnlockedKeys = { "SingleShotCannon" };
         [SerializeField] private bool devUnlockAll = false;
 
         // ── Persistence keys ────────────────────────────────────────────────
@@ -151,7 +151,12 @@ namespace BirdHunter.Inventory.Services
                     {
                         string uk = UNLOCK_KEY_PREFIX + dto.name;
                         if (data.TryGetValue(uk, out var uItem))
-                            _unlocked[dto.name] = uItem.Value.GetAs<bool>();
+                        {
+                            bool cloudUnlocked = uItem.Value.GetAs<bool>();
+                            _unlocked[dto.name] = cloudUnlocked;
+                            if (cloudUnlocked)
+                                Debug.Log($"[CannonInventoryService] Cloud override: {dto.name} is UNLOCKED (from saved '{uk}').");
+                        }
                     }
                 }
 
@@ -211,7 +216,7 @@ namespace BirdHunter.Inventory.Services
             var dto = GetBaseData(key);
             if (dto == null) return 0;
             if (economy != null)
-                return economy.GetCannonUnlockCoins(dto.name, dto.unlockAtChapter);
+                return economy.GetCannonUnlockCoins(dto.cannonId, dto.unlockAtChapter);
             return dto.baseCoinsRequired;
         }
 
@@ -231,7 +236,7 @@ namespace BirdHunter.Inventory.Services
             int toLevel = GetLevel(key) + 1;
             if (toLevel > dto.maxUpgradeLevel) return 0;
             if (economy != null)
-                return economy.GetUpgradeCostCoins(dto.name, toLevel);
+                return economy.GetUpgradeCostCoins(dto.cannonId, toLevel);
             return 0;
         }
 
@@ -241,7 +246,7 @@ namespace BirdHunter.Inventory.Services
             if (dto == null || economy == null) return 0;
             int toLevel = GetLevel(key) + 1;
             if (toLevel > dto.maxUpgradeLevel) return 0;
-            return economy.GetUpgradeMaterialsRequired(dto.name, toLevel);
+            return economy.GetUpgradeMaterialsRequired(dto.cannonId, toLevel);
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -355,5 +360,36 @@ namespace BirdHunter.Inventory.Services
         /// <summary>Fetch the equipped cannon key from cloud (use from gameplay scene).</summary>
         public static UniTask<string> GetEquippedCannonKeyFromCloud()
             => CloudSaveManager.Instance.LoadValueAsync(EQUIPPED_KEY, string.Empty);
+
+        // ════════════════════════════════════════════════════════════════════
+        // Dev utilities — right-click the component header in the Inspector
+        // ════════════════════════════════════════════════════════════════════
+
+        [ContextMenu("Dev/Clear Cloud Unlock State (all cannons)")]
+        private void DevClearAllUnlockStateAsync()
+        {
+            if (!Application.isPlaying) { Debug.LogWarning("[CannonInventoryService] Enter Play Mode first."); return; }
+            ClearAllCloudUnlockStateAsync().Forget();
+        }
+
+        private async UniTaskVoid ClearAllCloudUnlockStateAsync()
+        {
+            if (!CannonStatsRepository.Instance.IsLoaded)
+            {
+                Debug.LogWarning("[CannonInventoryService] Stats repo not loaded yet.");
+                return;
+            }
+
+            foreach (var dto in CannonStatsRepository.Instance.All)
+            {
+                string uk = UNLOCK_KEY_PREFIX + dto.name;
+                try { await CloudSaveManager.Instance.SaveValueAsync(uk, false); }
+                catch (Exception ex) { Debug.LogError($"[CannonInventoryService] Clear {uk} failed: {ex.Message}"); continue; }
+
+                Debug.Log($"[CannonInventoryService] Cleared cloud data for {dto.name}.");
+            }
+
+            Debug.Log("[CannonInventoryService] Cloud state cleared. Restart the scene to re-initialize.");
+        }
     }
 }

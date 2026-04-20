@@ -21,7 +21,6 @@ public class PowerupCardController : MonoBehaviour
     public Image HeaderAssetImage { get; private set; }
     public TextMeshProUGUI HeaderText { get; private set; }
 
-    // ── Called by spawner right after AddComponent ────────────────────────────
     public void Initialise(string id, PowerupRarity rarity)
     {
         PowerupId = id;
@@ -29,7 +28,6 @@ public class PowerupCardController : MonoBehaviour
         ResolveUIReferences();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     private void Awake()
     {
         if (RootImage == null)
@@ -38,8 +36,6 @@ public class PowerupCardController : MonoBehaviour
 
     private void Start()
     {
-        // If the spawner never called Initialise (card placed directly in scene)
-        // try to find identity from the database using the GameObject name.
         if (string.IsNullOrEmpty(PowerupId))
             AutoResolveIdentity();
 
@@ -59,60 +55,16 @@ public class PowerupCardController : MonoBehaviour
         PowerupLockView.Instance?.UnregisterCard(this);
     }
 
-    // ── Identity auto-resolve ─────────────────────────────────────────────────
-    /// <summary>
-    /// Searches the PowerupDatabase (loaded from the LockManager) for a config
-    /// whose displayName or id matches this GameObject's name.
-    /// </summary>
     private void AutoResolveIdentity()
     {
-        var db = PowerupLockManager.Instance?.GetDatabase();
-        if (db == null) return;
+        var cfg = PowerupGate.FindByNameOrId(gameObject.name);
+        if (cfg == null) return;
 
-        string goName = gameObject.name;
-
-        foreach (var cfg in db.allPowerups)
-        {
-            if (cfg.displayName == goName || cfg.id == goName)
-            {
-                PowerupId = cfg.id;
-                Rarity = cfg.rarity;
-                Debug.Log($"[PowerupCard] '{goName}' auto-resolved → id='{cfg.id}', rarity={cfg.rarity}");
-                return;
-            }
-        }
-
-        // Fallback: strip "(Clone)" suffix Unity appends on Instantiate
-        string stripped = goName.Replace("(Clone)", "").Trim();
-        foreach (var cfg in db.allPowerups)
-        {
-            if (cfg.displayName == stripped || cfg.id == stripped)
-            {
-                PowerupId = cfg.id;
-                Rarity = cfg.rarity;
-                Debug.Log($"[PowerupCard] '{goName}' auto-resolved (stripped) → id='{cfg.id}', rarity={cfg.rarity}");
-                return;
-            }
-        }
+        PowerupId = cfg.id;
+        Rarity = cfg.rarity;
+        Debug.Log($"[PowerupCard] '{gameObject.name}' auto-resolved → id='{cfg.id}', rarity={cfg.rarity}");
     }
 
-    // ── Per-card test hooks ───────────────────────────────────────────────────
-    [ContextMenu("Test / Lock This Card")]
-    public void TestLock() => PowerupLockManager.Instance?.LockPowerup(PowerupId);
-
-    [ContextMenu("Test / Unlock This Card")]
-    public void TestUnlock() => PowerupLockManager.Instance?.UnlockPowerup(PowerupId);
-
-    [ContextMenu("Test / Toggle This Card")]
-    public void TestToggle()
-    {
-        var mgr = PowerupLockManager.Instance;
-        if (mgr == null) return;
-        if (mgr.IsUnlocked(PowerupId)) mgr.LockPowerup(PowerupId);
-        else mgr.UnlockPowerup(PowerupId);
-    }
-
-    // ── UI reference resolver ─────────────────────────────────────────────────
     private void ResolveUIReferences()
     {
         RootImage = GetComponent<Image>();

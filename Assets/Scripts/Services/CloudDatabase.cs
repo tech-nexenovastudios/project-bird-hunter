@@ -16,7 +16,6 @@ public class CloudDatabase
     public InventoryData InventoryData { get; private set; }
     public ChapterUnlockStatusData ChapterUnlockStatusData { get; private set; }
 
-    public PowerupUnlockStatusData PowerupUnlockStatusData { get; private set; }
     public ShopData ShopData { get; private set; }
 
     public bool IsInitialized { get; private set; }
@@ -43,9 +42,6 @@ public class CloudDatabase
 
             ReportProgress(0.75f, "Loading chapter progress", cancellationToken);
             ChapterUnlockStatusData = await LoadChapterUnlockStatusAsync(cancellationToken);
-
-            ReportProgress(0.80f, "Loading powerup progress", cancellationToken);
-            PowerupUnlockStatusData = await LoadPowerupUnlockStatusAsync(cancellationToken);
 
             ReportProgress(0.90f, "Loading shop", cancellationToken);
             ShopData = await LoadShopDataAsync(cancellationToken);
@@ -110,14 +106,6 @@ public class CloudDatabase
             new ChapterUnlockStatusData()
         );
     }
-    private async UniTask<PowerupUnlockStatusData> LoadPowerupUnlockStatusAsync(CancellationToken ct)
-    {
-        return await CloudSaveManager.Instance.LoadValueAsync<PowerupUnlockStatusData>(
-            CloudKeys.POWERUP_UNLOCK_STATUS,
-            new PowerupUnlockStatusData()
-        );
-    }
-
     private async UniTask<ShopData> LoadShopDataAsync(CancellationToken ct)
     {
         await ExecuteWithRetryAsync(
