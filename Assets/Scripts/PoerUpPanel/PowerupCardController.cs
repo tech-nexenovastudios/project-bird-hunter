@@ -51,12 +51,12 @@ public class PowerupCardController : MonoBehaviour
             return;
         }
 
-        PowerupLockManager.Instance?.RegisterCard(this);
+        PowerupLockView.Instance?.RegisterCard(this);
     }
 
     private void OnDestroy()
     {
-        PowerupLockManager.Instance?.UnregisterCard(this);
+        PowerupLockView.Instance?.UnregisterCard(this);
     }
 
     // ── Identity auto-resolve ─────────────────────────────────────────────────

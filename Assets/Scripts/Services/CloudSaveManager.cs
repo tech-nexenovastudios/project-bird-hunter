@@ -39,7 +39,7 @@ public class CloudSaveManager : ICloudSaveManager
 
     // ==================== Initialization ====================
 
-    private const string ENVIRONMENT_NAME = "development";
+
 
     private async UniTask EnsureInitialized()
     {
@@ -47,17 +47,8 @@ public class CloudSaveManager : ICloudSaveManager
 
         if (UnityServices.State == ServicesInitializationState.Uninitialized)
         {
-            try
-            {
-                var options = new InitializationOptions().SetEnvironmentName(ENVIRONMENT_NAME);
-                await UnityServices.InitializeAsync(options);
-                Debug.Log($"[CloudSave] Unity Services Initialized. Environment: {ENVIRONMENT_NAME}");
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[CloudSave] Unity Services Initialization failed: {ex.Message}");
-                throw;
-            }
+            Debug.LogWarning("[CloudSave] Unity Services not initialized. Initializing without environment — AuthService should have done this.");
+            await UnityServices.InitializeAsync();
         }
 
         _isInitialized = true;

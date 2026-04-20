@@ -17,9 +17,8 @@ using UnityEngine.UI;
 //  in CannonInventoryService. This file only binds service events and updates
 //  widgets.
 //
-//  Items are instantiated at runtime from `cannonItemPrefab` using sprites and
-//  ids from `database.cannonSprites`. Each CannonItem's `cannonId` must match
-//  the `id` field of the matching cloud `cannon_stats` entry.
+//  Each CannonItem's `cannonKey` must match the `name` field of the matching
+//  cloud `cannon_stats` entry, and the corresponding CannonDatabase entry.
 //
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -96,7 +95,7 @@ public class CannonInventoryView : MonoBehaviour
 
     // ── Runtime ────────────────────────────────────────────────────────
     private readonly List<CannonItem> _items = new();
-    private int _selectedId = -1;
+    private string _selectedKey;
     private float _prevFillRatio;
     private bool _busyEquip;
     private bool _busyUpgrade;
@@ -180,15 +179,13 @@ public class CannonInventoryView : MonoBehaviour
     private void PopulateItems()
     {
         if (database == null || cannonItemPrefab == null || itemContainer == null) return;
+        if (database.entries == null) return;
 
-        var sprites = database.cannonSprites;
-        if (sprites == null) return;
-
-        foreach (var db in sprites)
+        foreach (var entry in database.entries)
         {
             var item = Instantiate(cannonItemPrefab, itemContainer);
-            if (item.cannonSprite != null) item.cannonSprite.sprite = db.Value;
-            item.cannonId = db.Key;
+            if (item.cannonSprite != null) item.cannonSprite.sprite = entry.icon;
+            item.cannonKey = entry.cannonKey;
             if (item.button == null) item.button = item.GetComponentInChildren<Button>();
 
             if (item.button != null)
@@ -205,14 +202,14 @@ public class CannonInventoryView : MonoBehaviour
     private void WireItem(CannonItem item)
     {
         if (item?.button == null) return;
-        int id = item.cannonId;
-        item.button.onClick.AddListener(() => SelectCannon(id));
+        string key = item.cannonKey;
+        item.button.onClick.AddListener(() => SelectCannon(key));
     }
 
-    private CannonItem FindItem(int id)
+    private CannonItem FindItem(string key)
     {
         foreach (var it in _items)
-            if (it != null && it.cannonId == id) return it;
+            if (it != null && it.cannonKey == key) return it;
         return null;
     }
 
@@ -223,48 +220,47 @@ public class CannonInventoryView : MonoBehaviour
     private void HandleReady()
     {
         RefreshAllItemVisuals();
-        int startId = service.EquippedId >= 0
-            ? service.EquippedId
-            : (_items.Count > 0 ? _items[0].cannonId : -1);
-        if (startId >= 0) SelectCannon(startId);
+        string startKey = service.EquippedKey
+            ?? (_items.Count > 0 ? _items[0].cannonKey : null);
+        if (startKey != null) SelectCannon(startKey);
     }
 
-    private void HandleUnlocked(int id)
+    private void HandleUnlocked(string key)
     {
-        ApplyLockVisual(id, unlocked: true);
-        if (id == _selectedId) UpdatePreview(id);
+        ApplyLockVisual(key, unlocked: true);
+        if (key == _selectedKey) UpdatePreview(key);
     }
 
-    private void HandleUpgraded(int id)
+    private void HandleUpgraded(string key)
     {
-        if (id != _selectedId) return;
-        UpdatePreviewText(id);
-        AnimateFills(id).Forget();
-        RefreshUpgradeButton(id);
+        if (key != _selectedKey) return;
+        UpdatePreviewText(key);
+        AnimateFills(key).Forget();
+        RefreshUpgradeButton(key);
     }
 
-    private void HandleEquipped(int id)
+    private void HandleEquipped(string key)
     {
-        if (_selectedId >= 0) RefreshEquipButton(_selectedId);
+        if (_selectedKey != null) RefreshEquipButton(_selectedKey);
     }
 
     // ════════════════════════════════════════════════════════════════════
     // Selection
     // ════════════════════════════════════════════════════════════════════
 
-    private void SelectCannon(int id)
+    private void SelectCannon(string key)
     {
-        if (FindItem(id) == null) return;
+        if (FindItem(key) == null) return;
 
-        if (_selectedId >= 0) SetItemSelectedVisual(_selectedId, false);
-        _selectedId = id;
-        SetItemSelectedVisual(id, true);
-        UpdatePreview(id);
+        if (_selectedKey != null) SetItemSelectedVisual(_selectedKey, false);
+        _selectedKey = key;
+        SetItemSelectedVisual(key, true);
+        UpdatePreview(key);
     }
 
-    private void SetItemSelectedVisual(int id, bool selected)
+    private void SetItemSelectedVisual(string key, bool selected)
     {
-        var item = FindItem(id);
+        var item = FindItem(key);
         if (item == null) return;
         if (item.cannonBgComp != null)
             item.cannonBgComp.sprite = selected ? selectedBgSprite : normalBgSprite;
@@ -276,14 +272,14 @@ public class CannonInventoryView : MonoBehaviour
     // Preview panel
     // ════════════════════════════════════════════════════════════════════
 
-    private void UpdatePreview(int id)
+    private void UpdatePreview(string key)
     {
         if (service == null) return;
-        var dto = service.GetBaseData(id);
+        var dto = service.GetBaseData(key);
         if (dto == null) return;
 
-        bool unlocked = service.IsUnlocked(id);
-        var item = FindItem(id);
+        bool unlocked = service.IsUnlocked(key);
+        var item = FindItem(key);
 
         if (previewCannonImage != null)
         {
@@ -292,18 +288,18 @@ public class CannonInventoryView : MonoBehaviour
             previewCannonImage.material = unlocked ? null : grayscaleMaterial;
         }
 
-        UpdatePreviewText(id);
-        SnapFills(id);
-        RefreshEquipButton(id);
-        RefreshUpgradeButton(id);
+        UpdatePreviewText(key);
+        SnapFills(key);
+        RefreshEquipButton(key);
+        RefreshUpgradeButton(key);
     }
 
-    private void UpdatePreviewText(int id)
+    private void UpdatePreviewText(string key)
     {
-        var dto = service.GetBaseData(id);
+        var dto = service.GetBaseData(key);
         if (dto == null) return;
         if (previewNameText != null)        previewNameText.text = dto.name;
-        if (previewLevelText != null)       previewLevelText.text = $"Level {service.GetLevel(id)}";
+        if (previewLevelText != null)       previewLevelText.text = $"Level {service.GetLevel(key)}";
         if (previewDescriptionText != null) previewDescriptionText.text = dto.description;
     }
 
@@ -311,9 +307,9 @@ public class CannonInventoryView : MonoBehaviour
     // Fill bars (level-based, 1..max → 0..1)
     // ════════════════════════════════════════════════════════════════════
 
-    private float LevelRatio(int id, int level)
+    private float LevelRatio(string key, int level)
     {
-        int max = service.GetMaxLevel(id);
+        int max = service.GetMaxLevel(key);
         return max <= 0 ? 0f : Mathf.Clamp01((float)level / max);
     }
 
@@ -328,12 +324,12 @@ public class CannonInventoryView : MonoBehaviour
         rt.offsetMin = rt.offsetMax = Vector2.zero;
     }
 
-    private void SnapFills(int id)
+    private void SnapFills(string key)
     {
-        int level = service.GetLevel(id);
-        float current = LevelRatio(id, level);
-        float next = LevelRatio(id, level + 1);
-        bool atMax = service.IsMaxLevel(id);
+        int level = service.GetLevel(key);
+        float current = LevelRatio(key, level);
+        float next = LevelRatio(key, level + 1);
+        bool atMax = service.IsMaxLevel(key);
 
         SetFill(damageFillCurrent, current);
         SetFill(healthFillCurrent, current);
@@ -346,10 +342,10 @@ public class CannonInventoryView : MonoBehaviour
         _prevFillRatio = current;
     }
 
-    private async UniTask AnimateFills(int id)
+    private async UniTask AnimateFills(string key)
     {
-        int level = service.GetLevel(id);
-        float target = LevelRatio(id, level);
+        int level = service.GetLevel(key);
+        float target = LevelRatio(key, level);
         float elapsed = 0f;
 
         while (elapsed < fillAnimDuration)
@@ -363,14 +359,14 @@ public class CannonInventoryView : MonoBehaviour
             await UniTask.Yield(_destroyCT);
         }
 
-        SnapFills(id);
+        SnapFills(key);
     }
 
     // ════════════════════════════════════════════════════════════════════
     // Equip button
     // ════════════════════════════════════════════════════════════════════
 
-    private void RefreshEquipButton(int id)
+    private void RefreshEquipButton(string key)
     {
         if (equipButton == null || equipButtonText == null || service == null) return;
 
@@ -382,7 +378,7 @@ public class CannonInventoryView : MonoBehaviour
             return;
         }
 
-        if (!service.IsUnlocked(id))
+        if (!service.IsUnlocked(key))
         {
             equipButtonText.text = "UNLOCK";
             equipButton.interactable = true;
@@ -390,7 +386,7 @@ public class CannonInventoryView : MonoBehaviour
             return;
         }
 
-        if (service.IsEquipped(id))
+        if (service.IsEquipped(key))
         {
             equipButtonText.text = "EQUIPPED";
             equipButton.interactable = false;
@@ -406,35 +402,35 @@ public class CannonInventoryView : MonoBehaviour
 
     private void OnEquipPressed()
     {
-        if (_selectedId < 0 || _busyEquip || service == null) return;
+        if (_selectedKey == null || _busyEquip || service == null) return;
 
-        if (!service.IsUnlocked(_selectedId))
+        if (!service.IsUnlocked(_selectedKey))
         {
-            ShowUnlockPopup(_selectedId);
+            ShowUnlockPopup(_selectedKey);
             return;
         }
 
-        EquipAsync(_selectedId).Forget();
+        EquipAsync(_selectedKey).Forget();
     }
 
-    private async UniTaskVoid EquipAsync(int id)
+    private async UniTaskVoid EquipAsync(string key)
     {
         _busyEquip = true;
-        RefreshEquipButton(id);
-        await service.Equip(id);
+        RefreshEquipButton(key);
+        await service.Equip(key);
         _busyEquip = false;
-        RefreshEquipButton(id);
+        RefreshEquipButton(key);
     }
 
     // ════════════════════════════════════════════════════════════════════
     // Upgrade button
     // ════════════════════════════════════════════════════════════════════
 
-    private void RefreshUpgradeButton(int id)
+    private void RefreshUpgradeButton(string key)
     {
         if (upgradeButton == null || service == null) return;
 
-        if (!service.IsUnlocked(id))
+        if (!service.IsUnlocked(key))
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
             upgradeButton.interactable = false;
@@ -450,7 +446,7 @@ public class CannonInventoryView : MonoBehaviour
             return;
         }
 
-        if (service.IsMaxLevel(id))
+        if (service.IsMaxLevel(key))
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "MAX LEVEL";
             upgradeButton.interactable = false;
@@ -458,7 +454,7 @@ public class CannonInventoryView : MonoBehaviour
             return;
         }
 
-        int cost = service.GetUpgradeCoinCost(id);
+        int cost = service.GetUpgradeCoinCost(key);
         bool canAfford = CurrencyManager.Instance != null && CurrencyManager.Instance.Gold >= cost;
 
         if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
@@ -469,40 +465,40 @@ public class CannonInventoryView : MonoBehaviour
 
     private void OnUpgradePressed()
     {
-        if (_selectedId < 0 || _busyUpgrade || service == null) return;
-        UpgradeAsync(_selectedId).Forget();
+        if (_selectedKey == null || _busyUpgrade || service == null) return;
+        UpgradeAsync(_selectedKey).Forget();
     }
 
-    private async UniTaskVoid UpgradeAsync(int id)
+    private async UniTaskVoid UpgradeAsync(string key)
     {
         _busyUpgrade = true;
-        RefreshUpgradeButton(id);
+        RefreshUpgradeButton(key);
 
-        bool ok = await service.TryUpgrade(id);
+        bool ok = await service.TryUpgrade(key);
         if (!ok) ShowNotEnoughGold().Forget();
 
         _busyUpgrade = false;
-        RefreshUpgradeButton(id);
+        RefreshUpgradeButton(key);
     }
 
     // ════════════════════════════════════════════════════════════════════
     // Unlock popup
     // ════════════════════════════════════════════════════════════════════
 
-    private void ShowUnlockPopup(int id)
+    private void ShowUnlockPopup(string key)
     {
         if (service == null || unlockPopupPanel == null) return;
 
-        var dto = service.GetBaseData(id);
+        var dto = service.GetBaseData(key);
         if (dto == null) return;
 
-        var item = FindItem(id);
+        var item = FindItem(key);
         if (popupCannonImage != null && item?.cannonSprite?.sprite != null)
             popupCannonImage.sprite = item.cannonSprite.sprite;
         if (popupCannonNameText != null) popupCannonNameText.text = dto.name;
 
-        int coinCost = service.GetUnlockCoinCost(id);
-        int gemCost  = service.GetUnlockGemCost(id);
+        int coinCost = service.GetUnlockCoinCost(key);
+        int gemCost  = service.GetUnlockGemCost(key);
         if (popupCoinCostText != null) popupCoinCostText.text = coinCost == 0 ? "Free" : $"{coinCost:N0} Gold";
         if (popupGemCostText != null)  popupGemCostText.text  = gemCost  == 0 ? "" : $"{gemCost} Gems";
 
@@ -516,17 +512,17 @@ public class CannonInventoryView : MonoBehaviour
 
     private void OnPopupConfirmed()
     {
-        if (_selectedId < 0 || _busyUnlock) return;
-        ConfirmUnlockAsync(_selectedId).Forget();
+        if (_selectedKey == null || _busyUnlock) return;
+        ConfirmUnlockAsync(_selectedKey).Forget();
     }
 
-    private async UniTaskVoid ConfirmUnlockAsync(int id)
+    private async UniTaskVoid ConfirmUnlockAsync(string key)
     {
         _busyUnlock = true;
         if (popupConfirmButton != null) popupConfirmButton.interactable = false;
         if (unlockPopupPanel != null)   unlockPopupPanel.SetActive(false);
 
-        bool ok = await service.TryUnlock(id);
+        bool ok = await service.TryUnlock(key);
         if (!ok) ShowNotEnoughGold().Forget();
 
         if (popupConfirmButton != null) popupConfirmButton.interactable = true;
@@ -541,12 +537,12 @@ public class CannonInventoryView : MonoBehaviour
     {
         if (service == null) return;
         foreach (var it in _items)
-            if (it != null) ApplyLockVisual(it.cannonId, service.IsUnlocked(it.cannonId));
+            if (it != null) ApplyLockVisual(it.cannonKey, service.IsUnlocked(it.cannonKey));
     }
 
-    private void ApplyLockVisual(int id, bool unlocked)
+    private void ApplyLockVisual(string key, bool unlocked)
     {
-        var item = FindItem(id);
+        var item = FindItem(key);
         if (item?.button == null) return;
 
         foreach (var g in item.button.GetComponentsInChildren<Graphic>(true))
@@ -562,7 +558,7 @@ public class CannonInventoryView : MonoBehaviour
             }
             else
             {
-                var dto = service?.GetBaseData(id);
+                var dto = service?.GetBaseData(key);
                 if (dto != null && item.unlockRequirementText != null)
                 {
                     item.unlockRequirementContainer.SetActive(true);
@@ -597,8 +593,8 @@ public class CannonInventoryView : MonoBehaviour
 
             bool show = filter switch
             {
-                "Unlocked" => service != null && service.IsUnlocked(item.cannonId),
-                "Locked"   => service == null || !service.IsUnlocked(item.cannonId),
+                "Unlocked" => service != null && service.IsUnlocked(item.cannonKey),
+                "Locked"   => service == null || !service.IsUnlocked(item.cannonKey),
                 _          => true,
             };
             item.button.gameObject.SetActive(show);

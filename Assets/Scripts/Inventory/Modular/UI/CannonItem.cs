@@ -6,7 +6,7 @@ namespace BirdHunter.Inventory.UI
 {
     public class CannonItem : MonoBehaviour
     {
-        public int cannonId;
+        public string cannonKey;
         public Button button;
         public Image cannonSprite;
 

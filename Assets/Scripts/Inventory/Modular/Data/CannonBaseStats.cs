@@ -11,7 +11,6 @@ namespace BirdHunter.Inventory.Data
     [Serializable]
     public class CannonBaseStatsDto
     {
-        public int id;
         public string name;
         public string description;
         public int unlockAtChapter;
@@ -26,12 +25,6 @@ namespace BirdHunter.Inventory.Data
         public int baseCoinsRequired;
         public int baseGemsRequired;
 
-        public string CannonIdKey => $"CANNON_{id:00}";
-
-        /// <summary>
-        /// Build a fresh StatSheet with only the base values populated.
-        /// Upgrade/equip layers add modifiers on top.
-        /// </summary>
         public StatSheet BuildStatSheet()
         {
             var sheet = new StatSheet();
@@ -48,8 +41,8 @@ namespace BirdHunter.Inventory.Data
     }
 
     /// <summary>
-    /// Loads the cannon base-stats from Cloud Save Game Data under the custom
-    /// id `cannon_stats`. Each sub-key holds one DTO. Caches DTOs by id.
+    /// Loads cannon base-stats from Cloud Save Game Data under the custom
+    /// id `cannon_stats`. Each sub-key holds one DTO. Caches DTOs by name.
     /// </summary>
     public sealed class CannonStatsRepository
     {
@@ -58,14 +51,14 @@ namespace BirdHunter.Inventory.Data
         private static CannonStatsRepository instance;
         public static CannonStatsRepository Instance => instance ??= new CannonStatsRepository();
 
-        private readonly Dictionary<int, CannonBaseStatsDto> _byId = new();
+        private readonly Dictionary<string, CannonBaseStatsDto> _byKey = new();
         private CannonBaseStatsDto[] _ordered = Array.Empty<CannonBaseStatsDto>();
 
         public bool IsLoaded { get; private set; }
         public int Count => _ordered.Length;
 
-        public CannonBaseStatsDto GetById(int id)
-            => _byId.GetValueOrDefault(id);
+        public CannonBaseStatsDto GetByKey(string key)
+            => _byKey.GetValueOrDefault(key);
 
         public IReadOnlyList<CannonBaseStatsDto> All => _ordered;
 
@@ -73,8 +66,6 @@ namespace BirdHunter.Inventory.Data
         {
             if (IsLoaded) return;
 
-            // Game Data → Custom ID "cannon_stats" — one key per cannon, each
-            // holding a single CannonBaseStatsDto as JSON.
             var loaded = await CloudSaveManager.Instance.LoadCustomAllAsync(CANNON_STATS_KEY);
 
             if (loaded == null || loaded.Count == 0)
@@ -95,7 +86,6 @@ namespace BirdHunter.Inventory.Data
                     continue;
                 }
 
-                // Fill blanks if the cloud payload left them out
                 if (string.IsNullOrEmpty(dto.name)) dto.name = kvp.Key;
 
                 parsed.Add(dto);
@@ -107,22 +97,12 @@ namespace BirdHunter.Inventory.Data
                 return;
             }
 
-            // Sort by id for deterministic ordering; assign sequential ids if all came back zero.
-            bool allZeroIds = parsed.TrueForAll(d => d.id == 0);
-            if (allZeroIds)
-            {
-                parsed.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
-                for (int i = 0; i < parsed.Count; i++) parsed[i].id = i;
-            }
-            else
-            {
-                parsed.Sort((a, b) => a.id.CompareTo(b.id));
-            }
+            parsed.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
 
             _ordered = parsed.ToArray();
-            _byId.Clear();
+            _byKey.Clear();
             foreach (var dto in _ordered)
-                _byId[dto.id] = dto;
+                _byKey[dto.name] = dto;
 
             IsLoaded = true;
             Debug.Log($"[CannonStatsRepository] Loaded {_ordered.Length} cannon(s) from cloud.");
@@ -130,7 +110,6 @@ namespace BirdHunter.Inventory.Data
 
         private static CannonBaseStatsDto ParseOne(Item item)
         {
-            // Each Game Data value is a single DTO (not an array/wrapper).
             try
             {
                 string raw = item.Value.GetAsString();
@@ -144,6 +123,5 @@ namespace BirdHunter.Inventory.Data
 
             return null;
         }
-
     }
 }

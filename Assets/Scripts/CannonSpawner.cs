@@ -20,32 +20,31 @@ public class CannonSpawner : MonoBehaviour
 
         while (!service.IsReady) await UniTask.Yield();
 
-        int id = service.EquippedId;
-        if (id < 0)
+        string key = service.EquippedKey;
+        if (string.IsNullOrEmpty(key))
         {
             Debug.LogError("[CannonSpawner] No cannon equipped.");
             return null;
         }
 
-        if (!database.cannonPrefabs.TryGetValue(id, out var cannonPrefab) || cannonPrefab == null)
+        var entry = database?.GetEntry(key);
+        if (entry?.cannonPrefab == null)
         {
-            Debug.LogError($"[CannonSpawner] Cannon prefab missing for id {id} in database.");
+            Debug.LogError($"[CannonSpawner] Cannon prefab missing for key '{key}' in database.");
             return null;
         }
 
-        database.cannonBullets.TryGetValue(id, out var bulletPrefab);
-
-        cannon = Instantiate(cannonPrefab, transform.position, transform.rotation);
+        cannon = Instantiate(entry.cannonPrefab, transform.position, transform.rotation);
 
         var baseCannon = cannon.GetComponent<BaseCannon>();
         if (baseCannon != null)
         {
-            baseCannon.Configure(service.GetStatSheet(id), bulletPrefab);
-            Debug.Log($"[CannonSpawner] Configured cannon id {id}: {cannonPrefab.name}");
+            baseCannon.Configure(service.GetStatSheet(key), entry.bulletPrefab);
+            Debug.Log($"[CannonSpawner] Configured cannon '{key}': {entry.cannonPrefab.name}");
         }
         else
         {
-            Debug.LogError($"[CannonSpawner] {cannonPrefab.name} is missing a BaseCannon component.");
+            Debug.LogError($"[CannonSpawner] {entry.cannonPrefab.name} is missing a BaseCannon component.");
         }
 
         return cannon;

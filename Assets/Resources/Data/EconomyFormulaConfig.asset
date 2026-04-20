@@ -12,4 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdb0bd293fbc6d740bb1b3c4db235837, type: 3}
   m_Name: EconomyFormulaConfig
   m_EditorClassIdentifier: Assembly-CSharp::EconomyFormulaConfig
-  cannonMultipliers: []
+  cannonMultipliers:
+  - cannonId: CANNON_01
+    coinMultiplier: 1.2
+    matMultiplier: 1.2

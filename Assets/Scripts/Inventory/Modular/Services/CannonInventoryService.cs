@@ -9,7 +9,7 @@ using UnityEngine;
 namespace BirdHunter.Inventory.Services
 {
     /// <summary>
-    /// Owns cannon inventory state: per-cannon level, unlock flag, equipped id.
+    /// Owns cannon inventory state: per-cannon level, unlock flag, equipped key.
     /// Costs come from EconomyFormulaConfig; base stats from CannonStatsRepository.
     /// UI never touches CloudSave / CurrencyManager directly — it goes through this.
     /// </summary>
@@ -28,31 +28,31 @@ namespace BirdHunter.Inventory.Services
         [SerializeField] private float moveSpeedPerLevelPct = 0.02f;
 
         [Header("Defaults")]
-        [SerializeField] private int[] defaultUnlockedIds = { 0 };
+        [SerializeField] private string[] defaultUnlockedKeys = { "SingleCannon" };
         [SerializeField] private bool devUnlockAll = false;
 
         // ── Persistence keys ────────────────────────────────────────────────
-        private const string LEVEL_KEY_PREFIX = "cannon_level_";
-        private const string UNLOCK_KEY_PREFIX = "cannon_unlocked_";
-        private const string EQUIPPED_KEY = "cannon_equipped_id";
+        private const string LEVEL_KEY_PREFIX   = "cannon_level_";
+        private const string UNLOCK_KEY_PREFIX  = "cannon_unlocked_";
+        private const string EQUIPPED_KEY       = "cannon_equipped_id";
 
-        // ── State, keyed by cannon id ───────────────────────────────────────
-        private readonly Dictionary<int, int> _levels = new();
-        private readonly Dictionary<int, bool> _unlocked = new();
-        private readonly Dictionary<int, StatSheet> _sheets = new();
-        private int _equippedId = -1;
+        // ── State, keyed by cannon name/slug ───────────────────────────────
+        private readonly Dictionary<string, int>       _levels   = new();
+        private readonly Dictionary<string, bool>      _unlocked = new();
+        private readonly Dictionary<string, StatSheet> _sheets   = new();
+        private string _equippedKey;
 
         private CancellationToken _destroyCT;
 
         // ── Events ──────────────────────────────────────────────────────────
-        public event Action OnReady;
-        public event Action<int> OnUnlocked;
-        public event Action<int> OnUpgraded;
-        public event Action<int> OnEquipped;
+        public event Action              OnReady;
+        public event Action<string>      OnUnlocked;
+        public event Action<string>      OnUpgraded;
+        public event Action<string>      OnEquipped;
 
-        public bool IsReady { get; private set; }
-        public int Count => CannonStatsRepository.Instance.Count;
-        public int EquippedId => _equippedId;
+        public bool   IsReady    { get; private set; }
+        public int    Count      => CannonStatsRepository.Instance.Count;
+        public string EquippedKey => _equippedKey;
         public EconomyFormulaConfig Economy => economy;
 
         // ════════════════════════════════════════════════════════════════════
@@ -79,11 +79,11 @@ namespace BirdHunter.Inventory.Services
         {
             if (Instance == this)
             {
-                OnReady = null;
+                OnReady    = null;
                 OnUnlocked = null;
                 OnUpgraded = null;
                 OnEquipped = null;
-                Instance = null;
+                Instance   = null;
             }
         }
 
@@ -102,33 +102,30 @@ namespace BirdHunter.Inventory.Services
                 return;
             }
 
-            // Build per-cannon state shells
             foreach (var dto in repo.All)
             {
-                _levels[dto.id] = 1;
-                _unlocked[dto.id] = false;
-                _sheets[dto.id] = dto.BuildStatSheet();
+                _levels[dto.name]   = 1;
+                _unlocked[dto.name] = false;
+                _sheets[dto.name]   = dto.BuildStatSheet();
             }
 
-            // Apply local defaults
-            if (!devUnlockAll && defaultUnlockedIds != null)
-                foreach (int id in defaultUnlockedIds)
-                    if (_unlocked.ContainsKey(id))
-                        _unlocked[id] = true;
+            if (!devUnlockAll && defaultUnlockedKeys != null)
+                foreach (string key in defaultUnlockedKeys)
+                    if (_unlocked.ContainsKey(key))
+                        _unlocked[key] = true;
+
             if (devUnlockAll)
                 foreach (var dto in repo.All)
-                    _unlocked[dto.id] = true;
+                    _unlocked[dto.name] = true;
 
-            // Overlay cloud state
             await LoadCloudStateAsync();
 
-            // Apply upgrade modifiers so sheets are current on ready
             foreach (var dto in repo.All)
-                ApplyUpgradeModifier(dto.id);
+                ApplyUpgradeModifier(dto.name);
 
             IsReady = true;
             OnReady?.Invoke();
-            OnEquipped?.Invoke(_equippedId);
+            OnEquipped?.Invoke(_equippedKey);
         }
 
         private async UniTask LoadCloudStateAsync()
@@ -136,8 +133,8 @@ namespace BirdHunter.Inventory.Services
             var keys = new HashSet<string> { EQUIPPED_KEY };
             foreach (var dto in CannonStatsRepository.Instance.All)
             {
-                keys.Add(LEVEL_KEY_PREFIX + dto.id);
-                keys.Add(UNLOCK_KEY_PREFIX + dto.id);
+                keys.Add(LEVEL_KEY_PREFIX  + dto.name);
+                keys.Add(UNLOCK_KEY_PREFIX + dto.name);
             }
 
             try
@@ -146,20 +143,20 @@ namespace BirdHunter.Inventory.Services
 
                 foreach (var dto in CannonStatsRepository.Instance.All)
                 {
-                    string lk = LEVEL_KEY_PREFIX + dto.id;
+                    string lk = LEVEL_KEY_PREFIX + dto.name;
                     if (data.TryGetValue(lk, out var lItem))
-                        _levels[dto.id] = Mathf.Clamp(lItem.Value.GetAs<int>(), 1, dto.maxUpgradeLevel);
+                        _levels[dto.name] = Mathf.Clamp(lItem.Value.GetAs<int>(), 1, dto.maxUpgradeLevel);
 
                     if (!devUnlockAll)
                     {
-                        string uk = UNLOCK_KEY_PREFIX + dto.id;
+                        string uk = UNLOCK_KEY_PREFIX + dto.name;
                         if (data.TryGetValue(uk, out var uItem))
-                            _unlocked[dto.id] = uItem.Value.GetAs<bool>();
+                            _unlocked[dto.name] = uItem.Value.GetAs<bool>();
                     }
                 }
 
                 if (data.TryGetValue(EQUIPPED_KEY, out var eItem))
-                    _equippedId = eItem.Value.GetAs<int>();
+                    _equippedKey = eItem.Value.GetAs<string>();
             }
             catch (Exception ex)
             {
@@ -167,95 +164,97 @@ namespace BirdHunter.Inventory.Services
             }
 
             // Fallback: equip first unlocked cannon
-            if (!_unlocked.ContainsKey(_equippedId) || !_unlocked[_equippedId])
+            if (string.IsNullOrEmpty(_equippedKey)
+                || !_unlocked.TryGetValue(_equippedKey, out var equippedUnlocked)
+                || !equippedUnlocked)
             {
-                _equippedId = FirstUnlockedId();
+                _equippedKey = FirstUnlockedKey();
             }
         }
 
-        private int FirstUnlockedId()
+        private string FirstUnlockedKey()
         {
             foreach (var dto in CannonStatsRepository.Instance.All)
-                if (_unlocked.TryGetValue(dto.id, out var u) && u)
-                    return dto.id;
+                if (_unlocked.TryGetValue(dto.name, out var u) && u)
+                    return dto.name;
             return CannonStatsRepository.Instance.All.Count > 0
-                ? CannonStatsRepository.Instance.All[0].id
-                : -1;
+                ? CannonStatsRepository.Instance.All[0].name
+                : null;
         }
 
         // ════════════════════════════════════════════════════════════════════
         // Queries
         // ════════════════════════════════════════════════════════════════════
 
-        public bool IsUnlocked(int id) => _unlocked.TryGetValue(id, out var u) && u;
-        public int GetLevel(int id) => _levels.GetValueOrDefault(id, 0);
-        public bool IsEquipped(int id) => _equippedId == id;
+        public bool IsUnlocked(string key)  => _unlocked.TryGetValue(key, out var u) && u;
+        public int  GetLevel(string key)     => _levels.GetValueOrDefault(key, 0);
+        public bool IsEquipped(string key)   => _equippedKey == key;
 
-        public CannonBaseStatsDto GetBaseData(int id)
-            => CannonStatsRepository.Instance.GetById(id);
+        public CannonBaseStatsDto GetBaseData(string key)
+            => CannonStatsRepository.Instance.GetByKey(key);
 
-        public StatSheet GetStatSheet(int id)
-            => _sheets.GetValueOrDefault(id);
+        public StatSheet GetStatSheet(string key)
+            => _sheets.GetValueOrDefault(key);
 
-        public int GetMaxLevel(int id)
+        public int GetMaxLevel(string key)
         {
-            var dto = GetBaseData(id);
+            var dto = GetBaseData(key);
             return dto?.maxUpgradeLevel ?? 1;
         }
 
-        public bool IsMaxLevel(int id) => GetLevel(id) >= GetMaxLevel(id);
+        public bool IsMaxLevel(string key) => GetLevel(key) >= GetMaxLevel(key);
 
         // ── Costs (via EconomyFormulaConfig with DTO fallback) ──────────────
 
-        public int GetUnlockCoinCost(int id)
+        public int GetUnlockCoinCost(string key)
         {
-            var dto = GetBaseData(id);
+            var dto = GetBaseData(key);
             if (dto == null) return 0;
             if (economy != null)
-                return economy.GetCannonUnlockCoins(dto.CannonIdKey, dto.unlockAtChapter);
+                return economy.GetCannonUnlockCoins(dto.name, dto.unlockAtChapter);
             return dto.baseCoinsRequired;
         }
 
-        public int GetUnlockGemCost(int id)
+        public int GetUnlockGemCost(string key)
         {
-            var dto = GetBaseData(id);
+            var dto = GetBaseData(key);
             if (dto == null) return 0;
             if (economy != null)
-                return economy.GetCannonUnlockGems(GetUnlockCoinCost(id));
+                return economy.GetCannonUnlockGems(GetUnlockCoinCost(key));
             return dto.baseGemsRequired;
         }
 
-        public int GetUpgradeCoinCost(int id)
+        public int GetUpgradeCoinCost(string key)
         {
-            var dto = GetBaseData(id);
+            var dto = GetBaseData(key);
             if (dto == null) return 0;
-            int toLevel = GetLevel(id) + 1;
+            int toLevel = GetLevel(key) + 1;
             if (toLevel > dto.maxUpgradeLevel) return 0;
             if (economy != null)
-                return economy.GetUpgradeCostCoins(dto.CannonIdKey, toLevel);
+                return economy.GetUpgradeCostCoins(dto.name, toLevel);
             return 0;
         }
 
-        public int GetUpgradeMaterialCost(int id)
+        public int GetUpgradeMaterialCost(string key)
         {
-            var dto = GetBaseData(id);
+            var dto = GetBaseData(key);
             if (dto == null || economy == null) return 0;
-            int toLevel = GetLevel(id) + 1;
+            int toLevel = GetLevel(key) + 1;
             if (toLevel > dto.maxUpgradeLevel) return 0;
-            return economy.GetUpgradeMaterialsRequired(dto.CannonIdKey, toLevel);
+            return economy.GetUpgradeMaterialsRequired(dto.name, toLevel);
         }
 
         // ════════════════════════════════════════════════════════════════════
         // Mutations
         // ════════════════════════════════════════════════════════════════════
 
-        public async UniTask<bool> TryUnlock(int id)
+        public async UniTask<bool> TryUnlock(string key)
         {
             if (!IsReady) return false;
-            if (IsUnlocked(id)) return false;
+            if (IsUnlocked(key)) return false;
 
-            int coinCost = GetUnlockCoinCost(id);
-            int gemCost = GetUnlockGemCost(id);
+            int coinCost = GetUnlockCoinCost(key);
+            int gemCost  = GetUnlockGemCost(key);
 
             if (coinCost > 0 || gemCost > 0)
             {
@@ -265,48 +264,48 @@ namespace BirdHunter.Inventory.Services
                 if (!spent) return false;
             }
 
-            _unlocked[id] = true;
-            SaveUnlockAsync(id).Forget();
-            OnUnlocked?.Invoke(id);
+            _unlocked[key] = true;
+            SaveUnlockAsync(key).Forget();
+            OnUnlocked?.Invoke(key);
             return true;
         }
 
-        public async UniTask<bool> TryUpgrade(int id)
+        public async UniTask<bool> TryUpgrade(string key)
         {
-            if (!IsReady || !IsUnlocked(id) || IsMaxLevel(id)) return false;
+            if (!IsReady || !IsUnlocked(key) || IsMaxLevel(key)) return false;
 
-            int cost = GetUpgradeCoinCost(id);
+            int cost = GetUpgradeCoinCost(key);
             if (cost > 0)
             {
                 bool spent = await CurrencyManager.Instance.SpendGold(cost);
                 if (!spent) return false;
             }
 
-            _levels[id] = GetLevel(id) + 1;
-            ApplyUpgradeModifier(id);
-            SaveLevelAsync(id).Forget();
+            _levels[key] = GetLevel(key) + 1;
+            ApplyUpgradeModifier(key);
+            SaveLevelAsync(key).Forget();
 
-            OnUpgraded?.Invoke(id);
+            OnUpgraded?.Invoke(key);
             return true;
         }
 
-        public async UniTask<bool> Equip(int id)
+        public async UniTask<bool> Equip(string key)
         {
-            if (!IsReady || !IsUnlocked(id)) return false;
-            if (_equippedId == id) return true;
+            if (!IsReady || !IsUnlocked(key)) return false;
+            if (_equippedKey == key) return true;
 
-            _equippedId = id;
+            _equippedKey = key;
             SaveEquippedAsync().Forget();
-            OnEquipped?.Invoke(id);
+            OnEquipped?.Invoke(key);
             return true;
         }
 
-        public void ForceUnlock(int id)
+        public void ForceUnlock(string key)
         {
-            if (!_unlocked.ContainsKey(id) || _unlocked[id]) return;
-            _unlocked[id] = true;
-            SaveUnlockAsync(id).Forget();
-            OnUnlocked?.Invoke(id);
+            if (!_unlocked.ContainsKey(key) || _unlocked[key]) return;
+            _unlocked[key] = true;
+            SaveUnlockAsync(key).Forget();
+            OnUnlocked?.Invoke(key);
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -315,13 +314,13 @@ namespace BirdHunter.Inventory.Services
 
         private static readonly object UpgradeSource = new { tag = "Upgrade" };
 
-        private void ApplyUpgradeModifier(int id)
+        private void ApplyUpgradeModifier(string key)
         {
-            if (!_sheets.TryGetValue(id, out var sheet)) return;
+            if (!_sheets.TryGetValue(key, out var sheet)) return;
 
             sheet.RemoveBySource(UpgradeSource);
 
-            int level = GetLevel(id);
+            int level = GetLevel(key);
             if (level <= 1) return;
 
             int steps = level - 1;
@@ -335,26 +334,26 @@ namespace BirdHunter.Inventory.Services
         // Persistence
         // ════════════════════════════════════════════════════════════════════
 
-        private async UniTaskVoid SaveLevelAsync(int id)
+        private async UniTaskVoid SaveLevelAsync(string key)
         {
-            try { await CloudSaveManager.Instance.SaveValueAsync(LEVEL_KEY_PREFIX + id, _levels[id]); }
+            try { await CloudSaveManager.Instance.SaveValueAsync(LEVEL_KEY_PREFIX + key, _levels[key]); }
             catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveLevel failed: {ex.Message}"); }
         }
 
-        private async UniTaskVoid SaveUnlockAsync(int id)
+        private async UniTaskVoid SaveUnlockAsync(string key)
         {
-            try { await CloudSaveManager.Instance.SaveValueAsync(UNLOCK_KEY_PREFIX + id, true); }
+            try { await CloudSaveManager.Instance.SaveValueAsync(UNLOCK_KEY_PREFIX + key, true); }
             catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveUnlock failed: {ex.Message}"); }
         }
 
         private async UniTaskVoid SaveEquippedAsync()
         {
-            try { await CloudSaveManager.Instance.SaveValueAsync(EQUIPPED_KEY, _equippedId); }
+            try { await CloudSaveManager.Instance.SaveValueAsync(EQUIPPED_KEY, _equippedKey); }
             catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveEquipped failed: {ex.Message}"); }
         }
 
-        /// <summary>Fetch the equipped cannon id from cloud (use from gameplay scene).</summary>
-        public static UniTask<int> GetEquippedCannonIdFromCloud()
-            => CloudSaveManager.Instance.LoadValueAsync(EQUIPPED_KEY, 0);
+        /// <summary>Fetch the equipped cannon key from cloud (use from gameplay scene).</summary>
+        public static UniTask<string> GetEquippedCannonKeyFromCloud()
+            => CloudSaveManager.Instance.LoadValueAsync(EQUIPPED_KEY, string.Empty);
     }
 }
