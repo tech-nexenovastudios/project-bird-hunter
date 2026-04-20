@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Unity.Services.CloudSave;
 using Unity.Services.CloudSave.Models;
 using Unity.Services.Core;
+using Unity.Services.Core.Environments;
 using UnityEngine;
 
 public interface ICloudSaveManager
@@ -38,6 +39,8 @@ public class CloudSaveManager : ICloudSaveManager
 
     // ==================== Initialization ====================
 
+    private const string ENVIRONMENT_NAME = "development";
+
     private async UniTask EnsureInitialized()
     {
         if (_isInitialized) return;
@@ -46,8 +49,9 @@ public class CloudSaveManager : ICloudSaveManager
         {
             try
             {
-                await UnityServices.InitializeAsync();
-                Debug.Log("[CloudSave] Unity Services Initialized.");
+                var options = new InitializationOptions().SetEnvironmentName(ENVIRONMENT_NAME);
+                await UnityServices.InitializeAsync(options);
+                Debug.Log($"[CloudSave] Unity Services Initialized. Environment: {ENVIRONMENT_NAME}");
             }
             catch (Exception ex)
             {
@@ -123,6 +127,25 @@ public class CloudSaveManager : ICloudSaveManager
         catch (Exception ex)
         {
             Debug.LogError($"[CloudSave] List Keys failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Load all key/value pairs stored under a game-wide custom data id
+    /// (the "Game Data" tab in the Cloud Save dashboard).
+    /// </summary>
+    public async UniTask<Dictionary<string, Item>> LoadCustomAllAsync(string customDataId)
+    {
+        await EnsureInitialized();
+
+        try
+        {
+            return await CloudSaveService.Instance.Data.Custom.LoadAllAsync(customDataId);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[CloudSave] Custom.LoadAllAsync('{customDataId}') failed: {ex.Message}");
+            return new Dictionary<string, Item>();
         }
     }
 

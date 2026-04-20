@@ -184,4 +184,13 @@ namespace Gameplay.Birds
             _movementStrategy?.Dispose();
         }
     }
+
+    public enum BirdMovementType
+    {
+        NormalMove,
+        ZigZagMove,
+        LeftRightMove,
+        CurvePathMove,
+        TargetMove,
+    }
 }

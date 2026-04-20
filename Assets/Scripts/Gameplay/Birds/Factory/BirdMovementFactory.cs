@@ -18,8 +18,8 @@
                 case BirdMovementType.CurvePathMove:
                     return new CurvePathMovement();
 
-                case BirdMovementType.DigonalMove:
-                    return new DiagonalMovement();
+                // case BirdMovementType.DigonalMove:
+                //     return new DiagonalMovement();
 
                 case BirdMovementType.NormalMove:
                 default:

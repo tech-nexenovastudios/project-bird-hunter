@@ -6,10 +6,10 @@ using UnityEngine;
 
 public static class GamePoolManager
 {
-    public static Dictionary<BirdType, Queue<GameObject>> birdPool = new();
-    public static Dictionary<EggType, Queue<GameObject>> EggPool = new();
+    // public static Dictionary<BirdType, Queue<GameObject>> birdPool = new();
+    // public static Dictionary<EggType, Queue<GameObject>> EggPool = new();
     public static Queue<GameObject> blastParticlePool = new Queue<GameObject>();
-    public static Dictionary<BulletType, Queue<GameObject>> bulletQueue = new(); //Bullet pool
+    // public static Dictionary<BulletType, Queue<GameObject>> bulletQueue = new(); //Bullet pool
     public static Queue<GameObject> bulletDamageTextQueue = new(); //Bullet pool
     public static Queue<GameObject> cannonBulletQueue = new();
 

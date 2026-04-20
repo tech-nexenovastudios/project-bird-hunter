@@ -1,4 +1,5 @@
 ﻿
+using BirdHunter.Inventory.Stats;
 using DG.Tweening;
 using Gameplay.Events;
 using UnityEngine;
@@ -23,7 +24,7 @@ public class CannonHealthBar : MonoBehaviour
 
     private bool _initialized = false;
 
-    public void Init(CannonStats stats)
+    public void Init(StatSheet stats)
     {
         // Only create instanced material if the bar has a material that uses _Value
         if (_healthBar.material != null && _healthBar.material.HasProperty(ShaderValue))
@@ -36,8 +37,7 @@ public class CannonHealthBar : MonoBehaviour
         _healthBar.fillAmount = 1f;
         if (_damageBar != null) _damageBar.fillAmount = 1f;
 
-
-        _maxHealth = stats.currentMaxHealth;
+        _maxHealth = stats != null ? stats.Get(StatType.Health) : 100f;
 
         _initialized = true;
     }

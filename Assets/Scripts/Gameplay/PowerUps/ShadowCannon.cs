@@ -1,4 +1,5 @@
 using UnityEngine;
+using BirdHunter.Inventory.Stats;
 using Gameplay.Interfaces;
 using Gameplay.Player;
 
@@ -77,11 +78,11 @@ namespace Gameplay.PowerUps
 
         private void HandleFiring()
         {
-            if (sourceCannonMb.CannonStats == null || bulletPrefab == null) return;
+            if (sourceCannonMb.Stats == null || bulletPrefab == null) return;
             if (!sourceCannon.IsFiring) return;
 
             fireTimer += Time.deltaTime;
-            float interval = 1f / sourceCannonMb.CannonStats.currentFireRate;
+            float interval = 1f / sourceCannonMb.Stats.Get(StatType.FireRate);
 
             if (fireTimer >= interval)
             {
@@ -110,11 +111,11 @@ namespace Gameplay.PowerUps
             BaseBullet bullet = go.GetComponent<BaseBullet>();
             if (bullet == null) return;
 
-            bullet.bulletSpeed = sourceCannonMb.CannonStats.currentBulletSpeed;
+            bullet.bulletSpeed = sourceCannonMb.Stats.Get(StatType.BulletSpeed);
             bullet.damage = Mathf.Max(1, Mathf.RoundToInt(sourceCannon.CurrentAttack * damagePercent / 100f));
 
             if (bullet is BouncingBullet bouncing)
-                bouncing.bounceCount = sourceCannonMb.CannonStats.bulletBounce;
+                bouncing.bounceCount = sourceCannonMb.Stats.GetInt(StatType.BulletBounce);
 
             Rigidbody2D rb = go.GetComponent<Rigidbody2D>();
             if (rb != null)
