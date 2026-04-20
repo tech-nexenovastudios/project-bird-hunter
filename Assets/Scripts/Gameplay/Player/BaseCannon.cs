@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using Gameplay.Events;
 using Gameplay.Interfaces;
 using Gameplay.PowerUps;
@@ -158,6 +159,7 @@ namespace Gameplay.Player
         protected virtual void OnDestroy()
         {
             GameEvents.OnPlayerLevelUp -= OnLevelUp;
+            transform.DOKill();
         }
 
         protected virtual void Update()

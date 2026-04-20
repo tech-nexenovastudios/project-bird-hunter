@@ -17,12 +17,6 @@ namespace Gameplay.Managers
         [Header("Powerup Pool")]
         public PowerupConfig[] allPowerups;
 
-        [Header("Level Data")]
-        public string levelResourcesPath = "Data/GeneratedLevels";
-
-        [Header("Save")]
-        public string saveFileName = "birdhunter_progress.dat";
-
         private GameProgress _progress;
 
         public static event Action<int, PowerupConfig[]> OnSpinTriggered;
@@ -58,28 +52,22 @@ namespace Gameplay.Managers
         {
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
 
         // ─────────────────────────────────────────────
         // Level Loading
         // ─────────────────────────────────────────────
 
+        public LevelProfile LoadLevelProfile(int index) => PersistantData.Instance.ChapterData.levelProfiles[index];
+        
         public LevelProfile GetCurrentLevelProfile()
             => LoadLevelProfile(CurrentChapter, CurrentLevel);
 
         public LevelProfile LoadLevelProfile(int chapter, int level)
         {
-            string path = $"{levelResourcesPath}/Chapter{chapter}/Levels/Ch{chapter}_L{level:D2}";
-            var profile = Resources.Load<LevelProfile>(path);
-
-            if (profile == null) Debug.LogWarning($"[ProgressManager] ❌ LevelProfile missing: {path}");
-            else
-            {
-                Debug.Log($"[ProgressManager] ✅ LevelProfile loaded: {path}");
-                OnLevelLoaded?.Invoke(profile);
-                GameEvents.FireGameLevelUpdated(profile, level);
-            }
+            var profile = LoadLevelProfile(level);
+            OnLevelLoaded?.Invoke(profile);
+            GameEvents.FireGameLevelUpdated(profile, level);
             return profile;
         }
 
@@ -109,12 +97,16 @@ namespace Gameplay.Managers
             }
             else
             {
+                int completedChapter = _progress.currentChapter;
                 _progress.currentChapter++;
                 _progress.currentLevel = 1;
                 _progress.ResetSlotsForNewChapter();
                 LastSelectedPowerup = null;
                 GameEvents.FirePowerupUnequipped();
                 GameEvents.FireChapterCompleted(_progress.currentChapter);
+
+                // Unlock the next chapter in cloud
+                ChapterUnlockManager.Instance?.SetUnlock(_progress.currentChapter - 1, true).Forget();
 
                 // Delay spin until transition finishes
                 StartCoroutine(DelayedTriggerSpin(4.5f));
@@ -197,7 +189,6 @@ namespace Gameplay.Managers
         // ─────────────────────────────────────────────
         // Reset
         // ─────────────────────────────────────────────
-
         public void ResetProgress()
         {
             _progress = new GameProgress();

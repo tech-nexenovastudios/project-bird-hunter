@@ -3,21 +3,18 @@ using Cysharp.Threading.Tasks;
 using Gameplay.Managers;
 using UnityEngine;
 using Gameplay.Player;
+using Unity.Services.CloudSave;
 
 public class CannonSpawner : MonoBehaviour
 {
     public CannonHolder_SO cannons;
-    public LevelReferences references;
     public static GameObject cannon;
 
     private const string SELECTEDCANNONKEY = "SelectedCannonIndex";
 
     public async UniTask<GameObject> CannonSpawn()
     {
-        await UniTask.Yield();
-
-        //var index = PlayerPrefs.GetInt(SELECTEDCANNONKEY, 0);
-        int index = 0;
+        int index = CloudSaveManager.Instance.LoadValueAsync<int>(SELECTEDCANNONKEY).GetAwaiter().GetResult();
         index = Mathf.Clamp(index, 0, cannons.cannonsData.Length - 1);
 
         var data = cannons.cannonsData[index];
@@ -27,8 +24,6 @@ public class CannonSpawner : MonoBehaviour
         var baseCannon = cannon.GetComponent<BaseCannon>();
         if (baseCannon != null)
         {
-            //data.cannonStats.ApplyProgression(GameProgressManager.Instance.GlobalLevel);
-            
             baseCannon.Configure(data.cannonStats, data.bulletPrefab);
             Debug.Log($"[CannonSpawner] Configured new BaseCannon: {data.cannonPrefab.name}");
         }

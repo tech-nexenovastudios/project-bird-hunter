@@ -5,7 +5,8 @@ using UnityEngine;
 public class ChaptersConfig : ScriptableObject
 {
     public List<ChapterData> worlds;
-    public int GetCurrentWorldIndex(ChapterData world) => worlds.IndexOf(world);
-    public ChapterData GetWorldData(int index) => worlds[index];
+    public int GetCurrentChapterIndex(ChapterData world) => worlds.IndexOf(world);
+    public ChapterData GetChapterData(int index) => worlds[index];
+    public ChapterData GetNextChapterData(int index) => worlds[index + 1];
     public int GetWorldCount() => worlds.Count;
 }

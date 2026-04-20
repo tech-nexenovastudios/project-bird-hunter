@@ -310,7 +310,7 @@ public class ChapterUnlockManager : MonoBehaviour
             return;
         }
 
-        ChapterData data = chaptersConfig.GetWorldData(_lastUnlockedChapter);
+        ChapterData data = chaptersConfig.GetChapterData(_lastUnlockedChapter);
         if (data == null)
         {
             Debug.LogWarning($"[ChapterUnlockManager] No ChapterData found for " +

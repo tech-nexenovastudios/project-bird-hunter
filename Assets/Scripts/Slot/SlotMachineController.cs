@@ -227,8 +227,8 @@ public class SlotMachineController : MonoBehaviour
         slotMachinePanel.SetActive(false);
         slotMachinePanel.transform.localScale = Vector3.one;
 
-        int chapter = PlayerPrefs.GetInt("SelectedChapter", 1);
-        int level = PlayerPrefs.GetInt("SelectedLevel", 1);
+        int chapter = GameProgressManager.Instance.CurrentChapter;
+        int level   = GameProgressManager.Instance.CurrentLevel;
         StartCoroutine(LoadNextLevelWithCountdown(chapter, level));
     }
 
