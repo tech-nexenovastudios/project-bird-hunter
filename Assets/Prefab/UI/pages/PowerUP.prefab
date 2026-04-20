@@ -932,11 +932,11 @@ RectTransform:
   m_Children:
   - {fileID: 1561805042502275905}
   - {fileID: 4030203539612769203}
-  - {fileID: 3147907569504463010}
-  - {fileID: 175395208788739092}
   - {fileID: 8194219235733793345}
-  - {fileID: 885856871118725596}
+  - {fileID: 175395208788739092}
   - {fileID: 2631336896779519262}
+  - {fileID: 3147907569504463010}
+  - {fileID: 885856871118725596}
   - {fileID: 2912769439629938661}
   - {fileID: 5695054614272873673}
   - {fileID: 7639764804689406781}
@@ -957,13 +957,13 @@ RectTransform:
   - {fileID: 8619953072697406257}
   - {fileID: 7300334594349419216}
   - {fileID: 3327760043723697040}
-  - {fileID: 8263387211936974890}
   - {fileID: 8593341602135527142}
+  - {fileID: 8263387211936974890}
   m_Father: {fileID: 851086733829540909}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -511.1999, y: 714.8498}
+  m_AnchoredPosition: {x: -511.1999, y: 714.84937}
   m_SizeDelta: {x: 1042.7, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &788427903221484847
@@ -1438,7 +1438,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 7826170215741318921}
   m_Direction: 2
   m_Value: 1.0000001
-  m_Size: 0.34284118
+  m_Size: 0.34271982
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1650,7 +1650,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Incendiary Shot
+      value: Phase Shield
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -1735,14 +1735,14 @@ PrefabInstance:
     - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 2dc9bab8180406f46a644a795ace073d, type: 3}
+      objectReference: {fileID: 21300000, guid: c50ecbb4ad0d74e36a5c6193bfd8bba4, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Incendiary Shot
+      value: Phase Shield
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 21.55
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2442,20 +2442,22 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_text
-      value: Spike Field
+      value: 'Blade Summoner
+
+'
       objectReference: {fileID: 0}
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_fontSize
-      value: 32.15
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2816334186289660706, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Name
-      value: Spike Field
+      value: Blade Summoner
       objectReference: {fileID: 0}
     - target: {fileID: 5202464141505176906, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 5c55cbd4fa76046428f4674b2026f7db, type: 3}
+      objectReference: {fileID: 21300000, guid: e08807c1b9aed457c9a32e360b6dd677, type: 3}
     - target: {fileID: 5278733253007508179, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -2556,20 +2558,22 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_text
-      value: Laser Cannon
+      value: 'Spike Field
+
+'
       objectReference: {fileID: 0}
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_fontSize
-      value: 26
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2816334186289660706, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Name
-      value: Laser Cannon
+      value: Spike Field
       objectReference: {fileID: 0}
     - target: {fileID: 5202464141505176906, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 9cd55db2f47ec3646961d1718d57291f, type: 3}
+      objectReference: {fileID: 21300000, guid: 5b036b974fa8184418cba2e7fe30fa61, type: 3}
     - target: {fileID: 5278733253007508179, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -2670,20 +2674,20 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_text
-      value: Blade Summoner
+      value: Shadow Turret
       objectReference: {fileID: 0}
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_fontSize
-      value: 21.35
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2816334186289660706, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Name
-      value: Blade Summoner
+      value: Shadow Turret
       objectReference: {fileID: 0}
     - target: {fileID: 5202464141505176906, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: b0750ac074fbb14439d516a89f69078f, type: 3}
+      objectReference: {fileID: 21300000, guid: eddab0207680e494faf856d3f5367fd6, type: 3}
     - target: {fileID: 5278733253007508179, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -2785,7 +2789,7 @@ PrefabInstance:
     - target: {fileID: 774507490172512735, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 7fcbba724d40fb64bbb4bc3901744e67, type: 3}
+      objectReference: {fileID: 21300000, guid: 960254f1f4e424687a1aee8576081cdf, type: 3}
     - target: {fileID: 2385054722748686307, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Name
       value: Instant Heal
@@ -2917,20 +2921,20 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_text
-      value: Shadow Turret
+      value: Laser Cannon
       objectReference: {fileID: 0}
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_fontSize
-      value: 23.05
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2816334186289660706, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Name
-      value: Shadow Turret
+      value: Laser Cannon
       objectReference: {fileID: 0}
     - target: {fileID: 5202464141505176906, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: b8135dbf935d6d24e87b293616ab194c, type: 3}
+      objectReference: {fileID: 21300000, guid: 15ec71c09e0504de8961e3862c3946a1, type: 3}
     - target: {fileID: 5278733253007508179, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -3031,7 +3035,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Desperation Fury
+      value: Ember Orb
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -3113,13 +3117,19 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 952d72fb15dd54c33bae153f207ef539, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Desperation Fury
+      value: 'Ember Orb
+
+'
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 19.85
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3925,7 +3935,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Life Steal
+      value: Lightning Shot
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -4010,18 +4020,18 @@ PrefabInstance:
     - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: d0ca5b5b1c1496a489006f2a06ec3c10, type: 3}
+      objectReference: {fileID: 21300000, guid: 6bdfd4e5659824650b9d279999c37fb2, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Life Steal
+      value: Lightning Shot
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 28
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSizeBase
-      value: 28
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4128,14 +4138,14 @@ PrefabInstance:
     - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 48b4b610db36c9c40912ce487537ed5c, type: 3}
+      objectReference: {fileID: 21300000, guid: 45ec26b967f1d489fb2e5da954af7310, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
       value: Flame Trail
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 30.05
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4161,7 +4171,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_fontSize
-      value: 30.3
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2816334186289660706, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Name
@@ -4170,7 +4180,7 @@ PrefabInstance:
     - target: {fileID: 5202464141505176906, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 58ec7ff2fe5f7be4995457198c3d360b, type: 3}
+      objectReference: {fileID: 21300000, guid: f88b66938d37f495da17fc139f067136, type: 3}
     - target: {fileID: 5278733253007508179, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -5707,7 +5717,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Piercing Rounds
+      value: Life Steal
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -5789,13 +5799,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 373a4a37a27774282b87a9d16793048b, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Piercing Rounds
+      value: Life Steal
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 21.75
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5821,7 +5835,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_fontSize
-      value: 34.2
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2816334186289660706, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Name
@@ -5830,7 +5844,7 @@ PrefabInstance:
     - target: {fileID: 5202464141505176906, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: fe4ca9803aed8e3418c66859231552f4, type: 3}
+      objectReference: {fileID: 21300000, guid: 8bb583c6c62b546308d770eec383a49d, type: 3}
     - target: {fileID: 5278733253007508179, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -5931,7 +5945,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Phase Shield
+      value: Compact Frame
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -6016,14 +6030,14 @@ PrefabInstance:
     - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 3d3a71c452cbdbd45a37892904ddf15b, type: 3}
+      objectReference: {fileID: 21300000, guid: b849d0da18fda4c08a90799cbeb5387b, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Phase Shield
+      value: Compact Frame
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 27.05
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6046,7 +6060,7 @@ PrefabInstance:
     - target: {fileID: 774507490172512735, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 876e008171122ac47832caf19737e382, type: 3}
+      objectReference: {fileID: 21300000, guid: 7cd9b17c32d0b454ab5a5fa4180b17d6, type: 3}
     - target: {fileID: 2385054722748686307, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Name
       value: Pre-Boss Recovery
@@ -6057,7 +6071,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4664066879599096231, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_fontSize
-      value: 18.3
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 7884854768785813541, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Pivot.x
@@ -6182,7 +6196,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Lightning Shot
+      value: Toxic Orb
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -6267,14 +6281,16 @@ PrefabInstance:
     - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: f6ffb9ac432bff349aab3a64f39a6f7b, type: 3}
+      objectReference: {fileID: 21300000, guid: 3cabfd20c232a4272b7241b7f367019e, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Lightning Shot
+      value: 'Toxic Orb
+
+'
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 23.5
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6975,7 +6991,7 @@ PrefabInstance:
     - target: {fileID: 774507490172512735, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 8e2ad0b29e5fad2468e630f151c53e8f, type: 3}
+      objectReference: {fileID: 21300000, guid: bc7718668fd0c4972b8df4323e6df646, type: 3}
     - target: {fileID: 2385054722748686307, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Name
       value: Dual Shot
@@ -6986,7 +7002,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4664066879599096231, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_fontSize
-      value: 34.1
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 7884854768785813541, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Pivot.x
@@ -7088,7 +7104,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Toxic Orb
+      value: Incendiary Shot
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -7173,14 +7189,16 @@ PrefabInstance:
     - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 2902dd21307492a4eab24d121796b60a, type: 3}
+      objectReference: {fileID: 21300000, guid: 773cd84a24f3145348a52278bbb3882c, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Toxic Orb
+      value: 'Incendiary Shot
+
+'
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 35.3
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7202,7 +7220,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Ember Orb
+      value: Desperation Fury
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -7287,10 +7305,12 @@ PrefabInstance:
     - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: bde92f0a1cfc59845b1cc65a415ea10f, type: 3}
+      objectReference: {fileID: 21300000, guid: a62a19c47b3d5414485331d132f2fb72, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Ember Orb
+      value: 'Desperation Fury
+
+'
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
@@ -8673,7 +8693,7 @@ PrefabInstance:
     - target: {fileID: 774507490172512735, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: bb6c554837c57a045b63f7eed0c63720, type: 3}
+      objectReference: {fileID: 21300000, guid: 7a8f6c49d22714f2a89bcf0effb8473b, type: 3}
     - target: {fileID: 2385054722748686307, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Name
       value: Ricochet Rounds
@@ -8684,7 +8704,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4664066879599096231, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_fontSize
-      value: 21.25
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 7884854768785813541, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Pivot.x
@@ -8809,7 +8829,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Twin Spread
+      value: Focus Amplifier
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -8894,14 +8914,16 @@ PrefabInstance:
     - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 607438a813afbdd4485af9c74f8ab28c, type: 3}
+      objectReference: {fileID: 21300000, guid: b3608bf8e3eab48c1a6fc9b3857904a4, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Twin Spread
+      value: 'Focus Amplifier
+
+'
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 28.9
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -8924,10 +8946,10 @@ PrefabInstance:
     - target: {fileID: 774507490172512735, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 0d3d63c15422cd44192852e942dae97b, type: 3}
+      objectReference: {fileID: 21300000, guid: 24077fc83a1d64e1887af2cb7f43892c, type: 3}
     - target: {fileID: 2385054722748686307, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Name
-      value: Vitality Boost
+      value: Freeze Breeze
       objectReference: {fileID: 0}
     - target: {fileID: 4664066879599096231, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_text
@@ -8935,7 +8957,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4664066879599096231, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_fontSize
-      value: 22.95
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 7884854768785813541, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Pivot.x
@@ -9060,7 +9082,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Compact Frame
+      value: Twin Spread
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -9145,14 +9167,16 @@ PrefabInstance:
     - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 27d6f095ee623ca41991f573c6b6f9eb, type: 3}
+      objectReference: {fileID: 21300000, guid: e218b24b01b814c8cbb0b43518793183, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Compact Frame
+      value: 'Twin Spread
+
+'
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 23.25
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9174,7 +9198,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 57752487361367302, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Name
-      value: Focus Amplifier
+      value: Piercing Rounds
       objectReference: {fileID: 0}
     - target: {fileID: 176562354884822849, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_Pivot.x
@@ -9256,13 +9280,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3409623975848633920, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: e68bc7388ce594a0988b1880dcdf24ce, type: 3}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_text
-      value: Focus Amplifier
+      value: Piercing Rounds
       objectReference: {fileID: 0}
     - target: {fileID: 4647900988939946414, guid: f622b57c55bd74344b1c7ce727e759c2, type: 3}
       propertyPath: m_fontSize
-      value: 22.2
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9285,7 +9313,7 @@ PrefabInstance:
     - target: {fileID: 774507490172512735, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 834ea946fce078a438547a15cfe1fa1b, type: 3}
+      objectReference: {fileID: 21300000, guid: f6219ccb095f54fc49aaebdd27565c11, type: 3}
     - target: {fileID: 2385054722748686307, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Name
       value: Power Surge
@@ -9296,7 +9324,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4664066879599096231, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_fontSize
-      value: 27.95
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 7884854768785813541, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Pivot.x
@@ -10104,18 +10132,18 @@ PrefabInstance:
     - target: {fileID: 774507490172512735, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 908c64724bfb8e54eb12f088a504fcdd, type: 3}
+      objectReference: {fileID: 21300000, guid: cd6c3b6b1d270415d9d199848b894d27, type: 3}
     - target: {fileID: 2385054722748686307, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Name
-      value: Mana Acceleration
+      value: Vitality Boost
       objectReference: {fileID: 0}
     - target: {fileID: 4664066879599096231, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_text
-      value: Mana Acceleration
+      value: Vitality Boost
       objectReference: {fileID: 0}
     - target: {fileID: 4664066879599096231, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_fontSize
-      value: 18.55
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 6785574535315809070, guid: e585c953f7e344dc19dcb14edc42d081, type: 3}
       propertyPath: m_Color.b
@@ -10334,6 +10362,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1038950002859397461, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 1147e8f1bfcbb564c9c0a94196b13a74, type: 3}
     - target: {fileID: 1769699222931032539, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
       propertyPath: m_Name
       value: Revenge Pulse
@@ -10348,7 +10380,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6671921039739283914, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
       propertyPath: m_fontSize
-      value: 22.9
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -10374,12 +10406,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2188291476877499614, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_fontSize
-      value: 20.5
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2816334186289660706, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Name
       value: Retaliation Core
       objectReference: {fileID: 0}
+    - target: {fileID: 5202464141505176906, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: bdbabcf4143304ee6842a1ec95fab8a0, type: 3}
     - target: {fileID: 5278733253007508179, guid: b80299d15651b4c57b99c85cc55b9084, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -10558,6 +10594,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1038950002859397461, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 8bd43bb82dbe8684cbbbdca686a064c2, type: 3}
     - target: {fileID: 1769699222931032539, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
       propertyPath: m_Name
       value: Second Chance
@@ -10572,7 +10612,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6671921039739283914, guid: b31b53cb6139c487687e63b74e8a84ff, type: 3}
       propertyPath: m_fontSize
-      value: 22.7
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

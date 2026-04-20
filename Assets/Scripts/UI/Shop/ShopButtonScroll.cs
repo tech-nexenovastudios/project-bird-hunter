@@ -13,18 +13,18 @@ public class ShopButtonScroll : MonoBehaviour
     {
         if (rect != null && viewport != null)
         {
-    
+
             float itemY = Mathf.Abs(rect.anchoredPosition.y);
 
             float targetPosition = itemY - ((viewport.rect.height / 2f) + (rect.rect.height / 2f));
 
-           
+
             float maxScrollY = Mathf.Max(0, scrollRect.rect.height - viewport.rect.height);
 
-            
+
             targetPosition = Mathf.Clamp(targetPosition, 0, maxScrollY);
 
-        
+
             scrollRect.DOAnchorPosY(targetPosition, 0.2f);
         }
     }
