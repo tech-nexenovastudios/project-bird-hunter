@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BirdHunter.Inventory.Stats;
 using Gameplay.Events;
 using Gameplay.Interfaces;
 using Gameplay.PowerUps;
@@ -22,7 +23,7 @@ namespace Gameplay.Player
         {
             get
             {
-                int baseMax = CannonStats != null ? Mathf.RoundToInt(CannonStats.currentMaxHealth) : 100;
+                int baseMax = Stats != null ? Stats.GetInt(StatType.Health) : 100;
                 return baseMax + maxHpBonus;
             }
         }
@@ -32,8 +33,8 @@ namespace Gameplay.Player
         public bool SuppressBullets { get; set; }
 
         // ── Attack modifiers ─────────────────────────────────
-        public int BaseAttack => CannonStats != null
-            ? Mathf.RoundToInt(CannonStats.currentBulletDamage) : 1;
+        public int BaseAttack => Stats != null
+            ? Stats.GetInt(StatType.Damage) : 1;
 
         private float flatAttackBonus;
         private float percentAttackBonus;
@@ -68,7 +69,7 @@ namespace Gameplay.Player
         public Transform Transform => transform;
 
         // ── Stats & Prefab ───────────────────────────────────
-        public CannonStats CannonStats { get; private set; }
+        public StatSheet Stats { get; private set; }
         public float ManaFillRateBonus { get; set; }
         public GameObject BulletPrefab { get; set; }
 
@@ -119,12 +120,11 @@ namespace Gameplay.Player
             originalWheelRadius = wheelRadius;
         }
 
-        public virtual void Configure(CannonStats stats, GameObject bulletPrefab)
+        public virtual void Configure(StatSheet stats, GameObject bulletPrefab)
         {
             ManaFillRateBonus = 0f;
-            CannonStats = stats;
+            Stats = stats;
             BulletPrefab = bulletPrefab;
-            CannonStats.InitRuntime();
 
             flatAttackBonus = 0f;
             percentAttackBonus = 0f;
@@ -150,7 +150,7 @@ namespace Gameplay.Player
                 bulletPool = null;
             }
 
-            GameEvents.FireCannonStatsUpdated(CannonStats);
+            GameEvents.FireCannonStatsUpdated(Stats);
             GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp);
             GameEvents.OnPlayerLevelUp += OnLevelUp;
         }
@@ -343,11 +343,10 @@ namespace Gameplay.Player
 
         protected virtual void HandleMovement()
         {
-            if (CannonStats == null) return;
+            if (Stats == null) return;
 
             Vector2 oldPos = rb.position;
-            // was:  movementInput * (CannonStats.currentMoveSpeed * Time.fixedDeltaTime)
-            Vector2 newPos = rb.position + movementInput * (CannonStats.currentMoveSpeed * moveSpeedMultiplier * Time.fixedDeltaTime);
+            Vector2 newPos = rb.position + movementInput * (Stats.Get(StatType.MoveSpeed) * moveSpeedMultiplier * Time.fixedDeltaTime);
 
             float leftBound = mainCam.ViewportToWorldPoint(Vector3.zero).x + halfWidth;
             float rightBound = mainCam.ViewportToWorldPoint(Vector3.right).x - halfWidth;
@@ -375,11 +374,11 @@ namespace Gameplay.Player
 
         protected virtual void HandleFiring()
         {
-            if (CannonStats == null || BulletPrefab == null || !IsFiring) return;
+            if (Stats == null || BulletPrefab == null || !IsFiring) return;
             if (SuppressBullets) return;
 
             fireTimer += Time.deltaTime;
-            float interval = 1f / CannonStats.currentFireRate;
+            float interval = 1f / Stats.Get(StatType.FireRate);
 
             if (fireTimer >= interval)
             {
@@ -452,12 +451,12 @@ namespace Gameplay.Player
             // of when transform.up is read later.
             Vector2 fireDirection = rotation * Vector2.up;
 
-            bullet.Init(CannonStats, fireDirection);   // ← updated signature
+            bullet.Init(Stats, fireDirection);
             bullet.damage = CurrentAttack;
-            bullet.bulletSpeed = CannonStats.currentBulletSpeed;
+            bullet.bulletSpeed = Stats.Get(StatType.BulletSpeed);
 
             if (bullet is BouncingBullet bouncing)
-                bouncing.bounceCount = CannonStats.bulletBounce;
+                bouncing.bounceCount = Stats.GetInt(StatType.BulletBounce);
 
             return bullet;
         }
@@ -468,9 +467,8 @@ namespace Gameplay.Player
 
         private void OnLevelUp(int newLevel)
         {
-            if (CannonStats != null)
+            if (Stats != null)
             {
-                CannonStats.ApplyProgression(newLevel);
                 OnHealthChanged(CurrentHp, MaxHp);
             }
         }

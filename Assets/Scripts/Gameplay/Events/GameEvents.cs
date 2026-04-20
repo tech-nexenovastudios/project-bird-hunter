@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BirdHunter.Inventory.Stats;
 using Gameplay.Birds;
 using Gameplay.Interfaces;
 using Gameplay.Levels;
@@ -137,11 +138,11 @@ namespace Gameplay.Events
         public static void FireCannonHealthChanged(int currentHp, int maxHp) => OnCannonHealthChanged?.Invoke(currentHp, maxHp);
         public static event Action<int, int> OnCannonHealthChanged;
 
-        public static void FireCannonStatsUpdated(CannonStats cannonStats) => OnCannonStatsUpdated?.Invoke(cannonStats);
+        public static void FireCannonStatsUpdated(StatSheet statSheet) => OnCannonStatsUpdated?.Invoke(statSheet);
 
         internal static void FirePowerupCommitted(PowerupConfig results) => OnPowerupCommitted?.Invoke(results);
 
-        public static event Action<CannonStats> OnCannonStatsUpdated;
+        public static event Action<StatSheet> OnCannonStatsUpdated;
 
         public static void FireLevelCompletedEarly(float remaining) => OnLevelCompletedEarly?.Invoke(remaining);
         public static event Action<float> OnLevelCompletedEarly;

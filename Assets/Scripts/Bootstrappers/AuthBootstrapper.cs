@@ -2,9 +2,11 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
+using Unity.Services.Core.Environments;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using System.Threading;
+using UnityEditor.Rendering;
 
 //#if UNITY_ANDROID && !UNITY_EDITOR
 #if UNITY_ANDROID
@@ -133,6 +135,8 @@ public class AuthBootstrapper : MonoBehaviour
     //  INITIALIZE UNITY SERVICES
     // ═══════════════════════════════════════════════════════════════
 
+    private const string ENVIRONMENT_NAME = "development";
+
     private async UniTask<bool> InitializeServices()
     {
         if (UnityServices.State != ServicesInitializationState.Uninitialized)
@@ -141,8 +145,9 @@ public class AuthBootstrapper : MonoBehaviour
         try
         {
             SetStatus("Initializing...");
-            await UnityServices.InitializeAsync();
-            Debug.Log("[Auth] Unity Services initialized.");
+            var options = new InitializationOptions().SetEnvironmentName(ENVIRONMENT_NAME);
+            await UnityServices.InitializeAsync(options);
+            Debug.Log($"[Auth] Unity Services initialized. Environment: {ENVIRONMENT_NAME}");
             return true;
         }
         catch (System.Exception ex)

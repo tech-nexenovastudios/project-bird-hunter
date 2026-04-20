@@ -1,48 +1,52 @@
-using System;
+using BirdHunter.Inventory;
+using BirdHunter.Inventory.Services;
 using Cysharp.Threading.Tasks;
-using Gameplay.Managers;
-using UnityEngine;
 using Gameplay.Player;
+using UnityEngine;
 
 public class CannonSpawner : MonoBehaviour
 {
-    public CannonHolder_SO cannons;
-    public LevelReferences references;
+    public CannonDatabase database;
     public static GameObject cannon;
-
-    private const string SELECTEDCANNONKEY = "SelectedCannonIndex";
 
     public async UniTask<GameObject> CannonSpawn()
     {
-        await UniTask.Yield();
+        var service = CannonInventoryService.Instance;
+        if (service == null)
+        {
+            Debug.LogError("[CannonSpawner] CannonInventoryService is not in the scene.");
+            return null;
+        }
 
-        //var index = PlayerPrefs.GetInt(SELECTEDCANNONKEY, 0);
-        int index = 0;
-        index = Mathf.Clamp(index, 0, cannons.cannonsData.Length - 1);
+        while (!service.IsReady) await UniTask.Yield();
 
-        var data = cannons.cannonsData[index];
-        cannon = Instantiate(data.cannonPrefab, transform.position, transform.rotation);
+        string key = service.EquippedKey;
+        if (string.IsNullOrEmpty(key))
+        {
+            Debug.LogError("[CannonSpawner] No cannon equipped.");
+            return null;
+        }
 
-        // --- NEW CANNON SYSTEM ---
+        var entry = database?.GetEntry(key);
+        if (entry?.cannonPrefab == null)
+        {
+            Debug.LogError($"[CannonSpawner] Cannon prefab missing for key '{key}' in database.");
+            return null;
+        }
+
+        cannon = Instantiate(entry.cannonPrefab, transform.position, transform.rotation);
+
         var baseCannon = cannon.GetComponent<BaseCannon>();
         if (baseCannon != null)
         {
-            //data.cannonStats.ApplyProgression(GameProgressManager.Instance.GlobalLevel);
-            
-            baseCannon.Configure(data.cannonStats, data.bulletPrefab);
-            Debug.Log($"[CannonSpawner] Configured new BaseCannon: {data.cannonPrefab.name}");
+            baseCannon.Configure(service.GetStatSheet(key), entry.bulletPrefab);
+            Debug.Log($"[CannonSpawner] Configured cannon '{key}': {entry.cannonPrefab.name}");
         }
-        else Debug.LogError($"[CannonSpawner] {data.cannonPrefab.name} does not have a BaseCannon component!");
+        else
+        {
+            Debug.LogError($"[CannonSpawner] {entry.cannonPrefab.name} is missing a BaseCannon component.");
+        }
 
-        return cannon;
-    }
-
-    [Obsolete]
-    public GameObject SpawnCannon()
-    {
-        int index = PlayerPrefs.GetInt("CannonIndex", 0);
-        index  = Mathf.Clamp(index, 0, cannons.cannonsData.Length - 1);
-        cannon = Instantiate(cannons.cannonsData[index].cannonPrefab);
         return cannon;
     }
 

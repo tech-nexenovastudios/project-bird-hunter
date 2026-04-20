@@ -67,6 +67,7 @@ public class AdManager : MonoBehaviour
     // SINGLETON & STATE
     // ========================================================================
 
+   // [System.Obsolete("Use ServiceLocator.Get<AdManager>() instead.")]
     public static AdManager Instance { get; private set; }
 
     public bool IsInitialized { get; private set; }
@@ -128,6 +129,7 @@ public class AdManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        ServiceLocator.Register<AdManager>(this); 
 
         // [FIX 1] Restore "Remove Ads" purchase on app start.
         adsDisabled = PlayerPrefs.GetInt(PREF_ADS_REMOVED, 0) == 1;
@@ -167,7 +169,7 @@ public class AdManager : MonoBehaviour
     private void OnDestroy()
     {
         if (Instance != this) return;
-
+        ServiceLocator.Unregister<AdManager>(); 
         LevelPlay.OnInitSuccess -= HandleInitSuccess;
         LevelPlay.OnInitFailed -= HandleInitFailed;
 

@@ -1,0 +1,359 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using BirdHunter.Inventory.Data;
+using BirdHunter.Inventory.Stats;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
+
+namespace BirdHunter.Inventory.Services
+{
+    /// <summary>
+    /// Owns cannon inventory state: per-cannon level, unlock flag, equipped key.
+    /// Costs come from EconomyFormulaConfig; base stats from CannonStatsRepository.
+    /// UI never touches CloudSave / CurrencyManager directly — it goes through this.
+    /// </summary>
+    public sealed class CannonInventoryService : MonoBehaviour
+    {
+        public static CannonInventoryService Instance { get; private set; }
+
+        [Header("Config")]
+        [SerializeField] private EconomyFormulaConfig economy;
+
+        [Header("Progression Curve")]
+        [Tooltip("Percent per upgrade level, applied as PctAdd. Level N adds (N-1) * this.")]
+        [SerializeField] private float damagePerLevelPct = 0.10f;
+        [SerializeField] private float healthPerLevelPct = 0.10f;
+        [SerializeField] private float fireRatePerLevelPct = 0.05f;
+        [SerializeField] private float moveSpeedPerLevelPct = 0.02f;
+
+        [Header("Defaults")]
+        [SerializeField] private string[] defaultUnlockedKeys = { "SingleCannon" };
+        [SerializeField] private bool devUnlockAll = false;
+
+        // ── Persistence keys ────────────────────────────────────────────────
+        private const string LEVEL_KEY_PREFIX   = "cannon_level_";
+        private const string UNLOCK_KEY_PREFIX  = "cannon_unlocked_";
+        private const string EQUIPPED_KEY       = "cannon_equipped_id";
+
+        // ── State, keyed by cannon name/slug ───────────────────────────────
+        private readonly Dictionary<string, int>       _levels   = new();
+        private readonly Dictionary<string, bool>      _unlocked = new();
+        private readonly Dictionary<string, StatSheet> _sheets   = new();
+        private string _equippedKey;
+
+        private CancellationToken _destroyCT;
+
+        // ── Events ──────────────────────────────────────────────────────────
+        public event Action              OnReady;
+        public event Action<string>      OnUnlocked;
+        public event Action<string>      OnUpgraded;
+        public event Action<string>      OnEquipped;
+
+        public bool   IsReady    { get; private set; }
+        public int    Count      => CannonStatsRepository.Instance.Count;
+        public string EquippedKey => _equippedKey;
+        public EconomyFormulaConfig Economy => economy;
+
+        // ════════════════════════════════════════════════════════════════════
+        // Lifecycle
+        // ════════════════════════════════════════════════════════════════════
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            _destroyCT = this.GetCancellationTokenOnDestroy();
+        }
+
+        private void Start()
+        {
+            InitializeAsync().Forget();
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                OnReady    = null;
+                OnUnlocked = null;
+                OnUpgraded = null;
+                OnEquipped = null;
+                Instance   = null;
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // Initialization
+        // ════════════════════════════════════════════════════════════════════
+
+        private async UniTaskVoid InitializeAsync()
+        {
+            await CannonStatsRepository.Instance.LoadAsync();
+
+            var repo = CannonStatsRepository.Instance;
+            if (!repo.IsLoaded || repo.Count == 0)
+            {
+                Debug.LogError("[CannonInventoryService] Base stats failed to load. Service inert.");
+                return;
+            }
+
+            foreach (var dto in repo.All)
+            {
+                _levels[dto.name]   = 1;
+                _unlocked[dto.name] = false;
+                _sheets[dto.name]   = dto.BuildStatSheet();
+            }
+
+            if (!devUnlockAll && defaultUnlockedKeys != null)
+                foreach (string key in defaultUnlockedKeys)
+                    if (_unlocked.ContainsKey(key))
+                        _unlocked[key] = true;
+
+            if (devUnlockAll)
+                foreach (var dto in repo.All)
+                    _unlocked[dto.name] = true;
+
+            await LoadCloudStateAsync();
+
+            foreach (var dto in repo.All)
+                ApplyUpgradeModifier(dto.name);
+
+            IsReady = true;
+            OnReady?.Invoke();
+            OnEquipped?.Invoke(_equippedKey);
+        }
+
+        private async UniTask LoadCloudStateAsync()
+        {
+            var keys = new HashSet<string> { EQUIPPED_KEY };
+            foreach (var dto in CannonStatsRepository.Instance.All)
+            {
+                keys.Add(LEVEL_KEY_PREFIX  + dto.name);
+                keys.Add(UNLOCK_KEY_PREFIX + dto.name);
+            }
+
+            try
+            {
+                var data = await CloudSaveManager.Instance.LoadAsync(keys);
+
+                foreach (var dto in CannonStatsRepository.Instance.All)
+                {
+                    string lk = LEVEL_KEY_PREFIX + dto.name;
+                    if (data.TryGetValue(lk, out var lItem))
+                        _levels[dto.name] = Mathf.Clamp(lItem.Value.GetAs<int>(), 1, dto.maxUpgradeLevel);
+
+                    if (!devUnlockAll)
+                    {
+                        string uk = UNLOCK_KEY_PREFIX + dto.name;
+                        if (data.TryGetValue(uk, out var uItem))
+                            _unlocked[dto.name] = uItem.Value.GetAs<bool>();
+                    }
+                }
+
+                if (data.TryGetValue(EQUIPPED_KEY, out var eItem))
+                    _equippedKey = eItem.Value.GetAs<string>();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[CannonInventoryService] Cloud load failed: {ex.Message}");
+            }
+
+            // Fallback: equip first unlocked cannon
+            if (string.IsNullOrEmpty(_equippedKey)
+                || !_unlocked.TryGetValue(_equippedKey, out var equippedUnlocked)
+                || !equippedUnlocked)
+            {
+                _equippedKey = FirstUnlockedKey();
+            }
+        }
+
+        private string FirstUnlockedKey()
+        {
+            foreach (var dto in CannonStatsRepository.Instance.All)
+                if (_unlocked.TryGetValue(dto.name, out var u) && u)
+                    return dto.name;
+            return CannonStatsRepository.Instance.All.Count > 0
+                ? CannonStatsRepository.Instance.All[0].name
+                : null;
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // Queries
+        // ════════════════════════════════════════════════════════════════════
+
+        public bool IsUnlocked(string key)  => _unlocked.TryGetValue(key, out var u) && u;
+        public int  GetLevel(string key)     => _levels.GetValueOrDefault(key, 0);
+        public bool IsEquipped(string key)   => _equippedKey == key;
+
+        public CannonBaseStatsDto GetBaseData(string key)
+            => CannonStatsRepository.Instance.GetByKey(key);
+
+        public StatSheet GetStatSheet(string key)
+            => _sheets.GetValueOrDefault(key);
+
+        public int GetMaxLevel(string key)
+        {
+            var dto = GetBaseData(key);
+            return dto?.maxUpgradeLevel ?? 1;
+        }
+
+        public bool IsMaxLevel(string key) => GetLevel(key) >= GetMaxLevel(key);
+
+        // ── Costs (via EconomyFormulaConfig with DTO fallback) ──────────────
+
+        public int GetUnlockCoinCost(string key)
+        {
+            var dto = GetBaseData(key);
+            if (dto == null) return 0;
+            if (economy != null)
+                return economy.GetCannonUnlockCoins(dto.name, dto.unlockAtChapter);
+            return dto.baseCoinsRequired;
+        }
+
+        public int GetUnlockGemCost(string key)
+        {
+            var dto = GetBaseData(key);
+            if (dto == null) return 0;
+            if (economy != null)
+                return economy.GetCannonUnlockGems(GetUnlockCoinCost(key));
+            return dto.baseGemsRequired;
+        }
+
+        public int GetUpgradeCoinCost(string key)
+        {
+            var dto = GetBaseData(key);
+            if (dto == null) return 0;
+            int toLevel = GetLevel(key) + 1;
+            if (toLevel > dto.maxUpgradeLevel) return 0;
+            if (economy != null)
+                return economy.GetUpgradeCostCoins(dto.name, toLevel);
+            return 0;
+        }
+
+        public int GetUpgradeMaterialCost(string key)
+        {
+            var dto = GetBaseData(key);
+            if (dto == null || economy == null) return 0;
+            int toLevel = GetLevel(key) + 1;
+            if (toLevel > dto.maxUpgradeLevel) return 0;
+            return economy.GetUpgradeMaterialsRequired(dto.name, toLevel);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // Mutations
+        // ════════════════════════════════════════════════════════════════════
+
+        public async UniTask<bool> TryUnlock(string key)
+        {
+            if (!IsReady) return false;
+            if (IsUnlocked(key)) return false;
+
+            int coinCost = GetUnlockCoinCost(key);
+            int gemCost  = GetUnlockGemCost(key);
+
+            if (coinCost > 0 || gemCost > 0)
+            {
+                bool spent = await CurrencyManager.Instance.SpendMultiple(
+                    (CurrencyType.Gold, coinCost),
+                    (CurrencyType.Gems, gemCost));
+                if (!spent) return false;
+            }
+
+            _unlocked[key] = true;
+            SaveUnlockAsync(key).Forget();
+            OnUnlocked?.Invoke(key);
+            return true;
+        }
+
+        public async UniTask<bool> TryUpgrade(string key)
+        {
+            if (!IsReady || !IsUnlocked(key) || IsMaxLevel(key)) return false;
+
+            int cost = GetUpgradeCoinCost(key);
+            if (cost > 0)
+            {
+                bool spent = await CurrencyManager.Instance.SpendGold(cost);
+                if (!spent) return false;
+            }
+
+            _levels[key] = GetLevel(key) + 1;
+            ApplyUpgradeModifier(key);
+            SaveLevelAsync(key).Forget();
+
+            OnUpgraded?.Invoke(key);
+            return true;
+        }
+
+        public async UniTask<bool> Equip(string key)
+        {
+            if (!IsReady || !IsUnlocked(key)) return false;
+            if (_equippedKey == key) return true;
+
+            _equippedKey = key;
+            SaveEquippedAsync().Forget();
+            OnEquipped?.Invoke(key);
+            return true;
+        }
+
+        public void ForceUnlock(string key)
+        {
+            if (!_unlocked.ContainsKey(key) || _unlocked[key]) return;
+            _unlocked[key] = true;
+            SaveUnlockAsync(key).Forget();
+            OnUnlocked?.Invoke(key);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // Upgrade modifier — removed + reapplied on each level change
+        // ════════════════════════════════════════════════════════════════════
+
+        private static readonly object UpgradeSource = new { tag = "Upgrade" };
+
+        private void ApplyUpgradeModifier(string key)
+        {
+            if (!_sheets.TryGetValue(key, out var sheet)) return;
+
+            sheet.RemoveBySource(UpgradeSource);
+
+            int level = GetLevel(key);
+            if (level <= 1) return;
+
+            int steps = level - 1;
+            sheet.Add(new StatModifier(StatType.Damage,    steps * damagePerLevelPct,    StatModOp.PctAdd, UpgradeSource));
+            sheet.Add(new StatModifier(StatType.Health,    steps * healthPerLevelPct,    StatModOp.PctAdd, UpgradeSource));
+            sheet.Add(new StatModifier(StatType.FireRate,  steps * fireRatePerLevelPct,  StatModOp.PctAdd, UpgradeSource));
+            sheet.Add(new StatModifier(StatType.MoveSpeed, steps * moveSpeedPerLevelPct, StatModOp.PctAdd, UpgradeSource));
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // Persistence
+        // ════════════════════════════════════════════════════════════════════
+
+        private async UniTaskVoid SaveLevelAsync(string key)
+        {
+            try { await CloudSaveManager.Instance.SaveValueAsync(LEVEL_KEY_PREFIX + key, _levels[key]); }
+            catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveLevel failed: {ex.Message}"); }
+        }
+
+        private async UniTaskVoid SaveUnlockAsync(string key)
+        {
+            try { await CloudSaveManager.Instance.SaveValueAsync(UNLOCK_KEY_PREFIX + key, true); }
+            catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveUnlock failed: {ex.Message}"); }
+        }
+
+        private async UniTaskVoid SaveEquippedAsync()
+        {
+            try { await CloudSaveManager.Instance.SaveValueAsync(EQUIPPED_KEY, _equippedKey); }
+            catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveEquipped failed: {ex.Message}"); }
+        }
+
+        /// <summary>Fetch the equipped cannon key from cloud (use from gameplay scene).</summary>
+        public static UniTask<string> GetEquippedCannonKeyFromCloud()
+            => CloudSaveManager.Instance.LoadValueAsync(EQUIPPED_KEY, string.Empty);
+    }
+}

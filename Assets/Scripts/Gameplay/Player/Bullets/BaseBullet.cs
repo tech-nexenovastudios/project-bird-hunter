@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BirdHunter.Inventory.Stats;
 using DG.Tweening;
 using Gameplay.Events;
 using Gameplay.Interfaces;
@@ -77,12 +78,12 @@ namespace Gameplay.Player
 
         protected virtual void OnInitComplete() { }
 
-        public void Init(CannonStats stats, Vector2 fireDirection)
+        public void Init(StatSheet stats, Vector2 fireDirection)
         {
-            bulletSpeed = stats.currentBulletSpeed;
-            damage = stats.currentBulletDamage;
+            bulletSpeed = stats.Get(StatType.BulletSpeed);
+            damage = stats.Get(StatType.Damage);
 
-            if (rb != null) rb.mass = stats.baseBulletMass;
+            if (rb != null) rb.mass = 0.25f;
 
             startPosition = transform.position;
 

@@ -33,13 +33,10 @@ public class ChapterSelector : MonoBehaviour
 
     public void LoadCurrentWorld()
     {
-        if (ChapterUnlockManager.Instance != null && !ChapterUnlockManager.Instance.IsUnlocked(currentIndex))
-        {
-            Debug.Log($"[ChapterSelector] Chapter {currentIndex} is locked.");
-            return;
-        }
+        var unlockService = ServiceLocator.Get<ChapterUnlockService>();
+        if (unlockService != null && !unlockService.IsUnlocked(currentIndex))
 
-        PlayerPrefs.SetInt("SelectedWorld", currentIndex);
+            PlayerPrefs.SetInt("SelectedWorld", currentIndex);
         PlayerPrefs.SetInt("SelectedLevel", 1);
 
         ChapterData data = worlds.GetWorldData(currentIndex);

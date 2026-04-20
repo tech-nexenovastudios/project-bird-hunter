@@ -59,6 +59,7 @@ public class RemoteConfigManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        ServiceLocator.Register<RemoteConfigManager>(this); 
     }
 
     /// <summary>
@@ -388,7 +389,11 @@ public class RemoteConfigManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Safety unsubscribe in case fetch is still pending
+        if (Instance == this)
+        {
+            ServiceLocator.Unregister<RemoteConfigManager>();  // ← ADD THIS
+        }
+
         try { RemoteConfigService.Instance.FetchCompleted -= HandleFetchCompleted; }
         catch { /* RemoteConfigService may not exist during app quit */ }
     }
