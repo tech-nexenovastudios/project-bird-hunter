@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using Gameplay.Events;
+using Gameplay.Levels;
 using Gameplay.PowerUps;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,14 +13,12 @@ public class PowerupLockView : MonoBehaviour
     [SerializeField] private Material grayscaleMaterial;
 
     // ─── Rarity colors ───
-    private static readonly Color ColCommon = Hex("98F3AF");
-    private static readonly Color ColRare = Hex("F8E64B");
-    private static readonly Color ColEpic = Hex("EAB3FF");
+    private static readonly Color ColCommon    = Hex("98F3AF");
+    private static readonly Color ColRare      = Hex("F8E64B");
+    private static readonly Color ColEpic      = Hex("EAB3FF");
     private static readonly Color ColLegendary = Hex("FF9B94");
 
-    // ─── Runtime ───
     private readonly Dictionary<string, PowerupCardController> cards = new();
-    private PowerupUnlockService unlockService;
 
     // ─── Lifecycle ───
 
@@ -31,31 +31,15 @@ public class PowerupLockView : MonoBehaviour
             Debug.LogWarning("[PowerupLockView] Grayscale material not assigned.");
     }
 
-    private void Start()
-    {
-        unlockService = ServiceLocator.Get<PowerupUnlockService>();
-
-        if (unlockService == null || !unlockService.IsReady)
-        {
-            Debug.LogError("[PowerupLockView] PowerupUnlockService not available or not ready.");
-            return;
-        }
-
-        RefreshAllCards();
-    }
-
     private void OnEnable()
     {
-        EventBus.Subscribe<PowerupUnlockedEvent>(OnPowerupUnlocked);
-        EventBus.Subscribe<PowerupLockedEvent>(OnPowerupLocked);
-        EventBus.Subscribe<PowerupStatesLoadedEvent>(OnStatesLoaded);
+        GameEvents.OnGameLevelUpdated += OnLevelUpdated;
+        RefreshAllCards();
     }
 
     private void OnDisable()
     {
-        EventBus.Unsubscribe<PowerupUnlockedEvent>(OnPowerupUnlocked);
-        EventBus.Unsubscribe<PowerupLockedEvent>(OnPowerupLocked);
-        EventBus.Unsubscribe<PowerupStatesLoadedEvent>(OnStatesLoaded);
+        GameEvents.OnGameLevelUpdated -= OnLevelUpdated;
     }
 
     private void OnDestroy()
@@ -63,24 +47,7 @@ public class PowerupLockView : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    // ─── Event handlers ───
-
-    private void OnPowerupUnlocked(PowerupUnlockedEvent evt)
-    {
-        if (cards.TryGetValue(evt.powerupId, out var card))
-            ApplyUnlockedVisual(card);
-    }
-
-    private void OnPowerupLocked(PowerupLockedEvent evt)
-    {
-        if (cards.TryGetValue(evt.powerupId, out var card))
-            ApplyLockedVisual(card);
-    }
-
-    private void OnStatesLoaded(PowerupStatesLoadedEvent evt)
-    {
-        RefreshAllCards();
-    }
+    private void OnLevelUpdated(LevelProfile _, int __) => RefreshAllCards();
 
     // ─── Card registration ───
 
@@ -93,9 +60,7 @@ public class PowerupLockView : MonoBehaviour
         }
 
         cards[card.PowerupId] = card;
-
-        bool unlocked = unlockService != null && unlockService.IsUnlocked(card.PowerupId);
-        ApplyVisual(card, unlocked);
+        ApplyVisual(card, PowerupGate.IsUnlocked(card.PowerupId));
     }
 
     public void UnregisterCard(PowerupCardController card)
@@ -105,9 +70,8 @@ public class PowerupLockView : MonoBehaviour
 
     public void RefreshAllCards()
     {
-        if (unlockService == null) return;
         foreach (var kvp in cards)
-            ApplyVisual(kvp.Value, unlockService.IsUnlocked(kvp.Key));
+            ApplyVisual(kvp.Value, PowerupGate.IsUnlocked(kvp.Key));
     }
 
     // ─── Visuals ───
@@ -115,7 +79,7 @@ public class PowerupLockView : MonoBehaviour
     private void ApplyVisual(PowerupCardController card, bool unlocked)
     {
         if (unlocked) ApplyUnlockedVisual(card);
-        else ApplyLockedVisual(card);
+        else          ApplyLockedVisual(card);
     }
 
     public void ApplyLockedVisual(PowerupCardController card)
@@ -144,9 +108,9 @@ public class PowerupLockView : MonoBehaviour
 
     private static Color RarityColour(PowerupRarity r) => r switch
     {
-        PowerupRarity.Common => ColCommon,
-        PowerupRarity.Rare => ColRare,
-        PowerupRarity.Epic => ColEpic,
+        PowerupRarity.Common    => ColCommon,
+        PowerupRarity.Rare      => ColRare,
+        PowerupRarity.Epic      => ColEpic,
         PowerupRarity.Legendary => ColLegendary,
         _ => Color.white
     };

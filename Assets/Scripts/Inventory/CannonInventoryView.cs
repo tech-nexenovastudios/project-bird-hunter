@@ -9,7 +9,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CannonInventoryView : MonoBehaviour
+public class CannonInventoryView : MonoBehaviour, IMenuPage
 {
     public static CannonInventoryView Instance { get; private set; }
     
@@ -81,8 +81,8 @@ public class CannonInventoryView : MonoBehaviour
     [SerializeField] private Material grayscaleMaterial;
 
     // ── Runtime ────────────────────────────────────────────────────────
-    public PageType PageType { get; }
-    
+    public PageType PageType => PageType.Inventory;
+
     private readonly List<CannonItem> _items = new();
     private string _selectedKey;
     private float _prevFillRatio;
@@ -126,6 +126,8 @@ public class CannonInventoryView : MonoBehaviour
     {
         ResetScreen();
 
+        if (PageManager.Instance != null) PageManager.Instance.Register(this);
+
         if (service == null) service = CannonInventoryService.Instance;
         if (service != null)
         {
@@ -140,6 +142,9 @@ public class CannonInventoryView : MonoBehaviour
         if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
         Filter("All");
     }
+
+    public void OnPageEnter() { /* OnEnable already runs ResetScreen + HandleReady */ }
+    public void OnPageExit() { }
 
     public void ResetScreen()
     {
@@ -166,6 +171,8 @@ public class CannonInventoryView : MonoBehaviour
 
     private void OnDisable()
     {
+        if (PageManager.Instance != null) PageManager.Instance.Unregister(this);
+
         if (service == null) return;
         service.OnReady    -= HandleReady;
         service.OnUnlocked -= HandleUnlocked;
