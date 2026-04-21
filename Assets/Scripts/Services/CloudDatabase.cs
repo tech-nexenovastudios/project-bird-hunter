@@ -12,10 +12,9 @@ public class CloudDatabase
 {
     // ─── Public Data (read-only access from outside) ───
     public UserData UserData { get; private set; }
-
     public InventoryData InventoryData { get; private set; }
     public ChapterUnlockStatusData ChapterUnlockStatusData { get; private set; }
-
+    public PowerupUnlockStatusData PowerupUnlockStatusData { get; private set; }
     public ShopData ShopData { get; private set; }
 
     public bool IsInitialized { get; private set; }
@@ -34,14 +33,17 @@ public class CloudDatabase
         {
             EventBus.Publish(new DataLoadStartedEvent());
 
-            ReportProgress(0.30f, "Loading user data", cancellationToken);
+            ReportProgress(0.20f, "Loading user data", cancellationToken);
             UserData = await LoadUserDataAsync(cancellationToken);
 
-            ReportProgress(0.60f, "Loading inventory", cancellationToken);
+            ReportProgress(0.40f, "Loading inventory", cancellationToken);
             InventoryData = await LoadInventoryDataAsync(cancellationToken);
 
-            ReportProgress(0.75f, "Loading chapter progress", cancellationToken);
+            ReportProgress(0.60f, "Loading chapter progress", cancellationToken);
             ChapterUnlockStatusData = await LoadChapterUnlockStatusAsync(cancellationToken);
+
+            ReportProgress(0.75f, "Loading powerup progress", cancellationToken);
+            PowerupUnlockStatusData = await LoadPowerupUnlockStatusAsync(cancellationToken);
 
             ReportProgress(0.90f, "Loading shop", cancellationToken);
             ShopData = await LoadShopDataAsync(cancellationToken);
@@ -68,6 +70,7 @@ public class CloudDatabase
         }
     }
 
+    // ─── Loaders ───
 
     private async UniTask<UserData> LoadUserDataAsync(CancellationToken ct)
     {
@@ -76,7 +79,6 @@ public class CloudDatabase
             new UserData()
         );
     }
-
 
     private async UniTask<InventoryData> LoadInventoryDataAsync(CancellationToken ct)
     {
@@ -106,6 +108,15 @@ public class CloudDatabase
             new ChapterUnlockStatusData()
         );
     }
+
+    private async UniTask<PowerupUnlockStatusData> LoadPowerupUnlockStatusAsync(CancellationToken ct)
+    {
+        return await CloudSaveManager.Instance.LoadValueAsync<PowerupUnlockStatusData>(
+            CloudKeys.POWERUP_UNLOCK_STATUS,
+            new PowerupUnlockStatusData()
+        );
+    }
+
     private async UniTask<ShopData> LoadShopDataAsync(CancellationToken ct)
     {
         await ExecuteWithRetryAsync(
@@ -140,7 +151,7 @@ public class CloudDatabase
         return data;
     }
 
-    // ─── Private: Helpers ───
+    // ─── Helpers ───
 
     private void ReportProgress(float progress, string step, CancellationToken ct)
     {

@@ -485,8 +485,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BootController
   statusText: {fileID: 1808042266}
+  retryButton: {fileID: 0}
   anonymousLoginButton: {fileID: 619285526}
   adManager: {fileID: 1506041231}
+  chaptersConfig: {fileID: 11400000, guid: 7b0490fe407016f4a9c56de091d5711d, type: 2}
+  defaultUnlockedChapters: 00000000
   autoGrantConsentInEditor: 1
 --- !u!4 &330708575
 Transform:

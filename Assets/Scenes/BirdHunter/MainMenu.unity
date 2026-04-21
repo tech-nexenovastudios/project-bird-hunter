@@ -6679,8 +6679,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c807c1ee2f40564abd11a0e23e3d249, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  list: []
-  taskGenerator: {fileID: 0}
 --- !u!4 &1016688889
 Transform:
   m_ObjectHideFlags: 0
@@ -7669,7 +7667,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1280876664}
-  - component: {fileID: 1280876663}
   - component: {fileID: 1280876665}
   - component: {fileID: 1280876666}
   m_Layer: 0
@@ -7679,28 +7676,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1280876663
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1280876662}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51a3b9616750c46408fa0f5cb96e6e13, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AdManager
-  appKey: 25785de5d
-  isDevelopmentMode: 1
-  rewardedAdUnitId: 5jobqa30iyk6jdsx
-  interstitialAdUnitId: qi9fh521rc833ggl
-  bannerAdUnitId: 
-  enableDebugLogs: 1
-  retryBaseDelay: 5
-  retryMaxDelay: 120
-  requireConsentBeforeLoading: 1
-  adsDisabled: 0
 --- !u!4 &1280876664
 Transform:
   m_ObjectHideFlags: 0
@@ -9691,9 +9666,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19a16917b9de02e43b41ddc2b3d73cc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PageRect: {fileID: 0}
-  Pages: []
+  pageRect: {fileID: 1735716073}
+  slideDistance: 1080
   animationTime: 0.2
+  pages:
+  - type: 4
+    root: {fileID: 878219822}
+  - type: 1
+    root: {fileID: 3296661274596296857}
+  - type: 0
+    root: {fileID: 113724341}
+  - type: 2
+    root: {fileID: 1222306250}
+  rootPage: 0
 --- !u!1 &1748937731
 GameObject:
   m_ObjectHideFlags: 0
@@ -12168,7 +12153,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3496849434684935008, guid: 8e0c2dbd6464c43d9a2e3a955c2a6b8f, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 714.85004
+      value: 714.85
       objectReference: {fileID: 0}
     - target: {fileID: 3859693901068475215, guid: 8e0c2dbd6464c43d9a2e3a955c2a6b8f, type: 3}
       propertyPath: m_AnchorMax.y
@@ -14432,6 +14417,11 @@ PrefabInstance:
       addedObject: {fileID: 1124803402}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 600883920f08b0f4fbc985cca3cd60a2, type: 3}
+--- !u!1 &3296661274596296857 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7813762299208235762, guid: 600883920f08b0f4fbc985cca3cd60a2, type: 3}
+  m_PrefabInstance: {fileID: 3296661274596296856}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4394061440201827935
 PrefabInstance:
   m_ObjectHideFlags: 0
