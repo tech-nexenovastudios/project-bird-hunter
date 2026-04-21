@@ -1,5 +1,3 @@
-
-
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
@@ -24,14 +22,14 @@ public class PowerupCardControllerEditor : Editor
             return;
         }
 
-        var mgr = PowerupLockManager.Instance;
-        if (mgr == null)
+        var service = ServiceLocator.Get<PowerupUnlockService>();
+        if (service == null || !service.IsReady)
         {
-            EditorGUILayout.HelpBox("PowerupLockManager not found in scene.", MessageType.Warning);
+            EditorGUILayout.HelpBox("PowerupUnlockService not available or not ready.", MessageType.Warning);
             return;
         }
 
-        bool unlocked = mgr.IsUnlocked(card.PowerupId);
+        bool unlocked = service.IsUnlocked(card.PowerupId);
 
         EditorGUILayout.Space(6);
         EditorGUILayout.LabelField("── Card Test ──", EditorStyles.boldLabel);
@@ -58,7 +56,7 @@ public class PowerupCardControllerEditor : Editor
         }
 
         // Config gate info
-        var db = mgr.GetDatabase();
+        var db = service.GetDatabase();
         var cfg = db?.GetPowerupById(card.PowerupId);
         if (cfg != null)
         {
@@ -109,14 +107,16 @@ public class PowerupLockTesterWindow : EditorWindow
             return;
         }
 
-        var mgr = PowerupLockManager.Instance;
-        if (mgr == null)
+        var service = ServiceLocator.Get<PowerupUnlockService>();
+        if (service == null || !service.IsReady)
         {
-            EditorGUILayout.HelpBox("PowerupLockManager not found in scene.", MessageType.Warning);
+            EditorGUILayout.HelpBox("PowerupUnlockService not available or not ready.", MessageType.Warning);
             return;
         }
 
-        var db = mgr.GetDatabase();
+        var view = PowerupLockView.Instance;
+        var db = service.GetDatabase();
+
         if (db == null)
         {
             EditorGUILayout.HelpBox(
@@ -125,39 +125,39 @@ public class PowerupLockTesterWindow : EditorWindow
             return;
         }
 
-        DrawGlobalControls(mgr, db);
+        DrawGlobalControls(service, view, db);
         EditorGUILayout.Space(4);
-        DrawChapterSimulator(mgr);
+        DrawChapterSimulator(service);
         EditorGUILayout.Space(4);
         DrawFilters();
         EditorGUILayout.Space(4);
-        DrawCardList(mgr, db);
+        DrawCardList(service, db);
 
         Repaint();
     }
 
     // ── Sections ─────────────────────────────────────────────────────────────
 
-    private void DrawGlobalControls(PowerupLockManager mgr, PowerupDatabase db)
+    private void DrawGlobalControls(PowerupUnlockService service, PowerupLockView view, PowerupDatabase db)
     {
         EditorGUILayout.LabelField("── Global ──", EditorStyles.boldLabel);
         using (new EditorGUILayout.HorizontalScope())
         {
             if (GUILayout.Button("🔓  Unlock ALL"))
-                foreach (var c in db.allPowerups) mgr.UnlockPowerup(c.id);
+                foreach (var c in db.allPowerups) service.UnlockPowerup(c.id);
 
             if (GUILayout.Button("🔒  Lock ALL"))
-                foreach (var c in db.allPowerups) mgr.LockPowerup(c.id);
+                foreach (var c in db.allPowerups) service.LockPowerup(c.id);
 
             if (GUILayout.Button("🔄  Chapter Reset"))
-                mgr.ResetForNewChapter();
+                service.ResetForNewChapter();
 
             if (GUILayout.Button("↺  Refresh"))
-                mgr.RefreshAllCards();
+                view?.RefreshAllCards();
         }
     }
 
-    private void DrawChapterSimulator(PowerupLockManager mgr)
+    private void DrawChapterSimulator(PowerupUnlockService service)
     {
         EditorGUILayout.LabelField("Chapter Gate Simulator", EditorStyles.boldLabel);
         using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
@@ -178,13 +178,13 @@ public class PowerupLockTesterWindow : EditorWindow
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Simulate Level Complete"))
-                    mgr.OnLevelCompleted(_simChapter, _simChapterLevel);
+                    service.OnLevelCompleted(_simChapter, _simChapterLevel);
 
                 EditorGUILayout.LabelField("Quick:", GUILayout.Width(38));
-                if (GUILayout.Button("L0", GUILayout.Width(28))) { _simChapterLevel = 0; mgr.OnLevelCompleted(_simChapter, 0); }
-                if (GUILayout.Button("L6", GUILayout.Width(28))) { _simChapterLevel = 6; mgr.OnLevelCompleted(_simChapter, 6); }
-                if (GUILayout.Button("L11", GUILayout.Width(32))) { _simChapterLevel = 11; mgr.OnLevelCompleted(_simChapter, 11); }
-                if (GUILayout.Button("L16", GUILayout.Width(32))) { _simChapterLevel = 16; mgr.OnLevelCompleted(_simChapter, 16); }
+                if (GUILayout.Button("L0", GUILayout.Width(28))) { _simChapterLevel = 0; service.OnLevelCompleted(_simChapter, 0); }
+                if (GUILayout.Button("L6", GUILayout.Width(28))) { _simChapterLevel = 6; service.OnLevelCompleted(_simChapter, 6); }
+                if (GUILayout.Button("L11", GUILayout.Width(32))) { _simChapterLevel = 11; service.OnLevelCompleted(_simChapter, 11); }
+                if (GUILayout.Button("L16", GUILayout.Width(32))) { _simChapterLevel = 16; service.OnLevelCompleted(_simChapter, 16); }
             }
         }
     }
@@ -210,7 +210,7 @@ public class PowerupLockTesterWindow : EditorWindow
         }
     }
 
-    private void DrawCardList(PowerupLockManager mgr, PowerupDatabase db)
+    private void DrawCardList(PowerupUnlockService service, PowerupDatabase db)
     {
         _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
@@ -218,7 +218,7 @@ public class PowerupLockTesterWindow : EditorWindow
 
         foreach (var cfg in db.allPowerups)
         {
-            bool unlocked = mgr.IsUnlocked(cfg.id);
+            bool unlocked = service.IsUnlocked(cfg.id);
 
             // ── Filters ───────────────────────────────────────────────────
             if (!_showLocked && !unlocked) continue;
@@ -273,9 +273,9 @@ public class PowerupLockTesterWindow : EditorWindow
 
                     // Per-card button
                     if (unlocked)
-                    { if (GUILayout.Button("Lock", GUILayout.Width(48))) mgr.LockPowerup(cfg.id); }
+                    { if (GUILayout.Button("Lock", GUILayout.Width(48))) service.LockPowerup(cfg.id); }
                     else
-                    { if (GUILayout.Button("Unlock", GUILayout.Width(56))) mgr.UnlockPowerup(cfg.id); }
+                    { if (GUILayout.Button("Unlock", GUILayout.Width(56))) service.UnlockPowerup(cfg.id); }
                 }
 
                 // Gate info row (small, always visible)
@@ -290,7 +290,7 @@ public class PowerupLockTesterWindow : EditorWindow
                         mini);
 
                     // Highlight if the simulator meets this gate
-                    bool gateMet = mgr.MeetsChapterGate(cfg, _simChapter, _simChapterLevel);
+                    bool gateMet = service.MeetsChapterGate(cfg, _simChapter, _simChapterLevel);
                     if (!initUnlocked)
                     {
                         var gateStyle = new GUIStyle(mini) { fontStyle = FontStyle.Bold };

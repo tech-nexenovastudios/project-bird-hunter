@@ -8,8 +8,8 @@ using Gameplay.PowerUps;
 /// Identity resolution priority:
 ///   1. Spawner calls Initialise(id, rarity)  — explicit, always correct
 ///   2. If PowerupId is still empty in Start() — auto-resolve from the
-///      database by matching this GameObject's name against config.displayName
-///      or config.id, so cards placed directly in the scene still work.
+///      database (via PowerupUnlockService) by matching this GameObject's name
+///      against config.displayName or config.id.
 /// </summary>
 public class PowerupCardController : MonoBehaviour
 {
@@ -61,12 +61,13 @@ public class PowerupCardController : MonoBehaviour
 
     // ── Identity auto-resolve ─────────────────────────────────────────────────
     /// <summary>
-    /// Searches the PowerupDatabase (loaded from the LockManager) for a config
+    /// Searches the PowerupDatabase (via PowerupUnlockService) for a config
     /// whose displayName or id matches this GameObject's name.
     /// </summary>
     private void AutoResolveIdentity()
     {
-        var db = PowerupLockManager.Instance?.GetDatabase();
+        var service = ServiceLocator.Get<PowerupUnlockService>();
+        var db = service?.GetDatabase();
         if (db == null) return;
 
         string goName = gameObject.name;
@@ -98,18 +99,24 @@ public class PowerupCardController : MonoBehaviour
 
     // ── Per-card test hooks ───────────────────────────────────────────────────
     [ContextMenu("Test / Lock This Card")]
-    public void TestLock() => PowerupLockManager.Instance?.LockPowerup(PowerupId);
+    public void TestLock()
+    {
+        ServiceLocator.Get<PowerupUnlockService>()?.LockPowerup(PowerupId);
+    }
 
     [ContextMenu("Test / Unlock This Card")]
-    public void TestUnlock() => PowerupLockManager.Instance?.UnlockPowerup(PowerupId);
+    public void TestUnlock()
+    {
+        ServiceLocator.Get<PowerupUnlockService>()?.UnlockPowerup(PowerupId);
+    }
 
     [ContextMenu("Test / Toggle This Card")]
     public void TestToggle()
     {
-        var mgr = PowerupLockManager.Instance;
-        if (mgr == null) return;
-        if (mgr.IsUnlocked(PowerupId)) mgr.LockPowerup(PowerupId);
-        else mgr.UnlockPowerup(PowerupId);
+        var service = ServiceLocator.Get<PowerupUnlockService>();
+        if (service == null) return;
+        if (service.IsUnlocked(PowerupId)) service.LockPowerup(PowerupId);
+        else service.UnlockPowerup(PowerupId);
     }
 
     // ── UI reference resolver ─────────────────────────────────────────────────
