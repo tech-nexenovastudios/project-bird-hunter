@@ -8,8 +8,8 @@ using Gameplay.PowerUps;
 /// Identity resolution priority:
 ///   1. Spawner calls Initialise(id, rarity)  — explicit, always correct
 ///   2. If PowerupId is still empty in Start() — auto-resolve from the
-///      database by matching this GameObject's name against config.displayName
-///      or config.id, so cards placed directly in the scene still work.
+///      database (via PowerupUnlockService) by matching this GameObject's name
+///      against config.displayName or config.id.
 /// </summary>
 public class PowerupCardController : MonoBehaviour
 {
@@ -21,6 +21,7 @@ public class PowerupCardController : MonoBehaviour
     public Image HeaderAssetImage { get; private set; }
     public TextMeshProUGUI HeaderText { get; private set; }
 
+    // ── Called by spawner right after AddComponent ────────────────────────────
     public void Initialise(string id, PowerupRarity rarity)
     {
         PowerupId = id;
@@ -28,6 +29,7 @@ public class PowerupCardController : MonoBehaviour
         ResolveUIReferences();
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
     private void Awake()
     {
         if (RootImage == null)
@@ -36,6 +38,8 @@ public class PowerupCardController : MonoBehaviour
 
     private void Start()
     {
+        // If the spawner never called Initialise (card placed directly in scene)
+        // try to find identity from the database using the GameObject name.
         if (string.IsNullOrEmpty(PowerupId))
             AutoResolveIdentity();
 
@@ -55,16 +59,67 @@ public class PowerupCardController : MonoBehaviour
         PowerupLockView.Instance?.UnregisterCard(this);
     }
 
+    // ── Identity auto-resolve ─────────────────────────────────────────────────
+    /// <summary>
+    /// Searches the PowerupDatabase (via PowerupUnlockService) for a config
+    /// whose displayName or id matches this GameObject's name.
+    /// </summary>
     private void AutoResolveIdentity()
     {
-        var cfg = PowerupGate.FindByNameOrId(gameObject.name);
-        if (cfg == null) return;
+        var service = ServiceLocator.Get<PowerupUnlockService>();
+        var db = service?.GetDatabase();
+        if (db == null) return;
 
-        PowerupId = cfg.id;
-        Rarity = cfg.rarity;
-        Debug.Log($"[PowerupCard] '{gameObject.name}' auto-resolved → id='{cfg.id}', rarity={cfg.rarity}");
+        string goName = gameObject.name;
+
+        foreach (var cfg in db.allPowerups)
+        {
+            if (cfg.displayName == goName || cfg.id == goName)
+            {
+                PowerupId = cfg.id;
+                Rarity = cfg.rarity;
+                Debug.Log($"[PowerupCard] '{goName}' auto-resolved → id='{cfg.id}', rarity={cfg.rarity}");
+                return;
+            }
+        }
+
+        // Fallback: strip "(Clone)" suffix Unity appends on Instantiate
+        string stripped = goName.Replace("(Clone)", "").Trim();
+        foreach (var cfg in db.allPowerups)
+        {
+            if (cfg.displayName == stripped || cfg.id == stripped)
+            {
+                PowerupId = cfg.id;
+                Rarity = cfg.rarity;
+                Debug.Log($"[PowerupCard] '{goName}' auto-resolved (stripped) → id='{cfg.id}', rarity={cfg.rarity}");
+                return;
+            }
+        }
     }
 
+    // ── Per-card test hooks ───────────────────────────────────────────────────
+    [ContextMenu("Test / Lock This Card")]
+    public void TestLock()
+    {
+        ServiceLocator.Get<PowerupUnlockService>()?.LockPowerup(PowerupId);
+    }
+
+    [ContextMenu("Test / Unlock This Card")]
+    public void TestUnlock()
+    {
+        ServiceLocator.Get<PowerupUnlockService>()?.UnlockPowerup(PowerupId);
+    }
+
+    [ContextMenu("Test / Toggle This Card")]
+    public void TestToggle()
+    {
+        var service = ServiceLocator.Get<PowerupUnlockService>();
+        if (service == null) return;
+        if (service.IsUnlocked(PowerupId)) service.LockPowerup(PowerupId);
+        else service.UnlockPowerup(PowerupId);
+    }
+
+    // ── UI reference resolver ─────────────────────────────────────────────────
     private void ResolveUIReferences()
     {
         RootImage = GetComponent<Image>();
