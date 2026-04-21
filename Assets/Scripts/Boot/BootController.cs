@@ -69,11 +69,6 @@ public class BootController : MonoBehaviour
         ServiceLocator.Register<ChapterUnlockService>(chapterUnlockService);
         var userDataRepo = new UserDataRepository();
         ServiceLocator.Register<UserDataRepository>(userDataRepo);
-
-        var powerupUnlockService = new PowerupUnlockService();
-        ServiceLocator.Register<PowerupUnlockService>(powerupUnlockService);
-
-
     }
 
     // ─── Event Subscriptions ───
@@ -190,19 +185,6 @@ public class BootController : MonoBehaviour
             cloudDatabase.ChapterUnlockStatusData,
             totalChapterCount,
             defaultUnlocked
-        );
-        // Initialize PowerupUnlockService with loaded data + database from Resources
-        var powerupService = ServiceLocator.Get<PowerupUnlockService>();
-        var powerupDatabase = Resources.Load<Gameplay.PowerUps.PowerupDatabase>("PowerupDatabase");
-
-        if (powerupDatabase == null)
-        {
-            Debug.LogError("[BootController] PowerupDatabase not found in Resources folder.");
-        }
-
-        powerupService.Initialize(
-            cloudDatabase.PowerupUnlockStatusData,
-            powerupDatabase
         );
         // Initialize UserDataRepository with the loaded user data
         var userDataRepo = ServiceLocator.Get<UserDataRepository>();

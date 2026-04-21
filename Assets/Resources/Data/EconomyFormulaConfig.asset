@@ -14,5 +14,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EconomyFormulaConfig
   cannonMultipliers:
   - cannonId: CANNON_01
+    coinMultiplier: 0
+    matMultiplier: 0
+  - cannonId: CANNON_02
+    coinMultiplier: 1
+    matMultiplier: 1
+  - cannonId: CANNON_03
     coinMultiplier: 1.2
+    matMultiplier: 1
+  - cannonId: CANNON_04
+    coinMultiplier: 1.5
     matMultiplier: 1.2
+  - cannonId: CANNON_05
+    coinMultiplier: 1.8
+    matMultiplier: 1.5
+  - cannonId: CANNON_06
+    coinMultiplier: 2.5
+    matMultiplier: 2
+  - cannonId: CANNON_07
+    coinMultiplier: 3.5
+    matMultiplier: 3

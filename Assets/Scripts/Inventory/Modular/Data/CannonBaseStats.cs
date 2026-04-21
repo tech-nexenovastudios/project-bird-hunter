@@ -11,7 +11,9 @@ namespace BirdHunter.Inventory.Data
     [Serializable]
     public class CannonBaseStatsDto
     {
-        public string name;
+        public string name;           // overridden at load time with the cloud sub-key — use for keying only
+        public string displayName;    // human-readable name from JSON, preserved before key override
+        public string cannonId;       // balance/economy ID (e.g. "CANNON_01"), matches EconomyFormulaConfig
         public string description;
         public int unlockAtChapter;
         public int maxUpgradeLevel = 10;
@@ -86,7 +88,10 @@ namespace BirdHunter.Inventory.Data
                     continue;
                 }
 
-                if (string.IsNullOrEmpty(dto.name)) dto.name = kvp.Key;
+                // Always identify by the clean dashboard custom-id sub-key (e.g. "BigBarthaCannon").
+                // Never trust the JSON `name` for keying — spaces break Player-Data key validation.
+                dto.displayName = string.IsNullOrEmpty(dto.name) ? kvp.Key : dto.name;
+                dto.name = kvp.Key;
 
                 parsed.Add(dto);
             }

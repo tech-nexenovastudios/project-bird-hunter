@@ -9,23 +9,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  CANNON SELECTION & UPGRADE MANAGER — thin presenter over CannonInventoryService
-// ═══════════════════════════════════════════════════════════════════════════════
-//
-//  All costs, unlock gates, upgrade math, stat sheets and cloud persistence live
-//  in CannonInventoryService. This file only binds service events and updates
-//  widgets.
-//
-//  Each CannonItem's `cannonKey` must match the `name` field of the matching
-//  cloud `cannon_stats` entry, and the corresponding CannonDatabase entry.
-//
-// ═══════════════════════════════════════════════════════════════════════════════
-
-public class CannonInventoryView : MonoBehaviour
+public class CannonInventoryView : MonoBehaviour, IMenuPage
 {
     public static CannonInventoryView Instance { get; private set; }
-
+    
     [Header("Service")]
     [SerializeField] private CannonInventoryService service;
 
@@ -94,6 +81,8 @@ public class CannonInventoryView : MonoBehaviour
     [SerializeField] private Material grayscaleMaterial;
 
     // ── Runtime ────────────────────────────────────────────────────────
+    public PageType PageType => PageType.Inventory;
+
     private readonly List<CannonItem> _items = new();
     private string _selectedKey;
     private float _prevFillRatio;
@@ -135,6 +124,10 @@ public class CannonInventoryView : MonoBehaviour
 
     private void OnEnable()
     {
+        ResetScreen();
+
+        if (PageManager.Instance != null) PageManager.Instance.Register(this);
+
         if (service == null) service = CannonInventoryService.Instance;
         if (service != null)
         {
@@ -150,8 +143,36 @@ public class CannonInventoryView : MonoBehaviour
         Filter("All");
     }
 
+    public void OnPageEnter() { /* OnEnable already runs ResetScreen + HandleReady */ }
+    public void OnPageExit() { }
+
+    public void ResetScreen()
+    {
+        // Clear selection
+        foreach (var item in _items)
+            if (item != null) SetItemSelectedVisual(item.cannonKey, false);
+        _selectedKey = null;
+
+        // Clear busy flags so buttons don't stay stuck if user left mid-operation
+        _busyEquip   = false;
+        _busyUpgrade = false;
+        _busyUnlock  = false;
+
+        // Hide popup and feedback text
+        if (unlockPopupPanel != null) unlockPopupPanel.SetActive(false);
+        if (notEnoughGoldText != null) SetTextAlpha(notEnoughGoldText, 0f);
+
+        // Reset equip/upgrade button states
+        if (equipButton != null)   equipButton.interactable   = true;
+        if (upgradeButton != null) upgradeButton.interactable = true;
+        if (equipButtonText != null)   equipButtonText.text   = "EQUIP";
+        if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
+    }
+
     private void OnDisable()
     {
+        if (PageManager.Instance != null) PageManager.Instance.Unregister(this);
+
         if (service == null) return;
         service.OnReady    -= HandleReady;
         service.OnUnlocked -= HandleUnlocked;
@@ -256,6 +277,7 @@ public class CannonInventoryView : MonoBehaviour
         _selectedKey = key;
         SetItemSelectedVisual(key, true);
         UpdatePreview(key);
+        EquipAsync(key).Forget();
     }
 
     private void SetItemSelectedVisual(string key, bool selected)
@@ -264,8 +286,12 @@ public class CannonInventoryView : MonoBehaviour
         if (item == null) return;
         if (item.cannonBgComp != null)
             item.cannonBgComp.sprite = selected ? selectedBgSprite : normalBgSprite;
+        else if (selected)
+            Debug.LogWarning($"[CannonInventoryView] {key}: cannonBgComp is null — assign it in the CannonItem prefab.");
         if (item.frameComp != null)
             item.frameComp.sprite = selected ? selectedFrameSprite : normalFrameSprite;
+        else if (selected)
+            Debug.LogWarning($"[CannonInventoryView] {key}: frameComp is null — assign it in the CannonItem prefab.");
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -298,7 +324,7 @@ public class CannonInventoryView : MonoBehaviour
     {
         var dto = service.GetBaseData(key);
         if (dto == null) return;
-        if (previewNameText != null)        previewNameText.text = dto.name;
+        if (previewNameText != null)        previewNameText.text = dto.displayName ?? dto.name;
         if (previewLevelText != null)       previewLevelText.text = $"Level {service.GetLevel(key)}";
         if (previewDescriptionText != null) previewDescriptionText.text = dto.description;
     }
@@ -543,9 +569,11 @@ public class CannonInventoryView : MonoBehaviour
     private void ApplyLockVisual(string key, bool unlocked)
     {
         var item = FindItem(key);
-        if (item?.button == null) return;
+        if (item == null) return;
 
-        foreach (var g in item.button.GetComponentsInChildren<Graphic>(true))
+        // Search from the item root, not just button children — cannonBgComp/frameComp
+        // may be siblings of the button, not nested inside it.
+        foreach (var g in item.GetComponentsInChildren<Graphic>(true))
             g.material = unlocked ? null : grayscaleMaterial;
 
         if (item.lockImageObj != null) item.lockImageObj.SetActive(!unlocked);
