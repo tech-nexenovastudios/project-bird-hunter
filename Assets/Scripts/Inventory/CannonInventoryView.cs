@@ -386,7 +386,10 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         _selectedKey = key;
         SetItemSelectedVisual(key, true);
         UpdatePreview(key);
-        EquipAsync(key).Forget();
+
+        // Only auto-equip if this cannon is unlocked
+        if (service != null && service.IsUnlocked(key))
+            EquipAsync(key).Forget();
     }
 
     private void SetItemSelectedVisual(string key, bool selected)
@@ -565,14 +568,16 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     {
         if (upgradeButton == null || service == null) return;
 
+        // ── Locked cannon: upgrade is never available ──
         if (!service.IsUnlocked(key))
         {
-            if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
+            if (upgradeButtonText != null) upgradeButtonText.text = "LOCKED";
             upgradeButton.interactable = false;
             StopPulse(upgradeButton.gameObject);
             return;
         }
 
+        // ── Upgrade in progress ──
         if (_busyUpgrade)
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADING...";
@@ -581,6 +586,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
             return;
         }
 
+        // ── Already max level ──
         if (service.IsMaxLevel(key))
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "MAX LEVEL";
@@ -589,18 +595,27 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
             return;
         }
 
+        // ── Normal: check if player can afford ──
         int cost = service.GetUpgradeCoinCost(key);
         bool canAfford = CurrencyManager.Instance != null && CurrencyManager.Instance.Gold >= cost;
 
         if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
         upgradeButton.interactable = canAfford;
         if (canAfford) StartPulse(upgradeButton.gameObject);
-        else           StopPulse(upgradeButton.gameObject);
+        else StopPulse(upgradeButton.gameObject);
     }
 
     private void OnUpgradePressed()
     {
         if (_selectedKey == null || _busyUpgrade || service == null) return;
+
+        // Guard: locked cannons cannot be upgraded
+        if (!service.IsUnlocked(_selectedKey))
+        {
+            Debug.LogWarning($"[CannonInventoryView] Tried to upgrade locked cannon '{_selectedKey}'.");
+            return;
+        }
+
         UpgradeAsync(_selectedKey).Forget();
     }
 

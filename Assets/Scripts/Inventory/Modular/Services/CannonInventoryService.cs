@@ -8,11 +8,6 @@ using UnityEngine;
 
 namespace BirdHunter.Inventory.Services
 {
-    /// <summary>
-    /// Owns cannon inventory state: per-cannon level, unlock flag, equipped key.
-    /// Costs come from EconomyFormulaConfig; base stats from CannonStatsRepository.
-    /// UI never touches CloudSave / CurrencyManager directly — it goes through this.
-    /// </summary>
     public sealed class CannonInventoryService : MonoBehaviour
     {
         public static CannonInventoryService Instance { get; private set; }
@@ -20,38 +15,32 @@ namespace BirdHunter.Inventory.Services
         [Header("Config")]
         [SerializeField] private EconomyFormulaConfig economy;
 
-        [Header("Progression Curve")]
-        [Tooltip("Percent per upgrade level, applied as PctAdd. Level N adds (N-1) * this.")]
-        [SerializeField] private float damagePerLevelPct = 0.10f;
-        [SerializeField] private float healthPerLevelPct = 0.10f;
-        [SerializeField] private float fireRatePerLevelPct = 0.05f;
-        [SerializeField] private float moveSpeedPerLevelPct = 0.02f;
-
         [Header("Defaults")]
         [SerializeField] private string[] defaultUnlockedKeys = { "SingleShotCannon" };
         [SerializeField] private bool devUnlockAll = false;
 
         // ── Persistence keys ────────────────────────────────────────────────
-        private const string LEVEL_KEY_PREFIX   = "cannon_level_";
-        private const string UNLOCK_KEY_PREFIX  = "cannon_unlocked_";
-        private const string EQUIPPED_KEY       = "cannon_equipped_id";
+        private const string LEVEL_KEY_PREFIX = "cannon_level_";
+        private const string UNLOCK_KEY_PREFIX = "cannon_unlocked_";
+        private const string EQUIPPED_KEY = "cannon_equipped_id";
 
-        // ── State, keyed by cannon name/slug ───────────────────────────────
-        private readonly Dictionary<string, int>       _levels   = new();
-        private readonly Dictionary<string, bool>      _unlocked = new();
-        private readonly Dictionary<string, StatSheet> _sheets   = new();
+        // ── State ───────────────────────────────────────────────────────────
+        private readonly Dictionary<string, int> _levels = new();
+        private readonly Dictionary<string, bool> _unlocked = new();
+        private readonly Dictionary<string, StatSheet> _sheets = new();
         private string _equippedKey;
 
+        private CannonProgressionConfig _progression;
         private CancellationToken _destroyCT;
 
         // ── Events ──────────────────────────────────────────────────────────
-        public event Action              OnReady;
-        public event Action<string>      OnUnlocked;
-        public event Action<string>      OnUpgraded;
-        public event Action<string>      OnEquipped;
+        public event Action OnReady;
+        public event Action<string> OnUnlocked;
+        public event Action<string> OnUpgraded;
+        public event Action<string> OnEquipped;
 
-        public bool   IsReady    { get; private set; }
-        public int    Count      => CannonStatsRepository.Instance.Count;
+        public bool IsReady { get; private set; }
+        public int Count => CannonStatsRepository.Instance.Count;
         public string EquippedKey => _equippedKey;
         public EconomyFormulaConfig Economy => economy;
 
@@ -68,6 +57,10 @@ namespace BirdHunter.Inventory.Services
             }
             Instance = this;
             _destroyCT = this.GetCancellationTokenOnDestroy();
+
+            _progression = Resources.Load<CannonProgressionConfig>("CannonProgressionConfig");
+            if (_progression == null)
+                Debug.LogError("[CannonInventoryService] CannonProgressionConfig not found in Resources.");
         }
 
         private void Start()
@@ -79,11 +72,11 @@ namespace BirdHunter.Inventory.Services
         {
             if (Instance == this)
             {
-                OnReady    = null;
+                OnReady = null;
                 OnUnlocked = null;
                 OnUpgraded = null;
                 OnEquipped = null;
-                Instance   = null;
+                Instance = null;
             }
         }
 
@@ -104,9 +97,9 @@ namespace BirdHunter.Inventory.Services
 
             foreach (var dto in repo.All)
             {
-                _levels[dto.name]   = 1;
+                _levels[dto.name] = 1;
                 _unlocked[dto.name] = false;
-                _sheets[dto.name]   = dto.BuildStatSheet();
+                _sheets[dto.name] = dto.BuildStatSheet();
             }
 
             if (!devUnlockAll && defaultUnlockedKeys != null)
@@ -126,6 +119,10 @@ namespace BirdHunter.Inventory.Services
             IsReady = true;
             OnReady?.Invoke();
             OnEquipped?.Invoke(_equippedKey);
+
+            // Write initial snapshot so gameplay can always find an equipped cannon
+            if (!string.IsNullOrEmpty(_equippedKey))
+                SaveSnapshotAsync().Forget();
         }
 
         private async UniTask LoadCloudStateAsync()
@@ -133,7 +130,7 @@ namespace BirdHunter.Inventory.Services
             var keys = new HashSet<string> { EQUIPPED_KEY };
             foreach (var dto in CannonStatsRepository.Instance.All)
             {
-                keys.Add(LEVEL_KEY_PREFIX  + dto.name);
+                keys.Add(LEVEL_KEY_PREFIX + dto.name);
                 keys.Add(UNLOCK_KEY_PREFIX + dto.name);
             }
 
@@ -155,7 +152,7 @@ namespace BirdHunter.Inventory.Services
                             bool cloudUnlocked = uItem.Value.GetAs<bool>();
                             _unlocked[dto.name] = cloudUnlocked;
                             if (cloudUnlocked)
-                                Debug.Log($"[CannonInventoryService] Cloud override: {dto.name} is UNLOCKED (from saved '{uk}').");
+                                Debug.Log($"[CannonInventoryService] Cloud override: {dto.name} is UNLOCKED.");
                         }
                     }
                 }
@@ -168,7 +165,6 @@ namespace BirdHunter.Inventory.Services
                 Debug.LogError($"[CannonInventoryService] Cloud load failed: {ex.Message}");
             }
 
-            // Fallback: equip first unlocked cannon
             if (string.IsNullOrEmpty(_equippedKey)
                 || !_unlocked.TryGetValue(_equippedKey, out var equippedUnlocked)
                 || !equippedUnlocked)
@@ -191,9 +187,9 @@ namespace BirdHunter.Inventory.Services
         // Queries
         // ════════════════════════════════════════════════════════════════════
 
-        public bool IsUnlocked(string key)  => _unlocked.TryGetValue(key, out var u) && u;
-        public int  GetLevel(string key)     => _levels.GetValueOrDefault(key, 0);
-        public bool IsEquipped(string key)   => _equippedKey == key;
+        public bool IsUnlocked(string key) => _unlocked.TryGetValue(key, out var u) && u;
+        public int GetLevel(string key) => _levels.GetValueOrDefault(key, 0);
+        public bool IsEquipped(string key) => _equippedKey == key;
 
         public CannonBaseStatsDto GetBaseData(string key)
             => CannonStatsRepository.Instance.GetByKey(key);
@@ -209,7 +205,7 @@ namespace BirdHunter.Inventory.Services
 
         public bool IsMaxLevel(string key) => GetLevel(key) >= GetMaxLevel(key);
 
-        // ── Costs (via EconomyFormulaConfig with DTO fallback) ──────────────
+        // ── Costs ───────────────────────────────────────────────────────────
 
         public int GetUnlockCoinCost(string key)
         {
@@ -259,7 +255,7 @@ namespace BirdHunter.Inventory.Services
             if (IsUnlocked(key)) return false;
 
             int coinCost = GetUnlockCoinCost(key);
-            int gemCost  = GetUnlockGemCost(key);
+            int gemCost = GetUnlockGemCost(key);
 
             if (coinCost > 0 || gemCost > 0)
             {
@@ -290,6 +286,10 @@ namespace BirdHunter.Inventory.Services
             ApplyUpgradeModifier(key);
             SaveLevelAsync(key).Forget();
 
+            // Update snapshot if this was the equipped cannon
+            if (key == _equippedKey)
+                SaveSnapshotAsync().Forget();
+
             OnUpgraded?.Invoke(key);
             return true;
         }
@@ -301,6 +301,7 @@ namespace BirdHunter.Inventory.Services
 
             _equippedKey = key;
             SaveEquippedAsync().Forget();
+            SaveSnapshotAsync().Forget();
             OnEquipped?.Invoke(key);
             return true;
         }
@@ -314,7 +315,7 @@ namespace BirdHunter.Inventory.Services
         }
 
         // ════════════════════════════════════════════════════════════════════
-        // Upgrade modifier — removed + reapplied on each level change
+        // Upgrade modifier
         // ════════════════════════════════════════════════════════════════════
 
         private static readonly object UpgradeSource = new { tag = "Upgrade" };
@@ -322,6 +323,7 @@ namespace BirdHunter.Inventory.Services
         private void ApplyUpgradeModifier(string key)
         {
             if (!_sheets.TryGetValue(key, out var sheet)) return;
+            if (_progression == null) return;
 
             sheet.RemoveBySource(UpgradeSource);
 
@@ -329,10 +331,10 @@ namespace BirdHunter.Inventory.Services
             if (level <= 1) return;
 
             int steps = level - 1;
-            sheet.Add(new StatModifier(StatType.Damage,    steps * damagePerLevelPct,    StatModOp.PctAdd, UpgradeSource));
-            sheet.Add(new StatModifier(StatType.Health,    steps * healthPerLevelPct,    StatModOp.PctAdd, UpgradeSource));
-            sheet.Add(new StatModifier(StatType.FireRate,  steps * fireRatePerLevelPct,  StatModOp.PctAdd, UpgradeSource));
-            sheet.Add(new StatModifier(StatType.MoveSpeed, steps * moveSpeedPerLevelPct, StatModOp.PctAdd, UpgradeSource));
+            sheet.Add(new StatModifier(StatType.Damage, steps * _progression.damagePerLevelPct, StatModOp.PctAdd, UpgradeSource));
+            sheet.Add(new StatModifier(StatType.Health, steps * _progression.healthPerLevelPct, StatModOp.PctAdd, UpgradeSource));
+            sheet.Add(new StatModifier(StatType.FireRate, steps * _progression.fireRatePerLevelPct, StatModOp.PctAdd, UpgradeSource));
+            sheet.Add(new StatModifier(StatType.MoveSpeed, steps * _progression.moveSpeedPerLevelPct, StatModOp.PctAdd, UpgradeSource));
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -357,12 +359,30 @@ namespace BirdHunter.Inventory.Services
             catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveEquipped failed: {ex.Message}"); }
         }
 
-        /// <summary>Fetch the equipped cannon key from cloud (use from gameplay scene).</summary>
+        private async UniTaskVoid SaveSnapshotAsync()
+        {
+            try
+            {
+                var snapshot = new EquippedCannonSnapshot
+                {
+                    cannonKey = _equippedKey,
+                    level = GetLevel(_equippedKey),
+                    savedAtTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                };
+                await CloudSaveManager.Instance.SaveValueAsync(CloudKeys.EQUIPPED_CANNON_SNAPSHOT, snapshot);
+                Debug.Log($"[CannonInventoryService] Snapshot saved: {snapshot.cannonKey} (level {snapshot.level})");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[CannonInventoryService] SaveSnapshot failed: {ex.Message}");
+            }
+        }
+         
         public static UniTask<string> GetEquippedCannonKeyFromCloud()
             => CloudSaveManager.Instance.LoadValueAsync(EQUIPPED_KEY, string.Empty);
 
         // ════════════════════════════════════════════════════════════════════
-        // Dev utilities — right-click the component header in the Inspector
+        // Dev utilities
         // ════════════════════════════════════════════════════════════════════
 
         [ContextMenu("Dev/Clear Cloud Unlock State (all cannons)")]

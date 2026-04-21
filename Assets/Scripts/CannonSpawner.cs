@@ -1,5 +1,4 @@
 using BirdHunter.Inventory;
-using BirdHunter.Inventory.Services;
 using Cysharp.Threading.Tasks;
 using Gameplay.Player;
 using UnityEngine;
@@ -11,19 +10,10 @@ public class CannonSpawner : MonoBehaviour
 
     public async UniTask<GameObject> CannonSpawn()
     {
-        var service = CannonInventoryService.Instance;
-        if (service == null)
-        {
-            Debug.LogError("[CannonSpawner] CannonInventoryService is not in the scene.");
-            return null;
-        }
-
-        while (!service.IsReady) await UniTask.Yield();
-
-        string key = service.EquippedKey;
+        string key = await CannonLoader.GetEquippedCannonKeyAsync();
         if (string.IsNullOrEmpty(key))
         {
-            Debug.LogError("[CannonSpawner] No cannon equipped.");
+            Debug.LogError("[CannonSpawner] No equipped cannon in cloud snapshot.");
             return null;
         }
 
@@ -34,17 +24,28 @@ public class CannonSpawner : MonoBehaviour
             return null;
         }
 
+        var statSheet = await CannonLoader.BuildStatSheetForEquippedAsync();
+        if (statSheet == null)
+        {
+            Debug.LogError("[CannonSpawner] Failed to build stat sheet.");
+            return null;
+        }
+
         cannon = Instantiate(entry.cannonPrefab, transform.position, transform.rotation);
 
-        var baseCannon = cannon.GetComponent<BaseCannon>();
+        // Search on root first, then in children (in case BaseCannon sits on a child object)
+        var baseCannon = cannon.GetComponent<BaseCannon>()
+                         ?? cannon.GetComponentInChildren<BaseCannon>(true);
+
         if (baseCannon != null)
         {
-            baseCannon.Configure(service.GetStatSheet(key), entry.bulletPrefab);
+            baseCannon.Configure(statSheet, entry.bulletPrefab);
             Debug.Log($"[CannonSpawner] Configured cannon '{key}': {entry.cannonPrefab.name}");
         }
         else
         {
-            Debug.LogError($"[CannonSpawner] {entry.cannonPrefab.name} is missing a BaseCannon component.");
+            Debug.LogError($"[CannonSpawner] Prefab '{entry.cannonPrefab.name}' (key: '{key}') is missing a BaseCannon component. " +
+                           "Check the prefab and its children.");
         }
 
         return cannon;
