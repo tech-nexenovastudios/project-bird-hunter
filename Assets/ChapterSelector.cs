@@ -9,7 +9,7 @@ public class ChapterSelector : MonoBehaviour
     [SerializeField] ChaptersConfig worlds;
 
     [Header("UI")]
-    [SerializeField] TMP_Text locationText;
+    //[SerializeField] TMP_Text locationText;
     [SerializeField] TMP_Text worldText;
     [SerializeField] TMP_Text chapterText;
 
@@ -27,8 +27,8 @@ public class ChapterSelector : MonoBehaviour
         ChapterData data = worlds.GetWorldData(currentIndex);
 
         worldText.text = $"WORLD: {data.worldName.ToUpper()}";
-        chapterText.text = $"CHAPTER {currentIndex + 1}";
-        locationText.text = $"LOCATION: {currentIndex + 1}/{worlds.GetWorldCount()}";
+        chapterText.text = $" {data.chapterName.ToUpper()}";
+        //locationText.text = $"LOCATION: {currentIndex + 1}/{worlds.GetWorldCount()}";
     }
 
     public void LoadCurrentWorld()
