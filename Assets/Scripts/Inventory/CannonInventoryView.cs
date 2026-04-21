@@ -5,6 +5,7 @@ using BirdHunter.Inventory;
 using BirdHunter.Inventory.Services;
 using BirdHunter.Inventory.UI;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -64,12 +65,30 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
     [Header("Unlock Popup")]
     [SerializeField] private GameObject unlockPopupPanel;
+    [SerializeField] private GameObject unlockMainPanel;      // Right side (cannon image + name)
+    [SerializeField] private RectTransform unlockSidePanel;   // Left side (slides in)
     [SerializeField] private Image popupCannonImage;
     [SerializeField] private TextMeshProUGUI popupCannonNameText;
     [SerializeField] private TextMeshProUGUI popupCoinCostText;
     [SerializeField] private TextMeshProUGUI popupGemCostText;
     [SerializeField] private Button popupConfirmButton;
     [SerializeField] private Button popupCancelButton;
+
+    [Header("Unlock Popup Animation")]
+    [Tooltip("Starting X position of side panel (relative to its parent RectTransform).")]
+    [SerializeField] private float sidePanelStartX = -180f;
+    [Tooltip("Ending X position of side panel (relative to its parent RectTransform).")]
+    [SerializeField] private float sidePanelEndX = 175f;
+    [Tooltip("Duration of side panel slide-in.")]
+    [SerializeField] private float sidePanelSlideDuration = 0.4f;
+    [Tooltip("Delay between each side panel child appearing.")]
+    [SerializeField] private float childStagger = 0.08f;
+    [Tooltip("Duration of each child's pop-in animation.")]
+    [SerializeField] private float childPopDuration = 0.25f;
+    [Tooltip("Side panel ease curve.")]
+    [SerializeField] private Ease slideEase = Ease.OutBack;
+    [Tooltip("Child pop ease curve.")]
+    [SerializeField] private Ease popEase = Ease.OutBack;
 
     [Header("Item Visual Sprites")]
     [SerializeField] private Sprite normalBgSprite;
@@ -90,6 +109,10 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     private bool _busyUpgrade;
     private bool _busyUnlock;
     private CancellationToken _destroyCT;
+    // ── Unlock popup animation state ──
+    private List<Transform> _sidePanelChildren = new();
+    private Sequence _unlockPopupSequence;
+    private bool _sidePanelPositionCached;
 
     // ════════════════════════════════════════════════════════════════════
     // Lifecycle
@@ -114,6 +137,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         if (lockedButton != null)   lockedButton.onClick.AddListener(() => Filter("Locked"));
 
         if (unlockPopupPanel != null) unlockPopupPanel.SetActive(false);
+        CacheUnlockPopupAnimation();
 
         if (notEnoughGoldText != null)
         {
@@ -121,6 +145,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
             SetTextAlpha(notEnoughGoldText, 0f);
         }
     }
+
 
     private void OnEnable()
     {
@@ -142,7 +167,90 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
         Filter("All");
     }
+    // ════════════════════════════════════════════════════════════════════
+    // Unlock popup animation
+    // ════════════════════════════════════════════════════════════════════
 
+    private void CacheUnlockPopupAnimation()
+    {
+        if (unlockSidePanel == null) return;
+
+        _sidePanelPositionCached = true;
+
+        // Collect direct children of side panel (these animate in one by one)
+        _sidePanelChildren.Clear();
+        for (int i = 0; i < unlockSidePanel.childCount; i++)
+            _sidePanelChildren.Add(unlockSidePanel.GetChild(i));
+    }
+
+    private void PlayUnlockPopupAnimation()
+    {
+        if (!_sidePanelPositionCached) CacheUnlockPopupAnimation();
+
+        // Kill any existing animation
+        _unlockPopupSequence?.Kill();
+
+        // ── Step 1: Show main panel immediately ──
+        if (unlockMainPanel != null)
+            unlockMainPanel.SetActive(true);
+
+        // ── Step 2: Setup side panel for animation ──
+        if (unlockSidePanel != null)
+        {
+            unlockSidePanel.gameObject.SetActive(true);
+
+            // Start at specified X position (preserves current Y)
+            Vector2 currentPos = unlockSidePanel.anchoredPosition;
+            unlockSidePanel.anchoredPosition = new Vector2(sidePanelStartX, currentPos.y);
+
+            // Hide all children before animation starts
+            foreach (var child in _sidePanelChildren)
+            {
+                if (child == null) continue;
+                child.gameObject.SetActive(false);
+                child.localScale = Vector3.zero;
+            }
+        }
+
+        // ── Step 3: Build the animation sequence ──
+        _unlockPopupSequence = DOTween.Sequence();
+
+        // Slide side panel from startX to endX
+        if (unlockSidePanel != null)
+        {
+            _unlockPopupSequence.Append(
+                unlockSidePanel.DOAnchorPosX(sidePanelEndX, sidePanelSlideDuration)
+                    .SetEase(slideEase)
+            );
+        }
+
+        // Then reveal children one by one
+        for (int i = 0; i < _sidePanelChildren.Count; i++)
+        {
+            var child = _sidePanelChildren[i];
+            if (child == null) continue;
+
+            Transform capturedChild = child;
+
+            _unlockPopupSequence.AppendCallback(() =>
+            {
+                if (capturedChild == null) return;
+                capturedChild.gameObject.SetActive(true);
+                capturedChild.localScale = Vector3.zero;
+                capturedChild.DOScale(Vector3.one, childPopDuration).SetEase(popEase);
+            });
+
+            _unlockPopupSequence.AppendInterval(childStagger);
+        }
+
+        _unlockPopupSequence.SetUpdate(true);
+    }
+
+    private void StopUnlockPopupAnimation()
+    {
+        _unlockPopupSequence?.Kill();
+        _unlockPopupSequence = null;
+    }
     public void OnPageEnter() { /* OnEnable already runs ResetScreen + HandleReady */ }
     public void OnPageExit() { }
 
@@ -182,6 +290,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
     private void OnDestroy()
     {
+        StopUnlockPopupAnimation();
         if (equipButton != null)        equipButton.onClick.RemoveListener(OnEquipPressed);
         if (upgradeButton != null)      upgradeButton.onClick.RemoveListener(OnUpgradePressed);
         if (popupConfirmButton != null) popupConfirmButton.onClick.RemoveListener(OnPopupConfirmed);
@@ -524,15 +633,18 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         if (popupCannonNameText != null) popupCannonNameText.text = dto.name;
 
         int coinCost = service.GetUnlockCoinCost(key);
-        int gemCost  = service.GetUnlockGemCost(key);
-        if (popupCoinCostText != null) popupCoinCostText.text = coinCost == 0 ? "Free" : $"{coinCost:N0} Gold";
-        if (popupGemCostText != null)  popupGemCostText.text  = gemCost  == 0 ? "" : $"{gemCost} Gems";
+        int gemCost = service.GetUnlockGemCost(key);
+        if (popupCoinCostText != null) popupCoinCostText.text = coinCost == 0 ? "Free" : $"{coinCost:N0}";
+        if (popupGemCostText != null) popupGemCostText.text = gemCost == 0 ? "" : $"{gemCost}";
 
+        // Enable the popup container, then play the animation
         unlockPopupPanel.SetActive(true);
+        PlayUnlockPopupAnimation();
     }
 
     private void OnPopupCancelled()
     {
+        StopUnlockPopupAnimation();
         if (unlockPopupPanel != null) unlockPopupPanel.SetActive(false);
     }
 
@@ -551,7 +663,8 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         bool ok = await service.TryUnlock(key);
         if (!ok) ShowNotEnoughGold().Forget();
 
-        if (popupConfirmButton != null) popupConfirmButton.interactable = true;
+        StopUnlockPopupAnimation();
+        if (unlockPopupPanel != null) unlockPopupPanel.SetActive(false);
         _busyUnlock = false;
     }
 
