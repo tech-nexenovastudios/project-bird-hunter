@@ -1,31 +1,60 @@
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ShopButtonScroll : MonoBehaviour
 {
-    [Tooltip("The 'Content' RectTransform that holds all the buttons.")]
     [SerializeField] private RectTransform scrollRect;
-
-    [Tooltip("The 'Viewport' RectTransform of the Scroll View.")]
     [SerializeField] private RectTransform viewport;
+    [SerializeField] private ScrollRect scroll;
+    [SerializeField] private ButtonSelection buttonSelection;
 
-    public void Scroll(RectTransform rect)
+    [System.Serializable]
+    public class Section
     {
-        if (rect != null && viewport != null)
+        public RectTransform contentRect;
+        public Transform sideButton;
+    }
+
+    [SerializeField] private Section[] sections;
+
+    private int _activeIndex = -1;
+    private bool _scrolling;
+
+    private void OnEnable() => scroll.onValueChanged.AddListener(OnScroll);
+    private void OnDisable() => scroll.onValueChanged.RemoveListener(OnScroll);
+
+    private void OnScroll(Vector2 _)
+    {
+        if (_scrolling) return;
+
+        float centerY = scrollRect.anchoredPosition.y + viewport.rect.height / 2f;
+        int closest = 0;
+        float minDist = float.MaxValue;
+
+        for (int i = 0; i < sections.Length; i++)
         {
-
-            float itemY = Mathf.Abs(rect.anchoredPosition.y);
-
-            float targetPosition = itemY - ((viewport.rect.height / 2f) + (rect.rect.height / 2f));
-
-
-            float maxScrollY = Mathf.Max(0, scrollRect.rect.height - viewport.rect.height);
-
-
-            targetPosition = Mathf.Clamp(targetPosition, 0, maxScrollY);
-
-
-            scrollRect.DOAnchorPosY(targetPosition, 0.2f);
+            float dist = Mathf.Abs(Mathf.Abs(sections[i].contentRect.anchoredPosition.y) - centerY);
+            if (dist < minDist) { minDist = dist; closest = i; }
         }
+
+        if (closest == _activeIndex) return;
+        _activeIndex = closest;
+        buttonSelection.btnSelection(sections[closest].sideButton);
+    }
+
+    public void ScrollTo(int index)
+    {
+        _activeIndex = index;
+        buttonSelection.btnSelection(sections[index].sideButton);
+
+        RectTransform rect = sections[index].contentRect;
+        float target = Mathf.Clamp(
+            Mathf.Abs(rect.anchoredPosition.y) - viewport.rect.height / 2f - rect.rect.height / 2f,
+            0, scrollRect.rect.height - viewport.rect.height
+        );
+
+        _scrolling = true;
+        scrollRect.DOAnchorPosY(target, 0.2f).OnComplete(() => _scrolling = false);
     }
 }

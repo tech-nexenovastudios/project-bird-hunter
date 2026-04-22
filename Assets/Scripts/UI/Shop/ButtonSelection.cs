@@ -16,7 +16,6 @@ public class ButtonSelection : MonoBehaviour
                 currentSelectedBtn.GetChild(0).gameObject.SetActive(false);
         }
 
-
         currentSelectedBtn = btn;
 
 
