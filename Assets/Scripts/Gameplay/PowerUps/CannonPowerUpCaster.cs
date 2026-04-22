@@ -101,6 +101,14 @@ namespace Gameplay.PowerUps
                 return;
             }
 
+            // ─── Enforce single-powerup rule: unequip anything currently active ───
+            if (equippedPowerUps.Count > 0)
+            {
+                UnityEngine.Debug.Log($"[PowerUpCaster] Enforcing single-powerup rule — unequipping {equippedPowerUps.Count} existing powerup(s).");
+                UnequipAll();
+            }
+
+            // Guard: if the incoming powerup is the one we just removed, still allow re-equip
             UnityEngine.Debug.Log($"[PowerUpCaster] Equipping '{powerUp.config?.id}'... effects count: {powerUp.effects?.Count ?? 0}");
             powerUp.ActivateOnCannon(cannonRef);
             equippedPowerUps.Add(powerUp);
@@ -122,7 +130,7 @@ namespace Gameplay.PowerUps
                 UnityEngine.Debug.LogWarning("[PowerUpCaster] cannonRef is not a BaseCannon — IProjectileModifier registration skipped.");
             }
 
-            UnityEngine.Debug.Log($"[PowerUpCaster] ✅ Equip complete. Total equipped: {equippedPowerUps.Count}");
+            UnityEngine.Debug.Log($"[PowerUpCaster] ✅ Equip complete. Active powerup: '{powerUp.config?.id}'");
         }
 
         public void Unequip(CannonPowerUp powerUp)

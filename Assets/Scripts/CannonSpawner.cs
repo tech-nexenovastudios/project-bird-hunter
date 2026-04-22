@@ -40,6 +40,17 @@ public class CannonSpawner : MonoBehaviour
         if (baseCannon != null)
         {
             baseCannon.Configure(statSheet, entry.bulletPrefab);
+
+            // Wire the cannon into the power-up caster
+            if (Gameplay.PowerUps.CannonPowerUpCaster.Instance != null)
+            {
+                Gameplay.PowerUps.CannonPowerUpCaster.Instance.SetCannon(baseCannon);
+            }
+            else
+            {
+                Debug.LogWarning("[CannonSpawner] CannonPowerUpCaster.Instance is null. PowerUps won't work.");
+            }
+
             Debug.Log($"[CannonSpawner] Configured cannon '{key}': {entry.cannonPrefab.name}");
         }
         else

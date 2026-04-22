@@ -6,7 +6,7 @@ using Unity.Services.Core.Environments;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using System.Threading;
-using UnityEditor.Rendering;
+//using UnityEditor.Rendering;
 
 //#if UNITY_ANDROID && !UNITY_EDITOR
 #if UNITY_ANDROID
