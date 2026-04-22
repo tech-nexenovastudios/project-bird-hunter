@@ -3179,9 +3179,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'WORLD : Medusa
-
-'
+  m_text: "WORLD : \n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 69969c0eb043b43b4a169fd1d0310418, type: 2}
   m_sharedMaterial: {fileID: -7073165931134622185, guid: 69969c0eb043b43b4a169fd1d0310418, type: 2}
@@ -3780,8 +3778,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.000012398, y: 14.4}
-  m_SizeDelta: {x: 160.74, y: 166.41}
+  m_AnchoredPosition: {x: 0.000012398, y: 2.08}
+  m_SizeDelta: {x: 160.74, y: 175.84}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3167751755611217106
 CanvasRenderer:
@@ -3811,7 +3809,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 71ef81b8e9fba40c49b40e1b9c502e43, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8388139960df75042ba90f0847f47a46, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -4710,7 +4708,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worlds: {fileID: 0}
-  locationText: {fileID: 0}
   worldText: {fileID: 0}
   chapterText: {fileID: 0}
 --- !u!1 &3958895769753383408
@@ -7769,14 +7766,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AvatarLoader
   profileImage: {fileID: 147098990658086612}
   avatarSprites:
-  - {fileID: 21300000, guid: 71ef81b8e9fba40c49b40e1b9c502e43, type: 3}
-  - {fileID: 21300000, guid: a9f63645590f94b9ba636f232a8f858f, type: 3}
-  - {fileID: 21300000, guid: 8dd23d8b95b9e40b9803bcbc7546b4fd, type: 3}
-  - {fileID: 21300000, guid: 22396fe15688941c4a5a38b45aaab5d9, type: 3}
-  - {fileID: 21300000, guid: 1f8a482252fff47bf9554f37716ed0ae, type: 3}
-  - {fileID: 21300000, guid: 744edd5bbb005469e845586be88bb4fa, type: 3}
-  - {fileID: 21300000, guid: 16999640cc74b4b899744f3ba70770c2, type: 3}
-  - {fileID: 21300000, guid: ec1926eda34c34332b9042c0631c0143, type: 3}
+  - {fileID: 21300000, guid: 797a9781ba73bbe428db39433eca021a, type: 3}
+  - {fileID: 21300000, guid: 89ac8813983817643a331ffc983887a0, type: 3}
+  - {fileID: 21300000, guid: 4270b08d31101c54fb4ca1c5bef3fd4a, type: 3}
+  - {fileID: 21300000, guid: 81092d91558e9e34096f19d91ab9d36a, type: 3}
+  - {fileID: 21300000, guid: 8388139960df75042ba90f0847f47a46, type: 3}
+  - {fileID: 21300000, guid: 8c5430264a2d36e448d1a6a7af721d58, type: 3}
+  - {fileID: 21300000, guid: 4001273829772ba4592931ce07d9e370, type: 3}
+  - {fileID: 21300000, guid: 39bbab5d8bf7e5e4c89cf9c6c61a74f9, type: 3}
 --- !u!114 &8262840746090866777
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8995,7 +8992,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worlds: {fileID: 11400000, guid: 7b0490fe407016f4a9c56de091d5711d, type: 2}
-  locationText: {fileID: 9196083050149756569}
   worldText: {fileID: 7949463780380295808}
   chapterText: {fileID: 5313068893760597944}
 --- !u!1 &7504191186865616891
@@ -9555,6 +9551,7 @@ GameObject:
   - component: {fileID: 2576839333613039221}
   - component: {fileID: 3287651996315241634}
   - component: {fileID: 6675367299301660439}
+  - component: {fileID: 4821773672992108856}
   m_Layer: 5
   m_Name: MainMenu 1
   m_TagString: Untagged
@@ -9622,6 +9619,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4821773672992108856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7902823452401988294}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02036c8514ea54cad9dfe0e98d067ac9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!1 &7944737641030003268
 GameObject:
   m_ObjectHideFlags: 0
@@ -10860,7 +10869,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -138.15002}
-  m_SizeDelta: {x: 442.6, y: 78.9}
+  m_SizeDelta: {x: 445, y: 78}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1376435985375997890
 CanvasRenderer:
@@ -10890,7 +10899,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: CHAPTER 10
+  m_text: 'CHAPTER
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 69969c0eb043b43b4a169fd1d0310418, type: 2}
   m_sharedMaterial: {fileID: -7073165931134622185, guid: 69969c0eb043b43b4a169fd1d0310418, type: 2}
