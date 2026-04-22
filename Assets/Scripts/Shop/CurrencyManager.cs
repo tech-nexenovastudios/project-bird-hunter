@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Unity.Services.Economy;
 using Unity.Services.Economy.Model;
@@ -40,10 +41,11 @@ public class CurrencyManager
     // ==================== State ====================
 
     private bool _isLoaded = false;
-    private bool _isBusy = false;
+
 
     public bool IsLoaded => _isLoaded;
-    public bool IsBusy => _isBusy;
+    private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+    public bool IsBusy => _lock.CurrentCount == 0;
 
     // ==================== Events ====================
 
@@ -165,12 +167,10 @@ public class CurrencyManager
     /// <summary>Directly sets a currency balance on the server. Use sparingly.</summary>
     public async UniTask SetBalance(CurrencyType type, long value)
     {
-        if (_isBusy) return;
-        _isBusy = true;
-
         string currencyId = GetCurrencyId(type);
         value = Math.Max(0, value);
 
+        await _lock.WaitAsync();
         try
         {
             var result = await EconomyService.Instance.PlayerBalances.SetBalanceAsync(currencyId, value);
@@ -183,7 +183,7 @@ public class CurrencyManager
         }
         finally
         {
-            _isBusy = false;
+            _lock.Release();
         }
     }
 
@@ -258,14 +258,11 @@ public class CurrencyManager
             return;
         }
 
-        if (_isBusy) return;
-        _isBusy = true;
-
+        await _lock.WaitAsync();
         try
         {
             var result = await EconomyService.Instance.PlayerBalances.IncrementBalanceAsync(currencyId, (int)amount);
             UpdateLocalBalance(type, result.Balance);
-
             Debug.Log($"[Currency] Added {amount} {type}. New balance: {result.Balance}");
         }
         catch (Exception ex)
@@ -274,7 +271,7 @@ public class CurrencyManager
         }
         finally
         {
-            _isBusy = false;
+            _lock.Release();
         }
     }
 
@@ -286,28 +283,23 @@ public class CurrencyManager
             return false;
         }
 
-        // Local check first to avoid unnecessary API call
         if (!CanAfford(type, amount))
         {
             OnInsufficientFunds?.Invoke(type, amount);
             return false;
         }
 
-        if (_isBusy) return false;
-        _isBusy = true;
-
+        await _lock.WaitAsync();
         try
         {
             var result = await EconomyService.Instance.PlayerBalances.DecrementBalanceAsync(currencyId, (int)amount);
             UpdateLocalBalance(type, result.Balance);
-
             Debug.Log($"[Currency] Spent {amount} {type}. New balance: {result.Balance}");
             return true;
         }
         catch (EconomyException ex)
         {
             Debug.LogError($"[Currency] Economy error spending {type}: {ex.Message}");
-            // Reload balances to sync with server
             await LoadBalances(true);
             return false;
         }
@@ -318,7 +310,7 @@ public class CurrencyManager
         }
         finally
         {
-            _isBusy = false;
+            _lock.Release();
         }
     }
 

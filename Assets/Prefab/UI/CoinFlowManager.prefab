@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3023670512738227129
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7556380872698579741}
+  - component: {fileID: 5786300951124384677}
+  m_Layer: 5
+  m_Name: CoinFlowManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &7556380872698579741
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3023670512738227129}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &5786300951124384677
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3023670512738227129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72e79be9ee0a06a4d976dae6fec66844, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CoinFlowManager
+  currencyEntries:
+  - currencyType: 0
+    iconPrefab: {fileID: 5446290551695521601, guid: ff749105b4d0f43819771e1412d0bdde, type: 3}
+    targetUI: {fileID: 0}
+    config: {fileID: 11400000, guid: 3158b3bd9e2a142ef9668a00cb3ef6cd, type: 2}
+  - currencyType: 1
+    iconPrefab: {fileID: 1127026721586314980, guid: 255783c652d2b4d7eb87cbdc400d1f92, type: 3}
+    targetUI: {fileID: 0}
+    config: {fileID: 11400000, guid: b8efa18ae71124087b9cf7a7515ebc5d, type: 2}
+  - currencyType: 2
+    iconPrefab: {fileID: 3235281561163307837, guid: 82092726ee6c74bbc830412f9162e85c, type: 3}
+    targetUI: {fileID: 0}
+    config: {fileID: 11400000, guid: 11c014c1e394047fa8626e63687b7327, type: 2}

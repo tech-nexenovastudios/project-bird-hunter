@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Gameplay.Events;
 using Gameplay.Rewards;
+using Cysharp.Threading.Tasks;
 
 namespace Gameplay.Managers
 {
@@ -20,6 +21,7 @@ namespace Gameplay.Managers
         public event Action<int> OnGemsAwarded;
         public event Action<int> OnPowerAwarded;
         public event Action<string, int> OnRewardBroadcast;
+        [SerializeField] private Canvas hudCanvas; // assign in Inspector
 
         private void Awake()
         {
@@ -51,7 +53,9 @@ namespace Gameplay.Managers
             Debug.Log("[RewardManager] Reset for new level");
         }
 
-        private void HandleEggDestroyed(Interfaces.IDamageable egg, int unused, Vector3 position)
+       
+
+        private void HandleEggDestroyed(Interfaces.IDamageable egg, int unused, Vector3 worldPosition)
         {
             if (rewardConfig == null)
             {
@@ -61,14 +65,45 @@ namespace Gameplay.Managers
 
             int chapter = GameProgressManager.Instance?.CurrentChapter ?? 1;
 
+            // ── World → screen conversion ─────────────────────────────────
+            // The egg lives in 3D world space; CoinFlowManager expects a
+            // screen-space Vector2.  We project through the main camera first,
+            // then optionally remap for Screen Space - Camera canvases.
+            Vector2 screenPos = WorldToCanvasScreenPos(worldPosition);
+
+            // ── Coins ─────────────────────────────────────────────────────
             int coins = rewardConfig.GetRandomCoinDrop(chapter);
             AwardCoins(coins, "egg_destroyed");
+            GameEvent.CurrencyCollected(CurrencyType.Gold, screenPos, coins);
 
+            // ── Gems (chance-based) ───────────────────────────────────────
             if (rewardConfig.ShouldDropGem(chapter))
             {
                 int gems = rewardConfig.GetRandomGemDrop(chapter);
                 AwardGems(gems, "egg_gem_drop");
+                GameEvent.CurrencyCollected(CurrencyType.Gems, screenPos, gems);
             }
+        }
+
+        //helper
+        private Vector2 WorldToCanvasScreenPos(Vector3 worldPos)
+        {
+            Vector2 screenPoint = Camera.main.WorldToScreenPoint(worldPos);
+
+            // Get the canvas root rect — coins are spawned as children of
+            // CoinFlowManager which sits on this canvas
+            RectTransform canvasRect = hudCanvas.GetComponent<RectTransform>();
+
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(
+                canvasRect,
+                screenPoint,
+                hudCanvas.renderMode == RenderMode.ScreenSpaceOverlay
+                    ? null
+                    : hudCanvas.worldCamera,
+                out Vector3 worldPoint
+            );
+
+            return worldPoint; // implicit cast to Vector2, drops Z
         }
 
         private void HandleBirdDestroyed(Interfaces.IDamageable bird, int unused, Vector3 position)
@@ -121,55 +156,56 @@ namespace Gameplay.Managers
                       $"Power Refund: {powerRefund}");
         }
 
+        // RewardManager.cs  ─  replace the three private Award methods
+
         private void AwardCoins(int amount, string reason = "")
         {
             if (amount <= 0) return;
 
-            var progress = GameProgressManager.Instance?.Data;
-            if (progress == null) return;
 
-            progress.totalCoins += amount;
             _sessionCoinsThisLevel += amount;
 
-            GameProgressManager.Instance.SaveProgress();
+        
+
+            // ── Persist to Unity Economy + fire OnCurrencyChanged in real-time ─
+            CurrencyManager.Instance.AddGold(amount).Forget();
+
             OnCoinsAwarded?.Invoke(amount);
             OnRewardBroadcast?.Invoke("coins", amount);
 
-            Debug.Log($"[RewardManager] +{amount} coins ({reason}) | Total: {progress.totalCoins}");
+            Debug.Log($"[RewardManager] +{amount} coins ({reason}) ");
         }
 
         private void AwardGems(int amount, string reason = "")
         {
             if (amount <= 0) return;
 
-            var progress = GameProgressManager.Instance?.Data;
-            if (progress == null) return;
-
-            progress.totalGems += amount;
             _sessionGemsThisLevel += amount;
 
-            GameProgressManager.Instance.SaveProgress();
+    
+
+            CurrencyManager.Instance.AddGems(amount).Forget();
+
             OnGemsAwarded?.Invoke(amount);
             OnRewardBroadcast?.Invoke("gems", amount);
 
-            Debug.Log($"[RewardManager] +{amount} gems ({reason}) | Total: {progress.totalGems}");
+            Debug.Log($"[RewardManager] +{amount} gems ({reason}) ");
         }
 
         private void AwardPower(int amount, string reason = "")
         {
             if (amount <= 0) return;
 
-            var progress = GameProgressManager.Instance?.Data;
-            if (progress == null) return;
-
-            progress.totalPower += amount;
             _sessionPowerRefundsThisLevel += amount;
 
-            GameProgressManager.Instance.SaveProgress();
+         
+
+            CurrencyManager.Instance.AddPower(amount).Forget();
+
             OnPowerAwarded?.Invoke(amount);
             OnRewardBroadcast?.Invoke("power", amount);
 
-            Debug.Log($"[RewardManager] +{amount} power ({reason}) | Total: {progress.totalPower}");
+            Debug.Log($"[RewardManager] +{amount} power ({reason}) ");
         }
 
         public int GetSessionCoinsThisLevel() => _sessionCoinsThisLevel;

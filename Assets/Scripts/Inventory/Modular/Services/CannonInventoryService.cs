@@ -14,6 +14,7 @@ namespace BirdHunter.Inventory.Services
     /// UI never touches CloudSave / CurrencyManager directly — it goes through this.
     /// </summary>
     public sealed class CannonInventoryService : MonoBehaviour
+
     {
         public static CannonInventoryService Instance { get; private set; }
 

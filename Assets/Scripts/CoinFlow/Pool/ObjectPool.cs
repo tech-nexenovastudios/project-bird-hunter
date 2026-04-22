@@ -98,7 +98,10 @@ public class ObjectPoo<T> where T : Component
 
     private T CreateNewInstance()
     {
-        T instance = UnityEngine.Object.Instantiate(prefab, parent);
+        // Instantiate without a parent first, then reparent with
+        // worldPositionStays:true so the prefab's original scale is preserved.
+        T instance = UnityEngine.Object.Instantiate(prefab);
+        instance.transform.SetParent(parent, worldPositionStays: true);
         CountAll++;
         return instance;
     }
