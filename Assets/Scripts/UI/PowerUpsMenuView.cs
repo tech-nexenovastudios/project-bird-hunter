@@ -4,7 +4,7 @@ public class PowerUpsMenuView : MonoBehaviour, IMenuPage
 {
     public PageType PageType   => PageType.PowerUps;
     
-    private void OnEnable()
+    private void Start()
     {
         PageManager.Instance.Register(this);
     }

@@ -5,7 +5,7 @@ public class MainMenuView : MonoBehaviour, IMenuPage
 {
     public PageType PageType  => PageType.MainMenu;
 
-    private void OnEnable()
+    private void Start()
     {
         PageManager.Instance.Register(this);
     }
