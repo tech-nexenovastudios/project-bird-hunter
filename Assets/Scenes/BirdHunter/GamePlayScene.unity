@@ -1608,6 +1608,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1267226186}
   - component: {fileID: 1267226185}
+  - component: {fileID: 1267226187}
   m_Layer: 0
   m_Name: CannonSpawner
   m_TagString: Untagged
@@ -1643,6 +1644,26 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1267226187
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1267226184}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f68577635009c40ee881ba1d0c97ebe4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BirdHunter.Inventory.Services.CannonInventoryService
+  economy: {fileID: 11400000, guid: 4cf59d45699e942b791a91fa79443c42, type: 2}
+  damagePerLevelPct: 0.1
+  healthPerLevelPct: 0.1
+  fireRatePerLevelPct: 0.05
+  moveSpeedPerLevelPct: 0.02
+  defaultUnlockedKeys:
+  - SingleShotCannon
+  devUnlockAll: 0
 --- !u!1 &1315662993
 GameObject:
   m_ObjectHideFlags: 0
