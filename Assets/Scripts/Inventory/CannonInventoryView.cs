@@ -151,7 +151,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     {
         ResetScreen();
 
-        if (PageManager.Instance != null) PageManager.Instance.Register(this);
+        
 
         if (service == null) service = CannonInventoryService.Instance;
         if (service != null)
@@ -166,6 +166,11 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
         if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
         Filter("All");
+    }
+
+    private void Start()
+    {
+        if (PageManager.Instance != null) PageManager.Instance.Register(this);
     }
     // ════════════════════════════════════════════════════════════════════
     // Unlock popup animation

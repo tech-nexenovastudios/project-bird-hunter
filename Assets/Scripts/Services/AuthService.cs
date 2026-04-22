@@ -136,11 +136,16 @@ public class AuthService
         if (UnityServices.State == ServicesInitializationState.Initialized)
             return true;
 
+        if (UnityServices.State == ServicesInitializationState.Initializing)
+        {
+            await UniTask.WaitUntil(
+                () => UnityServices.State != ServicesInitializationState.Initializing,
+                cancellationToken: ct);
+            return UnityServices.State == ServicesInitializationState.Initialized;
+        }
+
         try
         {
-            var options = new InitializationOptions().SetEnvironmentName("development");
-            await UnityServices.InitializeAsync(options).AsUniTask().AttachExternalCancellation(ct);
-
 #if UNITY_ANDROID && !UNITY_EDITOR
             if (!gpgsActivated)
             {
@@ -148,6 +153,8 @@ public class AuthService
                 gpgsActivated = true;
             }
 #endif
+            var options = new InitializationOptions().SetEnvironmentName("development");
+            await UnityServices.InitializeAsync(options).AsUniTask().AttachExternalCancellation(ct);
             return true;
         }
         catch (Exception ex)
@@ -243,6 +250,14 @@ public class AuthService
             catch (OperationCanceledException)
             {
                 throw;
+            }
+            catch (AuthenticationException ex) when (
+                ex.ErrorCode == AuthenticationErrorCodes.AccountAlreadyLinked ||
+                ex.ErrorCode == AuthenticationErrorCodes.AccountLinkLimitExceeded ||
+                ex.ErrorCode == AuthenticationErrorCodes.InvalidParameters)
+            {
+                Debug.LogError($"[AuthService] Non-retriable auth error {ex.ErrorCode}: {ex.Message}");
+                return false;
             }
             catch (Exception ex)
             {

@@ -4,7 +4,7 @@ public class ShopMenuView : MonoBehaviour, IMenuPage
 {
     public PageType PageType => PageType.ShopMenu;
     
-    private void OnEnable()
+    private void Start()
     {
         PageManager.Instance.Register(this);
     }
