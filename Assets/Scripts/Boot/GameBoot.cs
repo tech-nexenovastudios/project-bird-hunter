@@ -13,5 +13,9 @@ public class GameRoot : MonoBehaviour
         }
         instance = this;
         DontDestroyOnLoad(gameObject);
+        
+        Application.targetFrameRate = 60;
+        
+        Application.runInBackground = true;
     }
 }

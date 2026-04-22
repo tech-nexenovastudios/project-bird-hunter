@@ -53,6 +53,7 @@ namespace Gameplay.Eggs
         private float _maxHeightReachedSinceLastBounce;
         private Health.EggHealth _eggHealth;
         private Transform _cannonTransform;
+        private Vector3 _maxAllowedScale;
 
         private void Awake()
         {
@@ -76,6 +77,7 @@ namespace Gameplay.Eggs
             }
 
             _originalScale = transform.localScale;
+            _maxAllowedScale = _originalScale * 1.5f;
         }
 
         public void Init(EggTierConfig tierConfig, int hp, int sortingIndex)
@@ -315,32 +317,15 @@ namespace Gameplay.Eggs
             UpdateEdgeWidth(healthPercent);
             PlayMinorHitVFX();
             
-            //reduce scale multiplier every time egg is hit
-             var reducedScaleMultiplier = hitScaleMultiplier * (1f - healthPercent);
-            
-            //transform.DOScale(transform.localScale * hitScaleMultiplier, 0.05f).SetEase(Ease.OutBack);
-            transform.DOScale(transform.localScale * hitScaleMultiplier, 0.07f).SetEase(Ease.OutBack).OnComplete(() =>
+            float maxMultiplier = _maxAllowedScale.x / transform.localScale.x;
+            float clampedMultiplier = Mathf.Min(hitScaleMultiplier, maxMultiplier);
+
+            transform.DOScale(transform.localScale * clampedMultiplier, 0.07f).SetEase(Ease.OutBack).OnComplete(() =>
             {
                 transform.DOScale(_originalScale, 0.05f).SetEase(Ease.InBack).OnComplete(()=>DOTween.Kill(this));
             });
             transform.DOShakeScale(0.05f, 0.05f, 2, 0, false, ShakeRandomnessMode.Harmonic).SetEase(Ease.OutBack);
         }
-
-        private float CalculateHeightBasedHitImpulse()
-        {
-            float gravity = Physics2D.gravity.y * _rb.gravityScale;
-            float desiredBounceHeight = config.desiredBounceHeight;
-            float neededVelocity = Mathf.Sqrt(2f * Mathf.Abs(gravity) * desiredBounceHeight);
-            float velocityWithDamping = neededVelocity * 0.8f;
-            float currentHeight = Mathf.Max(0f, transform.position.y - _lastBouncePosition.y);
-            float heightRatio = Mathf.Clamp01(currentHeight / desiredBounceHeight);
-            float heightModifier = 1f - heightRatio * 0.2f;
-            float finalVelocity = velocityWithDamping * heightModifier;
-
-            float impulse = _rb.mass * finalVelocity;
-            return impulse;
-        }
-
         private void PlayMinorHitVFX()
         {
             if (minorHitVFXPrefab == null || hitVFXPoint == null)

@@ -285,8 +285,8 @@ namespace Gameplay.Managers
                 firstTimeClearedLevels = _progress.firstTimeClearedLevels ?? new()
             };
 
-            for (int i = 0; i < 4; i++)
-                data.slotPowerupIds[i] = _progress.chapterSlots[i]?.equippedPowerupId ?? "";
+            // for (int i = 0; i < 4; i++)
+            //     data.slotPowerupIds[i] = _progress.chapterSlots[i]?.equippedPowerupId ?? "";
 
             string path = Path.Combine(Application.persistentDataPath, saveFileName);
             try
@@ -324,7 +324,7 @@ namespace Gameplay.Managers
                 _progress = new GameProgress
                 {
                     currentChapter = data.currentChapter,
-                    currentLevel = data.currentLevel,
+                    currentLevel = 1,
                     highScore = data.highScore,
                     totalScore = data.totalScore,
                     globalUnlockedPowerupIds = data.globalUnlocked ?? new(),
@@ -338,9 +338,9 @@ namespace Gameplay.Managers
                     firstTimeClearedLevels = data.firstTimeClearedLevels ?? new()
                 };
 
-                for (int i = 0; i < 4; i++)
-                    if (!string.IsNullOrEmpty(data.slotPowerupIds[i]))
-                        _progress.chapterSlots[i].equippedPowerupId = data.slotPowerupIds[i];
+                // for (int i = 0; i < 4; i++)
+                //     if (!string.IsNullOrEmpty(data.slotPowerupIds[i]))
+                //         _progress.chapterSlots[i].equippedPowerupId = data.slotPowerupIds[i];
 
                 //Debug.Log($"[ProgressManager] 📂 Loaded: Ch{data.currentChapter} L{data.currentLevel} Spins:{data.playerSpins}");
             }
