@@ -7,6 +7,7 @@ using UnityEngine;
 public class CannonSpawner : MonoBehaviour
 {
     public CannonDatabase database;
+    public const string equipedKey = "cannon_equipped_id";
     public static GameObject cannon;
 
     public async UniTask<GameObject> CannonSpawn()

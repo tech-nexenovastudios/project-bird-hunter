@@ -7,7 +7,7 @@ namespace BirdHunter.Inventory
     [Serializable]
     public class CannonVisualEntry
     {
-        public string cannonKey;        // must match CannonBaseStatsDto.name
+        public string cannonKey;
         public Sprite icon;
         public GameObject cannonPrefab;
         public GameObject bulletPrefab;

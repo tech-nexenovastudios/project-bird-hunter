@@ -358,6 +358,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         string startKey = service.EquippedKey
             ?? (_items.Count > 0 ? _items[0].cannonKey : null);
         if (startKey != null) SelectCannon(startKey);
+        EquipAsync(startKey).Forget();
     }
 
     private void HandleUnlocked(string key)
@@ -391,7 +392,6 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         _selectedKey = key;
         SetItemSelectedVisual(key, true);
         UpdatePreview(key);
-        EquipAsync(key).Forget();
     }
 
     private void SetItemSelectedVisual(string key, bool selected)
