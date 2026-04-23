@@ -35,13 +35,17 @@ public class CoinFlowManager : MonoBehaviour
 
             // Build a separate pool for each currency type.
             // Gold coins go back to the gold pool, gems to the gem pool, etc.
-            var pool = new ObjectPoo<CoinEntity>(
+                var pool = new ObjectPoo<CoinEntity>(
                 prefab: entry.iconPrefab,
                 parent: transform,
                 initialSize: entry.config.poolInitialSize,
-                onGet: coin => coin.gameObject.SetActive(true),
+                onGet: coin =>
+                    {
+                        coin.gameObject.SetActive(true);
+                        //coin.GetComponent<RectTransform>().localScale = Vector3.one; // ← here
+                    },
                 onRelease: coin => coin.gameObject.SetActive(false)
-            );
+                );
 
             runtimeMap[entry.currencyType] = new CurrencyFlowRuntime
             {
@@ -80,7 +84,11 @@ public class CoinFlowManager : MonoBehaviour
     {
         var runtime = runtimeMap[type];
         var config = runtime.config;
-        int coinCount = config.coinsPerBurst;
+
+        // 15–20% of rewarded amount, clamped to at least 1
+        int coinCount = Mathf.Max(1, Mathf.RoundToInt(
+            totalValue * UnityEngine.Random.Range(0.15f, 0.20f)
+        ));
 
         int valuePerCoin = totalValue / coinCount;
         int remainder = totalValue % coinCount;
@@ -91,6 +99,8 @@ public class CoinFlowManager : MonoBehaviour
         for (int i = 0; i < coinCount; i++)
         {
             CoinEntity coin = runtime.pool.Get();
+            coin.GetComponent<RectTransform>().position = new Vector3(origin.x, origin.y, 0f);
+
             int value = valuePerCoin + (i == coinCount - 1 ? remainder : 0);
 
             coin.Launch(
@@ -103,7 +113,6 @@ public class CoinFlowManager : MonoBehaviour
                 {
                     runtime.pool.Release(returnedCoin);
                     arrivedCount++;
-
                     if (arrivedCount >= coinCount)
                         GameEvent.CurrencyBurstComplete(type);
                 }

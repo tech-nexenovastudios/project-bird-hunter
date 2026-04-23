@@ -16,18 +16,15 @@ public class CurrencyUI : MonoBehaviour
     private void OnEnable()
     {
         CurrencyManager.OnCurrencyChanged += OnCurrencyChanged;
-        RefreshAll();
+        if (!CurrencyManager.Instance.IsLoaded)
+            LoadCurrency().Forget();
+        else
+            RefreshAll();
     }
 
     private void OnDisable()
     {
         CurrencyManager.OnCurrencyChanged -= OnCurrencyChanged;
-    }
-
-    private void Start()
-    {
-        if (!CurrencyManager.Instance.IsLoaded)
-            LoadCurrency().Forget();
     }
 
     private async UniTaskVoid LoadCurrency()

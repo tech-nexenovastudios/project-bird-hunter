@@ -33,7 +33,7 @@ public class CoinEntity : MonoBehaviour
         currencyType = type;
 
         rect.position = origin;
-        rect.localScale = Vector3.one * cfg.startScale;
+        //rect.localScale = Vector3.one * cfg.startScale;
         canvasGroup.alpha = 1f;
 
         float tinyOffset = UnityEngine.Random.Range(-cfg.spreadWidth, cfg.spreadWidth);

@@ -101,6 +101,13 @@ namespace Gameplay.PowerUps
                 return;
             }
 
+            // ── Enforce single-slot: clear whatever is active before equipping ──
+            if (equippedPowerUps.Count > 0)
+            {
+                UnityEngine.Debug.Log($"[PowerUpCaster] Replacing active power-up(s) with '{powerUp.config?.id}'");
+                UnequipAll();
+            }
+
             UnityEngine.Debug.Log($"[PowerUpCaster] Equipping '{powerUp.config?.id}'... effects count: {powerUp.effects?.Count ?? 0}");
             powerUp.ActivateOnCannon(cannonRef);
             equippedPowerUps.Add(powerUp);

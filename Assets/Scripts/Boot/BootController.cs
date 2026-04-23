@@ -191,7 +191,7 @@ public class BootController : MonoBehaviour
         userDataRepo.Initialize(cloudDatabase, CloudSaveManager.Instance);
         //currency
         SetStatus("Loading currencies...");
-        await CurrencyManager.Instance.LoadBalances();
+        await CurrencyManager.Instance.LoadBalances(forceReload: true);
         //remote-config
         SetStatus("Fetching config...");
         await RemoteConfigManager.Instance.FetchConfig();

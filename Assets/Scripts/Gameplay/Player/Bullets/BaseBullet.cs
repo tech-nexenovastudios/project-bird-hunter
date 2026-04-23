@@ -163,9 +163,41 @@ namespace Gameplay.Player
             if (other.gameObject.CompareTag("Bird"))
                 OnHitTarget(other);
             else if (other.gameObject.CompareTag("BossWeapons"))
-                OnHitBossWeapon(other);          // separate path — uses IDamageablee
+                OnHitBossWeapon(other);
+            else if (other.gameObject.CompareTag("BossBird"))   // ← ADD THIS
+                OnHitBossBird(other);
         }
+        private void OnHitBossBird(Collider2D collision)
+        {
+            if (isDeactivated) return;
 
+            if (collision.TryGetComponent<IDamageablee>(out var bossHealth))
+            {
+                bool instantKilled = false;
+                float dealDamage = damage;
+
+                if (instantKillChance > 0f && UnityEngine.Random.value <= instantKillChance)
+                {
+                    // IDamageablee doesn't expose CurrentHp, so just deal massive damage
+                    dealDamage = float.MaxValue;
+                    instantKilled = true;
+                }
+
+                bossHealth.TakeDamage(dealDamage);
+
+                Vector3 hitPoint = collision.ClosestPoint(transform.position);
+                ShowDamageText(hitPoint, instantKilled ? damage : dealDamage);
+
+                // Apply on-hit effects (burn, freeze, chain lightning, etc.)
+                if (onHitEffects.Count > 0 && collision.TryGetComponent<IEntity>(out var entity))
+                {
+                    for (int i = 0; i < onHitEffects.Count; i++)
+                        onHitEffects[i]?.Apply(entity);
+                }
+            }
+
+            Deactivate();
+        }
         // Handles boss-side objects that implement IDamageablee (double-e)
         private void OnHitBossWeapon(Collider2D collision)
         {
@@ -254,7 +286,7 @@ namespace Gameplay.Player
 
         protected abstract void HandleMovement();
 
-        private void ShowDamageText(Vector3 position, float amount)
+        protected void ShowDamageText(Vector3 position, float amount)
         {
             GameObject go = null;
 
