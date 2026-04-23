@@ -5,6 +5,8 @@ using DG.Tweening;
 public class CoinFlowConfig : ScriptableObject
 {
     [Header("═══ Coin Count ═══")]
+    public int minCoins = 5;
+    public int maxCoins = 15;
     [Range(5, 30)]
     public int coinsPerBurst = 10;
 

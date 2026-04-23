@@ -105,6 +105,7 @@ public class CurrencyManager
         catch (Exception ex)
         {
             Debug.LogError($"[Currency] Failed to load balances: {ex.Message}");
+            throw; // let BootController catch and handle it
         }
     }
 

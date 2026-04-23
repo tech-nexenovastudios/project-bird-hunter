@@ -29,7 +29,7 @@ public class CurrencyUI : MonoBehaviour
 
     private async UniTaskVoid LoadCurrency()
     {
-        await CurrencyManager.Instance.LoadBalances();
+        await CurrencyManager.Instance.LoadBalances(forceReload: true); 
         RefreshAll();
     }
 
@@ -65,9 +65,9 @@ public class CurrencyUI : MonoBehaviour
     private string FormatCurrency(long value)
     {
         if (value >= 1_000_000)
-            return (value / 1_000_000f).ToString("0.#") + "M";
+            return (value / 1_000_000f).ToString("0.##") + "M";
         if (value >= 1_000)
-            return (value / 1_000f).ToString("0.#") + "K";
+            return (value / 1_000f).ToString("0.##") + "K";
         return value.ToString();
     }
 }

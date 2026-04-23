@@ -277,8 +277,12 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
         // Reset equip/upgrade button states
         if (equipButton != null)   equipButton.interactable   = true;
-        if (upgradeButton != null) upgradeButton.interactable = true;
-        if (equipButtonText != null)   equipButtonText.text   = "EQUIP";
+        if (upgradeButton != null)
+        {
+            upgradeButton.interactable = true;
+            upgradeButton.GetComponent<Image>().material = null;
+        }
+            if (equipButtonText != null)   equipButtonText.text   = "EQUIP";
         if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
     }
 
@@ -574,6 +578,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
             upgradeButton.interactable = false;
+            upgradeButton.GetComponent<Image>().material = grayscaleMaterial;
             StopPulse(upgradeButton.gameObject);
             return;
         }
@@ -599,6 +604,8 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
         if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
         upgradeButton.interactable = canAfford;
+        if(canAfford) upgradeButton.GetComponent<Image>().material = null;
+        else           upgradeButton.GetComponent<Image>().material = grayscaleMaterial;
         if (canAfford) StartPulse(upgradeButton.gameObject);
         else           StopPulse(upgradeButton.gameObject);
     }

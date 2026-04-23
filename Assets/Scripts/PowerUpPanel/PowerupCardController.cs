@@ -13,6 +13,7 @@ using Gameplay.PowerUps;
 /// </summary>
 public class PowerupCardController : MonoBehaviour
 {
+
     [HideInInspector] public string PowerupId;
     [HideInInspector] public PowerupRarity Rarity;
 
