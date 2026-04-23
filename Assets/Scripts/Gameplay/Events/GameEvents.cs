@@ -153,5 +153,8 @@ namespace Gameplay.Events
             => OnPowerupCooldownStarted?.Invoke(duration);
         public static event Action OnPowerupUnequipped;
         public static void FirePowerupUnequipped() => OnPowerupUnequipped?.Invoke();
+        public static event Action<int> OnChapterCompleted;  // int = new chapter number
+        public static void FireChapterCompleted(int newChapter)
+            => OnChapterCompleted?.Invoke(newChapter);
     }
 }
