@@ -9,6 +9,16 @@ using System.Threading;
 /// Manages user profile UI: username edit with validation, avatar selection.
 /// Reads from UserData (already loaded by CloudDatabase at boot).
 /// Saves through UserDataRepository (one save = full UserData persisted).
+///
+/// Avatar behaviour:
+///   - Selecting an avatar previews it on profileImage only.
+///   - profileButtonImage only updates after the player clicks Save.
+///   - If the panel is closed without saving, profileImage reverts to the
+///     last saved avatar (matching profileButtonImage).
+/// Avatar panel behaviour:
+///   - avatarSelectionPanel is hidden by default when the profile panel opens.
+///   - It opens when the player clicks the Edit button.
+///   - It closes when the panel is closed (OnPanelClosed) or Save is clicked.
 /// </summary>
 public class UserProfileDataManager : MonoBehaviour
 {
@@ -26,11 +36,13 @@ public class UserProfileDataManager : MonoBehaviour
     [SerializeField] private float validationFloatDistance = 40f;
 
     [Header("Avatar UI")]
-    [SerializeField] private Image profileImage;
-    [SerializeField] private Image profileButtonImage;
+    [SerializeField] private Image profileImage;           // Preview target — changes on selection
+    [SerializeField] private Image profileButtonImage;     // Persistent icon — only changes on Save
     [SerializeField] private List<Button> avatarButtons;
     [SerializeField] private List<Sprite> avatarSprites;
     [SerializeField] private Button saveButton;
+    [SerializeField] private GameObject avatarSelectionPanel; // Panel that shows avatar grid
+    [SerializeField] private GameObject statsPanel;           // Default panel shown when profile opens
 
     [Header("Avatar Visual States")]
     [SerializeField] private Color selectedColor = Color.white;
@@ -48,7 +60,7 @@ public class UserProfileDataManager : MonoBehaviour
 
     // ───────────────────────── Runtime State ─────────────────────────
 
-    private int previewedAvatarIndex = -1;
+    private int previewedAvatarIndex = -1;   // What is currently shown on profileImage
     private bool isEditing = false;
     private bool isSaving = false;
 
@@ -74,6 +86,9 @@ public class UserProfileDataManager : MonoBehaviour
         InitValidationAnimation();
         ClearValidation();
 
+        // Avatar selection panel is hidden until Edit is pressed
+        SetAvatarPanelVisible(false);
+
         if (editButton != null)
             editButton.onClick.AddListener(OnEditPressed);
 
@@ -90,7 +105,6 @@ public class UserProfileDataManager : MonoBehaviour
 
     private void Start()
     {
-        // Resolve services
         userDataRepo = ServiceLocator.Get<UserDataRepository>();
         authService = ServiceLocator.Get<AuthService>();
 
@@ -105,6 +119,11 @@ public class UserProfileDataManager : MonoBehaviour
 
     private void OnEnable()
     {
+        // Every time the panel is shown, reset the avatar selection state
+        // so unsaved previews from a previous session are discarded.
+        ResetAvatarPreviewToSaved();
+        SetAvatarPanelVisible(false);
+
         if (usernameInputField != null)
         {
             usernameInputField.onSubmit.AddListener(OnInputFinished);
@@ -114,6 +133,10 @@ public class UserProfileDataManager : MonoBehaviour
 
     private void OnDisable()
     {
+        // Panel is closing — revert any unsaved avatar preview
+        RevertProfileImageToSaved();
+        SetAvatarPanelVisible(false);
+
         if (usernameInputField != null)
         {
             usernameInputField.onSubmit.RemoveListener(OnInputFinished);
@@ -165,7 +188,7 @@ public class UserProfileDataManager : MonoBehaviour
 
             SetInputFieldText(data.username);
 
-            // Avatar
+            // Avatar — clamp index if out of range
             int clampedIndex = Mathf.Clamp(data.avatarIndex, 0, avatarSprites.Count - 1);
             if (clampedIndex != data.avatarIndex)
             {
@@ -173,8 +196,10 @@ public class UserProfileDataManager : MonoBehaviour
                 await userDataRepo.SaveAsync();
             }
 
+            // Sync both images to the saved avatar
             previewedAvatarIndex = data.avatarIndex;
-            ApplyAvatar(data.avatarIndex);
+            ApplyAvatarToProfileImage(data.avatarIndex);
+            ApplyAvatarToButtonImage(data.avatarIndex);
             HighlightAvatar(data.avatarIndex);
 
             Debug.Log($"[UserProfile] Loaded — Username: {data.username}, Avatar: {data.avatarIndex}");
@@ -192,6 +217,10 @@ public class UserProfileDataManager : MonoBehaviour
 
     private void OnEditPressed()
     {
+        // Open the avatar selection panel
+        SetAvatarPanelVisible(true);
+
+        // Also unlock the username field for editing
         if (usernameInputField == null) return;
 
         isEditing = true;
@@ -235,7 +264,6 @@ public class UserProfileDataManager : MonoBehaviour
 
             usernameInputField.interactable = false;
 
-            // Update in-memory data, then persist the whole UserData
             userDataRepo.Data.username = newUsername;
             await userDataRepo.SaveAsync();
 
@@ -263,21 +291,37 @@ public class UserProfileDataManager : MonoBehaviour
     //  AVATAR
     // ═══════════════════════════════════════════════════════════════
 
+    /// <summary>
+    /// Called when the player taps an avatar button.
+    /// Updates profileImage immediately as a preview.
+    /// profileButtonImage is NOT changed until the player saves.
+    /// </summary>
     private void PreviewAvatar(int index)
     {
         if (index < 0 || index >= avatarSprites.Count) return;
         if (previewedAvatarIndex == index) return;
 
         previewedAvatarIndex = index;
+
+        // Show the preview only on profileImage
+        ApplyAvatarToProfileImage(index);
         HighlightAvatar(index);
     }
 
-    private void ApplyAvatar(int index)
+    /// <summary>Updates only the main profile image (preview target).</summary>
+    private void ApplyAvatarToProfileImage(int index)
     {
         if (index < 0 || index >= avatarSprites.Count) return;
+        if (profileImage != null)
+            profileImage.sprite = avatarSprites[index];
+    }
 
-        if (profileImage != null) profileImage.sprite = avatarSprites[index];
-        if (profileButtonImage != null) profileButtonImage.sprite = avatarSprites[index];
+    /// <summary>Updates only the profile button image (confirmed/saved target).</summary>
+    private void ApplyAvatarToButtonImage(int index)
+    {
+        if (index < 0 || index >= avatarSprites.Count) return;
+        if (profileButtonImage != null)
+            profileButtonImage.sprite = avatarSprites[index];
     }
 
     private void HighlightAvatar(int selectedIndex)
@@ -299,9 +343,12 @@ public class UserProfileDataManager : MonoBehaviour
     private async UniTaskVoid SaveAvatarSelection(CancellationToken token)
     {
         var data = userDataRepo.Data;
+
         if (previewedAvatarIndex == data.avatarIndex)
         {
             Debug.Log("[UserProfile] No avatar change to save.");
+            // Still close the avatar panel on save
+            SetAvatarPanelVisible(false);
             return;
         }
 
@@ -312,7 +359,12 @@ public class UserProfileDataManager : MonoBehaviour
 
             token.ThrowIfCancellationRequested();
 
-            ApplyAvatar(data.avatarIndex);
+            // Now that it's confirmed, update the button image too
+            ApplyAvatarToButtonImage(data.avatarIndex);
+
+            // Close the avatar selection panel after saving
+            SetAvatarPanelVisible(false);
+
             EventBus.Publish(new AvatarChangedEvent { newAvatarIndex = data.avatarIndex });
             Debug.Log($"[UserProfile] Avatar saved: {data.avatarIndex}");
         }
@@ -324,7 +376,44 @@ public class UserProfileDataManager : MonoBehaviour
     }
 
     // ═══════════════════════════════════════════════════════════════
-    //  VALIDATION (animation code unchanged from original)
+    //  AVATAR PANEL & REVERT HELPERS
+    // ═══════════════════════════════════════════════════════════════
+
+    private void SetAvatarPanelVisible(bool visible)
+    {
+        if (avatarSelectionPanel != null)
+            avatarSelectionPanel.SetActive(visible);
+
+        // Stats panel is the inverse — visible when avatar panel is not
+        if (statsPanel != null)
+            statsPanel.SetActive(!visible);
+    }
+
+    /// <summary>
+    /// Reverts profileImage to the last saved avatar.
+    /// Call this when the profile panel closes without the player having saved.
+    /// </summary>
+    private void RevertProfileImageToSaved()
+    {
+        if (userDataRepo?.Data == null) return;
+
+        int savedIndex = userDataRepo.Data.avatarIndex;
+        previewedAvatarIndex = savedIndex;
+        ApplyAvatarToProfileImage(savedIndex);
+        HighlightAvatar(savedIndex);
+    }
+
+    /// <summary>
+    /// Called in OnEnable to guarantee a clean state every time the panel opens.
+    /// </summary>
+    private void ResetAvatarPreviewToSaved()
+    {
+        if (userDataRepo?.Data == null) return;
+        RevertProfileImageToSaved();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  VALIDATION (animation unchanged)
     // ═══════════════════════════════════════════════════════════════
 
     private bool IsValidUsername(string username)
@@ -419,7 +508,7 @@ public class UserProfileDataManager : MonoBehaviour
     }
 
     // ═══════════════════════════════════════════════════════════════
-    //  USERNAME GENERATION (logic unchanged)
+    //  USERNAME GENERATION
     // ═══════════════════════════════════════════════════════════════
 
     private string GenerateUsernameFromHint(string hint)
@@ -498,8 +587,16 @@ public class UserProfileDataManager : MonoBehaviour
         return (idx >= 0 && idx < avatarSprites.Count) ? avatarSprites[idx] : null;
     }
 
-    public string GetPlayerId()
+    public string GetPlayerId() => authService?.PlayerId ?? "Not signed in";
+
+    /// <summary>
+    /// Call this from your close-panel button instead of just disabling the GameObject,
+    /// if you need explicit control (e.g. animated panels). OnDisable handles the same
+    /// logic automatically when SetActive(false) is used.
+    /// </summary>
+    public void OnPanelClosed()
     {
-        return authService?.PlayerId ?? "Not signed in";
+        RevertProfileImageToSaved();
+        SetAvatarPanelVisible(false);
     }
 }

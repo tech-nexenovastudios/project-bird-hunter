@@ -26,8 +26,8 @@ public class ChapterSelector : MonoBehaviour
 
         ChapterData data = worlds.GetWorldData(currentIndex);
 
-        worldText.text = $"WORLD: {data.worldName.ToUpper()}";
-        chapterText.text = $" {data.chapterName.ToUpper()}";
+        worldText.text = $"{data.worldName.ToUpper()}";
+        chapterText.text = $"{data.chapterName.ToUpper()}";
         //locationText.text = $"LOCATION: {currentIndex + 1}/{worlds.GetWorldCount()}";
     }
 
