@@ -9,12 +9,17 @@ public class BossEventBus : ScriptableObject
         get
         {
             if (instance == null)
+            {
                 instance = Resources.Load<BossEventBus>("BossEventBus");
+                if (instance == null)
+                    Debug.LogError("[BossEventBus] Could not load 'BossEventBus' from Resources. " +
+                                   "Make sure the asset exists at Assets/Resources/BossEventBus.asset");
+            }
             return instance;
         }
     }
     //boss spawn events
-    public System.Action<string, float> OnBossRetreated;
+    public event System.Action<string, float> OnBossRetreated;
     public static void RaiseBossRetreated(string name, float hpNorm)  => Instance?.OnBossRetreated?.Invoke(name, hpNorm);
 
     public event System.Action<string> OnBossSpawned;

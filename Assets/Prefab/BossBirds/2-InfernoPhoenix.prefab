@@ -19,7 +19,7 @@ GameObject:
   - component: {fileID: 8308165296926866880}
   m_Layer: 0
   m_Name: 2-InfernoPhoenix
-  m_TagString: Bird
+  m_TagString: BossBird
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -219,7 +219,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossBirdController
   directTestConfig: {fileID: 11400000, guid: bc0533c2204c4854487851933b0dcd5f, type: 2}
-  testAsLevel20: 1
+  testAsLevel20: 0
 --- !u!114 &5034617323023194493
 MonoBehaviour:
   m_ObjectHideFlags: 0

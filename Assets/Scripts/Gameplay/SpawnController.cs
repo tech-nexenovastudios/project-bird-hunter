@@ -6,6 +6,7 @@ using Gameplay.Birds;
 using Gameplay.Eggs;
 using Gameplay.Levels;
 using Gameplay.Events;
+using Gameplay.Managers;
 
 namespace Gameplay
 {
@@ -80,11 +81,6 @@ namespace Gameplay
         void OnEnable()
         {
             GameEvents.OnLevelCompleted += HandleLevelCompleted;
-            if (BossEventBus.Instance != null)
-            {
-                BossEventBus.Instance.OnBossDefeated += HandleBossDefeated;
-                BossEventBus.Instance.OnBossRetreated += HandleBossRetreated;
-            }
         }
 
         void OnDisable()
@@ -96,6 +92,7 @@ namespace Gameplay
                 BossEventBus.Instance.OnBossRetreated -= HandleBossRetreated;
             }
         }
+
 
         void HandleLevelCompleted(int finalScore) => _levelCompleted = true;
 
@@ -210,6 +207,20 @@ namespace Gameplay
         private void TrySpawnBoss()
         {
             if (_bossSpawned) return;
+
+            // ── Subscribe here, guaranteed BossEventBus exists by spawn time ──
+            if (BossEventBus.Instance != null)
+            {
+                BossEventBus.Instance.OnBossDefeated -= HandleBossDefeated;   // unsub first to avoid doubles
+                BossEventBus.Instance.OnBossRetreated -= HandleBossRetreated;
+                BossEventBus.Instance.OnBossDefeated += HandleBossDefeated;
+                BossEventBus.Instance.OnBossRetreated += HandleBossRetreated;
+            }
+            else
+            {
+                Debug.LogError("[SpawnController] BossEventBus.Instance is null at spawn time — retreat/defeat won't fire!");
+                return;
+            }
 
             ClearRegularEnemies();
 
@@ -373,6 +384,7 @@ namespace Gameplay
                 _parkedBossGO = bossGO;
                 _parkedBossHpNormalized = hpNormalized;
                 _hasBossWaitingForLevel20 = true;
+                GameProgressManager.Instance.CompleteLevel(100);
 
                 Debug.Log($"[SpawnController] Boss '{bossName}' parked at {hpNormalized:P0} HP for Level 20.");
             });

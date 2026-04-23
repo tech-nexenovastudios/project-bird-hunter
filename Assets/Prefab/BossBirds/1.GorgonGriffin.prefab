@@ -114,7 +114,7 @@ GameObject:
   - component: {fileID: 7906084342241510567}
   m_Layer: 0
   m_Name: 1.GorgonGriffin
-  m_TagString: Bird
+  m_TagString: BossBird
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -307,7 +307,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossBirdController
   directTestConfig: {fileID: 11400000, guid: 723e8de91f4488c4485808f7a11a91df, type: 2}
-  testAsLevel20: 1
+  testAsLevel20: 0
 --- !u!114 &7239110244748243373
 MonoBehaviour:
   m_ObjectHideFlags: 0
