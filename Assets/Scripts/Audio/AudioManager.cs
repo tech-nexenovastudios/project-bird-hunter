@@ -6,6 +6,8 @@ public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
 
+    private const string PREF_MUSIC = "MusicVolume";   // was "MusicVol"
+    private const string PREF_SOUND = "SoundVolume";   // was "SFXVol"
     // ─────────────────────────────────────────────
     // AUDIO SOURCES
     // ─────────────────────────────────────────────
@@ -175,14 +177,14 @@ public class AudioManager : MonoBehaviour
     public void PlayLevelComplete() => PlaySFX(levelCompleteSFX, levelCompleteVolume);
     //public void PlayLevelFail() => PlaySFX(levelFailSFX, levelFailVolume);
 
-    // ══════════════════════════════════════════════
-    // SETTINGS PERSISTENCE
-    // ══════════════════════════════════════════════
+    // ══════════════════════════════════════════════
+    // SETTINGS PERSISTENCE
+    // ══════════════════════════════════════════════
 
-    private void LoadSettings()
+    private void LoadSettings()
     {
-        musicSource.volume = PlayerPrefs.GetFloat("MusicVol", musicDefaultVolume);
-        sfxSource.volume = PlayerPrefs.GetFloat("SFXVol", sfxDefaultVolume);
+        musicSource.volume = PlayerPrefs.GetFloat(PREF_MUSIC, musicDefaultVolume);
+        sfxSource.volume = PlayerPrefs.GetFloat(PREF_SOUND, sfxDefaultVolume);
         isMusicMuted = PlayerPrefs.GetInt("MusicMuted", 0) == 1;
         isSFXMuted = PlayerPrefs.GetInt("SFXMuted", 0) == 1;
         musicSource.mute = isMusicMuted;

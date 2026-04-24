@@ -84,31 +84,19 @@ public class SettingPanelController : MonoBehaviour
 
     private void ApplySoundSetting()
     {
-        if (isEnabled)
-        {
-            // Enable sound effects
-            AudioListener.pause = false;
-        }
-        else
-        {
-            // Disable sound effects
-            AudioListener.pause = true;
-        }
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.SetSFXVolume(isEnabled ? 1f : 0f);
+
+       
         Debug.Log($"Sound {(isEnabled ? "Enabled" : "Disabled")}");
     }
 
     private void ApplyMusicSetting()
     {
-        if (isEnabled)
-        {
-            // Enable music
-            AudioListener.volume = 1f;
-        }
-        else
-        {
-            // Disable music
-            AudioListener.volume = 0f;
-        }
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.SetMusicVolume(isEnabled ? 1f : 0f);
+
+        
         Debug.Log($"Music {(isEnabled ? "Enabled" : "Disabled")}");
     }
 
@@ -140,7 +128,7 @@ public class SettingPanelController : MonoBehaviour
     private void LoadSetting()
     {
         string key = GetPlayerPrefsKey();
-        isEnabled = PlayerPrefs.GetInt(key, 1) == 1; // Default to enabled (1)
+        isEnabled = PlayerPrefs.GetInt(key, 1) == 1; 
     }
 
     private string GetPlayerPrefsKey()
