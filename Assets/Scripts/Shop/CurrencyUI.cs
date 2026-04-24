@@ -1,11 +1,6 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
-using Cysharp.Threading.Tasks;
 
-/// <summary>
-/// Attach to a UI GameObject. Displays currency values and auto-updates on changes.
-/// Loads balances on Start if not already loaded.
-/// </summary>
 public class CurrencyUI : MonoBehaviour
 {
     [Header("Currency Texts")]
@@ -16,20 +11,21 @@ public class CurrencyUI : MonoBehaviour
     private void OnEnable()
     {
         CurrencyManager.OnCurrencyChanged += OnCurrencyChanged;
-        if (!CurrencyManager.Instance.IsLoaded)
-            LoadCurrency().Forget();
-        else
+        EventBus.Subscribe<CurrencyLoadedEvent>(OnCurrencyLoaded);
+
+        // If already loaded, paint now (covers the case where events fired before we subscribed)
+        if (CurrencyManager.Instance.IsLoaded)
             RefreshAll();
     }
 
     private void OnDisable()
     {
         CurrencyManager.OnCurrencyChanged -= OnCurrencyChanged;
+        EventBus.Unsubscribe<CurrencyLoadedEvent>(OnCurrencyLoaded);
     }
 
-    private async UniTaskVoid LoadCurrency()
+    private void OnCurrencyLoaded(CurrencyLoadedEvent evt)
     {
-        await CurrencyManager.Instance.LoadBalances();
         RefreshAll();
     }
 
@@ -37,15 +33,9 @@ public class CurrencyUI : MonoBehaviour
     {
         switch (type)
         {
-            case CurrencyType.Gold:
-                SetText(goldText, newValue);
-                break;
-            case CurrencyType.Gems:
-                SetText(gemsText, newValue);
-                break;
-            case CurrencyType.Power:
-                SetText(powerText, newValue);
-                break;
+            case CurrencyType.Gold: SetText(goldText, newValue); break;
+            case CurrencyType.Gems: SetText(gemsText, newValue); break;
+            case CurrencyType.Power: SetText(powerText, newValue); break;
         }
     }
 
@@ -58,16 +48,13 @@ public class CurrencyUI : MonoBehaviour
 
     private void SetText(TextMeshProUGUI text, long value)
     {
-        if (text != null)
-            text.text = FormatCurrency(value);
+        if (text != null) text.text = FormatCurrency(value);
     }
 
     private string FormatCurrency(long value)
     {
-        if (value >= 1_000_000)
-            return (value / 1_000_000f).ToString("0.#") + "M";
-        if (value >= 1_000)
-            return (value / 1_000f).ToString("0.#") + "K";
+        if (value >= 1_000_000) return (value / 1_000_000f).ToString("0.##") + "M";
+        if (value >= 1_000) return (value / 1_000f).ToString("0.##") + "K";
         return value.ToString();
     }
 }

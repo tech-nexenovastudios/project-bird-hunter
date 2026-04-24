@@ -13,15 +13,14 @@ public class PowerupLockView : MonoBehaviour
     [SerializeField] private Material grayscaleMaterial;
 
     // ─── Rarity colors ───
-    private static readonly Color ColCommon    = Hex("98F3AF");
-    private static readonly Color ColRare      = Hex("F8E64B");
-    private static readonly Color ColEpic      = Hex("EAB3FF");
+    private static readonly Color ColCommon = Hex("98F3AF");
+    private static readonly Color ColRare = Hex("F8E64B");
+    private static readonly Color ColEpic = Hex("EAB3FF");
     private static readonly Color ColLegendary = Hex("FF9B94");
 
     private readonly Dictionary<string, PowerupCardController> cards = new();
 
     // ─── Lifecycle ───
-
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -49,8 +48,43 @@ public class PowerupLockView : MonoBehaviour
 
     private void OnLevelUpdated(LevelProfile _, int __) => RefreshAllCards();
 
-    // ─── Card registration ───
+    // ─── Database access (used by PowerupCardController.AutoResolveIdentity) ───
+    /// <summary>
+    /// Returns the shared PowerupDatabase loaded by PowerupGate from Resources.
+    /// No serialized field needed — the gate owns the single load point.
+    /// </summary>
+    public PowerupDatabase GetDatabase() => PowerupGate.Database;
 
+    // ─── Lock / Unlock API ───
+    /// <summary>
+    /// Forces the locked visual on a card regardless of gate state.
+    /// Useful for editor context-menu tests. Does NOT mutate unlock state
+    /// (PowerupGate is stateless — truth comes from config + chapter progress).
+    /// </summary>
+    public void LockPowerup(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+        if (cards.TryGetValue(id, out var card))
+            ApplyLockedVisual(card);
+    }
+
+    /// <summary>
+    /// Forces the unlocked visual on a card regardless of gate state.
+    /// Useful for editor context-menu tests.
+    /// </summary>
+    public void UnlockPowerup(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+        if (cards.TryGetValue(id, out var card))
+            ApplyUnlockedVisual(card);
+    }
+
+    /// <summary>
+    /// Delegates to PowerupGate for the authoritative unlock check.
+    /// </summary>
+    public bool IsUnlocked(string id) => PowerupGate.IsUnlocked(id);
+
+    // ─── Card registration ───
     public void RegisterCard(PowerupCardController card)
     {
         if (card == null || string.IsNullOrEmpty(card.PowerupId))
@@ -58,7 +92,6 @@ public class PowerupLockView : MonoBehaviour
             Debug.LogWarning("[PowerupLockView] RegisterCard — null or empty id.");
             return;
         }
-
         cards[card.PowerupId] = card;
         ApplyVisual(card, PowerupGate.IsUnlocked(card.PowerupId));
     }
@@ -75,11 +108,10 @@ public class PowerupLockView : MonoBehaviour
     }
 
     // ─── Visuals ───
-
     private void ApplyVisual(PowerupCardController card, bool unlocked)
     {
         if (unlocked) ApplyUnlockedVisual(card);
-        else          ApplyLockedVisual(card);
+        else ApplyLockedVisual(card);
     }
 
     public void ApplyLockedVisual(PowerupCardController card)
@@ -108,9 +140,9 @@ public class PowerupLockView : MonoBehaviour
 
     private static Color RarityColour(PowerupRarity r) => r switch
     {
-        PowerupRarity.Common    => ColCommon,
-        PowerupRarity.Rare      => ColRare,
-        PowerupRarity.Epic      => ColEpic,
+        PowerupRarity.Common => ColCommon,
+        PowerupRarity.Rare => ColRare,
+        PowerupRarity.Epic => ColEpic,
         PowerupRarity.Legendary => ColLegendary,
         _ => Color.white
     };

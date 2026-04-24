@@ -84,11 +84,12 @@ public class CoinFlowManager : MonoBehaviour
     {
         var runtime = runtimeMap[type];
         var config = runtime.config;
-
-        // 15–20% of rewarded amount, clamped to at least 1
-        int coinCount = Mathf.Max(1, Mathf.RoundToInt(
-            totalValue * UnityEngine.Random.Range(0.15f, 0.20f)
-        ));
+        // In the range of 15% to 20% of the total value, but clamped to our min/max coin counts.
+        int coinCount = Mathf.Clamp(
+            Mathf.RoundToInt(totalValue * UnityEngine.Random.Range(0.15f, 0.20f)),
+            config.minCoins,   // never fewer than this
+            config.maxCoins    // never more than this
+        );
 
         int valuePerCoin = totalValue / coinCount;
         int remainder = totalValue % coinCount;

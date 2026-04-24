@@ -191,7 +191,18 @@ public class BootController : MonoBehaviour
         userDataRepo.Initialize(cloudDatabase, CloudSaveManager.Instance);
         //currency
         SetStatus("Loading currencies...");
-        await CurrencyManager.Instance.LoadBalances(forceReload: true);
+
+        // GPGS on Android can need a moment after auth — retry once
+        try
+        {
+            await CurrencyManager.Instance.LoadBalances(forceReload: true);
+        }
+        catch
+        {
+            Debug.LogWarning("[Boot] Currency load failed, retrying in 2s...");
+            await UniTask.Delay(2000, cancellationToken: ct);
+            await CurrencyManager.Instance.LoadBalances(forceReload: true); // throws up if still failing
+        }
         //remote-config
         SetStatus("Fetching config...");
         await RemoteConfigManager.Instance.FetchConfig();
@@ -246,7 +257,7 @@ public class BootController : MonoBehaviour
         }
     }
 
-    // ─── UI Helpers ───
+    // ─── UI Helpers ─── 
 
     private void SetStatus(string message)
     {
