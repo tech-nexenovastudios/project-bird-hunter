@@ -30,6 +30,8 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     [SerializeField] private TextMeshProUGUI previewNameText;
     [SerializeField] private TextMeshProUGUI previewLevelText;
     [SerializeField] private TextMeshProUGUI previewDescriptionText;
+    [SerializeField] private TextMeshProUGUI upgradeCoinRequiredText;
+    [SerializeField] private GameObject upgradeCoinRequiredContainer;
 
     [Header("Stat Fills – Current")]
     [SerializeField] private Image damageFillCurrent;
@@ -368,7 +370,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     private void HandleUnlocked(string key)
     {
         ApplyLockVisual(key, unlocked: true);
-        if (key == _selectedKey) UpdatePreview(key);
+        if (key == _selectedKey) UpdatePreview(key); 
     }
 
     private void HandleUpgraded(string key)
@@ -442,9 +444,13 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     {
         var dto = service.GetBaseData(key);
         if (dto == null) return;
-        if (previewNameText != null)        previewNameText.text = dto.displayName ?? dto.name;
-        if (previewLevelText != null)       previewLevelText.text = $"Level {service.GetLevel(key)}";
+
+        if (previewNameText != null) previewNameText.text = dto.displayName ?? dto.name;
+        if (previewLevelText != null) previewLevelText.text = $"Level {service.GetLevel(key)}";
         if (previewDescriptionText != null) previewDescriptionText.text = dto.description;
+
+        bool showCost = service.IsUnlocked(key) && !service.IsMaxLevel(key);
+        SetUpgradeCostText(key, showCost);
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -580,6 +586,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
             upgradeButton.interactable = false;
             upgradeButton.GetComponent<Image>().material = grayscaleMaterial;
             StopPulse(upgradeButton.gameObject);
+            SetUpgradeCostText(key, show: false);   // ← ADD
             return;
         }
 
@@ -596,6 +603,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
             if (upgradeButtonText != null) upgradeButtonText.text = "MAX LEVEL";
             upgradeButton.interactable = false;
             StopPulse(upgradeButton.gameObject);
+            SetUpgradeCostText(key, show: false);   // ← ADD
             return;
         }
 
@@ -604,12 +612,29 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
         if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
         upgradeButton.interactable = canAfford;
-        if(canAfford) upgradeButton.GetComponent<Image>().material = null;
-        else           upgradeButton.GetComponent<Image>().material = grayscaleMaterial;
+        upgradeButton.GetComponent<Image>().material = canAfford ? null : grayscaleMaterial;
         if (canAfford) StartPulse(upgradeButton.gameObject);
-        else           StopPulse(upgradeButton.gameObject);
+        else StopPulse(upgradeButton.gameObject);
+        SetUpgradeCostText(key, show: true);        // ← ADD
     }
 
+    //helper to show/hide upgrade cost text on the preview panel
+    private void SetUpgradeCostText(string key, bool show)
+    {
+        if (upgradeCoinRequiredContainer != null)
+            upgradeCoinRequiredContainer.SetActive(show);
+
+        if (upgradeCoinRequiredText == null) return;
+
+        if (!show)
+        {
+            upgradeCoinRequiredText.text = "";
+            return;
+        }
+
+        int cost = service.GetUpgradeCoinCost(key);
+        upgradeCoinRequiredText.text = cost > 0 ? "x" + cost : "Free";
+    }
     private void OnUpgradePressed()
     {
         if (_selectedKey == null || _busyUpgrade || service == null) return;
