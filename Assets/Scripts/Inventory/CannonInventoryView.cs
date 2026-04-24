@@ -446,7 +446,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         if (dto == null) return;
 
         if (previewNameText != null) previewNameText.text = dto.displayName ?? dto.name;
-        if (previewLevelText != null) previewLevelText.text = $"Level {service.GetLevel(key)}";
+        if (previewLevelText != null) previewLevelText.text = $"{service.GetLevel(key)}";
         if (previewDescriptionText != null) previewDescriptionText.text = dto.description;
 
         bool showCost = service.IsUnlocked(key) && !service.IsMaxLevel(key);

@@ -8,13 +8,16 @@ public class CurrencyUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI gemsText;
     [SerializeField] private TextMeshProUGUI powerText;
 
+    private bool _hasStarted = false;
+
     private void OnEnable()
     {
         CurrencyManager.OnCurrencyChanged += OnCurrencyChanged;
         EventBus.Subscribe<CurrencyLoadedEvent>(OnCurrencyLoaded);
 
-        // If already loaded, paint now (covers the case where events fired before we subscribed)
-        if (CurrencyManager.Instance.IsLoaded)
+        // Only refresh in OnEnable if Start has already run (i.e., this is a re-enable).
+        // First-time paint happens in Start — see note below.
+        if (_hasStarted && CurrencyManager.Instance.IsLoaded)
             RefreshAll();
     }
 
@@ -22,6 +25,16 @@ public class CurrencyUI : MonoBehaviour
     {
         CurrencyManager.OnCurrencyChanged -= OnCurrencyChanged;
         EventBus.Unsubscribe<CurrencyLoadedEvent>(OnCurrencyLoaded);
+    }
+
+    private void Start()
+    {
+        // Paint cache here — by Start(), TMP components are fully initialized.
+        // Painting in OnEnable before Start can fail silently due to TMP init timing.
+        _hasStarted = true;
+
+        if (CurrencyManager.Instance.IsLoaded)
+            RefreshAll();
     }
 
     private void OnCurrencyLoaded(CurrencyLoadedEvent evt)
