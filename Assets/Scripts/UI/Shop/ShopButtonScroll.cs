@@ -50,8 +50,8 @@ public class ShopButtonScroll : MonoBehaviour
 
         RectTransform rect = sections[index].contentRect;
         float target = Mathf.Clamp(
-            Mathf.Abs(rect.anchoredPosition.y) - viewport.rect.height / 2f - rect.rect.height / 2f,
-            0, scrollRect.rect.height - viewport.rect.height
+            Mathf.Abs(rect.anchoredPosition.y) - (viewport.rect.height / 2f + rect.rect.height / 2f -250) ,
+            0, scrollRect.rect.height - viewport.rect.height 
         );
 
         _scrolling = true;

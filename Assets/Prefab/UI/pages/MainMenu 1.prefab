@@ -3778,8 +3778,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.000012398, y: 2.08}
-  m_SizeDelta: {x: 160.74, y: 175.84}
+  m_AnchoredPosition: {x: 0.000012398, y: 1.9}
+  m_SizeDelta: {x: 180, y: 176.21}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3167751755611217106
 CanvasRenderer:
@@ -7748,7 +7748,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 8388139960df75042ba90f0847f47a46, type: 3}
   - {fileID: 21300000, guid: 8c5430264a2d36e448d1a6a7af721d58, type: 3}
   - {fileID: 21300000, guid: 4001273829772ba4592931ce07d9e370, type: 3}
-  - {fileID: 21300000, guid: 39bbab5d8bf7e5e4c89cf9c6c61a74f9, type: 3}
+  - {fileID: 21300000, guid: 22daf79b0f3faf14a9750b235832d1b6, type: 3}
 --- !u!114 &8262840746090866777
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9514,6 +9514,7 @@ GameObject:
   - component: {fileID: 6675367299301660439}
   - component: {fileID: 4821773672992108856}
   - component: {fileID: 4359573074131951568}
+  - component: {fileID: 2365224030986726011}
   m_Layer: 5
   m_Name: MainMenu 1
   m_TagString: Untagged
@@ -9594,6 +9595,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
 --- !u!114 &4359573074131951568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7902823452401988294}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02036c8514ea54cad9dfe0e98d067ac9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+--- !u!114 &2365224030986726011
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
