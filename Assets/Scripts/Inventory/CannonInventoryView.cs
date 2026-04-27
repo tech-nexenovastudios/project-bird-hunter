@@ -33,6 +33,16 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     [SerializeField] private TextMeshProUGUI upgradeCoinRequiredText;
     [SerializeField] private GameObject upgradeCoinRequiredContainer;
 
+    [Header("Cannon Level Badge Animation")]
+    [Tooltip("The parent UI GameObject of the level badge (the green flag-like element).")]
+    [SerializeField] private RectTransform levelBadgeParent;
+    [Tooltip("Duration of the badge unfurl animation.")]
+    [SerializeField] private float levelBadgeAnimDuration = 0.4f;
+    [Tooltip("Ease curve for the unfurl. OutBack gives a satisfying overshoot.")]
+    [SerializeField] private Ease levelBadgeEase = Ease.OutBack;
+    [Tooltip("Delay before the level text appears inside the badge (after unfurl starts).")]
+    [SerializeField] private float levelTextRevealDelay = 0.15f;
+
     [Header("Stat Fills – Current")]
     [SerializeField] private Image damageFillCurrent;
     [SerializeField] private Image healthFillCurrent;
@@ -45,14 +55,15 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
     [Header("Fill Animation")]
     [SerializeField] private float fillAnimDuration = 0.35f;
-
     [Header("Equip Button")]
     [SerializeField] private Button equipButton;
     [SerializeField] private TextMeshProUGUI equipButtonText;
+    [SerializeField] private ButtonShine equipButtonShine;  
 
     [Header("Upgrade Button")]
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TextMeshProUGUI upgradeButtonText;
+    [SerializeField] private ButtonShine upgradeButtonShine;
 
     [Header("Not Enough Gold Text")]
     [SerializeField] private TextMeshProUGUI notEnoughGoldText;
@@ -64,6 +75,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     [SerializeField] private Button allTabButton;
     [SerializeField] private Button unlockedButton;
     [SerializeField] private Button lockedButton;
+    
 
     [Header("Unlock Popup")]
     [SerializeField] private GameObject unlockPopupPanel;
@@ -115,7 +127,15 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     private List<Transform> _sidePanelChildren = new();
     private Sequence _unlockPopupSequence;
     private bool _sidePanelPositionCached;
+    // ── Level badge animation state ──
+    private Sequence _levelBadgeSequence;
+    private bool _levelBadgePivotCached;
 
+    private string _activeTabFilter = "All";
+    private static readonly Color TabActiveColor = new Color(0x80 / 255f, 0x80 / 255f, 0x80 / 255f, 1f);
+    private static readonly Color TabInactiveColor = Color.white;
+
+  
     // ════════════════════════════════════════════════════════════════════
     // Lifecycle
     // ════════════════════════════════════════════════════════════════════
@@ -173,6 +193,62 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     private void Start()
     {
         if (PageManager.Instance != null) PageManager.Instance.Register(this);
+    }
+    // ════════════════════════════════════════════════════════════════════
+    // Cannon level badge animation (unfurl from top)
+    // ════════════════════════════════════════════════════════════════════
+
+    private void PlayLevelBadgeAnimation(string levelText)
+    {
+        if (levelBadgeParent == null) return;
+
+        // Kill any previous animation
+        _levelBadgeSequence?.Kill();
+
+        // ── Initial state: collapsed vertically (scale Y = 0) ──
+        levelBadgeParent.localScale = new Vector3(1f, 0f, 1f);
+
+        // Hide the level text during the unfurl
+        if (previewLevelText != null)
+            previewLevelText.gameObject.SetActive(false);
+
+        // ── Build the sequence ──
+        _levelBadgeSequence = DOTween.Sequence();
+
+        // Unfurl: scale Y from 0 to 1 (no position change)
+        _levelBadgeSequence.Append(
+            levelBadgeParent.DOScaleY(1f, levelBadgeAnimDuration)
+                .SetEase(levelBadgeEase)
+        );
+
+        // After a short delay during unfurl, reveal the level text with a small pop
+        _levelBadgeSequence.InsertCallback(levelTextRevealDelay, () =>
+        {
+            if (previewLevelText == null) return;
+
+            previewLevelText.text = levelText;
+            previewLevelText.gameObject.SetActive(true);
+            previewLevelText.transform.localScale = Vector3.zero;
+            previewLevelText.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
+        });
+
+        _levelBadgeSequence.SetUpdate(true);
+    }
+
+    private void StopLevelBadgeAnimation()
+    {
+        _levelBadgeSequence?.Kill();
+        _levelBadgeSequence = null;
+
+        // Reset to default visible state (scale only, position untouched)
+        if (levelBadgeParent != null)
+            levelBadgeParent.localScale = Vector3.one;
+
+        if (previewLevelText != null)
+        {
+            previewLevelText.transform.localScale = Vector3.one;
+            previewLevelText.gameObject.SetActive(true);
+        }
     }
     // ════════════════════════════════════════════════════════════════════
     // Unlock popup animation
@@ -258,8 +334,30 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         _unlockPopupSequence?.Kill();
         _unlockPopupSequence = null;
     }
-    public void OnPageEnter() { /* OnEnable already runs ResetScreen + HandleReady */ }
-    public void OnPageExit() { }
+    public void OnPageEnter()
+    {
+        // Stop any in-flight animations from previous show
+        PageResetHelper.KillTweens(transform);
+
+        // Reset scroll positions
+        PageResetHelper.ResetScrolls(transform);
+
+        // Existing reset logic
+        ResetScreen();
+
+        // Re-bind data if service is ready
+        if (service != null && service.IsReady)
+            HandleReady();
+
+        // Default filter
+        Filter("All");
+    }
+    public void OnPageExit()
+    {
+        StopUnlockPopupAnimation();
+        StopLevelBadgeAnimation();
+        PageResetHelper.KillTweens(transform);
+    }
 
     public void ResetScreen()
     {
@@ -286,6 +384,9 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         }
             if (equipButtonText != null)   equipButtonText.text   = "EQUIP";
         if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
+        //reset cannon selection tab to "All" and refresh colors
+        _activeTabFilter = "All";
+        RefreshTabButtonColors("All");
     }
 
     private void OnDisable()
@@ -302,6 +403,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     private void OnDestroy()
     {
         StopUnlockPopupAnimation();
+        StopLevelBadgeAnimation();
         if (equipButton != null)        equipButton.onClick.RemoveListener(OnEquipPressed);
         if (upgradeButton != null)      upgradeButton.onClick.RemoveListener(OnUpgradePressed);
         if (popupConfirmButton != null) popupConfirmButton.onClick.RemoveListener(OnPopupConfirmed);
@@ -446,10 +548,24 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         if (dto == null) return;
 
         if (previewNameText != null) previewNameText.text = dto.displayName ?? dto.name;
-        if (previewLevelText != null) previewLevelText.text = $"{service.GetLevel(key)}";
         if (previewDescriptionText != null) previewDescriptionText.text = dto.description;
 
-        bool showCost = service.IsUnlocked(key) && !service.IsMaxLevel(key);
+        bool unlocked = service.IsUnlocked(key);
+
+        if (levelBadgeParent != null)
+            levelBadgeParent.gameObject.SetActive(unlocked);
+
+        if (unlocked)
+        {
+            string levelStr = $"{service.GetLevel(key)}";
+            PlayLevelBadgeAnimation(levelStr);
+        }
+        else
+        {
+            StopLevelBadgeAnimation();
+        }
+
+        bool showCost = unlocked && !service.IsMaxLevel(key);
         SetUpgradeCostText(key, showCost);
     }
 
@@ -466,12 +582,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     private static void SetFill(Image img, float ratio)
     {
         if (img == null) return;
-        if (ratio <= 0f) { img.enabled = false; return; }
-        img.enabled = true;
-        var rt = img.rectTransform;
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = new Vector2(Mathf.Clamp01(ratio), 1f);
-        rt.offsetMin = rt.offsetMax = Vector2.zero;
+        img.fillAmount = Mathf.Clamp01(ratio);
     }
 
     private void SnapFills(string key)
@@ -524,7 +635,17 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         {
             equipButtonText.text = "SAVING...";
             equipButton.interactable = false;
-            StopPulse(equipButton.gameObject);
+            equipButton.GetComponent<Image>().material = null;
+            SetShine(equipButtonShine, false);
+            return;
+        }
+
+        if (!IsChapterRequirementMet(key))
+        {
+            equipButtonText.text = "LOCKED";
+            equipButton.interactable = false;
+            equipButton.GetComponent<Image>().material = grayscaleMaterial;
+            SetShine(equipButtonShine, false);
             return;
         }
 
@@ -532,7 +653,8 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         {
             equipButtonText.text = "UNLOCK";
             equipButton.interactable = true;
-            StopPulse(equipButton.gameObject);
+            equipButton.GetComponent<Image>().material = null;
+            SetShine(equipButtonShine, false);
             return;
         }
 
@@ -540,19 +662,24 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         {
             equipButtonText.text = "EQUIPPED";
             equipButton.interactable = false;
-            StopPulse(equipButton.gameObject);
+            equipButton.GetComponent<Image>().material = null;
+            SetShine(equipButtonShine, false);
         }
         else
         {
             equipButtonText.text = "EQUIP";
             equipButton.interactable = true;
-            StartPulse(equipButton.gameObject);
+            equipButton.GetComponent<Image>().material = null;
+            SetShine(equipButtonShine, true);
         }
     }
 
     private void OnEquipPressed()
     {
         if (_selectedKey == null || _busyEquip || service == null) return;
+
+        // ── NEW ──
+        if (!IsChapterRequirementMet(_selectedKey)) return;
 
         if (!service.IsUnlocked(_selectedKey))
         {
@@ -571,7 +698,19 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         _busyEquip = false;
         RefreshEquipButton(key);
     }
+    private bool IsChapterRequirementMet(string key)
+    {
+        var dto = service?.GetBaseData(key);
+        if (dto == null) return true; // no data → don't block
+        //if (ChapterUnlockService is null) return true; // service missing → don't block
 
+        // Find your ChapterUnlockService instance — adjust to however you access it
+        var chapterService = ServiceLocator.Get<ChapterUnlockService>(); // or a static instance
+        if (chapterService == null) return true;
+
+        return chapterService.HighestUnlockedIndex >= dto.unlockAtChapter - 1;
+        // unlockAtChapter is 1-based ("Ch. 1"), index is 0-based, so Ch.1 → index 0
+    }
     // ════════════════════════════════════════════════════════════════════
     // Upgrade button
     // ════════════════════════════════════════════════════════════════════
@@ -585,8 +724,8 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
             if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
             upgradeButton.interactable = false;
             upgradeButton.GetComponent<Image>().material = grayscaleMaterial;
-            StopPulse(upgradeButton.gameObject);
-            SetUpgradeCostText(key, show: false);   // ← ADD
+            SetShine(upgradeButtonShine, false);
+            SetUpgradeCostText(key, show: false);
             return;
         }
 
@@ -594,7 +733,8 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADING...";
             upgradeButton.interactable = false;
-            StopPulse(upgradeButton.gameObject);
+            upgradeButton.GetComponent<Image>().material = null;   // ← FIX
+            SetShine(upgradeButtonShine, false);
             return;
         }
 
@@ -602,8 +742,9 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         {
             if (upgradeButtonText != null) upgradeButtonText.text = "MAX LEVEL";
             upgradeButton.interactable = false;
-            StopPulse(upgradeButton.gameObject);
-            SetUpgradeCostText(key, show: false);   // ← ADD
+            upgradeButton.GetComponent<Image>().material = null;   // ← FIX
+            SetShine(upgradeButtonShine, false);
+            SetUpgradeCostText(key, show: false);
             return;
         }
 
@@ -613,9 +754,12 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         if (upgradeButtonText != null) upgradeButtonText.text = "UPGRADE";
         upgradeButton.interactable = canAfford;
         upgradeButton.GetComponent<Image>().material = canAfford ? null : grayscaleMaterial;
-        if (canAfford) StartPulse(upgradeButton.gameObject);
-        else StopPulse(upgradeButton.gameObject);
-        SetUpgradeCostText(key, show: true);        // ← ADD
+        SetShine(upgradeButtonShine, canAfford);
+
+        SetUpgradeCostText(key, show: true);
+
+        if (upgradeCoinRequiredText != null)
+            upgradeCoinRequiredText.color = canAfford ? Color.white : Color.red;
     }
 
     //helper to show/hide upgrade cost text on the preview panel
@@ -629,11 +773,13 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         if (!show)
         {
             upgradeCoinRequiredText.text = "";
+            upgradeCoinRequiredText.color = Color.white; // ── NEW: reset color on hide
             return;
         }
 
         int cost = service.GetUpgradeCoinCost(key);
-        upgradeCoinRequiredText.text = cost > 0 ? "x" + cost : "Free";
+        upgradeCoinRequiredText.text = cost > 0 ? "" + cost : "Free";
+        // color is set by RefreshUpgradeButton after this call, so no need to set it here
     }
     private void OnUpgradePressed()
     {
@@ -667,7 +813,8 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         var item = FindItem(key);
         if (popupCannonImage != null && item?.cannonSprite?.sprite != null)
             popupCannonImage.sprite = item.cannonSprite.sprite;
-        if (popupCannonNameText != null) popupCannonNameText.text = dto.name;
+        if (popupCannonNameText != null) popupCannonNameText.text = dto.displayName ?? dto.name;
+        Debug.Log("cannon name: " + dto.name);
 
         int coinCost = service.GetUnlockCoinCost(key);
         int gemCost = service.GetUnlockGemCost(key);
@@ -762,9 +909,18 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         foreach (var graphic in root.GetComponentsInChildren<Graphic>(true))
             graphic.material = mat;
     }
-
+    //cannon tab filtering
+    private void RefreshTabButtonColors(string activeFilter)
+    {
+        if (allTabButton != null) allTabButton.GetComponent<Image>().color = activeFilter == "All" ? TabActiveColor : TabInactiveColor;
+        if (unlockedButton != null) unlockedButton.GetComponent<Image>().color = activeFilter == "Unlocked" ? TabActiveColor : TabInactiveColor;
+        if (lockedButton != null) lockedButton.GetComponent<Image>().color = activeFilter == "Locked" ? TabActiveColor : TabInactiveColor;
+    }
     private void Filter(string filter)
     {
+        _activeTabFilter = filter;
+        RefreshTabButtonColors(filter);          // ← new line
+
         foreach (var item in _items)
         {
             if (item?.button == null) continue;
@@ -772,8 +928,8 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
             bool show = filter switch
             {
                 "Unlocked" => service != null && service.IsUnlocked(item.cannonKey),
-                "Locked"   => service == null || !service.IsUnlocked(item.cannonKey),
-                _          => true,
+                "Locked" => service == null || !service.IsUnlocked(item.cannonKey),
+                _ => true,
             };
             item.button.gameObject.SetActive(show);
         }
@@ -814,13 +970,11 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         Color c = tmp.color; c.a = alpha; tmp.color = c;
     }
 
-    private void StartPulse(GameObject go)
-    {
-        if (buttonAnimator != null) buttonAnimator.AttentionPulse(go);
-    }
 
-    private void StopPulse(GameObject go)
+    //shine feature for equip/upgrade buttons to draw attention when actionable (not busy, not locked, can afford)
+    private static void SetShine(ButtonShine shine, bool on)
     {
-        if (buttonAnimator != null) buttonAnimator.StopAttentionPulse(go);
+        if (shine == null) return;
+        if (shine.enabled != on) shine.enabled = on;
     }
 }

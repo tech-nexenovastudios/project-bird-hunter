@@ -7,7 +7,7 @@ public class LoadingUI : MonoBehaviour
     [Header("Progress Bar")]
     [SerializeField] private Image fillImage;
     [SerializeField] private TextMeshProUGUI percentText;
-    [SerializeField] private TextMeshProUGUI statusText;
+    //[SerializeField] private TextMeshProUGUI statusText;
 
     [Header("Settings")]
     [Tooltip("How fast the bar smooths toward the target value. Higher = snappier.")]
@@ -57,24 +57,24 @@ public class LoadingUI : MonoBehaviour
     private void OnAuthProgress(AuthProgressEvent evt)
     {
         targetProgress = Mathf.Clamp01(evt.progress) * AUTH_WEIGHT;
-        SetStatus(evt.currentStep);
+        //SetStatus(evt.currentStep);
     }
 
     private void OnDataLoadProgress(DataLoadProgressEvent evt)
     {
         targetProgress = AUTH_WEIGHT + (Mathf.Clamp01(evt.progress) * DATA_WEIGHT);
-        SetStatus(evt.currentStep);
+        //SetStatus(evt.currentStep);
     }
 
     private void OnDataLoadCompleted(DataLoadCompletedEvent evt)
     {
         targetProgress = 1f;
-        SetStatus("Ready");
+        //SetStatus("Ready");
     }
 
     private void OnDataLoadFailed(DataLoadFailedEvent evt)
     {
-        SetStatus($"Error: {evt.errorMessage}");
+        //SetStatus($"Error: {evt.errorMessage}");
     }
 
     // ─── Visuals ───
@@ -88,16 +88,16 @@ public class LoadingUI : MonoBehaviour
             percentText.text = $"{Mathf.RoundToInt(displayedProgress * 100f)}%";
     }
 
-    private void SetStatus(string message)
-    {
-        if (statusText != null) statusText.text = message;
-    }
+    //private void SetStatus(string message)
+    //{
+    //    if (statusText != null) statusText.text = message;
+    //}
 
     private void ResetBar()
     {
         targetProgress = 0f;
         displayedProgress = 0f;
         UpdateVisuals();
-        SetStatus("Loading...");
+        //SetStatus("Loading...");
     }
 }

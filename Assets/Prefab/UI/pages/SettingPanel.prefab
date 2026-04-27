@@ -836,7 +836,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
-  hoverSound: 0
+  hoverSound: 1
 --- !u!1 &1471375823083552897
 GameObject:
   m_ObjectHideFlags: 0
@@ -847,6 +847,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5895199654963578610}
   - component: {fileID: 7907218457325058612}
+  - component: {fileID: 2136420162589241010}
   m_Layer: 5
   m_Name: SettingPanel
   m_TagString: Untagged
@@ -882,6 +883,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1471375823083552897}
   m_CullTransparentMesh: 1
+--- !u!225 &2136420162589241010
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1471375823083552897}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1481336346013762540
 GameObject:
   m_ObjectHideFlags: 0
@@ -1257,7 +1270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
-  hoverSound: 0
+  hoverSound: 1
 --- !u!1 &2167358595025436144
 GameObject:
   m_ObjectHideFlags: 0
@@ -2842,7 +2855,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 223822184d3eb4abcb0d2455f0efac4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  toggleType: 2
+  toggleType: 3
   onBg: {fileID: 334459727122914690}
   offBg: {fileID: 1249007065950283303}
   toggleBtn: {fileID: 4512690007821219642}
@@ -3992,6 +4005,7 @@ GameObject:
   - component: {fileID: 8360816434898369497}
   - component: {fileID: 2328028837176604182}
   - component: {fileID: 5925548091868572853}
+  - component: {fileID: 172688540291576072}
   m_Layer: 5
   m_Name: BG
   m_TagString: Untagged
@@ -4132,6 +4146,20 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &172688540291576072
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5497510847387455004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
 --- !u!1 &5622031171656091784
 GameObject:
   m_ObjectHideFlags: 0
@@ -4582,7 +4610,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6093074192651878040}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 

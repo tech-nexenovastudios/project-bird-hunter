@@ -422,7 +422,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 0
-  m_FillAmount: 1
+  m_FillAmount: 0.974
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
@@ -1266,6 +1266,81 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &2700643417647894762
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7307500752244690113}
+  - component: {fileID: 6061230584510528115}
+  - component: {fileID: 9013319028385083713}
+  m_Layer: 5
+  m_Name: Shine
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &7307500752244690113
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2700643417647894762}
+  m_LocalRotation: {x: -0, y: -0, z: 0.2164396, w: 0.97629607}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.000512, y: 1.000512, z: 1.0005119}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1597521301092230351}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 25}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 175, y: 0.009956688}
+  m_SizeDelta: {x: 84.46, y: 214.42}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &6061230584510528115
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2700643417647894762}
+  m_CullTransparentMesh: 1
+--- !u!114 &9013319028385083713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2700643417647894762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.20784314}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &2834499109712606415
 GameObject:
   m_ObjectHideFlags: 0
@@ -1776,8 +1851,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 38.199997, y: -52.100006}
-  m_SizeDelta: {x: 61, y: 92}
+  m_AnchoredPosition: {x: 40.9, y: -52.6}
+  m_SizeDelta: {x: 68.59, y: 92}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6908794129179160215
 CanvasRenderer:
@@ -2551,6 +2626,81 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &4261692488901594306
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6955330892467422660}
+  - component: {fileID: 2016661114552191288}
+  - component: {fileID: 507338354247918795}
+  m_Layer: 5
+  m_Name: Shine
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &6955330892467422660
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4261692488901594306}
+  m_LocalRotation: {x: 0, y: 0, z: 0.2164396, w: 0.97629607}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8594250535546435601}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 25}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -106, y: 0}
+  m_SizeDelta: {x: 84.46, y: 214.42}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &2016661114552191288
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4261692488901594306}
+  m_CullTransparentMesh: 1
+--- !u!114 &507338354247918795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4261692488901594306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.20784314}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &4771934368493118370
 GameObject:
   m_ObjectHideFlags: 0
@@ -2826,8 +2976,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.000012398, y: -24.1}
-  m_SizeDelta: {x: 61.98, y: 35.6}
+  m_AnchoredPosition: {x: -0.00002265, y: -24.1}
+  m_SizeDelta: {x: 75.69, y: 35.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2071575520985826213
 CanvasRenderer:
@@ -2857,7 +3007,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: x 1000
+  m_text: 1000
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 116dd4f0eb19645469f6bb2b480d54dc, type: 2}
   m_sharedMaterial: {fileID: -5397926085306306235, guid: 116dd4f0eb19645469f6bb2b480d54dc, type: 2}
@@ -2884,8 +3034,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
-  m_fontSizeBase: 15
+  m_fontSize: 25.6
+  m_fontSizeBase: 25.6
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2942,6 +3092,7 @@ GameObject:
   - component: {fileID: 5101394216852113403}
   - component: {fileID: 3950793122066039790}
   - component: {fileID: 7182132893572896597}
+  - component: {fileID: 3800265638842953065}
   m_Layer: 5
   m_Name: UpgradeBtn
   m_TagString: Untagged
@@ -2961,6 +3112,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 6955330892467422660}
   - {fileID: 739142619147571182}
   - {fileID: 3523927832783947947}
   m_Father: {fileID: 5800612546737591730}
@@ -3064,8 +3216,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
-  m_Padding: {x: 0, y: 0, z: 0, w: 0}
+  m_Padding: {x: 16.4, y: 12.57, z: 11.48, w: 2.11}
   m_Softness: {x: 0, y: 0}
+--- !u!114 &3800265638842953065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5098059376843540138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1f925b746e49db49890faf1aed31552, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonShine
+  shine: {fileID: 6955330892467422660}
+  duration: 0.8
+  interval: 3
+  ease: 4
 --- !u!1 &5428897711484822908
 GameObject:
   m_ObjectHideFlags: 0
@@ -3441,9 +3609,9 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.6901961, g: 0.61960787, b: 0.5764706, a: 1}
-    m_PressedColor: {r: 0.6901961, g: 0.61960787, b: 0.5764706, a: 1}
-    m_SelectedColor: {r: 0.6901961, g: 0.61960787, b: 0.5764706, a: 1}
+    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -4004,9 +4172,9 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.6901961, g: 0.61960787, b: 0.5764706, a: 1}
-    m_PressedColor: {r: 0.6901961, g: 0.61960787, b: 0.5764706, a: 1}
-    m_SelectedColor: {r: 0.6901961, g: 0.61960787, b: 0.5764706, a: 1}
+    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -4113,6 +4281,8 @@ GameObject:
   - component: {fileID: 3698238518698762317}
   - component: {fileID: 8907097083132854458}
   - component: {fileID: 5888515977801892583}
+  - component: {fileID: 9189173141969781984}
+  - component: {fileID: 3242473113001512358}
   m_Layer: 5
   m_Name: EquipBtn
   m_TagString: Untagged
@@ -4133,6 +4303,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1387604242724484493}
+  - {fileID: 7307500752244690113}
   m_Father: {fileID: 4083821936581762308}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -4222,6 +4393,36 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &9189173141969781984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6391862045426684475}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
+  m_Padding: {x: 10.56, y: 9.53, z: 9.94, w: 0}
+  m_Softness: {x: 0, y: 0}
+--- !u!114 &3242473113001512358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6391862045426684475}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1f925b746e49db49890faf1aed31552, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonShine
+  shine: {fileID: 7307500752244690113}
+  duration: 0.8
+  interval: 3
+  ease: 4
 --- !u!1 &6404922098183496663
 GameObject:
   m_ObjectHideFlags: 0
@@ -4677,7 +4878,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: bb27b2659fa385642aadacc7c15cb8f6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fada2b89a51a76d41976e5e86ec1ea0f, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5460,7 +5661,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6338261326421552826}
   m_HandleRect: {fileID: 743554412100300715}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -5642,9 +5843,9 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.6901961, g: 0.61960787, b: 0.5764706, a: 1}
-    m_PressedColor: {r: 0.6901961, g: 0.61960787, b: 0.5764706, a: 1}
-    m_SelectedColor: {r: 0.6901961, g: 0.61960787, b: 0.5764706, a: 1}
+    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -5964,6 +6165,10 @@ MonoBehaviour:
   previewDescriptionText: {fileID: 3659697617658834201}
   upgradeCoinRequiredText: {fileID: 8952459551362150099}
   upgradeCoinRequiredContainer: {fileID: 3651551508254330527}
+  levelBadgeParent: {fileID: 1305360253004470472}
+  levelBadgeAnimDuration: 0.45
+  levelBadgeEase: 27
+  levelTextRevealDelay: 0.15
   damageFillCurrent: {fileID: 4149113117839033533}
   healthFillCurrent: {fileID: 4467239403933226088}
   fireRateFillCurrent: {fileID: 6201397493883894649}
@@ -5973,8 +6178,10 @@ MonoBehaviour:
   fillAnimDuration: 0.35
   equipButton: {fileID: 5888515977801892583}
   equipButtonText: {fileID: 8384548800021312302}
+  equipButtonShine: {fileID: 3242473113001512358}
   upgradeButton: {fileID: 3950793122066039790}
   upgradeButtonText: {fileID: 261751661777308122}
+  upgradeButtonShine: {fileID: 3800265638842953065}
   notEnoughGoldText: {fileID: 3590912444546231743}
   fadeDuration: 0.4
   holdDuration: 1

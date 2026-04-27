@@ -2079,8 +2079,7 @@ GameObject:
   - component: {fileID: 6022469884596217817}
   - component: {fileID: 4290119825709679307}
   - component: {fileID: 3192413136795072042}
-  - component: {fileID: 8164719056226704707}
-  - component: {fileID: 7191806915249296556}
+  - component: {fileID: 4848564907153768986}
   m_Layer: 5
   m_Name: Shop
   m_TagString: Untagged
@@ -2149,7 +2148,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &8164719056226704707
+--- !u!114 &4848564907153768986
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2161,18 +2160,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a12bfc5a1e8147a7bda3c6a50e3d347, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
---- !u!114 &7191806915249296556
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3954743973224132634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a12bfc5a1e8147a7bda3c6a50e3d347, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
+  popupsToHide: []
+  scrollRects:
+  - {fileID: 8922060739693627199}
 --- !u!1 &4031075313957781285
 GameObject:
   m_ObjectHideFlags: 0
@@ -5680,7 +5670,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_AnchorMin.x
@@ -5688,7 +5678,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_SizeDelta.x
@@ -5696,7 +5686,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 389.70062
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -5728,11 +5718,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 400.1875
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -194.85031
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -7038,6 +7028,17 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 905813819484464828}
   m_SourcePrefab: {fileID: 100100000, guid: b92ae453756c740448f4ab594a17b658, type: 3}
+--- !u!114 &1004947478950330877 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6485711110515948293, guid: b92ae453756c740448f4ab594a17b658, type: 3}
+  m_PrefabInstance: {fileID: 6337573530088585976}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1206629698553886811 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5137862656935625379, guid: b92ae453756c740448f4ab594a17b658, type: 3}
@@ -7177,7 +7178,7 @@ MonoBehaviour:
   rewardAmount: 5
   adsRequired: 2
   watchAdButton: {fileID: 7680626541735185132}
-  progressText: {fileID: 0}
+  progressText: {fileID: 1004947478950330877}
   rewardText: {fileID: 0}
   claimReadyIndicator: {fileID: 0}
   adNotReadyIndicator: {fileID: 0}
