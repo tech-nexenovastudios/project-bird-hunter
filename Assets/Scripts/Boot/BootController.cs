@@ -3,7 +3,6 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class BootController : MonoBehaviour
 {
@@ -11,8 +10,7 @@ public class BootController : MonoBehaviour
 
     [Header("UI Feedback")]
     [SerializeField] private TextMeshProUGUI statusText;
-    //[SerializeField] private GameObject retryButton;
-    [SerializeField] private GameObject anonymousLoginButton;
+    [SerializeField] private GameObject guestButton;
 
     [Header("Ad Manager (optional)")]
     [Tooltip("Assign if AdManager lives in this scene. Leave empty if handled elsewhere.")]
@@ -64,7 +62,7 @@ public class BootController : MonoBehaviour
         ServiceLocator.Register<CloudDatabase>(cloudDatabase);
         ServiceLocator.Register<SceneLoader>(sceneLoader);
         ServiceLocator.Register<CurrencyManager>(CurrencyManager.Instance);
-        // In InitializeServices(), add:
+
         var chapterUnlockService = new ChapterUnlockService();
         ServiceLocator.Register<ChapterUnlockService>(chapterUnlockService);
         var userDataRepo = new UserDataRepository();
@@ -96,7 +94,6 @@ public class BootController : MonoBehaviour
         {
             HideAllButtons();
 
-            // Step 1: Authenticate
             SetStatus("Starting up...");
             bool signedIn = await authService.SignInAsync(ct);
 
@@ -106,20 +103,14 @@ public class BootController : MonoBehaviour
                 return;
             }
 
-            // Step 2: Load LoadingScene additively (progress bar visible from here on)
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.LOADING, setActive: false, ct: ct);
-
-            // Step 3: Start ad SDK init in parallel (don't await — it runs alongside data fetch)
             InitializeAdsInParallel();
 
             if (!await LoadGameDataAndCheckGatesAsync(ct))
                 return;
-            // Step 5: Transition to MainMenu, unload Bootstrapper + LoadingScene
+
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.MAIN_MENU, setActive: true, ct: ct);
             await sceneLoader.UnloadSceneAsync(SceneNames.LOADING, ct);
-
-            // Bootstrapper unloads itself last — use a detached token so our own
-            // OnDestroy cancellation doesn't abort the unload mid-flight.
             sceneLoader.UnloadSceneAsync(SceneNames.BOOTSTRAPPER, CancellationToken.None).Forget();
         }
         catch (OperationCanceledException)
@@ -130,7 +121,7 @@ public class BootController : MonoBehaviour
         {
             Debug.LogError($"[BootController] Boot failed: {ex.Message}\n{ex.StackTrace}");
             SetStatus("Something went wrong. Please retry.");
-            ShowRetryOnly();
+            ShowGuestButton();
         }
     }
 
@@ -144,108 +135,87 @@ public class BootController : MonoBehaviour
         if (autoGrantConsentInEditor && !adManager.HasConsentResolved)
             adManager.SetUserConsent(gdprConsent: true);
 #endif
-        // AdManager's own Start() handles init. Nothing to await here.
     }
 
     // ─── Failure Handlers ───
 
     private void OnAuthFailed()
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        SetStatus("Google Play sign-in failed.");
-        ShowFallbackButtons();
-#else
-        SetStatus("Sign-in failed. Check your connection.");
-        ShowRetryOnly();
-#endif
+        SetStatus("Sign-in failed. Continue as guest?");
+        ShowGuestButton();
     }
 
-    // ─── UI Button Handlers (wire in Inspector) ───
+    // ─── UI Button Handlers ───
 
-    public void OnRetryClicked()
-    {
-        HideAllButtons();
-        RunBootSequenceAsync(cts.Token).Forget();
-    }
-
-    public void OnAnonymousLoginClicked()
+    public void OnGuestButtonClicked()
     {
         HideAllButtons();
         ContinueWithAnonymousAsync(cts.Token).Forget();
     }
-    // Add this helper method to BootController
+
     private async UniTask<bool> LoadGameDataAndCheckGatesAsync(CancellationToken ct)
     {
         await cloudDatabase.InitializeAsync(ct);
-        // Initialize chapter unlock service with loaded data
+
         var chapterService = ServiceLocator.Get<ChapterUnlockService>();
-        int totalChapterCount = 10; // Or pull from your ChaptersConfig via a shared access pattern
+        int totalChapterCount = 10;
         int[] defaultUnlocked = new[] { 0 };
-        chapterService.Initialize(
-            cloudDatabase.ChapterUnlockStatusData,
-            totalChapterCount,
-            defaultUnlocked
-        );
-        // Initialize UserDataRepository with the loaded user data
+        chapterService.Initialize(cloudDatabase.ChapterUnlockStatusData, totalChapterCount, defaultUnlocked);
+
         var userDataRepo = ServiceLocator.Get<UserDataRepository>();
         userDataRepo.Initialize(cloudDatabase, CloudSaveManager.Instance);
-        //currency
-        SetStatus("Loading currencies...");
 
-        // GPGS on Android can need a moment after auth — retry once
+        SetStatus("Loading currencies...");
         try
         {
             await CurrencyManager.Instance.LoadBalances(forceReload: true);
         }
         catch
         {
-            Debug.LogWarning("[Boot] Currency load failed, retrying in 2s...");
             await UniTask.Delay(2000, cancellationToken: ct);
-            await CurrencyManager.Instance.LoadBalances(forceReload: true); // throws up if still failing
+            await CurrencyManager.Instance.LoadBalances(forceReload: true);
         }
-        //remote-config
+
         SetStatus("Fetching config...");
         await RemoteConfigManager.Instance.FetchConfig();
 
         if (RemoteConfigManager.Instance.MaintenanceMode)
         {
             SetStatus(RemoteConfigManager.Instance.MaintenanceMessage);
-            ShowRetryOnly();
             return false;
         }
 
         if (RemoteConfigManager.Instance.NeedsForceUpdate())
         {
             SetStatus(RemoteConfigManager.Instance.UpdatePromptMessage);
-            ShowRetryOnly();
             return false;
         }
 
         return true;
     }
+
     private async UniTaskVoid ContinueWithAnonymousAsync(CancellationToken ct)
     {
         try
         {
+            SetStatus("Signing in as guest...");
             bool signedIn = await authService.SignInAnonymouslyAsync(ct);
 
             if (!signedIn)
             {
                 SetStatus("Sign-in failed. Check your connection.");
-                ShowRetryOnly();
+                ShowGuestButton();
                 return;
             }
 
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.LOADING, setActive: false, ct: ct);
             InitializeAdsInParallel();
+
             if (!await LoadGameDataAndCheckGatesAsync(ct))
                 return;
 
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.MAIN_MENU, setActive: true, ct: ct);
             await sceneLoader.UnloadSceneAsync(SceneNames.LOADING, ct);
-
-            // Bootstrapper unloads itself last — use a detached token so our own
-            // OnDestroy cancellation doesn't abort the unload mid-flight.
             sceneLoader.UnloadSceneAsync(SceneNames.BOOTSTRAPPER, CancellationToken.None).Forget();
         }
         catch (OperationCanceledException) { }
@@ -253,11 +223,11 @@ public class BootController : MonoBehaviour
         {
             Debug.LogError($"[BootController] Anonymous flow failed: {ex.Message}");
             SetStatus("Something went wrong. Please retry.");
-            ShowRetryOnly();
+            ShowGuestButton();
         }
     }
 
-    // ─── UI Helpers ─── 
+    // ─── UI Helpers ───
 
     private void SetStatus(string message)
     {
@@ -266,19 +236,11 @@ public class BootController : MonoBehaviour
 
     private void HideAllButtons()
     {
-        //if (retryButton != null) retryButton.SetActive(false);
-        if (anonymousLoginButton != null) anonymousLoginButton.SetActive(false);
+        if (guestButton != null) guestButton.SetActive(false);
     }
 
-    private void ShowFallbackButtons()
+    private void ShowGuestButton()
     {
-        //if (retryButton != null) retryButton.SetActive(true);
-        if (anonymousLoginButton != null) anonymousLoginButton.SetActive(true);
-    }
-
-    private void ShowRetryOnly()
-    {
-        //if (retryButton != null) retryButton.SetActive(true);
-        if (anonymousLoginButton != null) anonymousLoginButton.SetActive(false);
+        if (guestButton != null) guestButton.SetActive(true);
     }
 }

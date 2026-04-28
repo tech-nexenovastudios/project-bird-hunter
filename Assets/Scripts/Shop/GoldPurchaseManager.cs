@@ -20,8 +20,7 @@ public class GoldPurchaseManager : MonoBehaviour
     private void Awake()
     {
         SetupPurchaseButtons();
-        if (loadingPanel != null)
-            loadingPanel.SetActive(false);
+        if (loadingPanel != null) loadingPanel.SetActive(false);
     }
 
     private void Update()
@@ -30,10 +29,7 @@ public class GoldPurchaseManager : MonoBehaviour
             loadingIcon.Rotate(0f, 0f, -rotateSpeed * Time.deltaTime);
     }
 
-    private void Start()
-    {
-        SyncConfig().Forget();
-    }
+    private void Start() => SyncConfig().Forget();
 
     private async UniTaskVoid SyncConfig()
     {
@@ -44,7 +40,6 @@ public class GoldPurchaseManager : MonoBehaviour
         {
             await EconomyService.Instance.Configuration.SyncConfigurationAsync();
             SetButtonsInteractable(true);
-            Debug.Log("[GoldPurchase] Economy config synced.");
         }
         catch (Exception ex)
         {
@@ -70,16 +65,10 @@ public class GoldPurchaseManager : MonoBehaviour
     {
         if (purchaseCards == null) return;
         foreach (var card in purchaseCards)
-        {
-            if (card.purchaseButton != null)
-                card.purchaseButton.interactable = state;
-        }
+            if (card.purchaseButton != null) card.purchaseButton.interactable = state;
     }
 
-    private void OnPurchaseClicked(int index)
-    {
-        ProcessPurchase(index).Forget();
-    }
+    private void OnPurchaseClicked(int index) => ProcessPurchase(index).Forget();
 
     private async UniTaskVoid ProcessPurchase(int index)
     {
@@ -94,36 +83,22 @@ public class GoldPurchaseManager : MonoBehaviour
 
             if (result != null)
             {
-                Debug.Log($"[GoldPurchase] Purchase '{card.purchaseName}' successful!");
+                // ── Convert button world position → screen pixels ──
+                Canvas canvas = card.purchaseButton.GetComponentInParent<Canvas>();
+                Camera cam = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                    ? canvas.worldCamera : null;
+                Vector2 buttonScreenPos = RectTransformUtility.WorldToScreenPoint(
+                    cam, card.purchaseButton.transform.position);
 
-                // ═══ GOLD FLOW EFFECT — from this button ═══
-                Vector2 buttonPos = card.purchaseButton.transform.position;
                 int goldAmount = 0;
                 if (result.Rewards != null)
                 {
                     foreach (var curr in result.Rewards.Currency)
-                    {
-                        if (curr.Id == "GOLD")
-                            goldAmount = (int)curr.Amount;
-                    }
+                        if (curr.Id == "GOLD") goldAmount = (int)curr.Amount;
                 }
+
                 if (goldAmount > 0)
-                    GameEvent.CurrencyCollected(CurrencyType.Gold, buttonPos, goldAmount);
-                // ════════════════════════════════════════════
-
-                if (result.Rewards != null)
-                {
-                    foreach (var item in result.Rewards.Inventory)
-                        Debug.Log($"  Received item: {item.Id}");
-                    foreach (var curr in result.Rewards.Currency)
-                        Debug.Log($"  Received currency: {curr.Amount} {curr.Id}");
-                }
-
-                if (result.Costs != null)
-                {
-                    foreach (var curr in result.Costs.Currency)
-                        Debug.Log($"  Spent: {curr.Amount} {curr.Id}");
-                }
+                    GameEvent.CurrencyCollected(CurrencyType.Gold, buttonScreenPos, goldAmount);
 
                 await CurrencyManager.Instance.Refresh();
             }
@@ -133,7 +108,6 @@ public class GoldPurchaseManager : MonoBehaviour
             switch (ex.ErrorCode)
             {
                 case 10504:
-                    Debug.LogWarning($"[GoldPurchase] Not enough currency for '{card.purchaseName}'.");
                     CurrencyManager.Instance.NotifyInsufficientFunds(CurrencyType.Gems, 0);
                     break;
                 default:
@@ -168,9 +142,6 @@ public class GoldPurchaseManager : MonoBehaviour
     {
         if (purchaseCards == null) return;
         foreach (var card in purchaseCards)
-        {
-            if (card.purchaseButton != null)
-                card.purchaseButton.onClick.RemoveAllListeners();
-        }
+            if (card.purchaseButton != null) card.purchaseButton.onClick.RemoveAllListeners();
     }
 }

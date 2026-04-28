@@ -88,22 +88,7 @@ namespace Gameplay.Managers
         //helper
         private Vector2 WorldToCanvasScreenPos(Vector3 worldPos)
         {
-            Vector2 screenPoint = Camera.main.WorldToScreenPoint(worldPos);
-
-            // Get the canvas root rect — coins are spawned as children of
-            // CoinFlowManager which sits on this canvas
-            RectTransform canvasRect = hudCanvas.GetComponent<RectTransform>();
-
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(
-                canvasRect,
-                screenPoint,
-                hudCanvas.renderMode == RenderMode.ScreenSpaceOverlay
-                    ? null
-                    : hudCanvas.worldCamera,
-                out Vector3 worldPoint
-            );
-
-            return worldPoint; // implicit cast to Vector2, drops Z
+            return Camera.main.WorldToScreenPoint(worldPos);
         }
 
         private void HandleBirdDestroyed(Interfaces.IDamageable bird, int unused, Vector3 position)

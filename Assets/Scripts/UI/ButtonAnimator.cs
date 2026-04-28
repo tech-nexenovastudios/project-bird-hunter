@@ -59,22 +59,16 @@ public class ButtonAnimator : MonoBehaviour
     {
         var rt = target.GetComponent<RectTransform>();
         if (rt == null) return;
-
         rt.DOKill();
 
-        // Quick push down and darken
         Vector2 originalPos = rt.anchoredPosition;
         var image = target.GetComponent<UnityEngine.UI.Image>();
         Color originalColor = image != null ? image.color : Color.white;
 
-        // Move down slightly
         rt.DOAnchorPos(originalPos + new Vector2(0, -4f), duration * 0.3f).SetEase(Ease.OutQuad);
-
-        // Dim color
         if (image != null)
             image.DOColor(originalColor * 0.7f, duration * 0.3f);
 
-        // Snap back
         DOVirtual.DelayedCall(duration * 0.35f, () =>
         {
             rt.DOAnchorPos(originalPos, duration * 0.4f).SetEase(Ease.OutBack);
@@ -82,6 +76,7 @@ public class ButtonAnimator : MonoBehaviour
                 image.DOColor(originalColor, duration * 0.4f);
         });
     }
+
     /// <summary>
     /// Continuously pulses the target's scale up by 15% and back to original.
     /// Call once to start; call StopAttentionPulse to stop.
@@ -102,5 +97,16 @@ public class ButtonAnimator : MonoBehaviour
     {
         target.transform.DOKill();
         target.transform.localScale = Vector3.one;
+    }
+
+    /// <summary>
+    /// Scales up slightly and bounces back to original scale with elastic feel.
+    /// </summary>
+    public void BouncyScale(GameObject target)
+    {
+        target.transform.DOKill();
+        target.transform.localScale = Vector3.one;
+        target.transform.DOScale(1f + strength, duration * 0.35f).SetEase(Ease.OutQuad).OnComplete(() =>
+            target.transform.DOScale(1f, duration * 0.65f).SetEase(Ease.OutElastic, 1.2f, 0.4f));
     }
 }

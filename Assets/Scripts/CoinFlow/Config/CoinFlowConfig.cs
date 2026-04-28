@@ -4,6 +4,8 @@ using DG.Tweening;
 [CreateAssetMenu(fileName = "CoinFlowConfig", menuName = "CoinFlow/Config")]
 public class CoinFlowConfig : ScriptableObject
 {
+   
+
     [Header("═══ Coin Count ═══")]
     public int minCoins = 5;
     public int maxCoins = 15;

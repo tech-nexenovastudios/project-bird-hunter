@@ -153,8 +153,13 @@ public class RewardedAdOffer : MonoBehaviour
             CurrencyType? type = GetCurrencyType();
             if (type.HasValue && watchAdButton != null)
             {
-                Vector2 buttonPos = watchAdButton.transform.position;
-                GameEvent.CurrencyCollected(type.Value, buttonPos, rewardAmount);
+                Canvas canvas = watchAdButton.GetComponentInParent<Canvas>();
+                Camera cam = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                    ? canvas.worldCamera : null;
+                Vector2 buttonScreenPos = RectTransformUtility.WorldToScreenPoint(
+                    cam, watchAdButton.transform.position);
+
+                GameEvent.CurrencyCollected(type.Value, buttonScreenPos, rewardAmount);
             }
             // ════════════════════════════════════════════════
 

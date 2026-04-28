@@ -14,7 +14,7 @@ public class UserData
     public UserData()
     {
         userId = string.Empty;
-        displayName = "Player";
+        displayName = "Player123";
         username = string.Empty;
         avatarIndex = 0;
         level = 1;
