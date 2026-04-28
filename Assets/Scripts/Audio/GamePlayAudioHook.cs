@@ -46,10 +46,10 @@ public class GameplayAudioHook : MonoBehaviour
         AudioManager.Instance?.PlayGameplayMusic();
     }
 
-    private void HandleLevelUpdated(Gameplay.Levels.LevelProfile profile, int index)
+    private void HandleLevelUpdated(int index)
     {
         // Optionally swap music per level here, e.g. boss levels
-        // AudioManager.Instance?.CrossfadeMusic(bossClip, 1f);
+        //AudioManager.Instance?.CrossfadeMusic(bossClip, 1f);
     }
 
     // ── Combat SFX ───────────────────────────────────────

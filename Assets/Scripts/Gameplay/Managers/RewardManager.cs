@@ -88,11 +88,24 @@ namespace Gameplay.Managers
         //helper
         private Vector2 WorldToCanvasScreenPos(Vector3 worldPos)
         {
+            if (Camera.main == null) return Vector2.zero;
+
             Vector2 screenPoint = Camera.main.WorldToScreenPoint(worldPos);
 
-            // Get the canvas root rect — coins are spawned as children of
-            // CoinFlowManager which sits on this canvas
+            // RewardManager is DontDestroyOnLoad but the HUD canvas is scene-scoped,
+            // so after a scene reload the reference dangles. Lazy re-bind.
+            if (hudCanvas == null)
+            {
+                foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+                {
+                    if (c != null && c.isRootCanvas) { hudCanvas = c; break; }
+                }
+            }
+
+            if (hudCanvas == null) return screenPoint;
+
             RectTransform canvasRect = hudCanvas.GetComponent<RectTransform>();
+            if (canvasRect == null) return screenPoint;
 
             RectTransformUtility.ScreenPointToWorldPointInRectangle(
                 canvasRect,
@@ -103,7 +116,7 @@ namespace Gameplay.Managers
                 out Vector3 worldPoint
             );
 
-            return worldPoint; // implicit cast to Vector2, drops Z
+            return worldPoint;
         }
 
         private void HandleBirdDestroyed(Interfaces.IDamageable bird, int unused, Vector3 position)
@@ -126,13 +139,9 @@ namespace Gameplay.Managers
             if (progressMgr?.Data == null) return;
 
             int chapter = progressMgr.CurrentChapter;
-            var profile = progressMgr.GetCurrentLevelProfile();
 
-            float performanceRatio = 1f;
-            if (profile != null && profile.targetScore > 0)
-            {
-                performanceRatio = (float)finalScore / profile.targetScore;
-            }
+            int targetScore = SpawnController.Instance != null ? SpawnController.Instance.TargetScore : 0;
+            float performanceRatio = targetScore > 0 ? (float)finalScore / targetScore : 1f;
 
             int completionCoins = rewardConfig.GetLevelCompletionCoins(chapter, performanceRatio);
             AwardCoins(completionCoins, "level_completion");

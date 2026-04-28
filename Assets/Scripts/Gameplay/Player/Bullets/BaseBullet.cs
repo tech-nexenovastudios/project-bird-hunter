@@ -290,13 +290,16 @@ namespace Gameplay.Player
         {
             GameObject go = null;
 
-            if (GamePoolManager.bulletDamageTextQueue.Count > 0)
+            // Drain destroyed pooled entries (scene reloads can leave dangling refs).
+            while (go == null && GamePoolManager.bulletDamageTextQueue.Count > 0)
             {
                 go = GamePoolManager.bulletDamageTextQueue.Dequeue();
+                if (go == null) continue;
                 go.transform.position = position;
                 go.SetActive(true);
             }
-            else if (damageTextPrefab != null)
+
+            if (go == null && damageTextPrefab != null)
             {
                 go = Instantiate(damageTextPrefab, position, Quaternion.identity);
             }

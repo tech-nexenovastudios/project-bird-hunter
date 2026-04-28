@@ -26,19 +26,20 @@ namespace Gameplay.Birds
         public event Action<BaseBird> OnDestroyed;
 
         protected void InvokeLayEgg() => OnLayEgg?.Invoke(this);
-        
-        private const float EGG_LAY_COOLDOWN = 1.5f;
-        private const float CANNON_ALIGN_THRESHOLD = 0.5f;
+
+        private const float CANNON_CROSS_TOLERANCE = 1.0f;
 
         protected bool _isDead;
         protected bool _isInScreen;
 
-        protected float _layTimer;
+        protected float _layCooldown;
+        private float _fallbackTimer;
+        private float _prevBirdX;
+        private bool _hasPrevBirdX;
         private float _remainingLifetime;
         private BoxCollider2D _collider;
         private float _halfWidth;
-        
-        private float _lastLayX;
+
         private Transform _eggSpawnPoint;
         public Transform EggSpawnPoint => _eggSpawnPoint ??= transform.GetChild(0);
 
@@ -60,12 +61,14 @@ namespace Gameplay.Birds
             if (birdHealth != null)
                 birdHealth.Init(birdConfig, hp);
             
-            _layTimer = EGG_LAY_COOLDOWN;
+            _layCooldown = config.layIntervalMin;
+            _fallbackTimer = config.layIntervalMax;
+            _hasPrevBirdX = false;
+            _prevBirdX = 0f;
             _remainingLifetime = config.lifetime;
 
             _collider = GetComponent<BoxCollider2D>();
             _halfWidth = _collider.bounds.extents.x;
-            _lastLayX = -999f;
 
             _movementStrategy = BirdMovementFactory.Create(BirdMovementType.NormalMove);
             _movementStrategy.Initialize(this, config);
@@ -88,27 +91,34 @@ namespace Gameplay.Birds
 
         private void HandleTimers()
         {
-            if (_layTimer > 0f)
-                _layTimer -= Time.deltaTime;
+            _layCooldown -= Time.deltaTime;
+            _fallbackTimer -= Time.deltaTime;
 
-            if (_isInScreen && _layTimer <= 0f)
+            float birdX = transform.position.x;
+            var gm = Managers.GameManager.Instance;
+            var cannon = gm != null ? gm.currentCannon : null;
+
+            bool crossedCannon = false;
+            if (cannon != null)
             {
-                var gm = Managers.GameManager.Instance;
-                if (gm != null && gm.currentCannon != null)
+                float cannonX = cannon.transform.position.x;
+                if (_hasPrevBirdX)
                 {
-                    float cannonX = gm.currentCannon.transform.position.x;
-                    float birdX = transform.position.x;
-
-                    if (Mathf.Abs(birdX - cannonX) < CANNON_ALIGN_THRESHOLD)
-                    {
-                        if (Mathf.Abs(birdX - _lastLayX) > CANNON_ALIGN_THRESHOLD * 2f)
-                        {
-                            OnLayEgg?.Invoke(this);
-                            _layTimer = EGG_LAY_COOLDOWN;
-                            _lastLayX = birdX;
-                        }
-                    }
+                    bool prevSide = _prevBirdX >= cannonX;
+                    bool currSide = birdX >= cannonX;
+                    crossedCannon = prevSide != currSide
+                                    || Mathf.Abs(birdX - cannonX) < CANNON_CROSS_TOLERANCE;
                 }
+            }
+
+            _prevBirdX = birdX;
+            _hasPrevBirdX = true;
+
+            if (_isInScreen && _layCooldown <= 0f && (crossedCannon || _fallbackTimer <= 0f))
+            {
+                OnLayEgg?.Invoke(this);
+                _layCooldown = config.layIntervalMin;
+                _fallbackTimer = config.layIntervalMax;
             }
 
             _remainingLifetime -= Time.deltaTime;

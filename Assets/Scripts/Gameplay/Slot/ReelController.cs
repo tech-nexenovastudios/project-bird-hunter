@@ -73,6 +73,9 @@ namespace Gameplay.Slot
             _powerNameText = FindTextChild("PowerNameText");
             _descriptionText = FindTextChild("DescriptionText");
             HideInfoTexts();
+            
+            symbols[2].gameObject.SetActive(false);
+            symbols[0].gameObject.SetActive(false);
 
             Debug.Log($"✅ Reel initialized: {symbols.Length} symbols at symbolSize={symbolSize}");
         }
@@ -185,6 +188,7 @@ namespace Gameplay.Slot
                                 OnPowerupSelected?.Invoke(results);
                                 // Commit the choice
                                 GameEvents.FirePowerupCommitted(results);
+                                spinTween?.Kill();
                             });
                         });
                 });

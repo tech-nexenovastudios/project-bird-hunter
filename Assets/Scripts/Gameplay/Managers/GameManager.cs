@@ -137,20 +137,27 @@ namespace Gameplay.Managers
         {
             _pendingLevelStart = false;
 
-            var profile = GameProgressManager.Instance.GetCurrentLevelProfile();
-            if (profile == null)
+            var chapterCfg = GameProgressManager.Instance.GetCurrentChapterConfig();
+            if (chapterCfg == null)
             {
-                Debug.LogError("Missing LevelProfile!");
+                int ch = GameProgressManager.Instance.CurrentChapter;
+                Debug.LogError($"[GameManager] Missing ChapterProgressionConfig for chapter {ch}. " +
+                               $"Ensure Assets/Resources/Data/ChapterProgressions/Chapter{ch}.asset exists.");
                 return;
             }
 
             state = GameState.Gameplay;
 
-            ScoreManager.Instance?.ResetLevel(profile.targetScore);
-            LevelCompletionController.Instance?.ResetForNewLevel();
+            int levelIdx = GameProgressManager.Instance.CurrentLevel - 1;
+            int priorAttempts = GameProgressManager.Instance.RegisterLevelAttempt(
+                GameProgressManager.Instance.CurrentChapter,
+                GameProgressManager.Instance.CurrentLevel);
 
-            spawnController.levelProfile = profile;
+            spawnController.Configure(chapterCfg, levelIdx, priorAttempts);
             spawnController.ResetLevel();
+
+            ScoreManager.Instance?.ResetLevel(spawnController.TargetScore);
+            LevelCompletionController.Instance?.ResetForNewLevel();
 
             RewardManager.Instance?.ResetForNewLevel();
 
@@ -166,7 +173,7 @@ namespace Gameplay.Managers
 
             GameProgressManager.Instance.ApplyPowerUpsToCurrentCannon(currentCannon);
 
-            GameEvents.FireGameLevelUpdated(profile, GameProgressManager.Instance.CurrentLevel);
+            GameEvents.FireGameLevelUpdated(GameProgressManager.Instance.CurrentLevel);
         }
 
         // ───────── Level complete ─────────

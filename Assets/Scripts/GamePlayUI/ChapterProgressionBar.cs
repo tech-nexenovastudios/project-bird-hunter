@@ -35,7 +35,7 @@ namespace Gameplay.UI
             GameEvents.OnGameLevelUpdated -= OnLevelUpdated;
         }
 
-        private void OnLevelUpdated(LevelProfile profile, int globalLevelIndex)
+        private void OnLevelUpdated(int globalLevelIndex)
         {
             var pm = GameProgressManager.Instance;
             Refresh(pm.CurrentLevel, pm.CurrentChapter);

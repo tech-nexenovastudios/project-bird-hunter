@@ -15,6 +15,10 @@ namespace Gameplay.Player
         [SerializeField] protected Transform[] wheels;
         [SerializeField] protected float wheelRadius = 0.5f;
 
+        [Header("Movement Bounds")]
+        [Tooltip("World units the cannon's body is allowed to hang off the side of the screen so the centered muzzle can still reach corner targets. 0 = body fully on-screen.")]
+        [SerializeField] protected float edgeOverhang = 0.4f;
+
         // ── Health ───────────────────────────────────────────
         public int CurrentHp { get; private set; }
 
@@ -348,8 +352,9 @@ namespace Gameplay.Player
             Vector2 oldPos = rb.position;
             Vector2 newPos = rb.position + movementInput * (Stats.Get(StatType.MoveSpeed) * moveSpeedMultiplier * Time.fixedDeltaTime);
 
-            float leftBound = mainCam.ViewportToWorldPoint(Vector3.zero).x + halfWidth;
-            float rightBound = mainCam.ViewportToWorldPoint(Vector3.right).x - halfWidth;
+            float effectiveHalfWidth = Mathf.Max(0f, halfWidth - edgeOverhang);
+            float leftBound = mainCam.ViewportToWorldPoint(Vector3.zero).x + effectiveHalfWidth;
+            float rightBound = mainCam.ViewportToWorldPoint(Vector3.right).x - effectiveHalfWidth;
 
             newPos.x = Mathf.Clamp(newPos.x, leftBound, rightBound);
             rb.MovePosition(newPos);

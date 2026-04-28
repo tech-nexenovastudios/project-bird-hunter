@@ -13,7 +13,6 @@ namespace Gameplay
     {
         private EggTierConfig e1, e2, e3, e4;
         private BirdConfig b1, b2, b3, b4;
-        private AdaptiveDifficultyConfig adaptiveConfig;
 
         private string baseFolder = "Assets/Resources/Data/GeneratedLevels";
 
@@ -43,10 +42,6 @@ namespace Gameplay
             b4 = (BirdConfig)EditorGUILayout.ObjectField("B4 Config", b4, typeof(BirdConfig), false);
             EditorGUILayout.Space();
 
-            adaptiveConfig = (AdaptiveDifficultyConfig)EditorGUILayout.ObjectField(
-                "Adaptive Config", adaptiveConfig, typeof(AdaptiveDifficultyConfig), false);
-            EditorGUILayout.Space();
-
             baseFolder = EditorGUILayout.TextField("Base Folder", baseFolder);
             GUILayout.Label($"Output: {baseFolder}/Chapter1/Levels/Ch1_L01.asset ...", EditorStyles.helpBox);
             EditorGUILayout.Space();
@@ -72,11 +67,6 @@ namespace Gameplay
             if (b1 == null || b2 == null || b3 == null || b4 == null)
             {
                 EditorUtility.DisplayDialog("❌ Missing", "Assign all B1–B4 Bird Configs!", "OK");
-                return false;
-            }
-            if (adaptiveConfig == null)
-            {
-                EditorUtility.DisplayDialog("❌ Missing", "Assign Adaptive Difficulty Config!", "OK");
                 return false;
             }
             return true;

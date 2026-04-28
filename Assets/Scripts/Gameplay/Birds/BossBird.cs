@@ -29,6 +29,7 @@ namespace Gameplay.Birds
         public bool       IsPhase2     { get; private set; }
         public bool       IsDefeated   { get; private set; }
 
+        private float _bossLayTimer;
         private float _specialAttackTimer;
 
         // ── Init ──────────────────────────────────────────────────────────
@@ -56,8 +57,8 @@ namespace Gameplay.Birds
 
             base.Init(tempConfig, bossConfig.totalHp);
 
-            // Own timers — BaseBird's _layTimer is private so we manage ours here
-            _layTimer            = bossConfig.phase1LayInterval;
+            // Boss runs its own fixed-interval lay; BaseBird's cannon-crossing lay is skipped via Update override.
+            _bossLayTimer        = bossConfig.phase1LayInterval;
             _specialAttackTimer  = bossConfig.specialAttackInterval;
 
             Debug.Log($"[BossBird] {bossConfig.bossId} spawned — HP {bossConfig.totalHp}");
@@ -82,11 +83,11 @@ namespace Gameplay.Birds
             float dt = Time.deltaTime;
 
             // ── Normal lay ──────────────────────────────────────────────
-            _layTimer -= dt;
-            if (_layTimer <= 0f)
+            _bossLayTimer -= dt;
+            if (_bossLayTimer <= 0f)
             {
                 InvokeLayEgg();
-                _layTimer = IsPhase2
+                _bossLayTimer = IsPhase2
                     ? BossConfig.phase2LayInterval
                     : BossConfig.phase1LayInterval;
             }

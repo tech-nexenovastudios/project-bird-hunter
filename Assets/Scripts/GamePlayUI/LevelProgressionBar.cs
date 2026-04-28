@@ -15,8 +15,6 @@ namespace Gameplay.UI
         [SerializeField] private Image EggImage;
         [SerializeField] private Image BirdImage;
 
-        [SerializeField] private int[] bossLevels = { 10, 20 };
-
         private int _targetScore = 0;
         private bool _isBossLevel;
         private bool _isLevel20;
@@ -43,11 +41,12 @@ namespace Gameplay.UI
 
         // ───────── Level Started ─────────
 
-        private void OnGameLevelUpdated(LevelProfile profile, int levelIndex)
+        private void OnGameLevelUpdated(int levelIndex)
         {
-            _targetScore = profile != null ? profile.targetScore : 0;
-            _isBossLevel = System.Array.IndexOf(bossLevels, levelIndex) >= 0;
-            _isLevel20 = profile != null && profile.globalLevel % 20 == 0;
+            var spawn = SpawnController.Instance;
+            _targetScore = spawn != null ? spawn.TargetScore : 0;
+            _isBossLevel = spawn != null && spawn.IsBossLevel;
+            _isLevel20 = levelIndex == 20;
 
             if (progressBarFill != null)
             {

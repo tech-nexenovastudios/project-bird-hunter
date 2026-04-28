@@ -40,13 +40,20 @@ namespace Gameplay.UI
         private void OnEnable()
         {
             GameEvents.OnGameLevelUpdated += OnGameLevelUpdated;
-            GameEvents.OnLevelCompleted += OnLevelCompleted;
+            // Post-level "Level X Complete!" popup is intentionally skipped — the next-level
+            // popup follows immediately and already shows "Level N+1 / Starting in 3..."; the
+            // duplicate countdown was a 4.5s dead beat between levels.
+            GameEvents.OnGraceTimeStarted += OnGraceTimeStarted;
+            GameEvents.OnGraceTimeTick += OnGraceTimeTick;
+            GameEvents.OnGraceTimeEnded += OnGraceTimeEnded;
         }
 
         private void OnDisable()
         {
             GameEvents.OnGameLevelUpdated -= OnGameLevelUpdated;
-            GameEvents.OnLevelCompleted -= OnLevelCompleted;
+            GameEvents.OnGraceTimeStarted -= OnGraceTimeStarted;
+            GameEvents.OnGraceTimeTick -= OnGraceTimeTick;
+            GameEvents.OnGraceTimeEnded -= OnGraceTimeEnded;
         }
 
         private void Awake()
@@ -56,7 +63,7 @@ namespace Gameplay.UI
 
         // ───────── Event Handlers ─────────
 
-        private void OnGameLevelUpdated(LevelProfile profile, int levelIndex)
+        private void OnGameLevelUpdated(int levelIndex)
         {
             _currentLevel = GameProgressManager.Instance.CurrentLevel;
             ShowPopup(
@@ -65,12 +72,48 @@ namespace Gameplay.UI
             );
         }
 
-        private void OnLevelCompleted(int score)
+        // ───────── Grace Time ─────────
+
+        private void OnGraceTimeStarted(float duration)
         {
-            ShowPopup(
-                title: $"Level {_currentLevel} Complete!",
-                countdownPrefix: "Next level in"
-            );
+            // Grace runs during gameplay (after target score + min duration). Stop any
+            // active level-start routine so we own the panel for the grace window.
+            if (_activeRoutine != null)
+            {
+                StopCoroutine(_activeRoutine);
+                _activeRoutine = null;
+            }
+
+            levelTitleText.transform.DOKill();
+            levelTitleText.DOKill();
+            popupCanvasGroup.DOKill();
+
+            levelTitleText.text = $"Grace Time +{Mathf.CeilToInt(duration)}s";
+            if (countdownText != null) countdownText.text = string.Empty;
+
+            popupPanel.SetActive(true);
+            popupCanvasGroup.alpha = 1f;
+            levelTitleText.transform.localScale = Vector3.one;
+            levelTitleText.alpha = 1f;
+        }
+
+        private void OnGraceTimeTick(float remaining)
+        {
+            if (levelTitleText != null)
+                levelTitleText.text = $"Grace Time: {Mathf.CeilToInt(remaining)}s";
+        }
+
+        private void OnGraceTimeEnded()
+        {
+            levelTitleText.transform.DOKill();
+            levelTitleText.DOKill();
+            popupCanvasGroup.DOKill();
+
+            popupCanvasGroup
+                .DOFade(0f, fadeOutDuration)
+                .SetEase(Ease.InCubic)
+                .SetUpdate(true)
+                .OnComplete(HideInstant);
         }
 
         // ───────── Core Display ─────────

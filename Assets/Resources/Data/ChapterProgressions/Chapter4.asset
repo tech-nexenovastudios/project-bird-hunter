@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67c7061d47f214520a0b98d742d2a17f, type: 3}
+  m_Name: Chapter4
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Levels.ChapterProgressionConfig
+  chapter: 4
+  totalLevels: 20
+  pressureMax: 19
+  pressureAvgStart: 7.2413793
+  pressureAvgStep: 0.5
+  pressureAvgCap: 17.1
+  targetScoreMin: 911
+  targetScoreMax: 1102
+  hpMultMin: 1.2594094
+  hpMultMax: 1.3548353
+  spawnIntervalEarly: 4.158621
+  spawnIntervalLate: 0.9327586
+  spawnIntervalJitter: 0.25
+  minDurationStart: 28.103449
+  minDurationEnd: 38.103447
+  maxDurationStart: 48.62069
+  maxDurationEnd: 59.13793
+  maxE4Start: 0
+  maxE4End: 0
+  maxE3Start: 1
+  maxE3End: 2
+  maxE2Start: 2
+  maxE2End: 4
+  bossBirdConfig: {fileID: 0}
+  bossSpawnDelay: 12
+  attackingBirdPool: []
+  attackingBirdSpawnInterval: 20
+  attackingBirdSpawnChance: 0.6
+  spinLevelIndices: 0000000004000000090000000e000000

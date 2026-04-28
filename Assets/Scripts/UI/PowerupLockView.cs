@@ -47,7 +47,7 @@ public class PowerupLockView : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    private void OnLevelUpdated(LevelProfile _, int __) => RefreshAllCards();
+    private void OnLevelUpdated(int __) => RefreshAllCards();
 
     // ─── Card registration ───
 

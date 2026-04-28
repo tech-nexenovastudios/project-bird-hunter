@@ -115,6 +115,7 @@ namespace Gameplay.Eggs
                 mainCam = Camera.main;
             }
 
+            Invoke(nameof(ApplyPhysics), 0.5f);
         }
 
         public void ApplyPhysics()
@@ -275,8 +276,9 @@ namespace Gameplay.Eggs
             if (collision.TryGetComponent(out IDamageable damageable))
             {
                 damageable.TakeDamage(config.cannonDamage);
-                _eggHealth?.TakeDamage(Mathf.CeilToInt(config.cannonDamage * 0.5f));
-                Invoke(nameof(ExecuteBounceEffect), 0.05f);
+                // _eggHealth?.TakeDamage(Mathf.CeilToInt(config.cannonDamage * 0.5f));
+                // Invoke(nameof(ExecuteBounceEffect), 0.05f);
+                PlayDeathSequence();
             }
         }
         

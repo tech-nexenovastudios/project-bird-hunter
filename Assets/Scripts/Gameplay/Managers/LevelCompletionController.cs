@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using Gameplay.Events;
 using Gameplay.Managers;
-using Gameplay.Levels;
 
 namespace Gameplay.Managers
 {
@@ -85,8 +84,10 @@ namespace Gameplay.Managers
 
         private int GetTargetScore()
         {
-            var profile = SpawnController.Instance?.levelProfile ?? GameProgressManager.Instance?.GetCurrentLevelProfile();
-            return profile != null ? Mathf.Max(1, profile.targetScore) : fallbackTargetScore;
+            if (SpawnController.Instance != null && SpawnController.Instance.TargetScore > 0)
+                return SpawnController.Instance.TargetScore;
+
+            return fallbackTargetScore;
         }
 
         public float GetScoreProgress()

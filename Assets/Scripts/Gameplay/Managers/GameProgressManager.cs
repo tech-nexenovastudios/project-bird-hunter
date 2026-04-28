@@ -18,6 +18,8 @@ namespace Gameplay.Managers
 
         [Header("Level Data")]
         public string levelResourcesPath = "Data/GeneratedLevels";
+        [Tooltip("Resources path for ChapterProgressionConfig assets (Chapter{n}.asset). If a chapter config is found here, per-level profiles are resolved from it and the legacy per-level assets are ignored.")]
+        public string chapterConfigResourcesPath = "Data/ChapterProgressions";
 
         [Header("Save")]
         public string saveFileName = "birdhunter_progress.dat";
@@ -38,6 +40,35 @@ namespace Gameplay.Managers
 
         public PowerupConfig LastSelectedPowerup { get; private set; }
         private int _currentSpinSlotIndex = 0;
+
+        // Session-only retry counters (not persisted). Resets on app restart and on chapter rollover.
+        private readonly Dictionary<string, int> _sessionLevelAttempts = new();
+
+        private static string AttemptKey(int chapter, int level) => $"Ch{chapter}_L{level}";
+
+        public int GetLevelAttempts(int chapter, int level)
+            => _sessionLevelAttempts.TryGetValue(AttemptKey(chapter, level), out var v) ? v : 0;
+
+        /// <summary>
+        /// Returns the number of *prior* attempts before this one (0 on first entry, 1 on first replay, ...) and
+        /// increments the counter for the given level. Use the returned value to drive replay-difficulty bumps.
+        /// </summary>
+        public int RegisterLevelAttempt(int chapter, int level)
+        {
+            string key = AttemptKey(chapter, level);
+            int prior = _sessionLevelAttempts.TryGetValue(key, out var v) ? v : 0;
+            _sessionLevelAttempts[key] = prior + 1;
+            return prior;
+        }
+
+        public void ResetAttemptsForChapter(int chapter)
+        {
+            string prefix = $"Ch{chapter}_L";
+            var keys = new List<string>();
+            foreach (var k in _sessionLevelAttempts.Keys)
+                if (k.StartsWith(prefix)) keys.Add(k);
+            foreach (var k in keys) _sessionLevelAttempts.Remove(k);
+        }
 
         private static bool IsSpinLevel(int completedLevel)
             => completedLevel == 5 || completedLevel == 10 || completedLevel == 15;
@@ -68,17 +99,41 @@ namespace Gameplay.Managers
         public LevelProfile GetCurrentLevelProfile()
             => LoadLevelProfile(CurrentChapter, CurrentLevel);
 
+        public ChapterProgressionConfig GetCurrentChapterConfig()
+            => LoadChapterConfig(CurrentChapter);
+
+        public ChapterProgressionConfig LoadChapterConfig(int chapter)
+        {
+            var cfg = Resources.Load<ChapterProgressionConfig>($"{chapterConfigResourcesPath}/Chapter{chapter}");
+            if (cfg == null)
+                Debug.LogWarning($"[ProgressManager] ❌ ChapterProgressionConfig missing: {chapterConfigResourcesPath}/Chapter{chapter}");
+            return cfg;
+        }
+
         public LevelProfile LoadLevelProfile(int chapter, int level)
         {
+            var chapterCfg = Resources.Load<ChapterProgressionConfig>($"{chapterConfigResourcesPath}/Chapter{chapter}");
+            if (chapterCfg != null)
+            {
+                var resolved = LevelProfileResolver.Resolve(chapterCfg, level - 1);
+                if (resolved != null)
+                {
+                    Debug.Log($"[ProgressManager] ✅ LevelProfile resolved from ChapterProgressionConfig: Ch{chapter} L{level}");
+                    OnLevelLoaded?.Invoke(resolved);
+                    GameEvents.FireGameLevelUpdated(level);
+                    return resolved;
+                }
+            }
+
             string path = $"{levelResourcesPath}/Chapter{chapter}/Levels/Ch{chapter}_L{level:D2}";
             var profile = Resources.Load<LevelProfile>(path);
 
             if (profile == null) Debug.LogWarning($"[ProgressManager] ❌ LevelProfile missing: {path}");
             else
             {
-                Debug.Log($"[ProgressManager] ✅ LevelProfile loaded: {path}");
+                Debug.Log($"[ProgressManager] ✅ LevelProfile loaded (legacy): {path}");
                 OnLevelLoaded?.Invoke(profile);
-                GameEvents.FireGameLevelUpdated(profile, level);
+                GameEvents.FireGameLevelUpdated(level);
             }
             return profile;
         }
@@ -110,6 +165,7 @@ namespace Gameplay.Managers
             }
             else
             {
+                ResetAttemptsForChapter(_progress.currentChapter);
                 _progress.currentChapter++;
                 _progress.currentLevel = 1;
                 _progress.ResetSlotsForNewChapter();

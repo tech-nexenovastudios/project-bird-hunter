@@ -25,6 +25,7 @@ namespace Gameplay.Health
         public int CurrentHp => _currentHp;
         public int MaxHp => _maxHp;
         public bool IsAlive => !_isDead;
+        public Eggs.EggTierConfig Config => config;
         private readonly List<IEffect<IDamageable>> activeEffects = new();
 
         public event Action<int, int> OnHpChanged;

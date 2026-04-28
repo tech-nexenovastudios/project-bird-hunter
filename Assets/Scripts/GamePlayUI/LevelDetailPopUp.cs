@@ -59,7 +59,7 @@ namespace Gameplay.UI
 
         // ───────── Event Handlers ─────────
 
-        private void OnGameLevelUpdated(LevelProfile profile, int levelIndex)
+        private void OnGameLevelUpdated(int levelIndex)
         {
             _levelCompleted = false;  // reset — this is a fresh level start or restart
             _currentLevel = GameProgressManager.Instance.CurrentLevel;

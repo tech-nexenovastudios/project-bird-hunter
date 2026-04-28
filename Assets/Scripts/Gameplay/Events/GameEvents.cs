@@ -28,7 +28,7 @@ namespace Gameplay.Events
 
         // ───────── XP / Level ─────────
         public static event Action<int> OnPlayerLevelUp;
-        public static event Action<LevelProfile, int> OnGameLevelUpdated;
+        public static event Action<int> OnGameLevelUpdated;
 
         // ───────── Level Flow ─────────
         public static event Action<int> OnLevelCompleted;
@@ -82,8 +82,8 @@ namespace Gameplay.Events
         public static void FirePlayerLevelUp(int newLevel)
             => OnPlayerLevelUp?.Invoke(newLevel);
 
-        public static void FireGameLevelUpdated(LevelProfile profile, int index)
-            => OnGameLevelUpdated?.Invoke(profile, index);
+        public static void FireGameLevelUpdated(int index)
+            => OnGameLevelUpdated?.Invoke(index);
 
         public static void FireLevelCompleted(int score)
             => OnLevelCompleted?.Invoke(score);
@@ -146,5 +146,17 @@ namespace Gameplay.Events
 
         public static void FireLevelCompletedEarly(float remaining) => OnLevelCompletedEarly?.Invoke(remaining);
         public static event Action<float> OnLevelCompletedEarly;
+
+        // ───────── Level Grace Time ─────────
+        // Fired after the target score is reached and the min-duration gate has elapsed.
+        // Bird/egg spawning is paused; the player has a fixed window to clear remaining eggs
+        // before they are force-destroyed. See SpawnController.StartDrain.
+        public static event Action<float> OnGraceTimeStarted; // duration (seconds)
+        public static event Action<float> OnGraceTimeTick;    // remaining (seconds)
+        public static event Action OnGraceTimeEnded;
+
+        public static void FireGraceTimeStarted(float duration) => OnGraceTimeStarted?.Invoke(duration);
+        public static void FireGraceTimeTick(float remaining) => OnGraceTimeTick?.Invoke(remaining);
+        public static void FireGraceTimeEnded() => OnGraceTimeEnded?.Invoke();
     }
 }

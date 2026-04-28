@@ -388,17 +388,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   config: {fileID: 11400000, guid: 94e21ff081ae30648b414361787f5d04, type: 2}
   mainCam: {fileID: 0}
-  minorHitVFXPrefab: {fileID: 761963168719914604, guid: 55d17c361fc373d488c9690aaa136e49, type: 3}
-  blastVFXPrefab: {fileID: 1003475684366793137, guid: f88d00996742fab429d503d9d4aec2a8, type: 3}
+  minorHitVFXPrefab: {fileID: 7516003108749195644, guid: d26d042577f7b244f89cdbe6b50fb567, type: 3}
+  blastVFXPrefab: {fileID: 2114415160723529283, guid: 3a12eb215c4bbc44981b4a0fa95357f1, type: 3}
   hitVFXPoint: {fileID: 1047616558158139249}
   blastVFXPoint: {fileID: 2899402552652186611}
   smokeParticle: {fileID: 2815520671769793254, guid: 23a256d34d4de1444b7c3353c2de03fb, type: 3}
   hitScaleMultiplier: 1.1
-  hitPushUpForce: 2
   hitScaleUpDuration: 0.08
   hitScaleDownDuration: 0.12
   deathScaleTarget: 0.1
   deathScaleDuration: 0.1
+  spawnSlowMovementDuration: 1
+  spawnMaxSlowVelocity: 1
+  wallBounceDamping: 0.65
+  minHorizontalVelocity: 0.3
+  bounceDirectionRandomness: 0.3
 --- !u!114 &96112293446289958
 MonoBehaviour:
   m_ObjectHideFlags: 0

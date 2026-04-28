@@ -96,6 +96,7 @@ using System;
 using UnityEngine;
 using TMPro;
 using Gameplay.Events;
+using Gameplay.Health;
 using Gameplay.Interfaces;
 
 namespace Gameplay.Managers
@@ -106,7 +107,7 @@ namespace Gameplay.Managers
 
         [SerializeField] private TMP_Text scoreText;
 
-        [Header("Score Values")]
+        [Header("Fallback Score Values (used when config/payload missing)")]
         [SerializeField] private int scorePerEggHit = 5;
         [SerializeField] private int scorePerEggDestroy = 20;
         [SerializeField] private int scorePerBirdDestroy = 50;
@@ -171,13 +172,18 @@ namespace Gameplay.Managers
         }
 
         private void OnEggHit(IDamageable egg, int damage, Vector3 hitPoint)
-            => AddScore(scorePerEggHit);
+        {
+            int award = (egg is EggHealth eh && eh.Config != null && eh.Config.scorePerHit > 0)
+                ? eh.Config.scorePerHit
+                : scorePerEggHit;
+            AddScore(award);
+        }
 
-        private void OnEggDestroyed(IDamageable egg, int unused, Vector3 position)
-            => AddScore(scorePerEggDestroy);
+        private void OnEggDestroyed(IDamageable egg, int scoreAwarded, Vector3 position)
+            => AddScore(scoreAwarded > 0 ? scoreAwarded : scorePerEggDestroy);
 
-        private void OnBirdDestroyed(IDamageable bird, int unused, Vector3 position)
-            => AddScore(scorePerBirdDestroy);
+        private void OnBirdDestroyed(IDamageable bird, int scoreAwarded, Vector3 position)
+            => AddScore(scoreAwarded > 0 ? scoreAwarded : scorePerBirdDestroy);
 
         private void UpdateDisplay()
         {
