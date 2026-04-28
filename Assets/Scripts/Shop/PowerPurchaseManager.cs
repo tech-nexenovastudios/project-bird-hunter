@@ -94,36 +94,22 @@ public class PowerPurchaseManager : MonoBehaviour
 
             if (result != null)
             {
-                Debug.Log($"[PowerPurchase] Purchase '{card.purchaseName}' successful!");
+                // ── Convert button world position → screen pixels ──
+                Canvas canvas = card.purchaseButton.GetComponentInParent<Canvas>();
+                Camera cam = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                    ? canvas.worldCamera : null;
+                Vector2 buttonScreenPos = RectTransformUtility.WorldToScreenPoint(
+                    cam, card.purchaseButton.transform.position);
 
-                // ═══ POWER FLOW EFFECT — from this button ═══
-                Vector2 buttonPos = card.purchaseButton.transform.position;
                 int powerAmount = 0;
                 if (result.Rewards != null)
                 {
                     foreach (var curr in result.Rewards.Currency)
-                    {
-                        if (curr.Id == "POWER")
-                            powerAmount = (int)curr.Amount;
-                    }
+                        if (curr.Id == "POWER") powerAmount = (int)curr.Amount;
                 }
+
                 if (powerAmount > 0)
-                    GameEvent.CurrencyCollected(CurrencyType.Power, buttonPos, powerAmount);
-                // ═════════════════════════════════════════════
-
-                if (result.Rewards != null)
-                {
-                    foreach (var item in result.Rewards.Inventory)
-                        Debug.Log($"  Received item: {item.Id}");
-                    foreach (var curr in result.Rewards.Currency)
-                        Debug.Log($"  Received currency: {curr.Amount} {curr.Id}");
-                }
-
-                if (result.Costs != null)
-                {
-                    foreach (var curr in result.Costs.Currency)
-                        Debug.Log($"  Spent: {curr.Amount} {curr.Id}");
-                }
+                    GameEvent.CurrencyCollected(CurrencyType.Power, buttonScreenPos, powerAmount);
 
                 await CurrencyManager.Instance.Refresh();
             }
@@ -133,7 +119,6 @@ public class PowerPurchaseManager : MonoBehaviour
             switch (ex.ErrorCode)
             {
                 case 10504:
-                    Debug.LogWarning($"[PowerPurchase] Not enough currency for '{card.purchaseName}'.");
                     CurrencyManager.Instance.NotifyInsufficientFunds(CurrencyType.Gems, 0);
                     break;
                 default:
@@ -151,7 +136,6 @@ public class PowerPurchaseManager : MonoBehaviour
             card.purchaseButton.interactable = true;
         }
     }
-
     private void ShowLoading()
     {
         isLoading = true;

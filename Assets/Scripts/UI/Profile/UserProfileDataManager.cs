@@ -218,7 +218,7 @@ public class UserProfileDataManager : MonoBehaviour
     private void OnEditPressed()
     {
         // Open the avatar selection panel
-        SetAvatarPanelVisible(true);
+        //SetAvatarPanelVisible(true);
 
         // Also unlock the username field for editing
         if (usernameInputField == null) return;

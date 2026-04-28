@@ -1,5 +1,7 @@
 using System;
+using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.SceneManagement;
 
 public class GameRoot : MonoBehaviour
@@ -41,5 +43,7 @@ public class GameRoot : MonoBehaviour
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
+
+        Application.runInBackground = true;
     }
 }

@@ -154,9 +154,13 @@ public class GemsBuyManager : MonoBehaviour, IDetailedStoreListener
         gem.purchaseButton.interactable = false;
         ShowLoading();
 
-        // ═══ Capture button position BEFORE async gap ═══
-        _currentPurchaseButtonPos = gem.purchaseButton.transform.position;
-        // ═════════════════════════════════════════════════
+        // ═══ Capture button screen position BEFORE async gap ═══
+        Canvas canvas = gem.purchaseButton.GetComponentInParent<Canvas>();
+        Camera cam = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            ? canvas.worldCamera : null;
+        _currentPurchaseButtonPos = RectTransformUtility.WorldToScreenPoint(
+            cam, gem.purchaseButton.transform.position);
+        // ═══════════════════════════════════════════════════════
 
         try
         {

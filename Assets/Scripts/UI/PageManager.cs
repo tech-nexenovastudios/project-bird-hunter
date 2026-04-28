@@ -136,8 +136,15 @@ public class PageManager : MonoBehaviour
     /// <summary>Push a page on top. Previous page stays underneath.</summary>
     public void PushPage(PageType type)
     {
-        if (!_byType.ContainsKey(type))      { Debug.LogWarning($"[PageManager] No slot for {type}."); return; }
-        if (_stack.Count > 0 && _stack.Peek() == type) return;
+        if (!_byType.ContainsKey(type)) { Debug.LogWarning($"[PageManager] No slot for {type}."); return; }
+
+        // Same page already on top — just trigger reset
+        if (_stack.Count > 0 && _stack.Peek() == type)
+        {
+            if (_registered.TryGetValue(type, out var samePage))
+                samePage.OnPageEnter();
+            return;
+        }
 
         var from = CurrentPage;
         _stack.Push(type);
@@ -159,7 +166,14 @@ public class PageManager : MonoBehaviour
     {
         if (!_byType.ContainsKey(type)) { Debug.LogWarning($"[PageManager] No slot for {type}."); return; }
         if (_stack.Count == 0) { PushPage(type); return; }
-        if (_stack.Peek() == type) return;
+
+        // Same page already on top — just trigger reset
+        if (_stack.Peek() == type)
+        {
+            if (_registered.TryGetValue(type, out var samePage))
+                samePage.OnPageEnter();
+            return;
+        }
 
         var from = _stack.Pop();
         _stack.Push(type);

@@ -32,8 +32,9 @@ namespace Gameplay.UI
         [Header("Vibration Animation")]
          private float slideSpeed = 15f;
 
-        private const string PREF_MUSIC = "MusicVolume";
-        private const string PREF_SOUND = "SoundVolume";
+        // In PausePanel, change these:
+        private const string PREF_MUSIC = "MusicVol";    
+        private const string PREF_SOUND = "SFXVol";     
         private const string PREF_VIBRATION = "VibrationOn";
 
         private bool vibrationOn = true;
@@ -90,6 +91,9 @@ namespace Gameplay.UI
             musicSlider.SetValueWithoutNotify(music);
             soundSlider.SetValueWithoutNotify(sound);
 
+            if (AudioManager.Instance != null) AudioManager.Instance.SetMusicVolume(music);
+            if (AudioManager.Instance != null) AudioManager.Instance.SetSFXVolume(sound);
+
             RefreshMusicBar(music);
             RefreshSoundBar(sound);
             RefreshVibrationBar(vibrationOn, animate: false);
@@ -107,12 +111,16 @@ namespace Gameplay.UI
         private void OnMusicChanged(float value)
         {
             RefreshMusicBar(value);
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.SetMusicVolume(value);
             SaveSettings();
         }
 
         private void OnSoundChanged(float value)
         {
             RefreshSoundBar(value);
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.SetSFXVolume(value);
             SaveSettings();
         }
 

@@ -1,40 +1,35 @@
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
-using Unity.Services.Authentication;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class AvatarLoader : MonoBehaviour
 {
     [SerializeField] private Image profileImage;
-    private const string AVATAR_KEY = "avatarIndex";
-    private int savedAvatarIndex = 0;
-    [SerializeField] private List<Sprite> avatarSprites;        // 8 matching sprites (same order as buttons)
-    void Start()
+    [SerializeField] private List<Sprite> avatarSprites;
+
+    private UserDataRepository _repo;
+
+    private void OnEnable()
     {
-        LoadAvatar().Forget();
-    }
-    //laod method
-    private async UniTaskVoid LoadAvatar()
-    {
-        try
-        {
-            var keys = new HashSet<string> { AVATAR_KEY };
-            var data = await CloudSaveManager.Instance.LoadAsync(keys);
-
-            // Load avatar
-            if (data.ContainsKey(AVATAR_KEY))
-                savedAvatarIndex = data[AVATAR_KEY].Value.GetAs<int>();
-
-            savedAvatarIndex = Mathf.Clamp(savedAvatarIndex, 0, avatarSprites.Count - 1);
-
-            profileImage.sprite = avatarSprites[savedAvatarIndex];
-            Debug.Log($"[UserProfile] Loaded —  Avatar: {savedAvatarIndex}");
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"[UserProfile] Failed to load profile: {ex.Message}");
-        }
+        _repo = ServiceLocator.Get<UserDataRepository>();
+        if (_repo != null) _repo.OnUserDataChanged += LoadAvatar;
+        LoadAvatar();
     }
 
+    private void OnDisable()
+    {
+        if (_repo != null) _repo.OnUserDataChanged -= LoadAvatar;
+    }
+
+    private void LoadAvatar()
+    {
+        if (profileImage == null || avatarSprites == null || avatarSprites.Count == 0) return;
+        if (_repo == null) _repo = ServiceLocator.Get<UserDataRepository>();
+        if (_repo?.UserData == null) return;
+
+        int index = Mathf.Clamp(_repo.UserData.avatarIndex, 0, avatarSprites.Count - 1);
+        profileImage.sprite = avatarSprites[index];
+    }
+
+    public void Refresh() => LoadAvatar();
 }

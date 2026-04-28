@@ -1,11 +1,6 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
-using Cysharp.Threading.Tasks;
 
-/// <summary>
-/// Attach to a UI GameObject. Displays currency values and auto-updates on changes.
-/// Loads balances on Start if not already loaded.
-/// </summary>
 public class CurrencyUI : MonoBehaviour
 {
     [Header("Currency Texts")]
@@ -13,23 +8,37 @@ public class CurrencyUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI gemsText;
     [SerializeField] private TextMeshProUGUI powerText;
 
+    private bool _hasStarted = false;
+
     private void OnEnable()
     {
         CurrencyManager.OnCurrencyChanged += OnCurrencyChanged;
-        if (!CurrencyManager.Instance.IsLoaded)
-            LoadCurrency().Forget();
-        else
+        EventBus.Subscribe<CurrencyLoadedEvent>(OnCurrencyLoaded);
+
+        // Only refresh in OnEnable if Start has already run (i.e., this is a re-enable).
+        // First-time paint happens in Start — see note below.
+        if (_hasStarted && CurrencyManager.Instance.IsLoaded)
             RefreshAll();
     }
 
     private void OnDisable()
     {
         CurrencyManager.OnCurrencyChanged -= OnCurrencyChanged;
+        EventBus.Unsubscribe<CurrencyLoadedEvent>(OnCurrencyLoaded);
     }
 
-    private async UniTaskVoid LoadCurrency()
+    private void Start()
     {
-        await CurrencyManager.Instance.LoadBalances();
+        // Paint cache here — by Start(), TMP components are fully initialized.
+        // Painting in OnEnable before Start can fail silently due to TMP init timing.
+        _hasStarted = true;
+
+        if (CurrencyManager.Instance.IsLoaded)
+            RefreshAll();
+    }
+
+    private void OnCurrencyLoaded(CurrencyLoadedEvent evt)
+    {
         RefreshAll();
     }
 
@@ -37,15 +46,9 @@ public class CurrencyUI : MonoBehaviour
     {
         switch (type)
         {
-            case CurrencyType.Gold:
-                SetText(goldText, newValue);
-                break;
-            case CurrencyType.Gems:
-                SetText(gemsText, newValue);
-                break;
-            case CurrencyType.Power:
-                SetText(powerText, newValue);
-                break;
+            case CurrencyType.Gold: SetText(goldText, newValue); break;
+            case CurrencyType.Gems: SetText(gemsText, newValue); break;
+            case CurrencyType.Power: SetText(powerText, newValue); break;
         }
     }
 
@@ -58,16 +61,13 @@ public class CurrencyUI : MonoBehaviour
 
     private void SetText(TextMeshProUGUI text, long value)
     {
-        if (text != null)
-            text.text = FormatCurrency(value);
+        if (text != null) text.text = FormatCurrency(value);
     }
 
     private string FormatCurrency(long value)
     {
-        if (value >= 1_000_000)
-            return (value / 1_000_000f).ToString("0.#") + "M";
-        if (value >= 1_000)
-            return (value / 1_000f).ToString("0.#") + "K";
+        if (value >= 1_000_000) return (value / 1_000_000f).ToString("0.##") + "M";
+        if (value >= 1_000) return (value / 1_000f).ToString("0.##") + "K";
         return value.ToString();
     }
 }

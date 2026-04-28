@@ -101,10 +101,19 @@ public class CurrencyManager
             OnCurrencyChanged?.Invoke(CurrencyType.Gold, _gold);
             OnCurrencyChanged?.Invoke(CurrencyType.Gems, _gems);
             OnCurrencyChanged?.Invoke(CurrencyType.Power, _power);
+
+            // Publish global event for UI that subscribes late
+            EventBus.Publish(new CurrencyLoadedEvent
+            {
+                gold = _gold,
+                gems = _gems,
+                power = _power
+            });
         }
         catch (Exception ex)
         {
             Debug.LogError($"[Currency] Failed to load balances: {ex.Message}");
+            throw; // let BootController catch and handle it
         }
     }
 

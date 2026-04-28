@@ -158,5 +158,15 @@ namespace Gameplay.Events
         public static void FireGraceTimeStarted(float duration) => OnGraceTimeStarted?.Invoke(duration);
         public static void FireGraceTimeTick(float remaining) => OnGraceTimeTick?.Invoke(remaining);
         public static void FireGraceTimeEnded() => OnGraceTimeEnded?.Invoke();
+        // ───────── Powerup Cooldown ─────────
+        public static event Action<float> OnPowerupCooldownStarted;
+
+        public static void FirePowerupCooldownStarted(float duration)
+            => OnPowerupCooldownStarted?.Invoke(duration);
+        public static event Action OnPowerupUnequipped;
+        public static void FirePowerupUnequipped() => OnPowerupUnequipped?.Invoke();
+        public static event Action<int> OnChapterCompleted;  // int = new chapter number
+        public static void FireChapterCompleted(int newChapter)
+            => OnChapterCompleted?.Invoke(newChapter);
     }
 }

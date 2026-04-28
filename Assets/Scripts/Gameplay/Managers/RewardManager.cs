@@ -88,6 +88,7 @@ namespace Gameplay.Managers
         //helper
         private Vector2 WorldToCanvasScreenPos(Vector3 worldPos)
         {
+            //return Camera.main.WorldToScreenPoint(worldPos);
             if (Camera.main == null) return Vector2.zero;
 
             Vector2 screenPoint = Camera.main.WorldToScreenPoint(worldPos);
