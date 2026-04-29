@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class PowerUpsMenuView : MonoBehaviour, IMenuPage
 {
-    public PageType PageType => PageType.ShopMenu;
+    public PageType PageType => PageType.PowerUps;
 
     [Header("Sub-Panels & Popups (will be hidden on page enter)")]
     [Tooltip("All popup/overlay panels in this page that should be hidden when the page opens.")]
@@ -80,7 +80,7 @@ public class PowerUpsMenuView : MonoBehaviour, IMenuPage
             {
                 if (sr == null) continue;
                 sr.verticalNormalizedPosition = 1f;
-                sr.horizontalNormalizedPosition = 0f;
+                //sr.horizontalNormalizedPosition = 0f;
             }
         }
         // Also catch any ScrollRects we didn't manually assign

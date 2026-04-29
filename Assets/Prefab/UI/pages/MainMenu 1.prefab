@@ -310,7 +310,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 48277476fb08c514188712760b650a07, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -745,6 +745,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonShine
   shine: {fileID: 1555850109279823548}
+  direction: 0
   duration: 0.8
   interval: 3
   ease: 4
@@ -2970,7 +2971,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8051058909854150260
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3020,8 +3021,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "WORLD : \n"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 69969c0eb043b43b4a169fd1d0310418, type: 2}
-  m_sharedMaterial: {fileID: -7073165931134622185, guid: 69969c0eb043b43b4a169fd1d0310418, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 116dd4f0eb19645469f6bb2b480d54dc, type: 2}
+  m_sharedMaterial: {fileID: -5397926085306306235, guid: 116dd4f0eb19645469f6bb2b480d54dc, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4523,7 +4524,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worlds: {fileID: 0}
-  worldText: {fileID: 0}
   chapterText: {fileID: 0}
 --- !u!1 &3958895769753383408
 GameObject:
@@ -6635,7 +6635,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 48277476fb08c514188712760b650a07, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -8599,7 +8599,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 48277476fb08c514188712760b650a07, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -9087,7 +9087,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worlds: {fileID: 11400000, guid: 7b0490fe407016f4a9c56de091d5711d, type: 2}
-  worldText: {fileID: 7949463780380295808}
   chapterText: {fileID: 5313068893760597944}
 --- !u!1 &7504191186865616891
 GameObject:
@@ -9579,7 +9578,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 48277476fb08c514188712760b650a07, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -9859,7 +9858,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 48277476fb08c514188712760b650a07, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -10884,7 +10883,7 @@ GameObject:
   - component: {fileID: 1376435985375997890}
   - component: {fileID: 5313068893760597944}
   m_Layer: 5
-  m_Name: ChapterNumber
+  m_Name: ChapterName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10906,7 +10905,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -129.29}
+  m_AnchoredPosition: {x: 0, y: -81}
   m_SizeDelta: {x: 990, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1376435985375997890
@@ -10937,19 +10936,17 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'CHAPTER
-
-'
+  m_text: Medusa temple
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 69969c0eb043b43b4a169fd1d0310418, type: 2}
-  m_sharedMaterial: {fileID: -7073165931134622185, guid: 69969c0eb043b43b4a169fd1d0310418, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e62abc2b22e7c6c499ea05d36a653cde, type: 2}
+  m_sharedMaterial: {fileID: -5397926085306306235, guid: e62abc2b22e7c6c499ea05d36a653cde, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

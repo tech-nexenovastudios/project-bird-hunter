@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class CoinFlowManager : MonoBehaviour
@@ -8,7 +9,11 @@ public class CoinFlowManager : MonoBehaviour
     [SerializeField] private CurrencyFlowEntry[] currencyEntries;
     [SerializeField] private Canvas parentCanvas;
     [SerializeField] private float coinScaleOverride = 0.5f;
-   
+
+    [Header("Target Bounce Animation")]
+    [SerializeField] private float bounceScale = 1.1f;
+    [SerializeField] private float bounceInDuration = 0.18f;
+    [SerializeField] private float bounceOutDuration = 0.28f;
 
     private Dictionary<CurrencyType, CurrencyFlowRuntime> runtimeMap;
 
@@ -36,11 +41,18 @@ public class CoinFlowManager : MonoBehaviour
                 onRelease: coin => coin.gameObject.SetActive(false)
             );
 
+            // Cache the parent we'll bounce — immediate parent of the target UI
+            Transform bounceTarget = entry.targetUI != null && entry.targetUI.parent != null
+                ? entry.targetUI.parent
+                : null;
+
             runtimeMap[entry.currencyType] = new CurrencyFlowRuntime
             {
                 config = entry.config,
                 targetUI = entry.targetUI,
-                pool = pool
+                pool = pool,
+                bounceTarget = bounceTarget,
+                bounceOriginalScale = bounceTarget != null ? bounceTarget.localScale : Vector3.one
             };
         }
     }
@@ -73,10 +85,8 @@ public class CoinFlowManager : MonoBehaviour
         int remainder = totalValue % coinCount;
         int arrivedCount = 0;
 
-        // Convert the target UI element to screen, then both origin and target to canvas world space.
         Camera canvasCam = (parentCanvas != null && parentCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
-            ? parentCanvas.worldCamera
-            : null;
+            ? parentCanvas.worldCamera : null;
 
         Vector2 targetScreenPos = RectTransformUtility.WorldToScreenPoint(canvasCam, runtime.targetUI.position);
         Vector3 spawnWorldPos = ScreenToCanvasWorldPos(originScreen, canvasCam);
@@ -89,7 +99,6 @@ public class CoinFlowManager : MonoBehaviour
             coinRT.position = spawnWorldPos;
             coinRT.localScale = coinScaleOverride == 1f ? Vector3.one : Vector3.one * coinScaleOverride;
 
-
             int value = valuePerCoin + (i == coinCount - 1 ? remainder : 0);
 
             coin.Launch(
@@ -101,14 +110,48 @@ public class CoinFlowManager : MonoBehaviour
                 onComplete: returnedCoin =>
                 {
                     runtime.pool.Release(returnedCoin);
+
+                    // Trigger bounce on first arrival; refresh while coins keep arriving
+                    BounceTargetActive(runtime);
+
                     arrivedCount++;
                     if (arrivedCount >= coinCount)
+                    {
+                        BounceTargetSettle(runtime);
                         GameEvent.CurrencyBurstComplete(type);
+                    }
                 }
             );
 
             yield return new WaitForSeconds(config.spawnInterval);
         }
+    }
+
+    private void BounceTargetActive(CurrencyFlowRuntime runtime)
+    {
+        if (runtime.bounceTarget == null) return;
+
+        // Already in "scaled up" state? Don't re-tween.
+        if (runtime.bounceTween != null && runtime.bounceTween.IsActive() && !runtime.isSettling) return;
+
+        runtime.bounceTween?.Kill();
+        runtime.isSettling = false;
+
+        runtime.bounceTween = runtime.bounceTarget
+            .DOScale(runtime.bounceOriginalScale * bounceScale, bounceInDuration)
+            .SetEase(Ease.OutQuad);
+    }
+
+    private void BounceTargetSettle(CurrencyFlowRuntime runtime)
+    {
+        if (runtime.bounceTarget == null) return;
+
+        runtime.bounceTween?.Kill();
+        runtime.isSettling = true;
+
+        runtime.bounceTween = runtime.bounceTarget
+            .DOScale(runtime.bounceOriginalScale, bounceOutDuration)
+            .SetEase(Ease.OutBack);
     }
 
     private Vector3 ScreenToCanvasWorldPos(Vector2 screenPos, Camera canvasCam)
@@ -126,16 +169,9 @@ public class CoinFlowManager : MonoBehaviour
 [Serializable]
 public class CurrencyFlowEntry
 {
-    [Tooltip("Which currency this entry handles")]
     public CurrencyType currencyType;
-
-    [Tooltip("The icon prefab (Image + CoinEntity) for this currency")]
     public CoinEntity iconPrefab;
-
-    [Tooltip("The RectTransform icons fly toward (HUD counter icon)")]
     public RectTransform targetUI;
-
-    [Tooltip("Settings for this currency's flow (speed, count, etc.)")]
     public CoinFlowConfig config;
 }
 
@@ -145,4 +181,8 @@ public class CurrencyFlowRuntime
     public CoinFlowConfig config;
     public RectTransform targetUI;
     public ObjectPoo<CoinEntity> pool;
+    public Transform bounceTarget;
+    public Vector3 bounceOriginalScale;
+    public Tween bounceTween;
+    public bool isSettling;
 }

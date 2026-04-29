@@ -671,6 +671,8 @@ GameObject:
   - component: {fileID: 928810857305842940}
   - component: {fileID: 3671211987078082890}
   - component: {fileID: 7090016553620377225}
+  - component: {fileID: 3677380896039307899}
+  - component: {fileID: 1197427583550652244}
   m_Layer: 5
   m_Name: shopBtnIcon
   m_TagString: Untagged
@@ -735,6 +737,33 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3677380896039307899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2469556659251852600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Shadow
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
+--- !u!114 &1197427583550652244
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2469556659251852600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b8582d5dec0c94798c1b9491d16462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IconPressEffect
 --- !u!1 &3209390472122972939
 GameObject:
   m_ObjectHideFlags: 0
@@ -991,6 +1020,8 @@ GameObject:
   - component: {fileID: 5756841313622863424}
   - component: {fileID: 8685859583358059075}
   - component: {fileID: 1600858934623498896}
+  - component: {fileID: 3404718123386441363}
+  - component: {fileID: 4517569577141440918}
   m_Layer: 5
   m_Name: homeBtnicon
   m_TagString: Untagged
@@ -1055,6 +1086,33 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3404718123386441363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3465462118717151479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Shadow
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EffectDistance: {x: 4, y: -4}
+  m_UseGraphicAlpha: 0
+--- !u!114 &4517569577141440918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3465462118717151479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b8582d5dec0c94798c1b9491d16462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IconPressEffect
 --- !u!1 &3671334671267595554
 GameObject:
   m_ObjectHideFlags: 0
@@ -1066,6 +1124,8 @@ GameObject:
   - component: {fileID: 4223068284940658929}
   - component: {fileID: 5897495181766578579}
   - component: {fileID: 9073788545249010039}
+  - component: {fileID: 8594884815932329586}
+  - component: {fileID: 3712580581392340389}
   m_Layer: 5
   m_Name: inventoryBtnIcon
   m_TagString: Untagged
@@ -1130,6 +1190,33 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8594884815932329586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3671334671267595554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Shadow
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
+--- !u!114 &3712580581392340389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3671334671267595554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b8582d5dec0c94798c1b9491d16462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IconPressEffect
 --- !u!1 &5710198047868921955
 GameObject:
   m_ObjectHideFlags: 0
@@ -1495,6 +1582,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2519cc76d251aee41a6fa482911cdd26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  glowMaterial: {fileID: 2100000, guid: 5c84620cb80e75f428f23d2a45ed0212, type: 2}
   shopButton: {fileID: 246093612031866191}
   inventoryButton: {fileID: 7947381213644094988}
   homeButton: {fileID: 4298066308714928037}
@@ -1531,6 +1619,8 @@ GameObject:
   - component: {fileID: 7412089244884753280}
   - component: {fileID: 8262988860127436429}
   - component: {fileID: 4650822702082317393}
+  - component: {fileID: 3830160881426094886}
+  - component: {fileID: 7129494943038184457}
   m_Layer: 5
   m_Name: powerUpBtnIcon
   m_TagString: Untagged
@@ -1595,6 +1685,33 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3830160881426094886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7153034503341488113}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Shadow
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
+--- !u!114 &7129494943038184457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7153034503341488113}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b8582d5dec0c94798c1b9491d16462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IconPressEffect
 --- !u!1 &8044621968367688077
 GameObject:
   m_ObjectHideFlags: 0

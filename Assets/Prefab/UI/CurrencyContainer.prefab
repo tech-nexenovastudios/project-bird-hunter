@@ -180,7 +180,6 @@ GameObject:
   - component: {fileID: 3215269687343961072}
   - component: {fileID: 8871872939018625898}
   - component: {fileID: 1525540609252533791}
-  - component: {fileID: 269552411079610694}
   m_Layer: 5
   m_Name: POWERText
   m_TagString: Untagged
@@ -307,22 +306,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &269552411079610694
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 649697607673920579}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5febc9e0d99fbe445ac74d235b709011, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CoinUICounter
-  currencyType: 2
-  countDuration: 1.5
-  punchScale: 1.2
-  punchSpeed: 8
 --- !u!1 &2037757738590339957
 GameObject:
   m_ObjectHideFlags: 0
@@ -334,7 +317,6 @@ GameObject:
   - component: {fileID: 5440023501445425204}
   - component: {fileID: 8468968785059878739}
   - component: {fileID: 8276090565621415202}
-  - component: {fileID: 1020912840153581636}
   m_Layer: 5
   m_Name: GEMSText
   m_TagString: Untagged
@@ -461,22 +443,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &1020912840153581636
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2037757738590339957}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5febc9e0d99fbe445ac74d235b709011, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CoinUICounter
-  currencyType: 1
-  countDuration: 1.5
-  punchScale: 1.2
-  punchSpeed: 8
 --- !u!1 &2273855740932960274
 GameObject:
   m_ObjectHideFlags: 0
@@ -940,8 +906,8 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: ShopButtonScroll, Assembly-CSharp
-        m_MethodName: Scroll
+        m_TargetAssemblyTypeName: UnityEngine.UI.ScrollRect, UnityEngine.UI
+        m_MethodName: set_viewport
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1205,8 +1171,6 @@ GameObject:
   - component: {fileID: 4182590983860480305}
   - component: {fileID: 3491737154811598574}
   - component: {fileID: 6853146807479907973}
-  - component: {fileID: 2019316135468092745}
-  - component: {fileID: 3665010668490389080}
   m_Layer: 5
   m_Name: goldText
   m_TagString: Untagged
@@ -1333,38 +1297,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &2019316135468092745
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4990997489630749917}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5febc9e0d99fbe445ac74d235b709011, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CoinUICounter
-  currencyType: 0
-  countDuration: 1.5
-  punchScale: 1.2
-  punchSpeed: 8
---- !u!114 &3665010668490389080
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4990997489630749917}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5febc9e0d99fbe445ac74d235b709011, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CoinUICounter
-  currencyType: 0
-  countDuration: 1.5
-  punchScale: 1.2
-  punchSpeed: 8
 --- !u!1 &5224753290031067911
 GameObject:
   m_ObjectHideFlags: 0
@@ -1952,8 +1884,8 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: ShopButtonScroll, Assembly-CSharp
-        m_MethodName: Scroll
+        m_TargetAssemblyTypeName: UnityEngine.UI.ScrollRect, UnityEngine.UI
+        m_MethodName: set_viewport
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2273,8 +2205,8 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: ShopButtonScroll, Assembly-CSharp
-        m_MethodName: Scroll
+        m_TargetAssemblyTypeName: UnityEngine.UI.ScrollRect, UnityEngine.UI
+        m_MethodName: set_viewport
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
