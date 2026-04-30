@@ -134,58 +134,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 13319335427950469, guid: 824fe5e4cb1428c49b923cde389e70eb, type: 3}
   m_PrefabInstance: {fileID: 331642202}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &13793318
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 13793320}
-  - component: {fileID: 13793319}
-  m_Layer: 0
-  m_Name: CannonInventoryService
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &13793319
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 13793318}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f68577635009c40ee881ba1d0c97ebe4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BirdHunter.Inventory.Services.CannonInventoryService
-  economy: {fileID: 11400000, guid: 4cf59d45699e942b791a91fa79443c42, type: 2}
-  damagePerLevelPct: 0.1
-  healthPerLevelPct: 0.1
-  fireRatePerLevelPct: 0.05
-  moveSpeedPerLevelPct: 0.02
-  defaultUnlockedKeys:
-  - SingleShotCannon
-  devUnlockAll: 0
---- !u!4 &13793320
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 13793318}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.8558, y: 2.63186, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!223 &150915544 stripped
 Canvas:
   m_CorrespondingSourceObject: {fileID: 6422116105036115743, guid: 824fe5e4cb1428c49b923cde389e70eb, type: 3}
@@ -3010,7 +2958,6 @@ SceneRoots:
   - {fileID: 1897403069}
   - {fileID: 1192327747418567421}
   - {fileID: 542771701}
-  - {fileID: 13793320}
   - {fileID: 802913711}
   - {fileID: 845465784}
   - {fileID: 2817422799634019132}
