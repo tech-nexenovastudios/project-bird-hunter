@@ -400,7 +400,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 199985722022032333}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a902dc488f49944bbc2a06e95189b6a, type: 3}
   m_Name: 
@@ -4294,6 +4294,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.UI.GameOverScreenHandler
   scoreTMP: {fileID: 615953660908998221}
+  targetScoreTMP: {fileID: 0}
+  chapterLevelTMP: {fileID: 0}
+  highScoreTMP: {fileID: 0}
   coinsTMP: {fileID: 5476121646233620376}
   gemsTMP: {fileID: 2456964334558139866}
   xpTMP: {fileID: 8922850869766316128}
@@ -10941,7 +10944,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -2.8084106, y: 0}
+  m_AnchoredPosition: {x: -2.8084717, y: 0}
   m_SizeDelta: {x: 0, y: -1925.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7956793235323525014
@@ -16361,7 +16364,6 @@ MonoBehaviour:
   progressBarFill: {fileID: 1682066718651862194}
   EggImage: {fileID: 1354843715412716360}
   BirdImage: {fileID: 7600304892980726951}
-  bossLevels: 0a00000014000000
 --- !u!1 &8912369897974375700
 GameObject:
   m_ObjectHideFlags: 0

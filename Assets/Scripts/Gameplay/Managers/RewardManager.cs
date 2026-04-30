@@ -96,36 +96,7 @@ namespace Gameplay.Managers
         //helper
         private Vector2 WorldToCanvasScreenPos(Vector3 worldPos)
         {
-            //return Camera.main.WorldToScreenPoint(worldPos);
-            if (Camera.main == null) return Vector2.zero;
-
-            Vector2 screenPoint = Camera.main.WorldToScreenPoint(worldPos);
-
-            // RewardManager is DontDestroyOnLoad but the HUD canvas is scene-scoped,
-            // so after a scene reload the reference dangles. Lazy re-bind.
-            if (hudCanvas == null)
-            {
-                foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
-                {
-                    if (c != null && c.isRootCanvas) { hudCanvas = c; break; }
-                }
-            }
-
-            if (hudCanvas == null) return screenPoint;
-
-            RectTransform canvasRect = hudCanvas.GetComponent<RectTransform>();
-            if (canvasRect == null) return screenPoint;
-
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(
-                canvasRect,
-                screenPoint,
-                hudCanvas.renderMode == RenderMode.ScreenSpaceOverlay
-                    ? null
-                    : hudCanvas.worldCamera,
-                out Vector3 worldPoint
-            );
-
-            return worldPoint;
+            return Camera.main.WorldToScreenPoint(worldPos);
         }
 
         private void HandleBirdDestroyed(Interfaces.IDamageable bird, int unused, Vector3 position)

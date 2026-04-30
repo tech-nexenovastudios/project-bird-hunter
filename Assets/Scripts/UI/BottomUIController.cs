@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 public class BottomUIController : MonoBehaviour
 {
+    [Header("Glow Material")]
+    public Material glowMaterial;
+
     [Header("UI Buttons")]
     public Button shopButton;
     public Button inventoryButton;
@@ -197,6 +200,8 @@ public class BottomUIController : MonoBehaviour
             Sprite targetSprite = GetIconSprite(button, isActive);
             if (targetSprite != null)
                 buttonIconImages[button].sprite = targetSprite;
+
+            buttonIconImages[button].material = isActive ? glowMaterial : null;
         }
     }
 

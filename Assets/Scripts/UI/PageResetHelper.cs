@@ -24,7 +24,7 @@ public static class PageResetHelper
         foreach (var sr in root.GetComponentsInChildren<ScrollRect>(true))
         {
             sr.verticalNormalizedPosition = 1f;
-            sr.horizontalNormalizedPosition = 0f;
+            //sr.horizontalNormalizedPosition = 0f;
         }
     }
 
