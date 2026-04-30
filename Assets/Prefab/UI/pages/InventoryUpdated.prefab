@@ -2225,7 +2225,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7814600237934167033}
-  - component: {fileID: 3787998674134780079}
   m_Layer: 0
   m_Name: InventoryService
   m_TagString: Untagged
@@ -2252,26 +2251,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &3787998674134780079
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3956754224302413506}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f68577635009c40ee881ba1d0c97ebe4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BirdHunter.Inventory.Services.CannonInventoryService
-  economy: {fileID: 11400000, guid: 4cf59d45699e942b791a91fa79443c42, type: 2}
-  damagePerLevelPct: 0.1
-  healthPerLevelPct: 0.1
-  fireRatePerLevelPct: 0.05
-  moveSpeedPerLevelPct: 0.02
-  defaultUnlockedKeys:
-  - SingleShotCannon
-  devUnlockAll: 0
 --- !u!1 &3965281187994098535
 GameObject:
   m_ObjectHideFlags: 0
@@ -3243,6 +3222,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonShine
   shine: {fileID: 6955330892467422660}
+  direction: 0
   duration: 0.8
   interval: 3
   ease: 4
@@ -4432,6 +4412,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonShine
   shine: {fileID: 7307500752244690113}
+  direction: 0
   duration: 0.8
   interval: 3
   ease: 4
@@ -6304,7 +6285,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d7f0f3ae9588b14aa57463808e95ff8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CannonSelectionAndUpgradeManager
-  service: {fileID: 3787998674134780079}
+  service: {fileID: 0}
   buttonAnimator: {fileID: 0}
   database: {fileID: 11400000, guid: c84a5046a2c074060b02e0d135506d3d, type: 2}
   cannonItemPrefab: {fileID: 7278216190614717605, guid: 37320ea7a9c054d64874c43c7a6345d5, type: 3}

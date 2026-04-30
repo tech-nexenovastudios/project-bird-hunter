@@ -173,8 +173,6 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     {
         ResetScreen();
 
-        
-
         if (service == null) service = CannonInventoryService.Instance;
         if (service != null)
         {

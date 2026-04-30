@@ -68,6 +68,18 @@ namespace BirdHunter.Inventory.Services
                 return;
             }
             Instance = this;
+            // Survive MainMenu→GamePlayScene transitions so in-memory upgrade levels and
+            // the equipped key stay live. Without this, the service is destroyed on scene
+            // unload and the gameplay scene's duplicate (or a re-init from cloud) replaces
+            // it — racing the fire-and-forget SaveLevelAsync writes from the upgrade UI.
+            // GameObject must be at scene root for DontDestroyOnLoad to take effect.
+            if (transform.parent == null)
+                DontDestroyOnLoad(gameObject);
+            else
+                Debug.LogWarning(
+                    "[CannonInventoryService] Cannot DontDestroyOnLoad — GameObject is " +
+                    "parented. Move it to the scene root, or upgrades won't persist between " +
+                    "MainMenu and gameplay scenes.");
             _destroyCT = this.GetCancellationTokenOnDestroy();
         }
 
@@ -271,7 +283,7 @@ namespace BirdHunter.Inventory.Services
             }
 
             _unlocked[key] = true;
-            SaveUnlockAsync(key).Forget();
+            await SaveUnlockAsync(key);
             OnUnlocked?.Invoke(key);
             return true;
         }
@@ -289,7 +301,7 @@ namespace BirdHunter.Inventory.Services
 
             _levels[key] = GetLevel(key) + 1;
             ApplyUpgradeModifier(key);
-            SaveLevelAsync(key).Forget();
+            await SaveLevelAsync(key);
 
             OnUpgraded?.Invoke(key);
             return true;
@@ -301,7 +313,7 @@ namespace BirdHunter.Inventory.Services
             if (_equippedKey == key) return true;
 
             _equippedKey = key;
-            SaveEquippedAsync().Forget();
+            await SaveEquippedAsync();
             OnEquipped?.Invoke(key);
             return true;
         }
@@ -340,19 +352,19 @@ namespace BirdHunter.Inventory.Services
         // Persistence
         // ════════════════════════════════════════════════════════════════════
 
-        private async UniTaskVoid SaveLevelAsync(string key)
+        private async UniTask SaveLevelAsync(string key)
         {
             try { await CloudSaveManager.Instance.SaveValueAsync(LEVEL_KEY_PREFIX + key, _levels[key]); }
             catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveLevel failed: {ex.Message}"); }
         }
 
-        private async UniTaskVoid SaveUnlockAsync(string key)
+        private async UniTask SaveUnlockAsync(string key)
         {
             try { await CloudSaveManager.Instance.SaveValueAsync(UNLOCK_KEY_PREFIX + key, true); }
             catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveUnlock failed: {ex.Message}"); }
         }
 
-        private async UniTaskVoid SaveEquippedAsync()
+        private async UniTask SaveEquippedAsync()
         {
             try { await CloudSaveManager.Instance.SaveValueAsync(EQUIPPED_KEY, _equippedKey); }
             catch (Exception ex) { Debug.LogError($"[CannonInventoryService] SaveEquipped failed: {ex.Message}"); }

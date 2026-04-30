@@ -76,6 +76,16 @@ namespace Gameplay
         bool _inGrace;
         float _graceTimer;
 
+        // True while eggs are being force-destroyed because grace expired. Read by RewardManager
+        // to scale per-egg drops down. Stays true for one frame after the destroy call so the
+        // synchronous egg.TakeDamage chain sees it.
+        bool _isForceDestroying;
+        // True when the *current* level's completion came via force-destroy (grace expired).
+        // Cleared on ResetLevel. Read by RewardManager.HandleLevelCompleted.
+        bool _lastCompletionWasForceDestroy;
+        public bool IsForceDestroying => _isForceDestroying;
+        public bool LastCompletionWasForceDestroy => _lastCompletionWasForceDestroy;
+
         // Matches the LevelDetailPopup "Starting in 3...2...1...Go!" intro so spawning waits
         // until the countdown finishes. Includes a small buffer for fade-in / "Go!" beat.
         const float StartupSpawnDelay = 3.6f;
@@ -157,6 +167,8 @@ namespace Gameplay
             _draining = false;
             _inGrace = false;
             _graceTimer = 0f;
+            _isForceDestroying = false;
+            _lastCompletionWasForceDestroy = false;
             _totalTrackedScore = 0;
             _sortingIndex = 10;
             _eggTierCounts.Clear();
@@ -691,6 +703,9 @@ namespace Gameplay
         // ultimately fires FireAllEggsCleared and the level completes.
         private void KillRemainingEggsViaDamage()
         {
+            _isForceDestroying = true;
+            _lastCompletionWasForceDestroy = true;
+
             // Snapshot — TakeDamage may indirectly mutate _activeEggs through HandleEggDestroyed.
             var snapshot = new List<Egg>(_activeEggs);
             foreach (var e in snapshot)
@@ -700,6 +715,10 @@ namespace Gameplay
                 if (dmg != null && dmg.IsAlive) dmg.TakeDamage(int.MaxValue);
             }
 
+            // Death-sequence animations may run for another frame or two; clear the per-frame
+            // flag here. The persistent flag (LastCompletionWasForceDestroy) lives until ResetLevel
+            // so RewardManager.HandleLevelCompleted picks it up.
+            _isForceDestroying = false;
             _levelCompleted = true;
         }
 

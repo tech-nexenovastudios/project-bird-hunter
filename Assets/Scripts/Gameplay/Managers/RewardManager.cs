@@ -65,6 +65,11 @@ namespace Gameplay.Managers
 
             int chapter = GameProgressManager.Instance?.CurrentChapter ?? 1;
 
+            // Eggs killed via grace-expiry force-destroy pay reduced drops.
+            float multiplier = (SpawnController.Instance != null && SpawnController.Instance.IsForceDestroying)
+                ? Mathf.Clamp01(rewardConfig.forceDestroyRewardMultiplier)
+                : 1f;
+
             // ── World → screen conversion ─────────────────────────────────
             // The egg lives in 3D world space; CoinFlowManager expects a
             // screen-space Vector2.  We project through the main camera first,
@@ -72,16 +77,19 @@ namespace Gameplay.Managers
             Vector2 screenPos = WorldToCanvasScreenPos(worldPosition);
 
             // ── Coins ─────────────────────────────────────────────────────
-            int coins = rewardConfig.GetRandomCoinDrop(chapter);
-            AwardCoins(coins, "egg_destroyed");
+            int coins = Mathf.RoundToInt(rewardConfig.GetRandomCoinDrop(chapter) * multiplier);
+            AwardCoins(coins, multiplier < 1f ? "egg_destroyed_grace" : "egg_destroyed");
             GameEvent.CurrencyCollected(CurrencyType.Gold, screenPos, coins);
 
             // ── Gems (chance-based) ───────────────────────────────────────
             if (rewardConfig.ShouldDropGem(chapter))
             {
-                int gems = rewardConfig.GetRandomGemDrop(chapter);
-                AwardGems(gems, "egg_gem_drop");
-                GameEvent.CurrencyCollected(CurrencyType.Gems, screenPos, gems);
+                int gems = Mathf.RoundToInt(rewardConfig.GetRandomGemDrop(chapter) * multiplier);
+                if (gems > 0)
+                {
+                    AwardGems(gems, multiplier < 1f ? "egg_gem_drop_grace" : "egg_gem_drop");
+                    GameEvent.CurrencyCollected(CurrencyType.Gems, screenPos, gems);
+                }
             }
         }
 
@@ -144,17 +152,28 @@ namespace Gameplay.Managers
             int targetScore = SpawnController.Instance != null ? SpawnController.Instance.TargetScore : 0;
             float performanceRatio = targetScore > 0 ? (float)finalScore / targetScore : 1f;
 
-            int completionCoins = rewardConfig.GetLevelCompletionCoins(chapter, performanceRatio);
-            AwardCoins(completionCoins, "level_completion");
+            bool forceDestroyed = SpawnController.Instance != null
+                && SpawnController.Instance.LastCompletionWasForceDestroy;
+            float completionMultiplier = forceDestroyed
+                ? Mathf.Clamp01(rewardConfig.forceDestroyRewardMultiplier)
+                : 1f;
 
-            if (!_firstClearBonusAwardedThisLevel)
+            int completionCoins = Mathf.RoundToInt(
+                rewardConfig.GetLevelCompletionCoins(chapter, performanceRatio) * completionMultiplier);
+            AwardCoins(completionCoins, forceDestroyed ? "level_completion_grace" : "level_completion");
+
+            // Suppress the first-clear gem bonus if the level was force-completed and the config
+            // says so — handing the player a flagship reward they didn't actually clear feels wrong.
+            bool skipFirstClear = forceDestroyed && rewardConfig.suppressFirstClearGemsOnForceDestroy;
+            if (!_firstClearBonusAwardedThisLevel && !skipFirstClear)
             {
                 int firstClearGems = rewardConfig.GetFirstTimeClearGems();
                 AwardGems(firstClearGems, "first_time_clear");
                 _firstClearBonusAwardedThisLevel = true;
             }
 
-            int powerRefund = rewardConfig.GetPowerRefund();
+            bool skipPowerRefund = forceDestroyed && rewardConfig.suppressPowerRefundOnForceDestroy;
+            int powerRefund = skipPowerRefund ? 0 : rewardConfig.GetPowerRefund();
             if (powerRefund > 0)
             {
                 AwardPower(powerRefund, "level_completion_refund");
@@ -163,7 +182,8 @@ namespace Gameplay.Managers
             Debug.Log($"[RewardManager] Level {chapter} Complete | " +
                       $"Coins: {completionCoins} | " +
                       $"Performance: {performanceRatio:P0} | " +
-                      $"Power Refund: {powerRefund}");
+                      $"Power Refund: {powerRefund} | " +
+                      $"ForceDestroyed: {forceDestroyed}");
         }
 
         // RewardManager.cs  ─  replace the three private Award methods
