@@ -298,7 +298,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1362041897}
   m_Father: {fileID: 206074718}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1411,6 +1412,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LoadingUI
   fillImage: {fileID: 102306306}
   percentText: {fileID: 1520402610}
+  birdIcon: {fileID: 1362041897}
   smoothSpeed: 5
 --- !u!1 &884352493
 GameObject:
@@ -1636,7 +1638,6 @@ RectTransform:
   m_Children:
   - {fileID: 1154470924}
   - {fileID: 206074718}
-  - {fileID: 1053025034}
   - {fileID: 1940646274}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1719,81 +1720,6 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1019746432}
-  m_CullTransparentMesh: 1
---- !u!1 &1053025033
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1053025034}
-  - component: {fileID: 1053025036}
-  - component: {fileID: 1053025035}
-  m_Layer: 5
-  m_Name: Image
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!224 &1053025034
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1053025033}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 933762238}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.0016785, y: 0.0017094}
-  m_SizeDelta: {x: 983.3, y: 2108.7}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1053025035
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1053025033}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.38431373}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 519374d8c7489544ab422bc389b4af62, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1053025036
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1053025033}
   m_CullTransparentMesh: 1
 --- !u!1 &1077804199
 GameObject:
@@ -2131,6 +2057,81 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1362041896
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1362041897}
+  - component: {fileID: 1362041899}
+  - component: {fileID: 1362041898}
+  m_Layer: 5
+  m_Name: birdIcon
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1362041897
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362041896}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 102306305}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 167, y: 6}
+  m_SizeDelta: {x: 97.600006, y: 65.5}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1362041898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362041896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: bcb361b03f38ff0409e8b40f2ebec8cd, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1362041899
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362041896}
+  m_CullTransparentMesh: 1
 --- !u!1 &1383105422
 GameObject:
   m_ObjectHideFlags: 0
@@ -2892,7 +2893,7 @@ GameObject:
   - component: {fileID: 1940646275}
   - component: {fileID: 1940646277}
   m_Layer: 5
-  m_Name: FaetherSapwnerPaanel
+  m_Name: FaetherSapwnerPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2967,13 +2968,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2a4aeb2162aa3a43ac065b11e6e9877, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FeatherSpawnerUI
-  featherSprites:
-  - {fileID: 21300000, guid: 72072b225ee7da34c8b74d9ab9686aaf, type: 3}
-  - {fileID: 21300000, guid: 131eea51183e63b4990d3714be0480f6, type: 3}
-  - {fileID: 21300000, guid: ca1c1a5b45bdcd142a06f1ddbc5e40d9, type: 3}
+  featherTypes:
+  - sprite: {fileID: 21300000, guid: 72072b225ee7da34c8b74d9ab9686aaf, type: 3}
+    fallSpeedRange: {x: 300, y: 300}
+  - sprite: {fileID: 21300000, guid: 131eea51183e63b4990d3714be0480f6, type: 3}
+    fallSpeedRange: {x: 300, y: 350}
+  - sprite: {fileID: 21300000, guid: ca1c1a5b45bdcd142a06f1ddbc5e40d9, type: 3}
+    fallSpeedRange: {x: 300, y: 400}
   spawnInterval: 0.5
-  sizeRange: {x: 60, y: 90}
-  fallSpeedRange: {x: 80, y: 160}
+  sizeRange: {x: 40, y: 70}
   swayAmountRange: {x: 30, y: 80}
   swayFrequencyRange: {x: 0.5, y: 2}
   rotationSpeedRange: {x: -90, y: 90}

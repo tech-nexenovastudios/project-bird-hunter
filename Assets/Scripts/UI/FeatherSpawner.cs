@@ -2,17 +2,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
+
+
 public class FeatherSpawnerUI : MonoBehaviour
 {
-    [Header("Feather Sprites")]
-    public Sprite[] featherSprites;
+    [Header("Feather Types")]
+    public FeatherType[] featherTypes;
 
     [Header("Spawn Settings")]
     public float spawnInterval = 0.4f;
     public Vector2 sizeRange = new Vector2(40f, 70f);
 
-    [Header("Movement")]
-    public Vector2 fallSpeedRange = new Vector2(80f, 160f);
+    [Header("Movement (shared)")]
     public Vector2 swayAmountRange = new Vector2(30f, 80f);
     public Vector2 swayFrequencyRange = new Vector2(0.5f, 2f);
     public Vector2 rotationSpeedRange = new Vector2(-90f, 90f);
@@ -36,7 +37,10 @@ public class FeatherSpawnerUI : MonoBehaviour
 
     void SpawnFeather()
     {
-        if (featherSprites == null || featherSprites.Length == 0) return;
+        if (featherTypes == null || featherTypes.Length == 0) return;
+
+        FeatherType type = featherTypes[Random.Range(0, featherTypes.Length)];
+        if (type.sprite == null) return;
 
         GameObject go = new GameObject("Feather", typeof(RectTransform), typeof(Image));
         RectTransform r = go.GetComponent<RectTransform>();
@@ -51,12 +55,12 @@ public class FeatherSpawnerUI : MonoBehaviour
         r.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
 
         Image img = go.GetComponent<Image>();
-        img.sprite = featherSprites[Random.Range(0, featherSprites.Length)];
+        img.sprite = type.sprite;
         img.preserveAspect = true;
         img.raycastTarget = false;
 
         FeatherUI f = go.AddComponent<FeatherUI>();
-        f.fallSpeed = Random.Range(fallSpeedRange.x, fallSpeedRange.y);
+        f.fallSpeed = Random.Range(type.fallSpeedRange.x, type.fallSpeedRange.y);
         f.swayAmount = Random.Range(swayAmountRange.x, swayAmountRange.y);
         f.swayFrequency = Random.Range(swayFrequencyRange.x, swayFrequencyRange.y);
         f.rotationSpeed = Random.Range(rotationSpeedRange.x, rotationSpeedRange.y);
@@ -89,9 +93,13 @@ public class FeatherUI : MonoBehaviour
         p.y -= fallSpeed * Time.deltaTime;
         p.x = startX + Mathf.Sin((Time.time + seed) * swayFrequency) * swayAmount;
         r.anchoredPosition = p;
-
         r.Rotate(0f, 0f, rotationSpeed * Time.deltaTime);
-
         if (p.y < despawnY) Destroy(gameObject);
     }
+}
+[System.Serializable]
+public class FeatherType
+{
+    public Sprite sprite;
+    public Vector2 fallSpeedRange = new Vector2(80f, 160f);
 }

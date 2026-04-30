@@ -28,6 +28,10 @@ namespace Gameplay.Player
         [Header("Death VFX")]
         [SerializeField] private GameObject deathVFXPrefab;
         [SerializeField] private Transform deathVFXPoint;
+        [Header("Power-Up VFX")]
+        [SerializeField] private GameObject healVFXPrefab;
+        [SerializeField] private GameObject shieldAbsorbVFXPrefab;
+        [SerializeField] private GameObject reviveVFXPrefab;
 
         private Vector3 muzzleStartPosition;
         private Vector3 muzzleStartScale;
@@ -144,18 +148,24 @@ namespace Gameplay.Player
             VFXPoolManager.Instance.Play(deathVFXPrefab, pos);
         }
 
-        private void OnDrawGizmos()
+        protected override void OnHealVFX(int amount)
         {
-            if (wheels == null) return;
-            foreach (var wheel in wheels)
-            {
-                if (wheel != null)
-                {
-#if UNITY_EDITOR
-                    UnityEditor.Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
-#endif
-                }
-            }
+            Vector3 spawnPos = transform.position;
+            spawnPos.y = -3.75f;
+            if (healVFXPrefab != null)
+                VFXPoolManager.Instance.Play(healVFXPrefab, spawnPos);
+        }
+
+        protected override void OnShieldAbsorbVFX()
+        {
+            if (shieldAbsorbVFXPrefab != null)
+                VFXPoolManager.Instance.Play(shieldAbsorbVFXPrefab, transform.position);
+        }
+
+        protected override void OnReviveVFX()
+        {
+            if (reviveVFXPrefab != null)
+                VFXPoolManager.Instance.Play(reviveVFXPrefab, transform.position);
         }
     }
 }

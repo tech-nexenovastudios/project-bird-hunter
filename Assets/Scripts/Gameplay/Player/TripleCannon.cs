@@ -4,34 +4,19 @@ using UnityEngine;
 
 namespace Gameplay.Player
 {
-    /// <summary>
-    /// Triple-barrel cannon. Center barrel fires straight,
-    /// left and right barrels fire at spread angles.
-    /// Each barrel has its own independent recoil and muzzle flash.
-    /// </summary>
     public class TripleCannon : BaseCannon
     {
         [Header("Spread Settings")]
-        [SerializeField, Range(0f, 45f)] private float spreadAngle = 5f;
+        [SerializeField, Range(0f, 45f)] private float spreadAngle = 0f;
 
-        [Header("Muzzle Flash")]
+        [Header("Muzzle Flash (0=Left, 1=Right)")]
         [SerializeField] private GameObject muzzleFlashPrefab;
+        [SerializeField] private Transform[] muzzleFlashPoints = new Transform[3];
 
-        [Header("Left Muzzle")]
-        [SerializeField] private Transform leftMuzzleTransform;
-        [SerializeField] private Transform leftMuzzleFlashPoint;
-
-        [Header("Center Muzzle")]
-        [SerializeField] private Transform centerMuzzleTransform;
-        [SerializeField] private Transform centerMuzzleFlashPoint;
-
-        [Header("Right Muzzle")]
-        [SerializeField] private Transform rightMuzzleTransform;
-        [SerializeField] private Transform rightMuzzleFlashPoint;
-
-        [Header("Recoil Settings")]
+        [Header("Muzzle Recoil (0=Left, 1=Right)")]
+        [SerializeField] private Transform[] muzzleTransforms = new Transform[3];
         [SerializeField] private float recoilYOffset = -0.25f;
-        [SerializeField] private Vector3 recoilEndScale = new(1.1f, 0.9f, 1f);
+        [SerializeField] private Vector3 recoilEndScale;
         [SerializeField] private float recoilDuration = 0.1f;
         [SerializeField] private float recoveryDuration = 0.1f;
 
@@ -43,178 +28,130 @@ namespace Gameplay.Player
         [SerializeField] private GameObject deathVFXPrefab;
         [SerializeField] private Transform deathVFXPoint;
 
-        // ── Cached start states ──
-        private Vector3 leftStartPos, leftStartScale;
-        private Vector3 centerStartPos, centerStartScale;
-        private Vector3 rightStartPos, rightStartScale;
+        [Header("Power-Up VFX")]
+        [SerializeField] private GameObject healVFXPrefab;
+        [SerializeField] private GameObject shieldAbsorbVFXPrefab;
+        [SerializeField] private GameObject reviveVFXPrefab;
 
-        // ── Independent recoil sequences ──
-        private Sequence leftSequence;
-        private Sequence centerSequence;
-        private Sequence rightSequence;
+        private Vector3[] muzzleStartPositions = new Vector3[3];
+        private Vector3[] muzzleStartScales = new Vector3[3];
+        private Sequence[] muzzleSequences = new Sequence[3];
+        private ParticleSystem[] _currentFlashes = new ParticleSystem[3];
 
         protected override void Awake()
         {
             base.Awake();
-
-            if (leftMuzzleTransform != null)
+            for (int i = 0; i < muzzleTransforms.Length; i++)
             {
-                leftStartPos = leftMuzzleTransform.localPosition;
-                leftStartScale = leftMuzzleTransform.localScale;
-            }
-
-            if (centerMuzzleTransform != null)
-            {
-                centerStartPos = centerMuzzleTransform.localPosition;
-                centerStartScale = centerMuzzleTransform.localScale;
-            }
-
-            if (rightMuzzleTransform != null)
-            {
-                rightStartPos = rightMuzzleTransform.localPosition;
-                rightStartScale = rightMuzzleTransform.localScale;
+                if (muzzleTransforms[i] != null)
+                {
+                    muzzleStartPositions[i] = muzzleTransforms[i].localPosition;
+                    muzzleStartScales[i] = muzzleTransforms[i].localScale;
+                }
             }
         }
 
         protected override void Shoot()
         {
-            if (gunTips == null || gunTips.Length < 3)
+            if (gunTips == null || gunTips.Length < 2)
             {
                 base.Shoot();
                 return;
             }
 
-            // ── Spawn bullets: left angled, center straight, right angled ──
-            Quaternion leftRot = gunTips[0].rotation * Quaternion.Euler(0f, 0f, spreadAngle);
-            SpawnBullet(gunTips[0].position, leftRot);
+            // Left barrel: positive spread, Right barrel: negative spread
+            float[] spreads = { spreadAngle, -spreadAngle };
 
-            SpawnBullet(gunTips[1].position, gunTips[1].rotation);
-
-            Quaternion rightRot = gunTips[2].rotation * Quaternion.Euler(0f, 0f, -spreadAngle);
-            SpawnBullet(gunTips[2].position, rightRot);
-
-            // ── Recoil all three barrels independently ──
-            PlayBarrelRecoil(
-                leftMuzzleTransform, leftStartPos, leftStartScale,
-                leftMuzzleFlashPoint, ref leftSequence
-            );
-
-            PlayBarrelRecoil(
-                centerMuzzleTransform, centerStartPos, centerStartScale,
-                centerMuzzleFlashPoint, ref centerSequence
-            );
-
-            PlayBarrelRecoil(
-                rightMuzzleTransform, rightStartPos, rightStartScale,
-                rightMuzzleFlashPoint, ref rightSequence
-            );
+            for (int i = 0; i < 3; i++)
+            {
+                if (gunTips[i] == null) continue;
+                Quaternion rot = gunTips[i].rotation * Quaternion.Euler(0f, 0f, spreads[i]);
+                SpawnBullet(gunTips[i].position, rot);
+                PlayMuzzleEffect(i);
+            }
 
             OnShootVFX();
         }
 
-        private void PlayBarrelRecoil(
-            Transform muzzle, Vector3 startPos, Vector3 startScale,
-            Transform flashPoint, ref Sequence sequence)
+        private void PlayMuzzleEffect(int i)
         {
+            Transform muzzle = muzzleTransforms[i];
             if (muzzle == null) return;
 
-            sequence?.Kill();
-            muzzle.localPosition = startPos;
-            muzzle.localScale = startScale;
-
-            ParticleSystem capturedFlash = null;
-            Vector3 recoilTarget = startPos + new Vector3(0f, recoilYOffset, 0f);
+            muzzleSequences[i]?.Kill();
+            muzzle.localPosition = muzzleStartPositions[i];
+            muzzle.localScale = muzzleStartScales[i];
 
             Sequence seq = DOTween.Sequence();
 
-            // ── Flash + kick ──
             seq.AppendCallback(() =>
             {
-                if (muzzleFlashPrefab != null && flashPoint != null)
-                    capturedFlash = VFXPoolManager.Instance.PlayAttached(muzzleFlashPrefab, flashPoint);
+                if (muzzleFlashPrefab != null && i < muzzleFlashPoints.Length && muzzleFlashPoints[i] != null)
+                    _currentFlashes[i] = VFXPoolManager.Instance.PlayAttached(muzzleFlashPrefab, muzzleFlashPoints[i]);
             });
 
-            seq.Append(
-                muzzle.DOLocalMove(recoilTarget, recoilDuration)
-                    .SetEase(Ease.OutSine)
-            );
+            seq.Append(muzzle.DOLocalMove(muzzleStartPositions[i] + new Vector3(0f, recoilYOffset, 0f), recoilDuration).SetEase(Ease.OutSine));
 
-            // ── Stop flash + return ──
             seq.AppendCallback(() =>
             {
-                if (capturedFlash != null && muzzleFlashPrefab != null)
+                if (_currentFlashes[i] != null && muzzleFlashPrefab != null)
                 {
-                    VFXPoolManager.Instance.StopAndReturn(muzzleFlashPrefab, capturedFlash);
-                    capturedFlash = null;
+                    VFXPoolManager.Instance.StopAndReturn(muzzleFlashPrefab, _currentFlashes[i]);
+                    _currentFlashes[i] = null;
                 }
             });
 
-            seq.Append(
-                muzzle.DOLocalMove(startPos, recoveryDuration)
-                    .SetEase(Ease.OutBack)
-            );
-
-            // ── Scale punch ──
-            seq.Append(
-                muzzle.DOScale(recoilEndScale, 0.05f)
-                    .SetEase(Ease.OutSine)
-            );
-            seq.Append(
-                muzzle.DOScale(startScale, 0.05f)
-                    .SetEase(Ease.InSine)
-            );
+            seq.Append(muzzle.DOLocalMove(muzzleStartPositions[i], recoveryDuration).SetEase(Ease.OutBack));
+            seq.Append(muzzle.DOScale(recoilEndScale, 0.05f).SetEase(Ease.OutSine));
+            seq.Append(muzzle.DOScale(muzzleStartScales[i], 0.05f).SetEase(Ease.InSine));
 
             seq.OnKill(() =>
             {
-                muzzle.localPosition = startPos;
-                muzzle.localScale = startScale;
-
-                if (capturedFlash != null && muzzleFlashPrefab != null)
+                muzzle.localPosition = muzzleStartPositions[i];
+                muzzle.localScale = muzzleStartScales[i];
+                if (_currentFlashes[i] != null && muzzleFlashPrefab != null)
                 {
-                    VFXPoolManager.Instance.StopAndReturn(muzzleFlashPrefab, capturedFlash);
-                    capturedFlash = null;
+                    VFXPoolManager.Instance.StopAndReturn(muzzleFlashPrefab, _currentFlashes[i]);
+                    _currentFlashes[i] = null;
                 }
             });
 
+            muzzleSequences[i] = seq;
             seq.Play();
-            sequence = seq;
         }
-
-        // ════════════════════════════════════════════════════════
-        //  VFX HOOKS
-        // ════════════════════════════════════════════════════════
 
         protected override void OnShootVFX() { }
 
         protected override void OnDamageTakenVFX(int damage)
         {
-            if (hitVFXPrefab == null || hitVFXPoint == null) return;
-            VFXPoolManager.Instance.Play(hitVFXPrefab, hitVFXPoint.position);
+            if (hitVFXPrefab != null && hitVFXPoint != null)
+                VFXPoolManager.Instance.Play(hitVFXPrefab, hitVFXPoint.position);
         }
 
         protected override void OnDeathVFX()
         {
             if (deathVFXPrefab == null) return;
-
-            Vector3 pos = deathVFXPoint != null
-                ? deathVFXPoint.position
-                : transform.position;
-
+            Vector3 pos = deathVFXPoint != null ? deathVFXPoint.position : transform.position;
             VFXPoolManager.Instance.Play(deathVFXPrefab, pos);
         }
-
-        private void OnDrawGizmos()
+        protected override void OnHealVFX(int amount)
         {
-            if (wheels == null) return;
-            foreach (var wheel in wheels)
-            {
-                if (wheel != null)
-                {
-#if UNITY_EDITOR
-                    UnityEditor.Handles.DrawWireDisc(wheel.position, Vector3.back, wheelRadius);
-#endif
-                }
-            }
+            Vector3 spawnPos = transform.position;
+            spawnPos.y = -3.75f;
+            if (healVFXPrefab != null)
+                VFXPoolManager.Instance.Play(healVFXPrefab, spawnPos);
+        }
+
+        protected override void OnShieldAbsorbVFX()
+        {
+            if (shieldAbsorbVFXPrefab != null)
+                VFXPoolManager.Instance.Play(shieldAbsorbVFXPrefab, transform.position);
+        }
+
+        protected override void OnReviveVFX()
+        {
+            if (reviveVFXPrefab != null)
+                VFXPoolManager.Instance.Play(reviveVFXPrefab, transform.position);
         }
     }
 }
