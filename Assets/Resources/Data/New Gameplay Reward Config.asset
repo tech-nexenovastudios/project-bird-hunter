@@ -14,57 +14,60 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Rewards.GameplayRewardConfig
   coinDropPhases:
   - phase: Early
-    chapters: "1\u201310"
-    minCoins: 30
-    maxCoins: 80
+    chapters: "1–10"
+    minCoins: 15
+    maxCoins: 40
     notes: Mostly kills/combos
   - phase: Mid
-    chapters: "11\u201320"
-    minCoins: 100
-    maxCoins: 200
+    chapters: "11–20"
+    minCoins: 50
+    maxCoins: 110
     notes: Denser spawns
   - phase: Late
-    chapters: "21\u201330"
-    minCoins: 250
-    maxCoins: 400
+    chapters: "21–30"
+    minCoins: 110
+    maxCoins: 200
     notes: More elite enemies sources
   gemDropPhases:
   - phase: Early
-    chapters: "1\u201310"
-    dropChancePercent: 3
+    chapters: "1–10"
+    dropChancePercent: 2
     minGemsPerDrop: 1
     maxGemsPerDrop: 1
   - phase: Mid
-    chapters: "11\u201320"
+    chapters: "11–20"
+    dropChancePercent: 3
+    minGemsPerDrop: 1
+    maxGemsPerDrop: 1
+  - phase: Late
+    chapters: "21–30"
     dropChancePercent: 5
     minGemsPerDrop: 1
     maxGemsPerDrop: 2
-  - phase: Late
-    chapters: "21\u201330"
-    dropChancePercent: 8
-    minGemsPerDrop: 2
-    maxGemsPerDrop: 3
   completionPhases:
   - phase: Early
-    chapters: "1\u201310"
-    baseCoins: 550
-    performanceBonusMin: 50
-    performanceBonusMax: 100
+    chapters: "1–10"
+    baseCoins: 280
+    performanceBonusMin: 30
+    performanceBonusMax: 60
   - phase: Mid
-    chapters: "11\u201320"
-    baseCoins: 1320
-    performanceBonusMin: 120
-    performanceBonusMax: 240
+    chapters: "11–20"
+    baseCoins: 700
+    performanceBonusMin: 80
+    performanceBonusMax: 150
   - phase: Late
-    chapters: "21\u201330"
-    baseCoins: 2750
-    performanceBonusMin: 250
-    performanceBonusMax: 500
-  gemsOnFirstTimeClear: 10
+    chapters: "21–30"
+    baseCoins: 1200
+    performanceBonusMin: 150
+    performanceBonusMax: 280
+  gemsOnFirstTimeClear: 4
   powerCostPerAttempt: 5
-  powerRefundChance: 0.25
+  powerRefundChance: 0.2
   powerRefundAmount: 5
-  expectedPowerReturnRatio: 0.25
+  expectedPowerReturnRatio: 0.2
   coinMultiplierForAd: 2
   powerPerAdRefill: 5
-  gemsPerAdReward: 10
+  gemsPerAdReward: 5
+  forceDestroyRewardMultiplier: 0.5
+  suppressFirstClearGemsOnForceDestroy: 1
+  suppressPowerRefundOnForceDestroy: 1

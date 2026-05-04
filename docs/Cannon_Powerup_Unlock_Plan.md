@@ -28,11 +28,11 @@ Source: `Assets/Resources/Data/Inventory/CannonDatabase.asset` for keys, `Econom
 
 ### 1.2 Recommended unlock progression
 
-The `EconomyFormulaConfig.GetBaseUnlockCoinsForChapter(c) = 1500 × (1 + 0.10 × (c-1)^1.1)` formula assumes you pick which chapter each cannon unlocks at. Below is a paced ramp that aligns with the chapter-economy slice in `Progression_Reward_Economy.md` §3 — each unlock sits at the "you've earned about 4× this coin cost by the time you arrive" level, leaving the player a real choice between unlocking and upgrading what they already have.
+Below is a paced ramp that aligns with the chapter-economy slice in `Progression_Reward_Economy.md` §3 — each unlock sits at the "you've earned about 4× this coin cost by the time you arrive" level, leaving the player a real choice between unlocking and upgrading what they already have.
 
 | Tier | Cannon | Unlock at chapter | Why this chapter |
 |---|---|---|---|
-| 1 | Single Shot | **Ch1 (free, owned at start)** | Tutorial weapon; multiplier is 0 in config. |
+| 1 | Single Shot | **Ch1 (free, owned at start)** | Tutorial weapon; `baseCoinsRequired = 0` in cloud. |
 | 2 | Rapid Fire | **Ch3** | First post-tutorial buy; player has ~58k coins by end of Ch2. |
 | 3 | Lucky | **Ch6** | Mid Early-phase reward; coincides with first crit/coin meta lessons. |
 | 4 | Double Cannon | **Ch10** | Coincides with chapter mid-boss debut; the "fork" weapon. |
@@ -40,32 +40,34 @@ The `EconomyFormulaConfig.GetBaseUnlockCoinsForChapter(c) = 1500 × (1 + 0.10 ×
 | 6 | Big Bartha | **Ch20** | End-of-Mid-phase capstone; same chapter as first 200-coin-drop wave. |
 | 7 | Triple | **Ch25** | Late-phase finale; ~5 chapters of soft-cap headroom for upgrades after. |
 
-These should land in `CannonStatsRepository`'s cloud JSON as `unlockAtChapter` per cannon. If you change them, recompute the unlock-cost column below.
+These live in cloud save `cannon_stats[<sub-key>].unlockAtChapter`. If you change them, also update the matching coin/gem prices in `docs/cloud-save/cannon_stats.json` and re-import.
 
-### 1.3 Unlock cost (computed from formula)
+### 1.3 Unlock cost (cloud-driven)
 
-Formula: `unlockCoins = round(GetBaseUnlockCoinsForChapter(unlockChapter) × coinMultiplier)`. Gems alternative: `ceil(unlockCoins / 110)`.
+**Source of truth:** Unity Cloud Save `cannon_stats` → per-cannon `baseCoinsRequired` / `baseGemsRequired`. Read at runtime via `CannonInventoryService.GetUnlockCoinCost` / `GetUnlockGemCost`. See `docs/cloud-save/cannon_stats.json` for the import file.
 
-| Tier | Cannon | Unlock Ch | `coinMultiplier` | Coins | Gems (alt) |
-|---|---|---|---|---|---|
-| 1 | Single Shot | 1 | 0.0 | **0** | 0 |
-| 2 | Rapid Fire | 3 | 1.0 | **1,821** | 17 |
-| 3 | Lucky | 6 | 1.2 | **2,861** | 27 |
-| 4 | Double Cannon | 10 | 1.5 | **4,766** | 44 |
-| 5 | Shotgun | 14 | 1.8 | **7,213** | 66 |
-| 6 | Big Bartha | 20 | 2.5 | **13,325** | 122 |
-| 7 | Triple | 25 | 3.5 | **22,561** | 206 |
+The numbers below were chosen as designer-friendly round values that approximate the prior baseline curve. They are no longer formula-driven — to retune any cannon, edit cloud save (or the JSON and re-import).
+
+| Tier | Cannon | Unlock Ch | Coins | Gems (alt) |
+|---|---|---|---|---|
+| 1 | Single Shot | 1 | **0** | 0 |
+| 2 | Rapid Fire | 3 | **6,000** | 55 |
+| 3 | Lucky | 6 | **9,500** | 87 |
+| 4 | Double Cannon | 10 | **16,000** | 146 |
+| 5 | Shotgun | 14 | **24,000** | 219 |
+| 6 | Big Bartha | 20 | **44,500** | 405 |
+| 7 | Triple | 25 | **75,000** | 682 |
 
 Approximate coins available at unlock time (cumulative, perfect runs):
 
-- Ch3 cumulative: ~58k → Rapid Fire (1.8k) is a **3% spend** of total earned. Trivial.
-- Ch6 cumulative: ~145k → Lucky (2.9k) is **2%**.
-- Ch10 cumulative: ~290k → Double (4.8k) is **1.6%**.
-- Ch14 cumulative: ~590k (entered Mid) → Shotgun (7.2k) is **1.2%**.
-- Ch20 cumulative: ~1.34M → Big Bartha (13.3k) is **1.0%**.
-- Ch25 cumulative: ~1.74M → Triple (22.5k) is **1.3%**.
+- Ch3 cumulative: ~58k → Rapid Fire (6.0k) is **~10%** of total earned.
+- Ch6 cumulative: ~145k → Lucky (9.5k) is **~7%**.
+- Ch10 cumulative: ~290k → Double (16.0k) is **~5.5%**.
+- Ch14 cumulative: ~590k → Shotgun (24.0k) is **~4%**.
+- Ch20 cumulative: ~1.34M → Big Bartha (44.5k) is **~3.3%**.
+- Ch25 cumulative: ~1.74M → Triple (75.0k) is **~4.3%**.
 
-> **Flaw:** unlocks are too cheap relative to coin earn rate. See §1.6.
+> Pricing was raised (base 1500 → 5000) and runtime was switched from formula to cloud-save `baseCoinsRequired` so live-ops can re-tune individual cannons without a client patch. Unlocks now sit in a 3–10% spend band — meaningful, but never gating progress.
 
 ### 1.4 Upgrade cost (Levels 2 → 10)
 
@@ -91,15 +93,13 @@ Materials: 0 mats for L2-L5; ramp begins at L6 as `floor(0.8 × (fromLevel - 4)^
 
 | Tier | Cannon | `coinMult` | `matMult` | Coins to L10 | Materials to L10 |
 |---|---|---|---|---|---|
-| 1 | Single Shot | 0.0 | 0.0 | **0**¹ | **0**¹ |
+| 1 | Single Shot | 0.6 | 0.6 | 18,841 | 7 |
 | 2 | Rapid Fire | 1.0 | 1.0 | 31,402 | 12 |
 | 3 | Lucky | 1.2 | 1.0 | 37,682 | 12 |
 | 4 | Double Cannon | 1.5 | 1.2 | 47,103 | 14 |
 | 5 | Shotgun | 1.8 | 1.5 | 56,524 | 18 |
 | 6 | Big Bartha | 2.5 | 2.0 | 78,505 | 24 |
 | 7 | Triple | 3.5 | 3.0 | 109,907 | 36 |
-
-¹ **Bug**: see §1.6.
 
 ### 1.5 Concrete unlock + max-upgrade chapter mapping
 
@@ -119,18 +119,16 @@ Given a player who progresses linearly with no skips:
 
 ### 1.6 Cannon flaws to fix before ship
 
-1. **`CANNON_01.coinMultiplier = 0` makes upgrades free.**  
-   Single Shot's L1→L10 upgrade chain is free with current config because the same multiplier is used for unlock *and* upgrade cost. Either:
-   - Set `CANNON_01.coinMultiplier = 0.6` (cheap but not free), and override unlock cost to 0 elsewhere, or
-   - Split into `unlockMultiplier` and `upgradeMultiplier` arrays.
+1. **~~`CANNON_01.coinMultiplier = 0` makes upgrades free.~~** ✅ **Fixed.**  
+   Unlock prices moved to cloud save (`baseCoinsRequired`). The local `coinMultiplier` is now upgrade-only — CANNON_01 is `0.6` (cheap but paid), and its unlock is `baseCoinsRequired: 0` in cloud.
 
-2. **Unlock pricing is far below earn rate.**  
-   Even Triple at 22.5k is ~1% of cumulative earnings by Ch25. To make unlocks feel like commitments, multiply `GetBaseUnlockCoinsForChapter` baseline from 1500 → 4000–6000, *or* gate unlocks behind both currency and a milestone (e.g. "clear Ch5-L20 *and* pay 2.9k for Lucky"). The progression doc §5.1 covers the broader two-config drift; this is a symptom of it.
+2. **~~Unlock pricing is far below earn rate.~~** ✅ **Fixed.**  
+   Unlock prices in `docs/cloud-save/cannon_stats.json` were re-baselined upward. Unlocks now sit at 3–10% of cumulative earnings (see §1.3).
 
-3. **Cannon stats live in cloud, prices live local.**  
-   `unlockAtChapter` from the recommended chapter table above must be edited in Cloud Save's `cannon_stats` custom-id. If the cloud and `EconomyFormulaConfig.cannonMultipliers[]` order disagree, you ship a cannon at the wrong price. Add a startup validator (see Progression doc §5.2).
+3. **~~Cannon stats live in cloud, prices live local.~~** ✅ **Fixed.**  
+   Runtime now reads `baseCoinsRequired` / `baseGemsRequired` directly from cloud-save `cannon_stats`. `EconomyFormulaConfig` is editor-only. Single source of truth — no validator needed. Cloud import file at `docs/cloud-save/cannon_stats.json`.
 
-4. **No "early unlock with gems" path.**  
+4. **No "early unlock with gems" path.** *(Open.)*  
    The formula calculates a gem alternative (`coinCost / 110`) but `RewardManager` and `UnlockUI` don't currently expose it. Either ship the gem path (give the soft sink for hoarders) or remove `GetCannonUnlockGems`.
 
 ---
@@ -293,8 +291,8 @@ Highest leverage first.
 | # | Item | Owner | Why |
 |---|---|---|---|
 | 1 | Re-baseline the four bolded powerup rows (§2.2) — Phase Shield, Blade Summoner, Spike Field, Rocket Barrage / Second Chance. | Design | Removes the four most surprising rarity-vs-availability mismatches. |
-| 2 | Fix `CANNON_01.coinMultiplier = 0` upgrade-cost bug. Split unlock vs upgrade multipliers. | Eng | Single Shot's whole upgrade tree is currently free. |
-| 3 | Multiply baseline unlock cost from 1500 → 4000–6000. | Design + Eng | Otherwise unlocks are <2% of cumulative earn — non-event. |
+| 2 | ~~Fix `CANNON_01.coinMultiplier = 0` upgrade-cost bug.~~ ✅ Done. | Eng | Unlock moved to cloud `baseCoinsRequired`; `coinMultiplier` is upgrade-only and CANNON_01 is now 0.6. |
+| 3 | ~~Re-baseline unlock costs upward.~~ ✅ Done. | Design + Eng | Cloud values now 0 / 6k / 9.5k / 16k / 24k / 44.5k / 75k → 3–10% of cumulative earn. |
 | 4 | Add startup validator for `CannonDatabase` ↔ `CannonStatsRepository` ↔ `EconomyFormulaConfig.cannonMultipliers[]` consistency. | Eng | Cloud-vs-local drift will absolutely happen otherwise. |
 | 5 | Add rarity drop-weights to the spin pool builder. | Eng | Without this, Legendary feel exactly as common as Common. |
 | 6 | Wire `EconomyFormulaConfig.GetFirstClearGems` into `RewardManager.HandleLevelCompleted` (replaces flat `gemsOnFirstTimeClear`). | Eng | Already-implemented chapter ramp is going unused. |

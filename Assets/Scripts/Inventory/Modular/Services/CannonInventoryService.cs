@@ -222,24 +222,22 @@ namespace BirdHunter.Inventory.Services
 
         public bool IsMaxLevel(string key) => GetLevel(key) >= GetMaxLevel(key);
 
-        // ── Costs (via EconomyFormulaConfig with DTO fallback) ──────────────
+        // ── Costs ───────────────────────────────────────────────────────────
+        // Unlock costs come straight from cloud save (CannonBaseStatsDto). The
+        // EconomyFormulaConfig formula is an editor-side calculator only — see
+        // docs/cloud-save/cannon_stats.json for the values shipped to cloud.
+        // Upgrade costs still use the formula because they share a curve shape.
 
         public int GetUnlockCoinCost(string key)
         {
             var dto = GetBaseData(key);
-            if (dto == null) return 0;
-            if (economy != null)
-                return economy.GetCannonUnlockCoins(dto.cannonId, dto.unlockAtChapter);
-            return dto.baseCoinsRequired;
+            return dto?.baseCoinsRequired ?? 0;
         }
 
         public int GetUnlockGemCost(string key)
         {
             var dto = GetBaseData(key);
-            if (dto == null) return 0;
-            if (economy != null)
-                return economy.GetCannonUnlockGems(GetUnlockCoinCost(key));
-            return dto.baseGemsRequired;
+            return dto?.baseGemsRequired ?? 0;
         }
 
         public int GetUpgradeCoinCost(string key)

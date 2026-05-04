@@ -150,16 +150,18 @@ public class EconomyFormulaConfig : ScriptableObject
     }
 
     // =========================
-    //  CANNON UNLOCK / UPGRADE
+    //  CANNON UPGRADE
     // =========================
+    // Unlock prices live in Cloud Save `cannon_stats` (CannonBaseStatsDto.
+    // baseCoinsRequired / baseGemsRequired). Only the upgrade curve is
+    // formula-driven, so this section keeps the per-cannon upgrade multipliers.
 
-    // Multipliers can be set from inspector per cannon ID
     [System.Serializable]
     public class CannonCostMultiplier
     {
         public string cannonId;       // e.g. "CANNON_01"
-        public float coinMultiplier;  // 1.0, 1.2, 1.5, ...
-        public float matMultiplier;   // 1.0, 1.2, 1.5, ...
+        public float coinMultiplier;  // upgrade coin multiplier
+        public float matMultiplier;   // upgrade material multiplier
     }
 
     public CannonCostMultiplier[] cannonMultipliers;
@@ -180,28 +182,7 @@ public class EconomyFormulaConfig : ScriptableObject
         return 1f;
     }
 
-    // 7. Unlock cost (optional formula-based)
-    public float GetBaseUnlockCoinsForChapter(int unlockChapter)
-    {
-        float baseUnlock = 1500f;
-        float mu = 1f + 0.10f * Mathf.Pow(unlockChapter - 1, 1.1f);
-        return baseUnlock * mu;
-    }
-
-    public int GetCannonUnlockCoins(string cannonId, int unlockChapter)
-    {
-        float baseCoins = GetBaseUnlockCoinsForChapter(unlockChapter);
-        float mult      = GetCannonCostMultiplier(cannonId);
-        return Mathf.RoundToInt(baseCoins * mult);
-    }
-
-    public int GetCannonUnlockGems(int coinCost)
-    {
-        float coinsPerGem = 110f; // soft→hard rate, tunable
-        return Mathf.CeilToInt(coinCost / coinsPerGem);
-    }
-
-    // 8. Upgrade cost curve (Single Shot template)
+    // Upgrade cost curve (Single Shot template)
     float GetSingleShotUpgradeCost(int toLevel)
     {
         // toLevel: 2..10
