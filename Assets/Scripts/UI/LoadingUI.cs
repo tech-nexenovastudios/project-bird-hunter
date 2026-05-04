@@ -7,7 +7,7 @@ public class LoadingUI : MonoBehaviour
     [Header("Progress Bar")]
     [SerializeField] private Image fillImage;
     [SerializeField] private TextMeshProUGUI percentText;
-    //[SerializeField] private TextMeshProUGUI statusText;
+    [SerializeField] private RectTransform birdIcon;
 
     [Header("Settings")]
     [Tooltip("How fast the bar smooths toward the target value. Higher = snappier.")]
@@ -57,24 +57,24 @@ public class LoadingUI : MonoBehaviour
     private void OnAuthProgress(AuthProgressEvent evt)
     {
         targetProgress = Mathf.Clamp01(evt.progress) * AUTH_WEIGHT;
-        //SetStatus(evt.currentStep);
+        
     }
 
     private void OnDataLoadProgress(DataLoadProgressEvent evt)
     {
         targetProgress = AUTH_WEIGHT + (Mathf.Clamp01(evt.progress) * DATA_WEIGHT);
-        //SetStatus(evt.currentStep);
+        
     }
 
     private void OnDataLoadCompleted(DataLoadCompletedEvent evt)
     {
         targetProgress = 1f;
-        //SetStatus("Ready");
+       
     }
 
     private void OnDataLoadFailed(DataLoadFailedEvent evt)
     {
-        //SetStatus($"Error: {evt.errorMessage}");
+      
     }
 
     // ─── Visuals ───
@@ -86,18 +86,22 @@ public class LoadingUI : MonoBehaviour
 
         if (percentText != null)
             percentText.text = $"{Mathf.RoundToInt(displayedProgress * 100f)}%";
+
+        if (birdIcon != null && fillImage != null)
+        {
+            float barWidth = fillImage.rectTransform.rect.width;
+            Vector2 pos = birdIcon.anchoredPosition;
+            pos.x = displayedProgress * barWidth;
+            birdIcon.anchoredPosition = pos;
+        }
     }
 
-    //private void SetStatus(string message)
-    //{
-    //    if (statusText != null) statusText.text = message;
-    //}
 
     private void ResetBar()
     {
         targetProgress = 0f;
         displayedProgress = 0f;
         UpdateVisuals();
-        //SetStatus("Loading...");
+       
     }
 }
