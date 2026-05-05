@@ -9,11 +9,18 @@ public class CoinFlowManager : MonoBehaviour
     [SerializeField] private CurrencyFlowEntry[] currencyEntries;
     [SerializeField] private Canvas parentCanvas;
     [SerializeField] private float coinScaleOverride = 0.5f;
+    [SerializeField] private float spawnRadius = 30f;
 
     [Header("Target Bounce Animation")]
     [SerializeField] private float bounceScale = 1.1f;
     [SerializeField] private float bounceInDuration = 0.18f;
     [SerializeField] private float bounceOutDuration = 0.28f;
+
+    [Header("Coin Flow SFX")]
+    [SerializeField] private AudioSource coinSfxSource;
+    [SerializeField] private AudioClip coinFlowSfx;
+    [Range(0f, 1f)] [SerializeField] private float coinSfxVolume = 1f;
+    [Range(-3f, 3f)] [SerializeField] private float coinSfxPitch = 1f;
 
     private Dictionary<CurrencyType, CurrencyFlowRuntime> runtimeMap;
 
@@ -94,16 +101,21 @@ public class CoinFlowManager : MonoBehaviour
 
         for (int i = 0; i < coinCount; i++)
         {
+            Vector2 randomOffset = UnityEngine.Random.insideUnitCircle * spawnRadius;
+            Vector3 coinSpawnWorldPos = ScreenToCanvasWorldPos(originScreen + randomOffset, canvasCam);
+
             CoinEntity coin = runtime.pool.Get();
             var coinRT = coin.GetComponent<RectTransform>();
-            coinRT.position = spawnWorldPos;
+            coinRT.position = coinSpawnWorldPos;
             coinRT.localScale = coinScaleOverride == 1f ? Vector3.one : Vector3.one * coinScaleOverride;
 
             int value = valuePerCoin + (i == coinCount - 1 ? remainder : 0);
 
+            if (i % 2 == 0) PlayCoinFlowSfx();
+
             coin.Launch(
                 type: type,
-                origin: spawnWorldPos,
+                origin: coinSpawnWorldPos,
                 target: targetWorldPos,
                 cfg: config,
                 value: value,
@@ -117,6 +129,7 @@ public class CoinFlowManager : MonoBehaviour
                     arrivedCount++;
                     if (arrivedCount >= coinCount)
                     {
+                        StopCoinFlowSfx();
                         BounceTargetSettle(runtime);
                         GameEvent.CurrencyBurstComplete(type);
                     }
@@ -125,6 +138,19 @@ public class CoinFlowManager : MonoBehaviour
 
             yield return new WaitForSeconds(config.spawnInterval);
         }
+    }
+
+    private void PlayCoinFlowSfx()
+    {
+        if (coinSfxSource == null || coinFlowSfx == null) return;
+        coinSfxSource.pitch = coinSfxPitch == 0f ? 1f : coinSfxPitch;
+        coinSfxSource.PlayOneShot(coinFlowSfx, coinSfxVolume);
+    }
+
+    private void StopCoinFlowSfx()
+    {
+        if (coinSfxSource == null) return;
+        coinSfxSource.Stop();
     }
 
     private void BounceTargetActive(CurrencyFlowRuntime runtime)

@@ -69,6 +69,12 @@ namespace Gameplay.Slot
 
                 DOVirtual.DelayedCall(i * 0.12f, () => reels[index].SpinToResult(result));
             }
+
+            if (reels.Length > 0)
+            {
+                float totalSpinDuration = (reels.Length - 1) * 0.12f + reels[reels.Length - 1].spinDuration;
+                DOVirtual.DelayedCall(totalSpinDuration, GameEvents.FireSpinAnimationCompleted);
+            }
         }
 
         private void OnReelSelected(ReelController clickedReel, PowerupConfig selected)

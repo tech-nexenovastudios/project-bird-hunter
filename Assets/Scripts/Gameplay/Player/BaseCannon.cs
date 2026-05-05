@@ -405,6 +405,7 @@ namespace Gameplay.Player
                         SpawnBullet(gunTips[i].position, gunTips[i].rotation);
             }
             OnShootVFX();
+            GameEvents.FireCannonShoot();
         }
 
         /// <summary>

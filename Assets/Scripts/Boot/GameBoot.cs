@@ -24,6 +24,13 @@ public class GameRoot : MonoBehaviour
         QualitySettings.antiAliasing = 1;
         Application.runInBackground = false;
     }
+    private void Start()
+    {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayMainMenuMusic();
+        else
+            Debug.LogWarning("AudioManager not found! Make sure it exists in the scene or is a DontDestroyOnLoad singleton.");
+    }
 
     private void OnEnable()
     {

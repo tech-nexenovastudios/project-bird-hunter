@@ -177,7 +177,10 @@ namespace Gameplay.Slot
                     }
 
                     // Bounce then register click
-                    symbols[^1].transform.DOScale(1.1f, 0.15f).SetLoops(2, LoopType.Yoyo)
+                    symbols[^1].transform.DOScale(1.1f, 0.15f).SetLoops(2, LoopType.Yoyo).OnStart(() =>
+                        {
+                            symbols[^1].button.image.raycastTarget = true;
+                        })
                         .OnComplete(() =>
                         {
                             symbols[^1].button.onClick.RemoveAllListeners();

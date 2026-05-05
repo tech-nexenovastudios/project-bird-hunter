@@ -21,6 +21,10 @@ namespace Gameplay.Events
 
         // ───────── Cannon ─────────
         public static event Action<int> OnCannonHit;
+        public static event Action OnCannonShoot;
+     
+
+        public static void FireCannonShoot() => OnCannonShoot?.Invoke();
 
         // ───────── Score ─────────
         public static event Action<int, int> OnLevelScoreUpdated;
@@ -34,8 +38,9 @@ namespace Gameplay.Events
         public static event Action<int> OnLevelCompleted;
         public static event Action OnAllEggsCleared;
 
-        // ───────── Player ─────────
+        // ───────── Player / Cannon─────────
         public static event Action OnPlayerDeath;
+        
 
 
         //public static event Action OnSlotPanelClosed ;
@@ -48,11 +53,17 @@ namespace Gameplay.Events
 
         public static event Action<List<PowerupConfig>> OnSpinStarted;
 
+        // Fired when all reels finish their visual spin animation (before player makes a selection).
+        public static event Action OnSpinAnimationCompleted;
+
         //notification panel
         //public static void FireSlotPanelClosed()
         //    => OnSlotPanelClosed?.Invoke();
         public static void FireSpinStarted(List<PowerupConfig> options)
             => OnSpinStarted?.Invoke(options);
+
+        public static void FireSpinAnimationCompleted()
+            => OnSpinAnimationCompleted?.Invoke();
         // ───────── UI ─────────
         // public static event Action OnBackToMenu;
         public static event Action<bool> OnPauseToggled;   // true = paused
