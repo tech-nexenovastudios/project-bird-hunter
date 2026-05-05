@@ -1,161 +1,20 @@
 using UnityEngine;
 
+// Cannon upgrade cost curve. Formula-driven because all cannons share the
+// same shape; per-cannon scaling is via `cannonMultipliers[]`.
+//
+// Unlock prices are NOT here — they live in Cloud Save `cannon_stats`
+// (CannonBaseStatsDto.baseCoinsRequired / baseGemsRequired) and are read
+// at runtime via CannonInventoryService.GetUnlockCoinCost.
+//
+// In-level coin/gem drops, completion bonuses, first-clear gems, and power
+// refunds are NOT here either — they live in `GameplayRewardConfig` and are
+// the only runtime path for in-game rewards. See docs/Reward_Tuning.md.
 [CreateAssetMenu(
     fileName = "EconomyFormulaConfig",
     menuName = "Game/Economy/EconomyFormulaConfig")]
 public class EconomyFormulaConfig : ScriptableObject
 {
-    // =========================
-    //  GLOBAL HELPERS
-    // =========================
-
-    public int GetGlobalLevel(int chapter, int levelInChapter)
-    {
-        return (chapter - 1) * 20 + levelInChapter;
-    }
-
-    // =========================
-    //  COINS
-    // =========================
-
-    // 1. In-level drops  (≈30-80 early → 250-400 late)
-    public float GetCoinsDropMin(int chapter, int levelInChapter)
-    {
-        float baseDropMin = 30f;
-        float mc = 1f + 0.03f * Mathf.Pow(chapter - 1, 1.1f);
-        float lf = 1f + 0.10f * ((levelInChapter - 1) / 19f);
-        return baseDropMin * mc * lf;
-    }
-
-    public float GetCoinsDropMax(int chapter, int levelInChapter)
-    {
-        float baseDropMax = 80f;
-        float mc = 1f + 0.03f * Mathf.Pow(chapter - 1, 1.1f);
-        float lf = 1f + 0.10f * ((levelInChapter - 1) / 19f);
-        return baseDropMax * mc * lf;
-    }
-
-    public int RollCoinsFromDrops(int chapter, int levelInChapter)
-    {
-        int min = Mathf.RoundToInt(GetCoinsDropMin(chapter, levelInChapter));
-        int max = Mathf.RoundToInt(GetCoinsDropMax(chapter, levelInChapter)) + 1;
-        return Random.Range(min, max);
-    }
-
-    // 2. Level completion (≈50-100 → 120-240 → 250-500)
-    public float GetCompletionBaseCoins(int chapter)
-    {
-        float baseComp = 50f;
-        float mc = 1f + 0.04f * Mathf.Pow(chapter - 1, 1.15f);
-        return baseComp * mc;
-    }
-
-    public float GetCompletionPerfMax(int chapter)
-    {
-        float basePerf = 50f;
-        float mc = 1f + 0.04f * Mathf.Pow(chapter - 1, 1.15f);
-        return basePerf * mc;
-    }
-
-    /// <summary>
-    /// performance01 = 0..1 (e.g., 0, 0.5, 1 based on stars)
-    /// </summary>
-    public int GetCompletionCoins(int chapter, float performance01)
-    {
-        float baseCoins = GetCompletionBaseCoins(chapter);
-        float perfMax   = GetCompletionPerfMax(chapter);
-        float reward    = baseCoins + performance01 * perfMax;
-
-        float jitter = Random.Range(0.95f, 1.05f);
-        return Mathf.RoundToInt(reward * jitter);
-    }
-
-    // =========================
-    //  GEMS
-    // =========================
-
-    // 3. First-time clear gems (gentle ramp)
-    public int GetFirstClearGems(
-        int chapter,
-        int levelInChapter,
-        bool isMilestone,
-        bool isBoss)
-    {
-        int globalLevel = GetGlobalLevel(chapter, levelInChapter);
-        float mg = 1f + 0.0004f * Mathf.Pow(globalLevel - 1, 1.05f);
-        float expected = 0.9f * mg;
-
-        int baseGems = Mathf.Clamp(Mathf.RoundToInt(expected), 1, 2);
-
-        if (isMilestone) baseGems += 1;
-        if (isBoss)      baseGems += 2;
-
-        return baseGems;
-    }
-
-    // 4. In-level gem drop chance & amount
-    public float GetGemDropChance(int chapter)
-    {
-        float t = (chapter - 1) / 29f;           // 0..1 over 30 chapters
-        return 0.03f + 0.07f * Mathf.Pow(t, 1.05f); // 3% → 10%, gentle
-    }
-
-    public int RollGemDropAmount(int chapter)
-    {
-        if (chapter <= 10)
-            return 1;
-
-        float r = Random.value;
-
-        if (chapter <= 20)
-        {
-            // 80%:1, 20%:2
-            return r < 0.8f ? 1 : 2;
-        }
-        else
-        {
-            // 70%:2, 30%:3
-            return r < 0.7f ? 2 : 3;
-        }
-    }
-
-    // =========================
-    //  POWER (ENERGY)
-    // =========================
-
-    // 5. Refund chance on completion (20% → 30%)
-    public float GetPowerRefundChance(int chapter)
-    {
-        return 0.20f + 0.10f * ((chapter - 1) / 29f);
-    }
-
-    public int RollPowerRefund(int chapter)
-    {
-        return Random.value < GetPowerRefundChance(chapter) ? 1 : 0;
-    }
-
-    // 6. In-level power drops (4% → 10%)
-    public float GetPowerDropChance(int chapter)
-    {
-        return 0.04f + 0.06f * ((chapter - 1) / 29f);
-    }
-
-    public int RollPowerDropAmount(int chapter)
-    {
-        if (chapter < 21)
-            return 1;
-
-        // Late game: 80% +1, 20% +2
-        return Random.value < 0.8f ? 1 : 2;
-    }
-
-    // =========================
-    //  CANNON UPGRADE
-    // =========================
-    // Unlock prices live in Cloud Save `cannon_stats` (CannonBaseStatsDto.
-    // baseCoinsRequired / baseGemsRequired). Only the upgrade curve is
-    // formula-driven, so this section keeps the per-cannon upgrade multipliers.
-
     [System.Serializable]
     public class CannonCostMultiplier
     {
@@ -182,7 +41,6 @@ public class EconomyFormulaConfig : ScriptableObject
         return 1f;
     }
 
-    // Upgrade cost curve (Single Shot template)
     float GetSingleShotUpgradeCost(int toLevel)
     {
         // toLevel: 2..10
@@ -213,28 +71,5 @@ public class EconomyFormulaConfig : ScriptableObject
 
         float mult = GetCannonMatMultiplier(cannonId);
         return Mathf.RoundToInt(baseMat * mult);
-    }
-
-    // =========================
-    //  CHEST SCALING
-    // =========================
-
-    public float GetChestCoinsMin(int chapter)
-    {
-        float baseMin = 3000f;
-        float mc = 1f + 0.06f * Mathf.Pow(chapter - 1, 1.15f);
-        return baseMin * mc;
-    }
-
-    public float GetChestCoinsMax(int chapter)
-    {
-        return GetChestCoinsMin(chapter) * 1.5f;
-    }
-
-    public int RollChestCoins(int chapter)
-    {
-        int min = Mathf.RoundToInt(GetChestCoinsMin(chapter));
-        int max = Mathf.RoundToInt(GetChestCoinsMax(chapter)) + 1;
-        return Random.Range(min, max);
     }
 }

@@ -58,16 +58,16 @@ The numbers below were chosen as designer-friendly round values that approximate
 | 6 | Big Bartha | 20 | **44,500** | 405 |
 | 7 | Triple | 25 | **75,000** | 682 |
 
-Approximate coins available at unlock time (cumulative, perfect runs):
+Approximate coins available at unlock time (cumulative, perfect runs, **post-cut earn rate** from `Reward_Tuning.md` §3):
 
-- Ch3 cumulative: ~58k → Rapid Fire (6.0k) is **~10%** of total earned.
-- Ch6 cumulative: ~145k → Lucky (9.5k) is **~7%**.
-- Ch10 cumulative: ~290k → Double (16.0k) is **~5.5%**.
-- Ch14 cumulative: ~590k → Shotgun (24.0k) is **~4%**.
-- Ch20 cumulative: ~1.34M → Big Bartha (44.5k) is **~3.3%**.
-- Ch25 cumulative: ~1.74M → Triple (75.0k) is **~4.3%**.
+- Ch3 cumulative: ~44k → Rapid Fire (6.0k) is **~13.6%** of total earned.
+- Ch6 cumulative: ~88k → Lucky (9.5k) is **~10.7%**.
+- Ch10 cumulative: ~147k → Double (16.0k) is **~10.8%**.
+- Ch14 cumulative: ~309k → Shotgun (24.0k) is **~7.8%**.
+- Ch20 cumulative: ~550k → Big Bartha (44.5k) is **~8.1%**.
+- Ch25 cumulative: ~924k → Triple (75.0k) is **~8.1%**.
 
-> Pricing was raised (base 1500 → 5000) and runtime was switched from formula to cloud-save `baseCoinsRequired` so live-ops can re-tune individual cannons without a client patch. Unlocks now sit in a 3–10% spend band — meaningful, but never gating progress.
+> Pricing was raised (base 1500 → 5000) and runtime was switched from formula to cloud-save `baseCoinsRequired`, in tandem with the reward-tuning cuts (`Reward_Tuning.md`). Unlocks now sit in a **7.8–13.6% spend band** at the time the player first sees them — meaningful purchases, never gating progress.
 
 ### 1.4 Upgrade cost (Levels 2 → 10)
 
@@ -295,7 +295,7 @@ Highest leverage first.
 | 3 | ~~Re-baseline unlock costs upward.~~ ✅ Done. | Design + Eng | Cloud values now 0 / 6k / 9.5k / 16k / 24k / 44.5k / 75k → 3–10% of cumulative earn. |
 | 4 | Add startup validator for `CannonDatabase` ↔ `CannonStatsRepository` ↔ `EconomyFormulaConfig.cannonMultipliers[]` consistency. | Eng | Cloud-vs-local drift will absolutely happen otherwise. |
 | 5 | Add rarity drop-weights to the spin pool builder. | Eng | Without this, Legendary feel exactly as common as Common. |
-| 6 | Wire `EconomyFormulaConfig.GetFirstClearGems` into `RewardManager.HandleLevelCompleted` (replaces flat `gemsOnFirstTimeClear`). | Eng | Already-implemented chapter ramp is going unused. |
+| 6 | ~~Wire `EconomyFormulaConfig.GetFirstClearGems` into `RewardManager.HandleLevelCompleted`.~~ ❌ Obsolete. | — | The method was deleted (see Reward_Tuning.md §7). `GameplayRewardConfig.gemsOnFirstTimeClear = 4` is now the single source of truth. |
 | 7 | Add `levelInChapter` factor to in-level coin drops. | Eng | Cheap fix; closes the "L20 pays the same as L1" perception. |
 | 8 | Fix Mana Acceleration asset name vs displayName. | Design | 30-second polish item. |
 

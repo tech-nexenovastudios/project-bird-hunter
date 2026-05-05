@@ -148,7 +148,7 @@ The spend-to-earn ratio is healthy throughout — players always have enough to 
 
 ### 4.2 Gem-pack pull
 
-Lifetime gem income drops from ~7k to ~2.8k. Now any player who wants to skip the grind on a cannon (gem alt-path) has to either grind further or buy a gem pack. The 500-gem starter pack ($0.99) finally has a clear use case: "a Mid-phase cannon unlock, today, instead of next week."
+Lifetime gem income drops from ~7k to ~2.8k. Combined with the **gem-pack rebalance** in `Shop_Pricing.md` §1 (packs cut to 100 / 600 / 1,300 / 2,800 / 7,500 gems), any player who wants to skip the grind on a cannon (gem alt-path) has to either grind further or buy a gem pack. The new $0.99 starter pack (100 gems) is exactly **one Ch3 cannon unlock** — the cleanest possible "buy this and the next thing happens" funnel.
 
 ---
 
@@ -180,12 +180,12 @@ A soft-launch player who's earning ≥30% above these is on the old curve — co
 
 ## 7. Open follow-ups
 
-| # | Item | Owner |
-|---|---|---|
-| 1 | Delete dead reward methods from `EconomyFormulaConfig.cs` (drift risk; methods listed in §1) | Eng |
-| 2 | Wire up chests with halved base (3,000 → 1,500) if/when the chest UI ships | Eng + Design |
-| 3 | Watch Day 7/14 retention for "stuck at Mid phase" — if >40% of Ch15 players churn for economy reasons, soften Mid completion bonus by +20% | Live-ops |
-| 4 | Migrate `GameplayRewardConfig` to Remote Config so live-ops can re-tune without a client patch (same play as the cannon prices → cloud) | Eng |
+| # | Item | Owner | Status |
+|---|---|---|---|
+| 1 | Delete dead reward methods from `EconomyFormulaConfig.cs` (drift risk; methods listed in §1) | Eng | ✅ Done — `EconomyFormulaConfig` now only holds the cannon upgrade-cost curve. |
+| 2 | Wire up chests with halved base (3,000 → 1,500) if/when the chest UI ships | Eng + Design | Open — chest UI not built yet; chest formulas were also deleted alongside #1, so any future chest system will need a fresh source. |
+| 3 | Watch Day 7/14 retention for "stuck at Mid phase" — if >40% of Ch15 players churn for economy reasons, soften Mid completion bonus by +20% | Live-ops | Open |
+| 4 | Migrate `GameplayRewardConfig` to Remote Config so live-ops can re-tune without a client patch (same play as the cannon prices → cloud) | Eng | Open |
 
 ---
 

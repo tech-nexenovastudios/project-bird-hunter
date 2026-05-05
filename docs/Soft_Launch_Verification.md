@@ -99,9 +99,12 @@ Run these against the **live store** (Google Play Internal Testing track / TestF
 
 | # | Check | Pass criteria |
 |---|---|---|
-| 5.1 | All 5 gem packs initialize | `[GemsBuy] IAP initialized.` log appears; no `OnInitializeFailed` |
-| 5.2 | Each gem pack shows correct localized price | Tap each card, verify `priceText` matches store listing |
-| 5.3 | Buy 500-gem pack ($0.99) end-to-end | Wallet increments by exactly 500; receipt confirms; pending-purchase logic clears |
+| 5.1 | All 6 gem packs initialize | `[GemsBuy] IAP initialized.` log appears; no `OnInitializeFailed` and no length-mismatch error from `PopulateProductIds` |
+| 5.2 | Each gem pack shows correct localized price | Tap each card, verify `priceText` matches store listing for the new SKUs (`100_gems`, `320_gems`, `600_gems`, `1300_gems`, `2800_gems`, `7500_gems`) |
+| 5.3 | Buy 100-gem pack ($0.99) end-to-end | Wallet increments by exactly 100; receipt confirms; pending-purchase logic clears |
+| 5.3a | Buy 320-gem pack ($2.99) end-to-end | Wallet increments by exactly 320 — confirms the new funnel-fill tier wired correctly |
+| 5.3b | Old SKUs (`500_gems`, `7000_gems`, `16000_gems`, `40000_gems`, `110000_gems`) are removed/hidden | Play Console / App Store Connect | None purchasable; no test account can buy them |
+| 5.3c | Shop UI shows 6 cards | Open shop scene at runtime | Six pack cards visible, none missing or stacked atop each other |
 | 5.4 | Restore pending purchase | Force-close mid-purchase; relaunch; gems credited via `RestorePendingPurchases` |
 | 5.5 | Buy gold pack (gems → coins) | Each `purchaseCards[i].virtualPurchaseId` matches Dashboard slot in catalog order |
 | 5.6 | Buy power pack (gems → power) | Same — order matters |
@@ -116,18 +119,21 @@ Run these against the **live store** (Google Play Internal Testing track / TestF
 
 ## 6. Earn-rate sanity check
 
-Play a fresh install through Ch1–Ch3 (≈60 levels) on a stopwatch. Compare to the modeled earn rate from `Progression_Reward_Economy.md`.
+Play a fresh install through Ch1–Ch3 (≈60 levels) on a stopwatch. Compare to the modeled earn rate from `Reward_Tuning.md` §3 (15-eggs-per-level baseline from `RewardManager.EstimateExpectedCoinsForLevel`). Numbers below assume the **post-cut** `GameplayRewardConfig` is the live asset.
 
 | Window | Expected coins (cumulative) | Expected gems | Expected power refunds |
 |---|---|---|---|
-| End Ch1 (L20) | ~14,000–18,000 | ~5–10 | ~4 levels worth |
-| End Ch2 (L40) | ~36,000–46,000 | ~12–22 | ~8 levels worth |
-| End Ch3 (L60) | ~58,000–72,000 | ~22–35 | ~12 levels worth |
+| End Ch1 (L20) | ~13,000–16,500 | ~3–6 | ~4 levels worth |
+| End Ch2 (L40) | ~26,500–32,500 | ~6–12 | ~8 levels worth |
+| End Ch3 (L60) | ~40,000–48,500 | ~10–17 | ~12 levels worth |
+| End Ch10 (L200) | ~135,000–160,000 | ~50–80 | ~40 levels worth |
+| End Ch20 (L400) | ~530,000–570,000 | ~140–180 | ~80 levels worth |
+| End Ch30 (L600) | ~1,250,000–1,350,000 | ~280–340 | ~120 levels worth |
 
-If actuals are <70% or >130% of expected, the formulas are mistuned. Check:
-- `GameplayRewardConfig.coinDropPhases[]` (in-level drops)
-- `GameplayRewardConfig.completionPhases[]` (per-level completion)
-- `EconomyFormulaConfig.GetGemDropChance` (in-level gem rate)
+If actuals are **<80% or >120%** of expected, the live config drifted from the doc. Check in this order:
+1. `Assets/Resources/Data/New Gameplay Reward Config.asset` matches Reward_Tuning §2.
+2. `RewardManager.EstimateExpectedCoinsForLevel`'s 15-eggs constant hasn't changed.
+3. Player isn't running on a save migrated from a pre-cut build (force fresh install for this test).
 
 ---
 

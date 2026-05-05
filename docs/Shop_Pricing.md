@@ -24,32 +24,43 @@ This doc pairs with `Cannon_Powerup_Unlock_Plan.md` (gameplay-side unlocks) and 
 
 Source: `Assets/Scripts/Shop/GemsBuyManager.cs:51`. Product IDs are formed as `{gemCount}_gems` and the actual price is fetched from Google Play / App Store at runtime (`OnInitialized`, line 85).
 
-| Tier | Pack | Product ID | Target USD¹ | $/100 gems | Position |
-|---|---|---|---|---|---|
-| 1 | **500 gems** | `500_gems` | $0.99 | $0.198 | Starter, low commit |
-| 2 | **7,000 gems** | `7000_gems` | $4.99 | $0.071 | "Most popular" — sweet spot |
-| 3 | **16,000 gems** | `16000_gems` | $9.99 | $0.062 | Mid value pack |
-| 4 | **40,000 gems** | `40000_gems` | $19.99 | $0.050 | Whale entry |
-| 5 | **110,000 gems** | `110000_gems` | $49.99 | $0.045 | Top tier |
+Gems are a **premium currency**. Pricing follows the industry-standard 6-tier mobile F2P ladder using charm price points ($0.99 / $2.99 / $4.99 / $9.99 / $19.99 / $49.99) and the $0.67–$0.99 per-100-gem band. Pack sizes were re-tuned downward (the previous values gave away 4–10× industry-standard amounts at the same USD price points).
+
+| Tier | Pack | Product ID | Target USD¹ | $/100 gems | Bonus vs starter | Position |
+|---|---|---|---|---|---|---|
+| 1 | **100 gems** | `100_gems` | $0.99 | $0.99 | — | Starter, low commit |
+| 2 | **320 gems** | `320_gems` | $2.99 | $0.93 | +6% | Funnel-fill |
+| 3 | **600 gems** | `600_gems` | $4.99 | $0.83 | +20% | "Most popular" — sweet spot |
+| 4 | **1,300 gems** | `1300_gems` | $9.99 | $0.77 | +30% | Mid value pack |
+| 5 | **2,800 gems** | `2800_gems` | $19.99 | $0.71 | +40% | Whale entry |
+| 6 | **7,500 gems** | `7500_gems` | $49.99 | $0.67 | +50% | Top tier |
 
 ¹ **Target** USD prices — set in Google Play Console / App Store Connect, not in code. Verify against the live store config; storefronts display localized prices via `storeProduct.metadata.localizedPrice`.
+
+> **Required actions before this ships:**
+> 1. **Play Console / App Store Connect:** create the six new SKUs (`100_gems`, `320_gems`, `600_gems`, `1300_gems`, `2800_gems`, `7500_gems`). Remove or hide the old SKUs (`500_gems`, `7000_gems`, `16000_gems`, `40000_gems`, `110000_gems`).
+> 2. **Unity scene:** the shop scene's `GemsBuyManager.gemProducts[]` Inspector array currently has 5 slots. Add a 6th slot for the $2.99 / 320-gem pack and wire its `purchaseButton` + `priceText` to a new card in the gem-pack panel UI. The `PopulateProductIds` validator at `GemsBuyManager.cs:53` will log an error and bail if the array length stays at 5.
+> 3. **Optional later:** if soft-launch ARPPU shows whales topping out, add a 7th tier at **$99.99 / 17,000 gems** (`$0.59/100`). Most major F2P games have it.
 
 ### 1.1 Coin-equivalent value of each gem pack
 
 Using the in-game rate `1 gem = 110 coins`:
 
-| Pack | Gems | Coins (equivalent) | What it unlocks (post-fix) |
+| Pack | Gems | Coins (equivalent) | What it gets you (post-fix economy) |
 |---|---|---|---|
-| 500 gems | 500 | 55,000 | Rapid Fire (Ch3) + Lucky (Ch6) with change |
-| 7,000 gems | 7,000 | 770,000 | All Early/Mid cannons + most upgrades to L7 |
-| 16,000 gems | 16,000 | 1,760,000 | Roughly Ch1–Ch20 fully maxed |
-| 40,000 gems | 40,000 | 4,400,000 | Triple unlock + most cannons to L10 |
-| 110,000 gems | 110,000 | 12,100,000 | "I want everything maxed forever" |
+| 100 gems | 100 | 11,000 | About one Ch3 cannon unlock (CANNON_02) via gem-alt path |
+| 320 gems | 320 | 35,200 | Up to a Ch10 cannon unlock (CANNON_04) via gem-alt |
+| 600 gems | 600 | 66,000 | All Early/Mid cannon unlocks (Tiers 2–5) via gem-alt |
+| 1,300 gems | 1,300 | 143,000 | All cannon unlocks via gem-alt with change to spare |
+| 2,800 gems | 2,800 | 308,000 | All unlocks + meaningful upgrade head-start |
+| 7,500 gems | 7,500 | 825,000 | Late-game shortcut — most upgrades to mid-tier |
 
-### 1.2 Pricing flaw watch
+### 1.2 Pricing health
 
-- **Pack 1 ($0.99 / 500 gems)** is 4× more expensive per gem than Pack 5. That ratio is fine — most F2P stores use 4–10× spread to make whales feel rewarded — but it's worth verifying mid-funnel: too steep and Pack 1 feels like a trap; too flat and Pack 5 has no pull.
-- The gap between Pack 2 (7k) and Pack 3 (16k) is narrow ($0.009/100 gems). Either widen Pack 3 to ~20k or tighten Pack 2 to ~5k so each tier feels distinct.
+- **Per-100 spread ($0.67 → $0.99)** is a healthy 47% range — top pack rewards commitment without making the starter feel like a trap.
+- **Bonus ladder (0% → 50%)** is clean, monotonic, and predictable.
+- **Total catalog supply: 12,620 gems** if a player buys every pack once. Lifetime cannon gem-alt cost = ~1,600 gems, so a buy-everything player has ~7.9× cannon-budget headroom for future sinks (battlepass, bundles, premium chests).
+- **Funnel coverage:** there is now a buyable SKU at every standard mobile-F2P price step from $0.99 to $49.99. The $0.99 → $4.99 jump (a known industry conversion gap) is filled by the $2.99 tier.
 
 ---
 
@@ -105,18 +116,18 @@ Why cloud, not formula: live-ops can re-tune any cannon without a client patch, 
 | 6 | Big Bartha | `BigBarthaCannon` | 20 | **44,500** | 405 |
 | 7 | Triple | `TripleCannon` | 25 | **75,000** | 682 |
 
-Spend as % of cumulative earnings at the unlock chapter:
+Spend as % of cumulative earnings at the unlock chapter (post-cut earn rate, see `Reward_Tuning.md` §3):
 
 | Tier | Spend at unlock | Cumulative earned | % of total |
 |---|---|---|---|
-| 2 | 6,000 | ~58k | 10.3% |
-| 3 | 9,500 | ~145k | 6.6% |
-| 4 | 16,000 | ~290k | 5.5% |
-| 5 | 24,000 | ~590k | 4.1% |
-| 6 | 44,500 | ~1.34M | 3.3% |
-| 7 | 75,000 | ~1.74M | 4.3% |
+| 2 | 6,000 | ~44k | 13.6% |
+| 3 | 9,500 | ~88k | 10.7% |
+| 4 | 16,000 | ~147k | 10.8% |
+| 5 | 24,000 | ~309k | 7.8% |
+| 6 | 44,500 | ~550k | 8.1% |
+| 7 | 75,000 | ~924k | 8.1% |
 
-This is the target band — meaningful but not blocking. Anything <2% reads as "free", anything >15% reads as "I have to grind first."
+This is the target band — meaningful but not blocking. Anything <2% reads as "free", anything >15% reads as "I have to grind first." Sitting in 7.8–13.6% means an unlock is ~1–3 chapters of focused saving.
 
 > **Pre-fix snapshot for context:** the old formula baseline of 1500 produced ~1–2% spend bands (Triple at Ch25 was ~22.5k coins ≈ 1.3% of cumulative earn). The values above were chosen as designer-friendly round numbers in the 3–10% band and baked into cloud save as the single source of truth. See `Cannon_Powerup_Unlock_Plan.md` §1.6 and `docs/cloud-save/cannon_stats.json`.
 

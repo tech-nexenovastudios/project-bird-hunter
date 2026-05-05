@@ -48,7 +48,7 @@ public class GemsBuyManager : MonoBehaviour, IDetailedStoreListener
 
     private void PopulateProductIds()
     {
-        long[] gemCounts = { 110000, 40000, 16000, 7000, 500 };
+        long[] gemCounts = { 7500, 2800, 1300, 600, 320, 100 };
 
         if (gemProducts == null || gemProducts.Length != gemCounts.Length)
         {

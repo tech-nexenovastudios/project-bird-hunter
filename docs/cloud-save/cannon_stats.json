@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "lastUpdated": "2026-05-05",
+    "description": "Cannon unlock pricing for Unity Cloud Save 'cannon_stats' custom-id. Each top-level key (except _meta) is a Cloud Save sub-key whose value is the JSON DTO stored at that key.",
+    "applyInstructions": "In the Unity Cloud Save dashboard, open the 'cannon_stats' custom-id. For each cannon sub-key listed below, MERGE the fields under that key into the existing JSON value: replace 'unlockAtChapter', 'baseCoinsRequired', and 'baseGemsRequired'. PRESERVE all gameplay stat fields (baseDamage, baseHealth, baseFireRate, baseBulletSpeed, baseCannonSpeed, displayName, description, maxUpgradeLevel) from the existing entry — do NOT overwrite them.",
+    "fieldsManagedHere": [
+      "cannonId",
+      "unlockAtChapter",
+      "baseCoinsRequired",
+      "baseGemsRequired"
+    ],
+    "source": "docs/Shop_Pricing.md §4 — Cannon unlocks",
+    "softToHardRate": "1 gem = 110 coins"
+  },
+  "SingleShotCannon": {
+    "cannonId": "CANNON_01",
+    "unlockAtChapter": 1,
+    "baseCoinsRequired": 0,
+    "baseGemsRequired": 0
+  },
+  "RapidFireCannon": {
+    "cannonId": "CANNON_02",
+    "unlockAtChapter": 3,
+    "baseCoinsRequired": 6000,
+    "baseGemsRequired": 55
+  },
+  "LuckyCannon": {
+    "cannonId": "CANNON_03",
+    "unlockAtChapter": 6,
+    "baseCoinsRequired": 9500,
+    "baseGemsRequired": 87
+  },
+  "DoubleCannon": {
+    "cannonId": "CANNON_04",
+    "unlockAtChapter": 10,
+    "baseCoinsRequired": 16000,
+    "baseGemsRequired": 146
+  },
+  "ShotgunCannon": {
+    "cannonId": "CANNON_05",
+    "unlockAtChapter": 14,
+    "baseCoinsRequired": 24000,
+    "baseGemsRequired": 219
+  },
+  "BigBarthaCannon": {
+    "cannonId": "CANNON_06",
+    "unlockAtChapter": 20,
+    "baseCoinsRequired": 44500,
+    "baseGemsRequired": 405
+  },
+  "TripleCannon": {
+    "cannonId": "CANNON_07",
+    "unlockAtChapter": 25,
+    "baseCoinsRequired": 75000,
+    "baseGemsRequired": 682
+  }
+}
