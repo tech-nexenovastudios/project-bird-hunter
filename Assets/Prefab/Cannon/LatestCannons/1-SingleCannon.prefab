@@ -302,7 +302,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 171004211
   m_SortingLayer: 8
-  m_SortingOrder: 1
+  m_SortingOrder: 3
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: a7d479bcf499352438fde54e1f47747b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -412,6 +412,12 @@ MonoBehaviour:
   hitVFXPoint: {fileID: 6380112749438192785}
   deathVFXPrefab: {fileID: 0}
   deathVFXPoint: {fileID: 0}
+  middleTransform: {fileID: 6380112749438192785}
+  leftWheel: {fileID: 2535470875987668765}
+  rightWheel: {fileID: 3989215522621493809}
+  wheelFlyDistance: 1
+  wheelHopHeight: 1
+  wheelSpin: 720
   healVFXPrefab: {fileID: 5314038177992974445}
   shieldAbsorbVFXPrefab: {fileID: 0}
   reviveVFXPrefab: {fileID: 0}

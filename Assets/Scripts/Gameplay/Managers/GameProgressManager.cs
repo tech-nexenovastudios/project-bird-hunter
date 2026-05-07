@@ -170,7 +170,17 @@ namespace Gameplay.Managers
                 _progress.currentLevel = 1;
                 _progress.ResetSlotsForNewChapter();
                 //Debug.Log($"[ProgressManager] 🎰 Chapter start spin → Ch{_progress.currentChapter}");
-                TriggerSpin(0);
+
+                // Play the chapter-end animation first; trigger the chapter-start
+                // spin only after the transition signals it has finished.
+                Action onTransitionDone = null;
+                onTransitionDone = () =>
+                {
+                    GameEvents.OnChapterTransitionFinished -= onTransitionDone;
+                    TriggerSpin(0);
+                };
+                GameEvents.OnChapterTransitionFinished += onTransitionDone;
+                GameEvents.FireChapterCompleted(_progress.currentChapter);
             }
 
             SaveProgress();

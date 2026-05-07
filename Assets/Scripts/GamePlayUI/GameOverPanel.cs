@@ -19,12 +19,12 @@ namespace Gameplay.UI
         [Header("Rewards")]
         [SerializeField] private TextMeshProUGUI coinsTMP;
         [SerializeField] private TextMeshProUGUI gemsTMP;
-        [SerializeField] private TextMeshProUGUI xpTMP;
+        [SerializeField] private TextMeshProUGUI powerTMP;
 
-        [Header("Multiplier Labels (x2 icons)")]
-        [SerializeField] private GameObject coinsX2Label;
-        [SerializeField] private GameObject gemsX2Label;
-        [SerializeField] private GameObject xpX2Label;
+        //[Header("Multiplier Labels (x2 icons)")]
+        //[SerializeField] private GameObject coinsX2Label;
+        //[SerializeField] private GameObject gemsX2Label;
+        //[SerializeField] private GameObject xpX2Label;
 
         [Header("Buttons")]
         [SerializeField] private Button watchAdButton;
@@ -40,6 +40,7 @@ namespace Gameplay.UI
         private int _highScore;
         private int _baseCoins;
         private int _baseGems;
+        private int _basePower;
         private int _baseXP;
         private bool _adRewardClaimed;
 
@@ -67,24 +68,27 @@ namespace Gameplay.UI
 
         private void OnEnable()
         {
-            GameEvents.OnPlayerDeath += HandlePlayerDeath;
+            //GameEvents.OnPlayerDeath += HandlePlayerDeath;
+            _adRewardClaimed = false;
+            SnapshotRunData();
+            RefreshUI();
         }
 
-        private void OnDisable()
-        {
-            GameEvents.OnPlayerDeath -= HandlePlayerDeath;
-        }
+        //private void OnDisable()
+        //{
+        //    GameEvents.OnPlayerDeath -= HandlePlayerDeath;
+        //}
 
         // ─────────────────────────────────────────────
         //  Death Handler
         // ─────────────────────────────────────────────
 
-        private void HandlePlayerDeath()
-        {
-            _adRewardClaimed = false;
-            SnapshotRunData();
-            RefreshUI();
-        }
+        //private void HandlePlayerDeath()
+        //{
+        //    _adRewardClaimed = false;
+        //    SnapshotRunData();
+        //    RefreshUI();
+        //}
 
         // ─────────────────────────────────────────────
         //  Data Snapshot
@@ -111,11 +115,10 @@ namespace Gameplay.UI
             var rewards = RewardManager.Instance;
             _baseCoins = rewards != null ? rewards.GetSessionCoinsThisLevel() : 0;
             _baseGems = rewards != null ? rewards.GetSessionGemsThisLevel() : 0;
+            _basePower = rewards != null ? rewards.GetSessionPowerThisLevel() : 0;
 
             int playerLevel = progress?.Data?.playerLevel ?? 1;
-            _baseXP = XPManager.Instance != null
-                ? Mathf.RoundToInt(XPManager.Instance.GetXPToNextLevel(playerLevel) * 0.1f)
-                : 0;
+     
         }
 
         // ─────────────────────────────────────────────
@@ -126,19 +129,19 @@ namespace Gameplay.UI
         {
             int multiplier = _adRewardClaimed ? 2 : 1;
 
-            if (scoreTMP) scoreTMP.text = _score.ToString("000,000");
+            if (scoreTMP) scoreTMP.text = _score.ToString();
             if (targetScoreTMP) targetScoreTMP.text = _targetScore > 0 ? _targetScore.ToString("000,000") : "-";
             if (chapterLevelTMP) chapterLevelTMP.text = $"Chapter {_chapter}  •  Level {_level}";
             if (highScoreTMP) highScoreTMP.text = _highScore.ToString("000,000");
 
-            if (coinsTMP) coinsTMP.text = (multiplier * _baseCoins).ToString("000");
-            if (gemsTMP) gemsTMP.text = (multiplier * _baseGems).ToString("000");
-            if (xpTMP) xpTMP.text = (multiplier * _baseXP).ToString("000");
+            if (coinsTMP) coinsTMP.text = (multiplier * _baseCoins).ToString();
+            if (gemsTMP) gemsTMP.text = (multiplier * _baseGems).ToString();
+            if (powerTMP) powerTMP.text = (multiplier * _basePower).ToString();
 
-            bool showBadges = !_adRewardClaimed;
-            if (coinsX2Label) coinsX2Label.SetActive(showBadges);
-            if (gemsX2Label) gemsX2Label.SetActive(showBadges);
-            if (xpX2Label) xpX2Label.SetActive(showBadges);
+            //bool showBadges = !_adRewardClaimed;
+            //if (coinsX2Label) coinsX2Label.SetActive(showBadges);
+            //if (gemsX2Label) gemsX2Label.SetActive(showBadges);
+            //if (xpX2Label) xpX2Label.SetActive(showBadges);
 
             if (watchAdButton) watchAdButton.gameObject.SetActive(!_adRewardClaimed);
         }

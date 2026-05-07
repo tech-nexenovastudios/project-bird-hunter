@@ -179,5 +179,12 @@ namespace Gameplay.Events
         public static event Action<int> OnChapterCompleted;  // int = new chapter number
         public static void FireChapterCompleted(int newChapter)
             => OnChapterCompleted?.Invoke(newChapter);
+
+        // Fires once the chapter-end animation has finished playing (or was
+        // skipped because references were missing). Listeners can use this to
+        // sequence follow-up UI like the chapter-start spin.
+        public static event Action OnChapterTransitionFinished;
+        public static void FireChapterTransitionFinished()
+            => OnChapterTransitionFinished?.Invoke();
     }
 }

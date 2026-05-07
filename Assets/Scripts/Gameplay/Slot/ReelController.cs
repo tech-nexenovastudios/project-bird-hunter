@@ -144,6 +144,11 @@ namespace Gameplay.Slot
 
             spinTween?.Kill();
 
+            // Reset reel position and re-enable the scrolling symbols so a second spin animates
+            content.anchoredPosition = Vector2.zero;
+            symbols[^3].gameObject.SetActive(true);
+            symbols[^2].gameObject.SetActive(true);
+
             // Hide texts & reset highlight at spin start
             HideInfoTexts();
             SetHighlight(false);

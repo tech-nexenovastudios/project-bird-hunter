@@ -46,6 +46,7 @@ namespace Gameplay.UI
             GameEvents.OnGraceTimeStarted += OnGraceTimeStarted;
             GameEvents.OnGraceTimeTick += OnGraceTimeTick;
             GameEvents.OnGraceTimeEnded += OnGraceTimeEnded;
+            GameEvents.OnChapterCompleted += OnChapterCompletedHandler;
         }
 
         private void OnDisable()
@@ -54,6 +55,23 @@ namespace Gameplay.UI
             GameEvents.OnGraceTimeStarted -= OnGraceTimeStarted;
             GameEvents.OnGraceTimeTick -= OnGraceTimeTick;
             GameEvents.OnGraceTimeEnded -= OnGraceTimeEnded;
+            GameEvents.OnChapterCompleted -= OnChapterCompletedHandler;
+        }
+
+        // The L20 "Starting in N..." countdown can still be running when the
+        // chapter rolls over. Stop it so it doesn't overlap the chapter-end
+        // animation; the next popup will appear with the new chapter's L1.
+        private void OnChapterCompletedHandler(int newChapterNumber)
+        {
+            if (_activeRoutine != null)
+            {
+                StopCoroutine(_activeRoutine);
+                _activeRoutine = null;
+            }
+            if (levelTitleText != null) levelTitleText.transform.DOKill();
+            if (levelTitleText != null) levelTitleText.DOKill();
+            if (popupCanvasGroup != null) popupCanvasGroup.DOKill();
+            HideInstant();
         }
 
         private void Awake()

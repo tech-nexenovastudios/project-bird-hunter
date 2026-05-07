@@ -44,12 +44,29 @@ namespace Gameplay.UI
         {
             GameEvents.OnGameLevelUpdated += OnGameLevelUpdated;
             GameEvents.OnLevelCompleted += OnLevelCompleted;
+            GameEvents.OnChapterCompleted += OnChapterCompletedHandler;
         }
 
         private void OnDisable()
         {
             GameEvents.OnGameLevelUpdated -= OnGameLevelUpdated;
             GameEvents.OnLevelCompleted -= OnLevelCompleted;
+            GameEvents.OnChapterCompleted -= OnChapterCompletedHandler;
+        }
+
+        // Stop the in-flight "Starting in N..." popup when the chapter rolls
+        // over so it doesn't overlap the chapter-end animation.
+        private void OnChapterCompletedHandler(int newChapterNumber)
+        {
+            if (_activeRoutine != null)
+            {
+                StopCoroutine(_activeRoutine);
+                _activeRoutine = null;
+            }
+            if (levelTitleText != null) levelTitleText.transform.DOKill();
+            if (levelTitleText != null) levelTitleText.DOKill();
+            if (popupCanvasGroup != null) popupCanvasGroup.DOKill();
+            HideInstant();
         }
 
         private void Awake()
