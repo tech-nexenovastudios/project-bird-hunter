@@ -3,6 +3,7 @@ using Gameplay.Birds;
 using Gameplay.Interfaces;
 using Gameplay.Player;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Gameplay.PowerUps.Debug
 {
@@ -12,7 +13,7 @@ namespace Gameplay.PowerUps.Debug
         public CannonPowerUp[] testPowerUps;
 
         [Header("Settings")]
-        [SerializeField] private KeyCode toggleKey = KeyCode.BackQuote;
+        [SerializeField] private Key toggleKey = Key.Backquote;
         [SerializeField] private bool startOpen = true;
 
         private bool showPanel;
@@ -32,7 +33,7 @@ namespace Gameplay.PowerUps.Debug
 
         private void Update()
         {
-            if (Input.GetKeyDown(toggleKey))
+            if (Keyboard.current != null && Keyboard.current[toggleKey].wasPressedThisFrame)
                 showPanel = !showPanel;
 
             for (int i = 0; i < equipped.Count; i++)

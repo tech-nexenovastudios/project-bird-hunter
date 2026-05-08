@@ -26,6 +26,7 @@ public enum AuthFailureReason
 {
     ServicesInitFailed,
     GpgsSignInFailed,
+    AppleGameCenterSignInFailed,
     AnonymousSignInFailed,
     NetworkError,
     Cancelled,

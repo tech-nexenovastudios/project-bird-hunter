@@ -142,7 +142,12 @@ namespace Gameplay
 
         void HandleLevelCompleted(int finalScore) => _levelCompleted = true;
 
-        void Start() => ResetLevel();
+        // Auto-reset only when an inspector chapterConfig is assigned (direct-scene debug flow).
+        // The normal flow is GameManager.StartGameplay → Configure → ResetLevel.
+        void Start()
+        {
+            if (chapterConfig != null) ResetLevel();
+        }
 
         /// <summary>
         /// Configures the controller for a specific chapter + level.

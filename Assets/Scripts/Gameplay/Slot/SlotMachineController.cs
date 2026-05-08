@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using DG.Tweening;
 using Gameplay.Events;
 using Gameplay.Managers;
@@ -7,17 +7,30 @@ using UnityEngine;
 
 namespace Gameplay.Slot
 {
+    /// <summary>
+    /// Drives the reels: starts staggered spins on OnSpinStarted, manages one-of-N highlight
+    /// when the player taps a reel, and equips the chosen powerup on Confirm. Confirm button
+    /// invokes <see cref="CommitSelection"/> via UnityEvent in the prefab.
+    /// </summary>
     public class SlotMachineController : MonoBehaviour
     {
+        private enum State { Idle, Spinning, AwaitingChoice, Confirming }
+
+        private const float ReelStaggerSeconds = 0.12f;
+
         [SerializeField] private ReelController[] reels;
         [SerializeField] private List<PowerupConfig> symbolLibrary;
 
+        private State _state = State.Idle;
         private ReelController _selectedReel;
+
+        // ─── Lifecycle ──────────────────────────────────────────────────────
 
         private void Start()
         {
             foreach (var reel in reels)
             {
+                if (reel == null) continue;
                 reel.symbolList = symbolLibrary;
                 reel.InitializeReel();
             }
@@ -26,92 +39,98 @@ namespace Gameplay.Slot
         private void OnEnable()
         {
             GameEvents.OnSpinStarted += Spin;
-            Debug.Log("[SlotMachine] OnEnable — subscribed to OnSpinStarted.");
         }
 
         private void OnDisable()
         {
             GameEvents.OnSpinStarted -= Spin;
-            Debug.Log("[SlotMachine] OnDisable — unsubscribed from OnSpinStarted.");
 
             foreach (var reel in reels)
             {
+                if (reel == null) continue;
                 reel.OnPowerupSelected = null;
                 reel.SetHighlight(false);
-                if (reel.content != null)
-                    reel.content.DOKill();
+                if (reel.content != null) reel.content.DOKill();
             }
 
             _selectedReel = null;
+            _state = State.Idle;
         }
 
-        // ───────── Spin ─────────
+        // ─── Spin ───────────────────────────────────────────────────────────
+
         private void Spin(List<PowerupConfig> resultsPerReel)
         {
-            Debug.Log($"[SlotMachine] Spin() called. Results count: {resultsPerReel?.Count}");
-
-            if (_selectedReel != null)
+            if (resultsPerReel == null || resultsPerReel.Count != reels.Length)
             {
-                _selectedReel.SetHighlight(false);
-                _selectedReel = null;
+                Debug.LogError($"[SlotMachine] Spin received {resultsPerReel?.Count ?? 0} results for {reels.Length} reels.");
+                return;
             }
+
+            ClearSelection();
+            _state = State.Spinning;
 
             for (int i = 0; i < reels.Length; i++)
             {
-                var result = resultsPerReel[i];
-                Debug.Log($"[SlotMachine] Reel[{i}] assigned result: {result?.displayName ?? "NULL"}");
-
-                var index = i;
+                int idx = i;
                 var reel = reels[i];
+                var result = resultsPerReel[i];
 
-                reels[i].OnPowerupSelected = null;
-                reels[i].OnPowerupSelected += (config) => OnReelSelected(reel, config);
+                reel.OnPowerupSelected = null;
+                reel.OnPowerupSelected = config => OnReelSelected(reel, config);
 
-                DOVirtual.DelayedCall(i * 0.12f, () => reels[index].SpinToResult(result));
+                DOVirtual.DelayedCall(idx * ReelStaggerSeconds, () => reel.SpinToResult(result));
             }
 
-            if (reels.Length > 0)
-            {
-                float totalSpinDuration = (reels.Length - 1) * 0.12f + reels[reels.Length - 1].spinDuration;
-                DOVirtual.DelayedCall(totalSpinDuration, GameEvents.FireSpinAnimationCompleted);
-            }
+            float allReelsCompleteTime = (reels.Length - 1) * ReelStaggerSeconds + reels[^1].spinDuration;
+            DOVirtual.DelayedCall(allReelsCompleteTime, OnAllReelsStopped);
         }
+
+        private void OnAllReelsStopped()
+        {
+            if (_state != State.Spinning) return;
+            _state = State.AwaitingChoice;
+            GameEvents.FireSpinAnimationCompleted();
+        }
+
+        // ─── Selection (player tapped a reel) ───────────────────────────────
 
         private void OnReelSelected(ReelController clickedReel, PowerupConfig selected)
         {
-            Debug.Log($"[SlotMachine] OnReelSelected — powerup: {selected?.displayName ?? "NULL"} | id: {selected?.id ?? "NULL"}");
+            if (selected == null) return;
 
             if (_selectedReel != null && _selectedReel != clickedReel)
-            {
-                Debug.Log("[SlotMachine] Un-highlighting previously selected reel.");
                 _selectedReel.SetHighlight(false);
-            }
 
             _selectedReel = clickedReel;
             clickedReel.SetHighlight(true);
 
-            // ── THIS was the missing call ──
             GameProgressManager.Instance.PlayerSelectedPowerup(selected);
+            // Surfaces "a reel was tapped" to listeners (UI confirm button enable, SFX, etc.).
+            GameEvents.FirePowerupCommitted(selected);
         }
 
-        // ───────── Confirm button ─────────
+        private void ClearSelection()
+        {
+            if (_selectedReel != null) _selectedReel.SetHighlight(false);
+            _selectedReel = null;
+        }
+
+        // ─── Confirm button (wired via UnityEvent in the prefab) ────────────
+
         public void CommitSelection()
         {
-            Debug.Log("[SlotMachine] CommitSelection() called.");
+            if (_state == State.Confirming) return;
 
             var selected = GameProgressManager.Instance.LastSelectedPowerup;
-
             if (selected == null)
             {
-                Debug.LogWarning("[SlotMachine] ⚠️ CommitSelection: LastSelectedPowerup is NULL — player hasn't selected a reel yet.");
+                Debug.LogWarning("[SlotMachine] CommitSelection: no powerup selected — confirm ignored.");
                 return;
             }
 
-            Debug.Log($"[SlotMachine] Committing powerup: '{selected.displayName}' (id: {selected.id})");
-
+            _state = State.Confirming;
             GameProgressManager.Instance.ClearLastSelectedPowerup();
-            Debug.Log("[SlotMachine] LastSelectedPowerup cleared. Calling OnSpinComplete...");
-
             GameManager.Instance.OnSpinComplete();
         }
     }

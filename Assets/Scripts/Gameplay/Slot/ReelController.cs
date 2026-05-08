@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
-using Gameplay.Events;
-using Gameplay.Managers;
 using Gameplay.PowerUps;
 using TMPro;
 using UnityEngine;
@@ -14,95 +12,125 @@ namespace Gameplay.Slot
 {
     public class ReelController : MonoBehaviour
     {
-        [Header("Settings")] public float symbolSize = 160f;
+        // ── Layout / animation constants ────────────────────────────────────
+        private const int   SymbolBufferCount = 20;
+        private const float ContentTopPadding = 100f;
+        private const float BounceScale       = 1.1f;
+        private const float BounceDuration    = 0.15f;
+        private const int   BounceLoops       = 2;
+
+        // Visible tail indices, counted from the end of the symbol strip.
+        private const int IdxResult = 1; // _symbols[^1]
+        private const int IdxMid    = 2; // _symbols[^2]
+        private const int IdxTop    = 3; // _symbols[^3]
+
+        [Header("Settings")]
+        public float symbolSize = 160f;
         public float spinDuration = 1.2f;
         public List<PowerupConfig> symbolList = new();
 
-        [Header("Assign These")] public RectTransform content;
+        [Header("Assign These")]
+        public RectTransform content;
 
-        private SymbolView[] symbols = new SymbolView[20];
-        private Tween spinTween;
+        // Subscribed by SlotMachineController; raised when player taps the result symbol.
+        public Action<PowerupConfig> OnPowerupSelected;
 
-        // ── TMP Text References ──────────────────────────────────────────────
+        private readonly SymbolView[] _symbols = new SymbolView[SymbolBufferCount];
+        private Tween _spinTween;
         private TextMeshProUGUI _powerNameText;
         private TextMeshProUGUI _descriptionText;
-
-        public Action<PowerupConfig> OnPowerupSelected;
 
         [ContextMenu("🔧 Initialize Reel")]
         public void InitializeReel()
         {
-            // 1. Validate
-            if (content == null)
+            if (!ResolveContent()) return;
+            if (symbolList == null || symbolList.Count == 0)
             {
-                content = transform.Find("Content") as RectTransform;
-                if (content == null)
-                {
-                    Debug.LogError("No Content found! Create Empty child named 'Content'");
-                    return;
-                }
+                Debug.LogError($"[Reel:{name}] symbolList is empty.");
+                return;
             }
-
-            if (symbolList.Count == 0)
+            if (SymbolPool.Instance == null)
             {
-                Debug.LogError("Assign symbolSprites!");
+                Debug.LogError($"[Reel:{name}] SymbolPool.Instance is null. Ensure SymbolPool exists in the scene.");
                 return;
             }
 
-            // 2. Setup MASK viewport (2 symbols tall)
-            var mask = GetComponent<RectMask2D>();
-            if (mask == null) gameObject.AddComponent<RectMask2D>();
+            ConfigureMaskAndContent();
+            ClearExistingSymbols();
+            CreateSymbols();
+            CacheLabels();
+            HideInfoTexts();
+
+            // Symbols at indices 0 and 2 stay hidden — only the central window plus the
+            // animated tail (last three) are visible during a spin.
+            if (_symbols[0] != null) _symbols[0].gameObject.SetActive(false);
+            if (_symbols[2] != null) _symbols[2].gameObject.SetActive(false);
+        }
+
+        public void SetHighlight(bool highlighted)
+        {
+            var resultSymbol = _symbols[^IdxResult];
+            if (resultSymbol == null || resultSymbol.iconImage == null) return;
+            resultSymbol.iconImage.color = highlighted ? Color.yellow : Color.white;
+        }
+
+        public void SpinToResult(PowerupConfig result)
+        {
+            if (result == null || result.icon == null)
+            {
+                Debug.LogError($"[Reel:{name}] SpinToResult called with null PowerupConfig or icon.");
+                return;
+            }
+
+            _spinTween?.Kill();
+            HideInfoTexts();
+            SetHighlight(false);
+
+            // Fill the visible tail with random filler then the actual result at the bottom.
+            var top = symbolList[Random.Range(0, symbolList.Count)];
+            var mid = symbolList[Random.Range(0, symbolList.Count)];
+            if (top?.icon != null) _symbols[^IdxTop].SetIcon(top.icon, "tail-top");
+            if (mid?.icon != null) _symbols[^IdxMid].SetIcon(mid.icon, "tail-mid");
+            _symbols[^IdxResult].SetIcon(result.icon, "result");
+
+            float stopY = symbolSize * (_symbols.Length - 2);
+
+            _spinTween = content.DOAnchorPosY(stopY, spinDuration)
+                .SetEase(Ease.Linear)
+                .OnComplete(() => OnSpinComplete(result));
+        }
+
+        // ─── Initialization helpers ─────────────────────────────────────────
+
+        private bool ResolveContent()
+        {
+            if (content != null) return true;
+            content = transform.Find("Content") as RectTransform;
+            if (content != null) return true;
+            Debug.LogError($"[Reel:{name}] Missing 'Content' child RectTransform.");
+            return false;
+        }
+
+        private void ConfigureMaskAndContent()
+        {
+            if (GetComponent<RectMask2D>() == null) gameObject.AddComponent<RectMask2D>();
             ((RectTransform)transform).sizeDelta = new Vector2(symbolSize, 2 * symbolSize);
 
-            // 3. Setup CONTENT (3 symbols tall)
             content.sizeDelta = new Vector2(symbolSize, 3 * symbolSize);
             content.pivot = new Vector2(0.5f, 0.5f);
             content.anchoredPosition = Vector2.zero;
+        }
 
-            // 4. DESTROY old symbols
+        private void ClearExistingSymbols()
+        {
             for (int i = content.childCount - 1; i >= 0; i--)
                 DestroyImmediate(content.GetChild(i).gameObject);
-
-            // 5. CREATE 20 SYMBOLS
-            for (int i = 0; i < 20; i++)
-            {
-                symbols[i] = CreatePerfectSymbol(i);
-            }
-
-            // 6. Find & hide TMP texts (direct children of this reel GameObject)
-            _powerNameText = FindTextChild("PowerNameText");
-            _descriptionText = FindTextChild("DescriptionText");
-            HideInfoTexts();
-            
-            symbols[2].gameObject.SetActive(false);
-            symbols[0].gameObject.SetActive(false);
-
-            Debug.Log($"✅ Reel initialized: {symbols.Length} symbols at symbolSize={symbolSize}");
         }
 
-        // ── Helper: find a TMP child by name anywhere in this reel's hierarchy ──
-        private TextMeshProUGUI FindTextChild(string childName)
+        private void CreateSymbols()
         {
-            var all = GetComponentsInChildren<TextMeshProUGUI>(includeInactive: true);
-            var found = all.FirstOrDefault(t => t.name == childName);
-            if (found == null)
-                Debug.LogWarning($"[ReelController] '{childName}' not found in children of {gameObject.name}");
-            return found;
-        }
-
-        private void HideInfoTexts()
-        {
-            if (_powerNameText) _powerNameText.gameObject.SetActive(false);
-            if (_descriptionText) _descriptionText.gameObject.SetActive(false);
-        }
-
-        // ── Public: yellow highlight on the result symbol, white to reset ────
-        public void SetHighlight(bool highlighted)
-        {
-            if (symbols == null || symbols.Length == 0) return;
-            var resultSymbol = symbols[^1];
-            if (resultSymbol == null || resultSymbol.iconImage == null) return;
-            resultSymbol.iconImage.color = highlighted ? Color.yellow : Color.white;
+            for (int i = 0; i < SymbolBufferCount; i++)
+                _symbols[i] = CreatePerfectSymbol(i);
         }
 
         private SymbolView CreatePerfectSymbol(int row)
@@ -114,7 +142,7 @@ namespace Gameplay.Slot
             rt.sizeDelta = new Vector2(symbolSize, symbolSize);
             rt.pivot = Vector2.one * 0.5f;
 
-            float halfHeight = 1.5f * symbolSize - 100f;
+            float halfHeight = 1.5f * symbolSize - ContentTopPadding;
             rt.anchoredPosition = new Vector2(0, halfHeight - (row + 0.5f) * symbolSize);
 
             var image = go.GetComponent<Image>();
@@ -125,83 +153,75 @@ namespace Gameplay.Slot
             symView.iconImage = image;
 
             var randomConfig = symbolList[Random.Range(0, symbolList.Count)];
-            if (randomConfig == null || randomConfig.icon == null)
-            {
-                Debug.LogWarning($"[ReelController] PowerupConfig has null icon — skipping SetIcon");
-                return symView;
-            }
-            symView.SetIcon(randomConfig.icon, randomConfig.id);
+            if (randomConfig?.icon != null)
+                symView.SetIcon(randomConfig.icon, randomConfig.id);
             return symView;
         }
 
-        public void SpinToResult(PowerupConfig results)
+        private void CacheLabels()
         {
-            if (results == null || results.icon == null)
+            _powerNameText   = FindTextChild("PowerNameText");
+            _descriptionText = FindTextChild("DescriptionText");
+        }
+
+        private TextMeshProUGUI FindTextChild(string childName)
+        {
+            var found = GetComponentsInChildren<TextMeshProUGUI>(includeInactive: true)
+                            .FirstOrDefault(t => t.name == childName);
+            if (found == null) Debug.LogWarning($"[Reel:{name}] '{childName}' not found in children.");
+            return found;
+        }
+
+        private void HideInfoTexts()
+        {
+            if (_powerNameText)   _powerNameText.gameObject.SetActive(false);
+            if (_descriptionText) _descriptionText.gameObject.SetActive(false);
+        }
+
+        // ─── Spin completion ────────────────────────────────────────────────
+
+        private void OnSpinComplete(PowerupConfig result)
+        {
+            _symbols[^IdxTop].gameObject.SetActive(false);
+            _symbols[^IdxMid].gameObject.SetActive(false);
+
+            if (_powerNameText)
             {
-                Debug.LogError("[ReelController] SpinToResult called with null PowerupConfig or icon!");
-                return;
+                _powerNameText.gameObject.SetActive(true);
+                _powerNameText.text = result.displayName;
+            }
+            if (_descriptionText)
+            {
+                _descriptionText.gameObject.SetActive(true);
+                _descriptionText.text = result.description;
             }
 
-            spinTween?.Kill();
+            BounceAndArmClick(result);
+        }
 
-            // Hide texts & reset highlight at spin start
-            HideInfoTexts();
-            SetHighlight(false);
-
-            var top = symbolList[Random.Range(0, symbolList.Count)];
-            var bottom = symbolList[Random.Range(0, symbolList.Count)];
-
-            if (top?.icon != null) symbols[^3].SetIcon(top.icon, "last-mid-top");
-            if (results?.icon != null) symbols[^2].SetIcon(bottom.icon, "last-mid");
-            if (bottom?.icon != null) symbols[^1].SetIcon(results.icon, "last");
-
-            float stopY = symbolSize * (symbols.Count() - 2);
-
-            spinTween = content.DOAnchorPosY(stopY, spinDuration)
-                .SetEase(Ease.Linear)
+        private void BounceAndArmClick(PowerupConfig result)
+        {
+            var resultSymbol = _symbols[^IdxResult];
+            resultSymbol.transform
+                .DOScale(BounceScale, BounceDuration)
+                .SetLoops(BounceLoops, LoopType.Yoyo)
+                .OnStart(() => resultSymbol.button.image.raycastTarget = true)
                 .OnComplete(() =>
                 {
-                    symbols[^3].gameObject.SetActive(false);
-                    symbols[^2].gameObject.SetActive(false);
-
-                    // Show name & description
-                    if (_powerNameText)
+                    resultSymbol.button.onClick.RemoveAllListeners();
+                    resultSymbol.AddListener(() =>
                     {
-                        _powerNameText.gameObject.SetActive(true);
-                        _powerNameText.text = results.displayName;   // ← verify field name on PowerupConfig
-                    }
-                    if (_descriptionText)
-                    {
-                        _descriptionText.gameObject.SetActive(true);
-                        _descriptionText.text = results.description; // ← verify field name on PowerupConfig
-                    }
-
-                    // Bounce then register click
-                    symbols[^1].transform.DOScale(1.1f, 0.15f).SetLoops(2, LoopType.Yoyo).OnStart(() =>
-                        {
-                            symbols[^1].button.image.raycastTarget = true;
-                        })
-                        .OnComplete(() =>
-                        {
-                            symbols[^1].button.onClick.RemoveAllListeners();
-                            symbols[^1].AddListener(() =>
-                            {
-                                Debug.Log("Powerup Clicked!");
-                                // Notify SlotMachineController for highlight management
-                                OnPowerupSelected?.Invoke(results);
-                                // Commit the choice
-                                GameEvents.FirePowerupCommitted(results);
-                                spinTween?.Kill();
-                            });
-                        });
+                        OnPowerupSelected?.Invoke(result);
+                        _spinTween?.Kill();
+                    });
                 });
         }
 
-        void OnDestroy()
+        private void OnDestroy()
         {
-            spinTween?.Kill();
-            foreach (var sym in symbols)
-                if (sym != null) SymbolPool.Instance.Release(sym);
+            _spinTween?.Kill();
+            for (int i = 0; i < _symbols.Length; i++)
+                if (_symbols[i] != null) SymbolPool.Instance?.Release(_symbols[i]);
         }
     }
 }

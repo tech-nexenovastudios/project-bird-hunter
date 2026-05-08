@@ -1,5 +1,30 @@
 {
   "dependencies": {
+    "com.apple.unityplugin.core": {
+      "version": "https://github.com/aymisml/apple-unityplugins-prebuilt.git#upm/Apple.Core",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "5ba53ff7fb00f64a9b77115b450d4e8ff86d765d"
+    },
+    "com.apple.unityplugin.corehaptics": {
+      "version": "https://github.com/aymisml/apple-unityplugins-prebuilt.git#upm/Apple.CoreHaptics",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.apple.unityplugin.core": "3.1.8"
+      },
+      "hash": "65a9bf091e055a1b569a575d7083bd885b2b730f"
+    },
+    "com.apple.unityplugin.gamekit": {
+      "version": "https://github.com/aymisml/apple-unityplugins-prebuilt.git#upm/Apple.GameKit",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.apple.unityplugin.core": "3.1.8"
+      },
+      "hash": "5183320a2947ae9bfc840acba5ea9ff4880ba2b9"
+    },
     "com.eflatun.scenereference": {
       "version": "https://github.com/starikcetin/Eflatun.SceneReference.git#4.1.1",
       "depth": 0,
@@ -619,7 +644,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.services.levelplay": {
-      "version": "9.4.0",
+      "version": "9.4.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {

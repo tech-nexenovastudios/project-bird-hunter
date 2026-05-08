@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    Default supplemental Info.plist keys merged into the Xcode-generated plist
+    by the Apple Build Profile (`AutomateInfoPlist` + `DefaultInfoPlist` slot).
+
+    Drag-assign this file to:
+        New Apple Build Profile  →  Default Info Plist
+
+    DO NOT add keys here that the profile or other plugins already manage:
+        - MinimumOSVersion              → AppleBuildProfile.MinimumOSVersion_iOS
+        - ITSAppUsesNonExemptEncryption → AppleBuildProfile.AppUsesNonExemptEncryption
+        - NSPhotoLibraryUsageDescription / NSCameraUsageDescription → NativeShare
+        - SKAdNetworkItems              → LevelPlay / AdMob post-processors
+        - FacebookAppID, FacebookClientToken, FacebookDisplayName,
+          LSApplicationQueriesSchemes (FB queries)               → Facebook SDK
+        - GADApplicationIdentifier      → AdMob settings asset
+        - CFBundle*                     → Unity Player Settings
+-->
+<plist version="1.0">
+<dict>
+    <!-- App Tracking Transparency. Required by App Store review when any SDK
+         calls ATTrackingManager.requestTrackingAuthorization (LevelPlay, AdMob,
+         Facebook, etc. all do). The string below is what the user sees in the
+         system prompt — edit it to match your privacy / monetization wording. -->
+    <key>NSUserTrackingUsageDescription</key>
+    <string>We use this to show you ads that are relevant and to support free updates.</string>
+
+    <!-- Optional. Uncomment if you need any of these.
+
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleLightContent</string>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
+
+    LSApplicationQueriesSchemes example (only add what your code actually queries):
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>tel</string>
+        <string>mailto</string>
+    </array>
+
+    NSAppTransportSecurity domain exception (only if you talk to non-HTTPS endpoints):
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>example.com</key>
+            <dict>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
+    -->
+</dict>
+</plist>

@@ -1,12 +1,11 @@
 using System;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.Purchasing;
-using UnityEngine.Purchasing.Extension;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using UnityEngine;
+using UnityEngine.Purchasing;
+using UnityEngine.UI;
 
-public class GemsBuyManager : MonoBehaviour, IDetailedStoreListener
+public class GemsBuyManager : MonoBehaviour
 {
     [Header("IAP Products")]
     [SerializeField] private GemProduct[] gemProducts;
@@ -16,28 +15,39 @@ public class GemsBuyManager : MonoBehaviour, IDetailedStoreListener
     [SerializeField] private Transform loadingIcon;
     [SerializeField] private float rotateSpeed = 300f;
 
-    private IStoreController _storeController;
-    private IExtensionProvider _extensionProvider;
-    private bool _isInitialized = false;
-    private bool _isLoading = false;
-    private bool _isPurchasing = false;
+    private bool _isLoading;
+    private bool _isPurchasing;
 
-    private Action<bool> _purchaseCallback;
-
-    // ── Stores the button position for the current purchase ──
-    private Vector2 _currentPurchaseButtonPos;
+    // Fixed gem amounts mapped 1:1 to indices in the gemProducts array.
+    private static readonly long[] GemCounts = { 7500, 2800, 1300, 600, 320, 100 };
 
     private void Awake()
     {
-        if (loadingPanel != null)
-            loadingPanel.SetActive(false);
+        if (loadingPanel != null) loadingPanel.SetActive(false);
         PopulateProductIds();
     }
 
     private void Start()
     {
-        InitializeIAP();
         SetupButtons();
+        SetButtonsInteractable(false);
+
+        if (IAPManager.Instance.IsInitialized)
+            OnIAPReady();
+        else
+            IAPManager.Instance.Initialized += OnIAPReady;
+    }
+
+    private void OnDestroy()
+    {
+        foreach (var product in gemProducts)
+        {
+            if (product?.purchaseButton != null)
+                product.purchaseButton.onClick.RemoveAllListeners();
+            if (product != null)
+                IAPManager.Instance.UnregisterFulfillment(product.productId);
+        }
+        IAPManager.Instance.Initialized -= OnIAPReady;
     }
 
     private void Update()
@@ -46,77 +56,20 @@ public class GemsBuyManager : MonoBehaviour, IDetailedStoreListener
             loadingIcon.Rotate(0f, 0f, -rotateSpeed * Time.deltaTime);
     }
 
+    // ─── Setup ───
+
     private void PopulateProductIds()
     {
-        long[] gemCounts = { 7500, 2800, 1300, 600, 320, 100 };
-
-        if (gemProducts == null || gemProducts.Length != gemCounts.Length)
+        if (gemProducts == null || gemProducts.Length != GemCounts.Length)
         {
-            Debug.LogError($"[GemsBuy] gemProducts array must have {gemCounts.Length} entries.");
+            Debug.LogError($"[GemsBuy] gemProducts must have {GemCounts.Length} entries.");
             return;
         }
 
         for (int i = 0; i < gemProducts.Length; i++)
         {
-            gemProducts[i].gemAmount = gemCounts[i];
-            gemProducts[i].googlePlayProductId = $"{gemCounts[i]}_gems";
-        }
-    }
-
-    private void InitializeIAP()
-    {
-        ShowLoading();
-        var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
-        foreach (var product in gemProducts)
-            builder.AddProduct(product.googlePlayProductId, ProductType.Consumable);
-        UnityPurchasing.Initialize(this, builder);
-    }
-
-    public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
-    {
-        _storeController = controller;
-        _extensionProvider = extensions;
-        _isInitialized = true;
-
-        foreach (var product in gemProducts)
-        {
-            var storeProduct = _storeController.products.WithID(product.googlePlayProductId);
-            if (storeProduct != null && product.priceText != null)
-                product.priceText.text = $"{storeProduct.metadata.isoCurrencyCode} {storeProduct.metadata.localizedPrice:0.00}";
-        }
-
-        RestorePendingPurchases();
-        SetButtonsInteractable(true);
-        HideLoading();
-        Debug.Log("[GemsBuy] IAP initialized.");
-    }
-
-    public void OnInitializeFailed(InitializationFailureReason error)
-    {
-        _isInitialized = false;
-        HideLoading();
-        Debug.LogError($"[GemsBuy] IAP init failed: {error}");
-    }
-
-    public void OnInitializeFailed(InitializationFailureReason error, string message)
-    {
-        _isInitialized = false;
-        HideLoading();
-        Debug.LogError($"[GemsBuy] IAP init failed: {error} - {message}");
-    }
-
-    private void RestorePendingPurchases()
-    {
-        foreach (var gem in gemProducts)
-        {
-            var product = _storeController.products.WithID(gem.googlePlayProductId);
-            if (product != null && product.hasReceipt && !product.availableToPurchase)
-            {
-                Debug.Log($"[GemsBuy] Found pending purchase: {gem.googlePlayProductId}. Granting {gem.gemAmount} gems.");
-                // Pending restores use screen center since there's no button context
-                Vector2 center = new Vector2(Screen.width / 2f, Screen.height / 2f);
-                GrantGemsAndConfirm(product, gem.gemAmount, center).Forget();
-            }
+            gemProducts[i].gemAmount = GemCounts[i];
+            gemProducts[i].productId = $"{GemCounts[i]}_gems";
         }
     }
 
@@ -128,52 +81,63 @@ public class GemsBuyManager : MonoBehaviour, IDetailedStoreListener
             if (gemProducts[i].purchaseButton != null)
                 gemProducts[i].purchaseButton.onClick.AddListener(() => OnBuyClicked(index));
         }
-        SetButtonsInteractable(false);
+    }
+
+    private void OnIAPReady()
+    {
+        IAPManager.Instance.Initialized -= OnIAPReady;
+
+        foreach (var gem in gemProducts)
+        {
+            IAPManager.Instance.RegisterFulfillment(gem.productId, p => GrantGemsForProduct(gem, p));
+
+            if (gem.priceText != null)
+            {
+                string price = IAPManager.Instance.GetLocalizedPrice(gem.productId);
+                if (!string.IsNullOrEmpty(price)) gem.priceText.text = price;
+            }
+        }
+
+        SetButtonsInteractable(true);
     }
 
     private void SetButtonsInteractable(bool state)
     {
         foreach (var product in gemProducts)
         {
-            if (product.purchaseButton != null)
+            if (product?.purchaseButton != null)
                 product.purchaseButton.interactable = state;
         }
     }
 
-    private void OnBuyClicked(int index)
-    {
-        ProcessPurchaseFlow(index).Forget();
-    }
+    // ─── Purchase Flow ───
+
+    private void OnBuyClicked(int index) => ProcessPurchaseFlow(index).Forget();
 
     private async UniTaskVoid ProcessPurchaseFlow(int index)
     {
-        if (!_isInitialized || _isPurchasing) return;
+        if (_isPurchasing || !IAPManager.Instance.IsInitialized) return;
 
         var gem = gemProducts[index];
         _isPurchasing = true;
         gem.purchaseButton.interactable = false;
         ShowLoading();
 
-        // ═══ Capture button screen position BEFORE async gap ═══
-        Canvas canvas = gem.purchaseButton.GetComponentInParent<Canvas>();
-        Camera cam = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-            ? canvas.worldCamera : null;
-        _currentPurchaseButtonPos = RectTransformUtility.WorldToScreenPoint(
-            cam, gem.purchaseButton.transform.position);
-        // ═══════════════════════════════════════════════════════
+        // Capture button screen position BEFORE async gap so the gem flow
+        // effect originates from the actual tapped button.
+        gem.lastButtonScreenPos = ResolveButtonScreenPosition(gem.purchaseButton);
 
         try
         {
-            bool success = await WaitForPurchaseAsync(gem.googlePlayProductId);
-
-            if (success)
-                Debug.Log($"[GemsBuy] Purchase '{gem.googlePlayProductId}' completed. {gem.gemAmount} gems granted.");
+            var result = await IAPManager.Instance.PurchaseAsync(gem.productId);
+            if (result == PurchaseResult.Success)
+                Debug.Log($"[GemsBuy] '{gem.productId}' purchased — {gem.gemAmount} gems granted.");
             else
-                Debug.LogWarning($"[GemsBuy] Purchase cancelled or failed for '{gem.googlePlayProductId}'.");
+                Debug.LogWarning($"[GemsBuy] '{gem.productId}' did not complete: {result}");
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[GemsBuy] Error: {ex.Message}");
+            Debug.LogError($"[GemsBuy] Purchase error: {ex.Message}");
         }
         finally
         {
@@ -183,95 +147,38 @@ public class GemsBuyManager : MonoBehaviour, IDetailedStoreListener
         }
     }
 
-    private UniTask<bool> WaitForPurchaseAsync(string productId)
+    private static Vector2 ResolveButtonScreenPosition(Button button)
     {
-        var tcs = new UniTaskCompletionSource<bool>();
-        _purchaseCallback = (success) => tcs.TrySetResult(success);
-        _storeController.InitiatePurchase(productId);
-        return tcs.Task;
+        var canvas = button.GetComponentInParent<Canvas>();
+        var cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? canvas.worldCamera
+            : null;
+        return RectTransformUtility.WorldToScreenPoint(cam, button.transform.position);
     }
 
-    public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
+    // ─── Fulfillment (called by IAPManager) ───
+
+    private async UniTask<bool> GrantGemsForProduct(GemProduct gem, Product _)
     {
-        string productId = args.purchasedProduct.definition.id;
-        Debug.Log($"[GemsBuy] Processing purchase: {productId}");
+        Vector2 origin = gem.lastButtonScreenPos == default
+            ? new Vector2(Screen.width / 2f, Screen.height / 2f)
+            : gem.lastButtonScreenPos;
 
-        GemProduct matchedGem = null;
-        foreach (var gem in gemProducts)
-        {
-            if (gem.googlePlayProductId == productId)
-            {
-                matchedGem = gem;
-                break;
-            }
-        }
-
-        if (matchedGem != null)
-        {
-            // Pass the stored button position through the chain
-            GrantGemsAndNotify(args.purchasedProduct, matchedGem.gemAmount, _currentPurchaseButtonPos).Forget();
-        }
-        else
-        {
-            Debug.LogWarning($"[GemsBuy] Unknown product purchased: {productId}");
-            _purchaseCallback?.Invoke(false);
-            _purchaseCallback = null;
-        }
-
-        return PurchaseProcessingResult.Complete;
-    }
-
-    private async UniTaskVoid GrantGemsAndNotify(Product product, long gemAmount, Vector2 originPos)
-    {
-        bool granted = await GrantGems(gemAmount, originPos);
-        _purchaseCallback?.Invoke(granted);
-        _purchaseCallback = null;
-    }
-
-    private async UniTaskVoid GrantGemsAndConfirm(Product product, long gemAmount, Vector2 originPos)
-    {
-        bool granted = await GrantGems(gemAmount, originPos);
-        if (granted)
-        {
-            _storeController.ConfirmPendingPurchase(product);
-            Debug.Log($"[GemsBuy] Pending purchase confirmed: {product.definition.id}");
-        }
-    }
-
-    private async UniTask<bool> GrantGems(long gemAmount, Vector2 originPos)
-    {
         try
         {
-            await CurrencyManager.Instance.AddGems(gemAmount);
+            await CurrencyManager.Instance.AddGems(gem.gemAmount);
             await CurrencyManager.Instance.Refresh();
-            Debug.Log($"[GemsBuy] Granted {gemAmount} gems.");
-
-            // ═══ GEM FLOW EFFECT — from the button ══════
-            GameEvent.CurrencyCollected(CurrencyType.Gems, originPos, (int)gemAmount);
-            // ═════════════════════════════════════════════
-
+            GameEvent.CurrencyCollected(CurrencyType.Gems, origin, (int)gem.gemAmount);
             return true;
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[GemsBuy] Failed to grant {gemAmount} gems: {ex.Message}");
+            Debug.LogError($"[GemsBuy] Failed to grant {gem.gemAmount} gems: {ex.Message}");
             return false;
         }
     }
 
-    public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
-    {
-        Debug.LogWarning($"[GemsBuy] Purchase failed: {product.definition.id} — {reason}");
-        _purchaseCallback?.Invoke(false);
-        _purchaseCallback = null;
-    }
-
-    public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
-    {
-        Debug.LogWarning($"[GemsBuy] Purchase failed: {product.definition.id} — {failureDescription.reason}: {failureDescription.message}");
-        _purchaseCallback?.Invoke(false);
-        _purchaseCallback = null;
-    }
+    // ─── UI Helpers ───
 
     private void ShowLoading()
     {
@@ -285,28 +192,16 @@ public class GemsBuyManager : MonoBehaviour, IDetailedStoreListener
         if (loadingPanel != null) loadingPanel.SetActive(false);
     }
 
-    public string GetLocalizedPrice(string productId)
-    {
-        if (!_isInitialized) return "";
-        var product = _storeController.products.WithID(productId);
-        return product?.metadata.localizedPriceString ?? "";
-    }
-
-    private void OnDestroy()
-    {
-        foreach (var product in gemProducts)
-        {
-            if (product.purchaseButton != null)
-                product.purchaseButton.onClick.RemoveAllListeners();
-        }
-    }
+    public string GetLocalizedPrice(string productId) =>
+        IAPManager.Instance.GetLocalizedPrice(productId);
 }
 
 [System.Serializable]
 public class GemProduct
 {
-    [HideInInspector] public string googlePlayProductId;
+    [HideInInspector] public string productId;
     [HideInInspector] public long gemAmount;
+    [HideInInspector] public Vector2 lastButtonScreenPos;
 
     [Header("Assign in Inspector")]
     public Button purchaseButton;

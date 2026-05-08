@@ -322,10 +322,11 @@ namespace Gameplay.Player
                 return;
             }
 
-            if (Input.GetMouseButton(0))
+            var input = Gameplay.Input.InputHandler.Instance;
+            if (input.IsFiring)
             {
                 StartFiring();
-                Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 mousePos = Camera.main.ScreenToWorldPoint(input.PointerPosition);
                 float delta = mousePos.x - transform.position.x;
 
                 if (Mathf.Abs(delta) < 0.1f)

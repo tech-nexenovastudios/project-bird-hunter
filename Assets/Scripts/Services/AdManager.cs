@@ -22,12 +22,18 @@ public class AdManager : MonoBehaviour
 
     [Header("=== LevelPlay Settings ===")]
     [Tooltip("App Key from LevelPlay dashboard. DO NOT commit this to public repos.")]
-    [SerializeField] private string appKey = "";
+    private string appKey = "";
+    [SerializeField] private string androidAppKey = "";
+    [SerializeField] private string iosAppKey = "";
     [SerializeField] private bool isDevelopmentMode = true;
 
     [Header("=== Ad Unit IDs (from LevelPlay Dashboard) ===")]
-    [SerializeField] private string rewardedAdUnitId = "";
-    [SerializeField] private string interstitialAdUnitId = "";
+    private string rewardedAdUnitId = "";
+    private string interstitialAdUnitId = "";
+    
+    [SerializeField] private string androidRewardedAdUnitId, androidInterstitialAdUnitId;
+    [SerializeField] private string iosRewardedAdUnitId, iosInterstitialAdUnitId;
+    
     [SerializeField] private string bannerAdUnitId = "";
 
     [Header("=== Behavior Settings ===")]
@@ -129,6 +135,13 @@ public class AdManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        appKey = Application.platform == RuntimePlatform.Android ? androidAppKey : iosAppKey;
+        
+        rewardedAdUnitId = Application.platform == RuntimePlatform.Android ?  androidRewardedAdUnitId : iosRewardedAdUnitId;
+        interstitialAdUnitId = Application.platform == RuntimePlatform.Android ?  androidInterstitialAdUnitId : iosInterstitialAdUnitId;
+        
+        
         ServiceLocator.Register<AdManager>(this); 
 
         // [FIX 1] Restore "Remove Ads" purchase on app start.

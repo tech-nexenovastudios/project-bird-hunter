@@ -25,7 +25,7 @@ MonoBehaviour:
   m_SupportsTerrainHoles: 1
   m_SupportsHDR: 1
   m_HDRColorBufferPrecision: 0
-  m_MSAA: 1
+  m_MSAA: 2
   m_RenderScale: 1
   m_UpscalingFilter: 0
   m_FsrOverrideSharpness: 0
@@ -41,10 +41,10 @@ MonoBehaviour:
   m_SupportProbeVolumeScenarios: 0
   m_SupportProbeVolumeScenarioBlending: 0
   m_ProbeVolumeSHBands: 1
-  m_MainLightRenderingMode: 1
+  m_MainLightRenderingMode: 0
   m_MainLightShadowsSupported: 1
   m_MainLightShadowmapResolution: 2048
-  m_AdditionalLightsRenderingMode: 1
+  m_AdditionalLightsRenderingMode: 0
   m_AdditionalLightsPerObjectLimit: 4
   m_AdditionalLightShadowsSupported: 0
   m_AdditionalLightsShadowmapResolution: 2048
@@ -53,7 +53,7 @@ MonoBehaviour:
   m_AdditionalLightsShadowResolutionTierHigh: 1024
   m_ReflectionProbeBlending: 0
   m_ReflectionProbeBoxProjection: 0
-  m_ReflectionProbeAtlas: 1
+  m_ReflectionProbeAtlas: 0
   m_ShadowDistance: 50
   m_ShadowCascadeCount: 1
   m_Cascade2Split: 0.25
@@ -80,7 +80,7 @@ MonoBehaviour:
   m_ColorGradingMode: 0
   m_ColorGradingLutSize: 32
   m_AllowPostProcessAlphaOutput: 0
-  m_UseFastSRGBLinearConversion: 0
+  m_UseFastSRGBLinearConversion: 1
   m_SupportDataDrivenLensFlare: 1
   m_SupportScreenSpaceLensFlare: 1
   m_GPUResidentDrawerMode: 0
@@ -92,7 +92,7 @@ MonoBehaviour:
   m_MaxPixelLights: 0
   m_ShadowAtlasResolution: 256
   m_VolumeFrameworkUpdateMode: 0
-  m_VolumeProfile: {fileID: 0}
+  m_VolumeProfile: {fileID: 11400000, guid: 768d6e7d8147c4ee8ac3a402fd6f5be4, type: 2}
   apvScenesData:
     obsoleteSceneBounds:
       m_Keys: []
@@ -100,8 +100,8 @@ MonoBehaviour:
     obsoleteHasProbeVolumes:
       m_Keys: []
       m_Values: 
-  m_PrefilteringModeMainLightShadows: 4
-  m_PrefilteringModeAdditionalLight: 4
+  m_PrefilteringModeMainLightShadows: 0
+  m_PrefilteringModeAdditionalLight: 0
   m_PrefilteringModeAdditionalLightShadows: 0
   m_PrefilterXRKeywords: 1
   m_PrefilteringModeForwardPlus: 0
@@ -128,14 +128,14 @@ MonoBehaviour:
   m_PrefilterSoftShadowsQualityHigh: 1
   m_PrefilterSoftShadows: 0
   m_PrefilterScreenCoord: 1
-  m_PrefilterScreenSpaceIrradiance: 0
+  m_PrefilterScreenSpaceIrradiance: 1
   m_PrefilterNativeRenderPass: 1
   m_PrefilterUseLegacyLightmaps: 0
-  m_PrefilterBicubicLightmapSampling: 0
-  m_PrefilterReflectionProbeRotation: 0
+  m_PrefilterBicubicLightmapSampling: 1
+  m_PrefilterReflectionProbeRotation: 1
   m_PrefilterReflectionProbeBlending: 1
   m_PrefilterReflectionProbeBoxProjection: 1
-  m_PrefilterReflectionProbeAtlas: 0
+  m_PrefilterReflectionProbeAtlas: 1
   m_ShaderVariantLogLevel: 0
   m_ShadowCascades: 0
   m_Textures:

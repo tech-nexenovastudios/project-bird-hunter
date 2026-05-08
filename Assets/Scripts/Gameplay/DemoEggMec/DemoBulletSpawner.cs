@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class DemoBulletSpawner : MonoBehaviour
 {
@@ -38,27 +39,22 @@ public class DemoBulletSpawner : MonoBehaviour
 
     void HandleMovement()
     {
-        // On mouse down, start dragging
-        if (Input.GetMouseButtonDown(0))
-        {
-            isDragging = true;
-        }
+        var pointer = Pointer.current;
+        if (pointer == null) return;
 
-        // On mouse up, stop dragging
-        if (Input.GetMouseButtonUp(0))
-        {
+        if (pointer.press.wasPressedThisFrame)
+            isDragging = true;
+        if (pointer.press.wasReleasedThisFrame)
             isDragging = false;
-        }
 
         if (isDragging)
         {
             HandleFire();
-            
-            Vector3 mousePos = Input.mousePosition;
-            mousePos.z = zDistance; // keep correct depth
+
+            Vector3 mousePos = pointer.position.ReadValue();
+            mousePos.z = zDistance;
             Vector3 worldPos = mainCam.ScreenToWorldPoint(mousePos);
 
-            // Only move horizontally
             Vector3 newPos = transform.position;
             newPos.x = worldPos.x;
             transform.position = newPos;

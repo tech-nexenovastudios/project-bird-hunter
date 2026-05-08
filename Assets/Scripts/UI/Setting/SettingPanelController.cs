@@ -1,3 +1,4 @@
+using Audio;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -108,13 +109,7 @@ public class SettingPanelController : MonoBehaviour
 
     private void ApplyVibrationSetting()
     {
-        // Implement your vibration enable/disable logic here
-#if UNITY_ANDROID || UNITY_IOS
-        if (isEnabled)
-        {
-            Handheld.Vibrate(); // Test vibration when enabled
-        }
-#endif
+        HapticsController.SetEnabled(isEnabled);
         Debug.Log($"Vibration {(isEnabled ? "Enabled" : "Disabled")}");
     }
 

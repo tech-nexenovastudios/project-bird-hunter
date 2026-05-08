@@ -12,6 +12,11 @@ using GooglePlayGames;
 using GooglePlayGames.BasicApi;
 #endif
 
+#if UNITY_IOS
+using Apple.GameKit;
+using Apple.GameKit.Players;
+#endif
+
 public class AuthService
 {
     // ─── Public State ───
@@ -60,6 +65,16 @@ public class AuthService
 
             // GPGS failed — do NOT auto-fallback. Let UI ask user.
             return PublishFailure("Google Play sign-in failed", AuthFailureReason.GpgsSignInFailed);
+#elif UNITY_IOS && !UNITY_EDITOR
+            ReportProgress(0.3f, "Signing in with Game Center");
+            if (await TryAppleGameCenterSignInAsync(ct))
+            {
+                PublishSuccess();
+                return true;
+            }
+
+            // Game Center failed — do NOT auto-fallback. Let UI ask user.
+            return PublishFailure("Game Center sign-in failed", AuthFailureReason.AppleGameCenterSignInFailed);
 #else
             ReportProgress(0.3f, "Signing in anonymously");
             if (await TrySignInAnonymouslyAsync(ct))
@@ -225,6 +240,87 @@ public class AuthService
         catch (Exception ex)
         {
             Debug.LogError($"[AuthService] GPGS error: {ex.Message}");
+            return false;
+        }
+    }
+#endif
+
+    // ─── Private: Apple Game Center Flow ───
+
+#if UNITY_IOS && !UNITY_EDITOR
+    private async UniTask<bool> TryAppleGameCenterSignInAsync(CancellationToken ct)
+    {
+        try
+        {
+            // Step 1: Authenticate the local player with Game Center.
+            var localPlayer = await GKLocalPlayer.Authenticate()
+                .AsUniTask().AttachExternalCancellation(ct);
+
+            if (localPlayer == null || !localPlayer.IsAuthenticated)
+            {
+                Debug.LogWarning("[AuthService] Game Center auth returned unauthenticated player.");
+                return false;
+            }
+
+            // Step 2: Capture display hint (player's Game Center display name).
+            string displayName = GKLocalPlayer.Local.DisplayName;
+            if (!string.IsNullOrEmpty(displayName))
+            {
+                AuthDisplayHint = displayName;
+                Debug.Log($"[AuthService] Display hint captured: {AuthDisplayHint}");
+            }
+
+            ReportProgress(0.6f, "Requesting server access");
+
+            // Step 3: Get identity verification items for Unity Authentication handoff.
+            var verification = await GKLocalPlayer.Local.FetchItemsForIdentityVerificationSignature()
+                .AsUniTask().AttachExternalCancellation(ct);
+
+            if (verification == null
+                || string.IsNullOrEmpty(verification.PublicKeyUrl)
+                || verification.Signature == null
+                || verification.Salt == null)
+            {
+                Debug.LogError("[AuthService] Game Center verification response was empty.");
+                return false;
+            }
+
+            string signatureB64 = Convert.ToBase64String(verification.GetSignature());
+            string saltB64 = Convert.ToBase64String(verification.GetSalt());
+            string teamPlayerId = GKLocalPlayer.Local.TeamPlayerId;
+
+            ReportProgress(0.85f, "Connecting to server");
+
+            // Step 4: Exchange the signed payload with Unity Authentication.
+            await AuthenticationService.Instance.SignInWithAppleGameCenterAsync(
+                    signatureB64,
+                    teamPlayerId,
+                    verification.PublicKeyUrl,
+                    saltB64,
+                    verification.Timestamp)
+                .AsUniTask().AttachExternalCancellation(ct);
+
+            IsAnonymous = false;
+            Debug.Log($"[AuthService] Apple Game Center sign-in complete. Player ID: {PlayerId}");
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AuthenticationException ex)
+        {
+            Debug.LogError($"[AuthService] Apple GC Unity Auth failed: {ex.ErrorCode} - {ex.Message}");
+            return false;
+        }
+        catch (GameKitException ex)
+        {
+            Debug.LogError($"[AuthService] GameKit error: {ex.Message}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[AuthService] Apple Game Center error: {ex.Message}");
             return false;
         }
     }
