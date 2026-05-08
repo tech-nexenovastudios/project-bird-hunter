@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Services;
 using TMPro;
 using UnityEngine;
 
@@ -34,13 +35,22 @@ public class BootController : MonoBehaviour
     private CloudDatabase cloudDatabase;
     private SceneLoader sceneLoader;
 
-    private CancellationTokenSource cts;
+    private CancellationTokenSource timeoutCts;
 
     // ─── Lifecycle ───
 
     private void Awake()
     {
-        cts = new CancellationTokenSource();
+        timeoutCts = new CancellationTokenSource();
+
+        timeoutCts.CancelAfterSlim(TimeSpan.FromSeconds(20));
+
+        using var linkedCts =
+            CancellationTokenSource.CreateLinkedTokenSource(
+                timeoutCts.Token,
+                this.GetCancellationTokenOnDestroy(),
+                AppLifetime.Token);
+        
         DetectVersionChange();
         InitializeServices();
         SubscribeToEvents();
@@ -65,14 +75,14 @@ public class BootController : MonoBehaviour
 
     private void Start()
     {
-        RunBootSequenceAsync(cts.Token).Forget();
+        RunBootSequenceAsync(timeoutCts.Token).Forget();
     }
 
     private void OnDestroy()
     {
         UnsubscribeFromEvents();
-        cts?.Cancel();
-        cts?.Dispose();
+        timeoutCts?.Cancel();
+        timeoutCts?.Dispose();
     }
 
     // ─── Service Registration ───
@@ -93,6 +103,8 @@ public class BootController : MonoBehaviour
         ServiceLocator.Register<ChapterUnlockService>(chapterUnlockService);
         var userDataRepo = new UserDataRepository();
         ServiceLocator.Register<UserDataRepository>(userDataRepo);
+
+        PushNotificationService.Initialize();
     }
 
     // ─── Event Subscriptions ───
@@ -179,7 +191,7 @@ public class BootController : MonoBehaviour
     public void OnGuestButtonClicked()
     {
         HideAllButtons();
-        ContinueWithAnonymousAsync(cts.Token).Forget();
+        ContinueWithAnonymousAsync(timeoutCts.Token).Forget();
     }
 
     // Wire on the Google login button. Re-runs the full auto sign-in flow,
@@ -188,17 +200,16 @@ public class BootController : MonoBehaviour
     {
         HideAllButtons();
         SetStatus("Signing in with Google...");
-        RetryAutoSignInAsync(cts.Token).Forget();
+        RetryAutoSignInAsync(timeoutCts.Token).Forget();
     }
 
-    // Wire on the Apple login button. AuthService does not yet implement
-    // Apple sign-in — log a warning and re-show the panels so the user can
-    // pick another option. Replace with the real flow once available.
+    // Wire on the Apple login button. AuthService.SignInAsync routes to
+    // Game Center on iOS, so the same retry path used by Google works here.
     public void OnAppleLoginClicked()
     {
-        Debug.LogWarning("[BootController] Apple sign-in not implemented yet.");
-        SetStatus("Apple sign-in is not available yet.");
-        ShowLoginPanels();
+        HideAllButtons();
+        SetStatus("Signing in with Game Center...");
+        RetryAutoSignInAsync(timeoutCts.Token).Forget();
     }
 
     private async UniTaskVoid RetryAutoSignInAsync(CancellationToken ct)
@@ -277,6 +288,8 @@ public class BootController : MonoBehaviour
         var userDataRepo = ServiceLocator.Get<UserDataRepository>();
         userDataRepo.Initialize(cloudDatabase, CloudSaveManager.Instance);
 
+        TryRegisterPushNotifications(ct);
+
         SetStatus("Loading currencies...");
         try
         {
@@ -289,6 +302,23 @@ public class BootController : MonoBehaviour
         }
 
         return true;
+    }
+
+    // Fire-and-forget so the OS permission prompt (iOS first launch) overlays the
+    // loading screen instead of blocking the boot sequence. RemoteConfig kill-switch
+    // lets us disable registration globally without shipping a new build.
+    private void TryRegisterPushNotifications(CancellationToken ct)
+    {
+        if (!RemoteConfigManager.Instance.PushNotificationsEnabled)
+        {
+            Debug.Log("[Boot] Push notifications disabled by RemoteConfig — skipping.");
+            return;
+        }
+
+        if (PushNotificationService.Instance == null)
+            return;
+
+        PushNotificationService.Instance.RegisterIfEnabledAsync(ct).Forget();
     }
 
     // Returns true if the boot sequence should continue (user dismissed an

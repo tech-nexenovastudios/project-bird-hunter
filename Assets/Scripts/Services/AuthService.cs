@@ -291,6 +291,8 @@ public class AuthService
 
             ReportProgress(0.85f, "Connecting to server");
 
+            Debug.Log("[AuthService] Game Center payload fetched");
+
             // Step 4: Exchange the signed payload with Unity Authentication.
             await AuthenticationService.Instance.SignInWithAppleGameCenterAsync(
                     signatureB64,

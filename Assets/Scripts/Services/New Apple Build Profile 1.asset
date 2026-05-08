@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b2797781d18e4c5987f2acb206f9e7b, type: 3}
+  m_Name: New Apple Build Profile 1
+  m_EditorClassIdentifier: Apple.Core.Editor::Apple.Core.AppleBuildProfile
+  AutomateInfoPlist: 1
+  DefaultInfoPlist: {fileID: 102900000, guid: 07001703d812944b7aaabcbd8bebefbe, type: 3}
+  MinimumOSVersion_iOS: 15.0
+  MinimumOSVersion_tvOS: 15.0
+  MinimumOSVersion_macOS: 10.15.0
+  MinimumOSVersion_visionOS: 1.0
+  AppUsesNonExemptEncryption: 0
+  AutomateEntitlements: 0
+  DefaultEntitlements: {fileID: 0}

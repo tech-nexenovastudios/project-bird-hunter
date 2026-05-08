@@ -1,4 +1,5 @@
 using Audio;
+using Services;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -103,7 +104,12 @@ public class SettingPanelController : MonoBehaviour
 
     private void ApplyNotificationSetting()
     {
-        // Implement your notification enable/disable logic here
+        // SetUserOptedIn persists the flag and, on opt-in, registers the device
+        // (triggering the iOS OS prompt the first time). UGS has no programmatic
+        // unsubscribe — opt-out only stops *this* app from re-registering on next boot.
+        if (PushNotificationService.Instance != null)
+            PushNotificationService.Instance.SetUserOptedIn(isEnabled);
+
         Debug.Log($"Notifications {(isEnabled ? "Enabled" : "Disabled")}");
     }
 
