@@ -119,6 +119,70 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &32402852
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 32402853}
+  - component: {fileID: 32402854}
+  m_Layer: 0
+  m_Name: Haptic Controller
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &32402853
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 32402852}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 620298805}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &32402854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 32402852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f278219d98cd4634b9f5e58cbf94c95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Audio.HapticsController
+  eggHitIntensity: 0
+  eggDestroyIntensity: 1
+  birdDestroyIntensity: 0
+  cannonHitIntensity: 2
+  playerDeathIntensity: 2
+  bossPhase2Intensity: 2
+  bossDefeatedIntensity: 2
+  levelCompletedIntensity: 1
+  chapterCompletedIntensity: 2
+  graceStartedIntensity: 0
+  graceEndedIntensity: 1
+  reelTapIntensity: 0
+  powerupConfirmIntensity: 1
+  reelsStoppedIntensity: 0
+  lightDurationMs: 10
+  lightAmplitude: 80
+  mediumDurationMs: 25
+  mediumAmplitude: 150
+  heavyDurationMs: 40
+  heavyAmplitude: 255
 --- !u!1 &61153610
 GameObject:
   m_ObjectHideFlags: 0
@@ -458,10 +522,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BootController
   statusText: {fileID: 0}
   guestButton: {fileID: 682436766}
-  updatePanel: {fileID: 2114894711}
-  loginPanel: {fileID: 1154470923}
-  upperPanel: {fileID: 61153610}
-  lowerPanel: {fileID: 2032281286}
+  updatePanel: {fileID: 0}
+  loginPanel: {fileID: 0}
+  upperPanel: {fileID: 0}
+  lowerPanel: {fileID: 0}
   adManager: {fileID: 1506041231}
   autoGrantConsentInEditor: 1
 --- !u!4 &330708575
@@ -853,6 +917,8 @@ Transform:
   - {fileID: 318708239}
   - {fileID: 931929071}
   - {fileID: 1085212952}
+  - {fileID: 1330181471}
+  - {fileID: 32402853}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &620298806
@@ -2502,6 +2568,50 @@ MonoBehaviour:
   swayAmountRange: {x: 30, y: 80}
   swayFrequencyRange: {x: 0.5, y: 2}
   rotationSpeedRange: {x: -90, y: 90}
+--- !u!1 &1330181470
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1330181471}
+  - component: {fileID: 1330181472}
+  m_Layer: 0
+  m_Name: InputHandler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1330181471
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1330181470}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 620298805}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1330181472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1330181470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6824499d4bda94f859ae61c1d6209f5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Input.InputHandler
 --- !u!1 &1506041230
 GameObject:
   m_ObjectHideFlags: 0
@@ -2531,10 +2641,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51a3b9616750c46408fa0f5cb96e6e13, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AdManager
-  appKey: 25785de5d
+  androidAppKey: 
+  iosAppKey: 
   isDevelopmentMode: 1
-  rewardedAdUnitId: 5jobqa30iyk6jdsx
-  interstitialAdUnitId: qi9fh521rc833ggl
+  androidRewardedAdUnitId: 
+  androidInterstitialAdUnitId: 
+  iosRewardedAdUnitId: 
+  iosInterstitialAdUnitId: 
   bannerAdUnitId: 
   enableDebugLogs: 1
   retryBaseDelay: 5
