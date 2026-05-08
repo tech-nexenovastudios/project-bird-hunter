@@ -199,8 +199,12 @@ MonoBehaviour:
       type: {class: BladeStrikeEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
         strikePrefab: {fileID: 6558925124617225918, guid: f890c6f8a6108ea4b804e6e63c1884fe, type: 3}
-        strikeInterval: 2
-        strikeLifetime: 0.5
+        checkInterval: 0.5
+        bladeSpeed: 12
+        rotationSpeed: 720
+        searchRadius: 50
+        bladeDamage: 30
+        localAttachOffset: {x: 1, y: 0, z: 0}
     - rid: 1861421009558306999
       type: {class: BulletElementModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
@@ -208,7 +212,7 @@ MonoBehaviour:
           rid: -2
         overrideDamage: 1
         damageOverride: 30
-        elementVfxPrefab: {fileID: 4135085659552123607, guid: f6ddc0f41cb4d7b49ae7a4742da195cb, type: 3}
+        elementVfxPrefab: {fileID: 4871532537760836162, guid: 98cb53da100729c4b96124cb734020b2, type: 3}
     - rid: 1861421009558307200
       type: {class: CannonStatModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
@@ -217,11 +221,15 @@ MonoBehaviour:
         duration: 0
         healCooldown: 20
         invincibleCooldown: 30
+        eggCheckInterval: 0.2
+        maxEggWait: 30
+        invincibleVfxPrefab: {fileID: 0}
+        invincibleVfxOffset: {x: 0, y: -0.5, z: 0}
     - rid: 1861421009558307201
       type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
         mode: 2
-        value: 30
+        value: 8
         rocketPrefab: {fileID: 0}
         rocketSpeeed: 10
         rocketInterval: 4
@@ -229,24 +237,32 @@ MonoBehaviour:
     - rid: 1861421009558307202
       type: {class: CannonStatModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
-        stat: 1
+        stat: 8
         value: 15
         duration: 0
         healCooldown: 0
         invincibleCooldown: 30
+        eggCheckInterval: 0.2
+        maxEggWait: 30
+        invincibleVfxPrefab: {fileID: 0}
+        invincibleVfxOffset: {x: 0, y: -0.5, z: 0}
     - rid: 1861421009558307203
       type: {class: LowHpAttackBoostModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
         hpThreshold: 0.5
-        percentBonus: 0.5
+        percentBonus: 50
     - rid: 1861421009558307204
       type: {class: CannonStatModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
         stat: 3
-        value: 1
-        duration: 30
+        value: 5
+        duration: 5
         healCooldown: 20
-        invincibleCooldown: 30
+        invincibleCooldown: 15
+        eggCheckInterval: 0.3
+        maxEggWait: 12
+        invincibleVfxPrefab: {fileID: 1705760933558139381, guid: 1a83aa6c32e74414db14c92b9c75d687, type: 3}
+        invincibleVfxOffset: {x: 0, y: -5, z: 0}
     - rid: 1861421009558307205
       type: {class: LaserEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
@@ -258,8 +274,8 @@ MonoBehaviour:
     - rid: 1861421009558307206
       type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
-        mode: 4
-        value: 4
+        mode: 1
+        value: 0.2
         rocketPrefab: {fileID: 6354247109572606826, guid: c4d0e1374de823f45a2c373f06d0f863, type: 3}
         rocketSpeeed: 10
         rocketInterval: 3
@@ -293,6 +309,10 @@ MonoBehaviour:
         duration: 0
         healCooldown: 0
         invincibleCooldown: 0
+        eggCheckInterval: 0.2
+        maxEggWait: 30
+        invincibleVfxPrefab: {fileID: 0}
+        invincibleVfxOffset: {x: 0, y: -0.5, z: 0}
     - rid: 1861421009558307212
       type: {class: GroundSpikeEffect, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:

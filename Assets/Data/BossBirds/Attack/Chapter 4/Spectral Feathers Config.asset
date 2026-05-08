@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpectralFeathersConfig
   cooldown: 3
   duration: 2
-  damage: 10
+  damage: 3
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
@@ -24,12 +24,13 @@ MonoBehaviour:
   spawnWidth: 4
   spawnYOffset: 0.5
   fallSpeed: 1
-  fallSpeedVariation: 0.1
-  zigzagAmplitude: 1
-  zigzagFrequency: 1
-  zigzagFrequencyVariation: 0.2
-  rotateToMovement: 1
-  spinSpeed: 10
-  contactDamage: 4
-  damageCooldown: 2
+  dragMin: 0.3
+  dragMax: 0.6
+  liftMin: 1.5
+  liftMax: 3
+  tumbleRateMin: 1.5
+  tumbleRateMax: 3
+  maxHorizontalSpeed: 4
+  contactDamage: 3
+  damageCooldown: 3
   destroyBelowY: -6

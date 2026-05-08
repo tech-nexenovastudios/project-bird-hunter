@@ -90,12 +90,16 @@ public class ChapterEnvironmentApplier : MonoBehaviour
         if (newData == null)
         {
             Debug.LogError($"[ChapterEnv] No ChapterData found for Chapter {newChapterNumber}.");
+            // Still fire the finished event so listeners (e.g. the spin chain)
+            // don't get stuck waiting on an animation that won't run.
+            GameEvents.FireChapterTransitionFinished();
             return;
         }
 
         if (backgroundRect == null || platformTransform == null)
         {
             Debug.LogError("[ChapterEnv] Transition references missing in Inspector.");
+            GameEvents.FireChapterTransitionFinished();
             return;
         }
 
@@ -195,6 +199,7 @@ public class ChapterEnvironmentApplier : MonoBehaviour
             chapterUnlockPanel.SetActive(false);
 
         Debug.Log($"[ChapterEnv] ✅ Transition to Chapter {chapterNum} complete.");
+        GameEvents.FireChapterTransitionFinished();
     }
 
     // ─────────────────────────────────────────────────────────────────────────

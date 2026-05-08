@@ -5,11 +5,14 @@ using UnityEngine;
 public class DroneSwarmConfig : BaseAttackConfig
 {
     [Header("Spawning")]
-    [Range(2, 4)]
-    public int droneCount = 2;
+    [Tooltip("Random spawn count is rolled in [minDroneCount, maxDroneCount] inclusive each time the attack fires.")]
+    public int minDroneCount = 2;
+    public int maxDroneCount = 5;
     public float spawnInterval = 4f;
     [Tooltip("Drones spawn at this radius around boss")]
     public float spawnRadius = 1f;
+    [Tooltip("Each drone self-destructs after this many seconds.")]
+    public float droneLifetime = 3f;
 
     [Header("Scale & Health (relative to boss)")]
     [Tooltip("Drone scale = boss scale * this value")]

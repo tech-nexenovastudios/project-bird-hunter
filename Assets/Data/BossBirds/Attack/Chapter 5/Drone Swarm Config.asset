@@ -13,14 +13,16 @@ MonoBehaviour:
   m_Name: Drone Swarm Config
   m_EditorClassIdentifier: Assembly-CSharp::DroneSwarmConfig
   cooldown: 3
-  duration: 2
-  damage: 10
+  duration: 3
+  damage: 5
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
-  droneCount: 2
-  spawnInterval: 4
+  minDroneCount: 2
+  maxDroneCount: 5
+  spawnInterval: 0.3
   spawnRadius: 1
+  droneLifetime: 3
   scaleRatio: 0.3
   healthRatio: 0.3
   dronePrefab: {fileID: 163310292118945550, guid: 0845be16d3d741e48993a096434d3438, type: 3}
@@ -30,6 +32,6 @@ MonoBehaviour:
   separationForce: 2
   hoverAmplitude: 0.3
   hoverSpeed: 2
-  contactDamage: 10
+  contactDamage: 5
   damageCooldown: 1
   deathVfxPrefab: {fileID: 0}

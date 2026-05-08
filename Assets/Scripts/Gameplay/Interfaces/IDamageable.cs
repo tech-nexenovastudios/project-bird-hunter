@@ -28,6 +28,8 @@ namespace Gameplay.Interfaces
         int CurrentAttack { get; }
         void AddAttackModifier(float flatBonus, float percentBonus);
         void RemoveAttackModifier(float flatBonus, float percentBonus);
+        void AddFireRateModifier(float percentBonus);
+        void RemoveFireRateModifier(float percentBonus);
         void IncreaseMaxHp(int amount);
         bool IsInvincible { get; set; }
         float HitboxScale { get; set; }

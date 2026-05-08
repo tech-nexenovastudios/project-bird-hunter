@@ -11,15 +11,24 @@ public class BossHealthHandler : MonoBehaviour, IDamageablee
 
     public event System.Action<float> OnHealthChanged;
     public event System.Action OnDeath;
-    
+
     public float MaxHealth => maxHealth;
-    public void Initialize(float hp, float enrage)
+    public float CurrentHealth => currentHealth;
+    public float NormalizedHealth => maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
+
+    /// <summary>Initialize at full HP (start of phase 1, or fresh level-20 test spawn).</summary>
+    public void Initialize(float hp, float enrage) => Initialize(hp, hp, enrage);
+
+    /// <summary>Initialize with separate max + starting HP — used when boss returns mid-fight.</summary>
+    public void Initialize(float maxHp, float startHp, float enrage)
     {
-        maxHealth = hp;
-        currentHealth = hp;
+        maxHealth = Mathf.Max(1f, maxHp);
+        currentHealth = Mathf.Clamp(startHp, 0f, maxHealth);
         enrageThreshold = enrage;
         hasEnraged = false;
         absorbChance = 0f;
+
+        OnHealthChanged?.Invoke(NormalizedHealth);
     }
 
     public void SetDamageAbsorbChance(float chance) => absorbChance = chance;

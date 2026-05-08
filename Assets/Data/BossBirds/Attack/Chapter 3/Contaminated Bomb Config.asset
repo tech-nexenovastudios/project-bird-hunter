@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 443299985f7ba4246a23fd7613eea49c, type: 3}
   m_Name: Contaminated Bomb Config
   m_EditorClassIdentifier: Assembly-CSharp::ContaminatedBombConfig
-  cooldown: 5
-  duration: 2
-  damage: 10
+  cooldown: 3
+  duration: 3
+  damage: 5
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
@@ -22,7 +22,7 @@ MonoBehaviour:
   bombPrefab: {fileID: 8332627154048928329, guid: 8e7e1bca8e7b6374aae7e2b979923fc8, type: 3}
   bombGravityScale: 1
   bombHealth: 5
-  bombContactDamage: 15
+  bombContactDamage: 5
   bombContactCooldown: 1
   bounceHeightFraction: 1
   explosionVfxPrefab: {fileID: 0}
@@ -30,11 +30,11 @@ MonoBehaviour:
   miniBombLaunchSpeed: 3
   miniBombPrefab: {fileID: 9153812327509104598, guid: c87347917c74d1b46981fd0dfcc62fbf, type: 3}
   miniBombCount: 3
-  miniBombHealth: 5
+  miniBombHealth: 2
   miniBombGravityScale: 1
-  miniBombLifetime: 6
-  miniBombSpreadSpeed: 1
+  miniBombLifetime: 5
+  miniBombSpreadSpeed: 2
   miniBombLaunchUpSpeed: 1
-  miniBombJumpForce: 10
-  miniBombContactDamage: 5
+  miniBombJumpForce: 8
+  miniBombContactDamage: 2
   miniBombContactCooldown: 1

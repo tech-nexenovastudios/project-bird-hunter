@@ -333,27 +333,62 @@ public class RemoteConfigManager : MonoBehaviour
 
     public bool MaintenanceMode => GetBool("maintenanceMode", false);
     public string MinRequiredVersion => GetString("minRequiredVersion", "1.0.0");
+    public string LatestVersion => GetString("latestVersion", "");
+    public bool ForceUpdate => GetBool("forceUpdate", false);
     public string UpdateURL => GetString("updateURL", "");
+    public string UpdateURLAndroid => GetString("updateURL_android", "");
+    public string UpdateURLiOS => GetString("updateURL_ios", "");
     public string ServerEndpointURL => GetString("serverURL", "");
 
     /// <summary>
-    /// Compares current app version against minRequiredVersion.
-    /// Returns true if the player MUST update.
+    /// Should the update panel be shown?
+    /// True if a newer version exists (current &lt; latestVersion) OR the version
+    /// is below the hard minimum. Either is enough to surface the prompt.
     /// </summary>
-    public bool NeedsForceUpdate()
+    public bool IsUpdateAvailable()
     {
-        string minVersion = MinRequiredVersion;
-        if (string.IsNullOrEmpty(minVersion)) return false;
+        return IsBelow(LatestVersion) || IsBelow(MinRequiredVersion);
+    }
 
+    /// <summary>
+    /// Is the update mandatory (Not Now button hidden)?
+    /// Mandatory when the explicit forceUpdate flag is set, OR when the version
+    /// is below the hard minimum (safety net for very old builds).
+    /// </summary>
+    public bool IsForceUpdate()
+    {
+        return ForceUpdate || IsBelow(MinRequiredVersion);
+    }
+
+    /// <summary>
+    /// Returns the store URL appropriate for the current platform.
+    /// Falls back to the generic UpdateURL if the platform-specific one is empty.
+    /// </summary>
+    public string GetPlatformUpdateURL()
+    {
+#if UNITY_IOS
+        string url = UpdateURLiOS;
+#elif UNITY_ANDROID
+        string url = UpdateURLAndroid;
+#else
+        string url = "";
+#endif
+        return string.IsNullOrEmpty(url) ? UpdateURL : url;
+    }
+
+    /// <summary>Legacy: kept for backward compatibility. Prefer IsForceUpdate().</summary>
+    public bool NeedsForceUpdate() => IsBelow(MinRequiredVersion);
+
+    private static bool IsBelow(string targetVersion)
+    {
+        if (string.IsNullOrEmpty(targetVersion)) return false;
         try
         {
-            var current = new Version(Application.version);
-            var minimum = new Version(minVersion);
-            return current < minimum;
+            return new Version(Application.version) < new Version(targetVersion);
         }
         catch
         {
-            return false; // If version parsing fails, don't block the player
+            return false;
         }
     }
 

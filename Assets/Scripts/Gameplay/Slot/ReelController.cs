@@ -86,6 +86,12 @@ namespace Gameplay.Slot
             HideInfoTexts();
             SetHighlight(false);
 
+            // Reset reel position and re-enable the tail symbols so a second spin animates
+            // correctly — OnSpinComplete deactivates the tail at the end of the previous spin.
+            content.anchoredPosition = Vector2.zero;
+            _symbols[^IdxTop].gameObject.SetActive(true);
+            _symbols[^IdxMid].gameObject.SetActive(true);
+
             // Fill the visible tail with random filler then the actual result at the bottom.
             var top = symbolList[Random.Range(0, symbolList.Count)];
             var mid = symbolList[Random.Range(0, symbolList.Count)];

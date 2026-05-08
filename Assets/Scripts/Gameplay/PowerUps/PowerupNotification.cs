@@ -34,6 +34,9 @@ public class PowerupNotification : MonoBehaviour
     private Tween _pulseTween;
     private Tween _cooldownTween;
     private PowerupConfig _currentConfig;
+    private bool _cooldownActive;
+    private float _pendingCooldownDuration;
+    private float _pendingCooldownStartTime;
 
     private void Start()
     {
@@ -66,6 +69,11 @@ public class PowerupNotification : MonoBehaviour
         if (config == null) return;
         _currentConfig = config;
 
+        // New powerup selected — clear any cooldown state from a previous powerup.
+        _cooldownActive = false;
+        _pendingCooldownDuration = 0f;
+        _cooldownTween?.Kill();
+
         _notificationPanel.DOKill();
 
         _powerupNameText.text = config.displayName;
@@ -91,6 +99,22 @@ public class PowerupNotification : MonoBehaviour
         _persistentIconRoot.gameObject.SetActive(true);
         _persistentIconSprite.sprite = _currentConfig.icon;
         _persistentIconFill.sprite = _currentConfig.icon;   // fill uses same sprite so it "reveals" the icon
+
+        // If a cooldown was started while the slide-in panel was still playing,
+        // resume it now from where it would naturally be — don't reset to active visuals.
+        if (_pendingCooldownDuration > 0f)
+        {
+            float elapsed = Time.time - _pendingCooldownStartTime;
+            float remaining = _pendingCooldownDuration - elapsed;
+            float startFill = Mathf.Clamp01(elapsed / _pendingCooldownDuration);
+            _pendingCooldownDuration = 0f;
+
+            if (remaining > 0f)
+            {
+                StartCooldownVisual(remaining, startFill);
+                return;
+            }
+        }
 
         SetActiveVisual();
         StartPulse();
@@ -130,30 +154,48 @@ public class PowerupNotification : MonoBehaviour
     {
         if (_persistentIconRoot == null || cooldownDuration <= 0f) return;
 
+        // Cooldown can start during the slide-in panel animation, before the
+        // persistent icon is visible. Defer the visual until ShowPersistentIcon runs.
+        if (!_persistentIconRoot.gameObject.activeSelf)
+        {
+            _pendingCooldownDuration = cooldownDuration;
+            _pendingCooldownStartTime = Time.time;
+            return;
+        }
+
+        StartCooldownVisual(cooldownDuration, 0f);
+    }
+
+    private void StartCooldownVisual(float remainingDuration, float startFill)
+    {
         StopPulse();
         _cooldownTween?.Kill();
+        _cooldownActive = true;
 
         _persistentIconSprite.color = _cooldownColor;
 
         if (_persistentIconFill != null)
         {
-            _persistentIconFill.fillAmount = 0f;
+            _persistentIconFill.fillAmount = startFill;
             _persistentIconFill.color = _activeColor;
-        }
 
-        _cooldownTween = _persistentIconFill
-            .DOFillAmount(1f, cooldownDuration)
-            .SetEase(Ease.Linear)
-            .OnComplete(() =>
-            {
-                SetActiveVisual();
-                StartPulse();
-            });
+            _cooldownTween = _persistentIconFill
+                .DOFillAmount(1f, remainingDuration)
+                .SetEase(Ease.Linear)
+                .OnComplete(() =>
+                {
+                    _cooldownActive = false;
+                    SetActiveVisual();
+                    StartPulse();
+                });
+        }
     }
 
     public void EndCooldown()
     {
         _cooldownTween?.Kill();
+        _cooldownActive = false;
+        _pendingCooldownDuration = 0f;
         SetActiveVisual();
         StartPulse();
     }
@@ -162,6 +204,8 @@ public class PowerupNotification : MonoBehaviour
     {
         StopPulse();
         _cooldownTween?.Kill();
+        _cooldownActive = false;
+        _pendingCooldownDuration = 0f;
         if (_persistentIconRoot != null)
             _persistentIconRoot.gameObject.SetActive(false);
         _currentConfig = null;

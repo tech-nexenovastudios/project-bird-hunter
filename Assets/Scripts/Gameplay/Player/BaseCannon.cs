@@ -42,6 +42,7 @@ namespace Gameplay.Player
 
         private float flatAttackBonus;
         private float percentAttackBonus;
+        private float percentFireRateBonus;
 
         public int CurrentAttack
         {
@@ -205,6 +206,17 @@ namespace Gameplay.Player
             percentAttackBonus -= percentBonus/100;
         }
 
+        public void AddFireRateModifier(float percentBonus)
+        {
+            percentFireRateBonus += percentBonus / 100f;
+            Debug.Log($"Fire rate increased by {percentBonus}% (total bonus {percentFireRateBonus * 100f}%)");
+        }
+
+        public void RemoveFireRateModifier(float percentBonus)
+        {
+            percentFireRateBonus -= percentBonus / 100f;
+        }
+
         public void IncreaseMaxHp(int amount)
         {
             if (amount <= 0) return;
@@ -273,8 +285,14 @@ namespace Gameplay.Player
             IsFiring = false;
             movementInput = Vector2.zero;
             OnDeathVFX();
-            GameEvents.FirePlayerDeath();
+            if (!DeferDeathEvent) RaisePlayerDeath();
         }
+
+        // Subclasses with a death animation override this to true and call
+        // RaisePlayerDeath() themselves once their animation completes.
+        protected virtual bool DeferDeathEvent => false;
+
+        protected void RaisePlayerDeath() => GameEvents.FirePlayerDeath();
 
         // ════════════════════════════════════════════════════════
         //  HITBOX SCALING
@@ -384,7 +402,10 @@ namespace Gameplay.Player
             if (SuppressBullets) return;
 
             fireTimer += Time.deltaTime;
-            float interval = 1f / Stats.Get(StatType.FireRate);
+            float effectiveFireRate = Stats.Get(StatType.FireRate) * (1f + percentFireRateBonus);
+            //Debug.Log("Fire rate : " + effectiveFireRate);
+            if (effectiveFireRate <= 0f) return;
+            float interval = 1f / effectiveFireRate;
 
             if (fireTimer >= interval)
             {

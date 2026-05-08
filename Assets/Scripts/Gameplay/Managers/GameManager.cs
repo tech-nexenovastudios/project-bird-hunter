@@ -53,6 +53,7 @@ namespace Gameplay.Managers
             GameProgressManager.OnSpinTriggered += OnSpinTriggered;
             GameEvents.OnPlayerDeath += OnPlayerDeath;
             GameEvents.OnPauseToggled += OnPauseToggled;
+            GameEvents.OnChapterCompleted += OnChapterCompletedHandler;
         }
 
         private void OnDisable()
@@ -61,6 +62,17 @@ namespace Gameplay.Managers
             GameProgressManager.OnSpinTriggered -= OnSpinTriggered;
             GameEvents.OnPlayerDeath -= OnPlayerDeath;
             GameEvents.OnPauseToggled -= OnPauseToggled;
+            GameEvents.OnChapterCompleted -= OnChapterCompletedHandler;
+        }
+
+        // Pause gameplay during the chapter-end animation. The spin still
+        // starts later (TriggerSpin → OnSpinTriggered also sets state=Slot),
+        // and StartGameplay restores Gameplay state once the spin closes.
+        // This guarantees OnProgressChanged's GameState.Slot guard skips
+        // StartGameplay during the animation window.
+        private void OnChapterCompletedHandler(int newChapterNumber)
+        {
+            state = GameState.Slot;
         }
 
         // ───────── Entry point ─────────

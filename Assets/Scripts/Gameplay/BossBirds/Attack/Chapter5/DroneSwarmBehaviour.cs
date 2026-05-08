@@ -20,6 +20,7 @@ public class DroneSwarmBehaviour : BaseAttackBehaviour
         public Rigidbody2D rb;
         public float hoverPhase;
         public float lastDamageTime;
+        public float spawnTime;
         public bool isAlive;
         public DroneHealth healthComp;
     }
@@ -45,19 +46,24 @@ public class DroneSwarmBehaviour : BaseAttackBehaviour
     {
         cannonTarget = FindCannon();
 
+        // Random count in [min, max] inclusive — clamp to safe values.
+        int minCount = Mathf.Max(1, config.minDroneCount);
+        int maxCount = Mathf.Max(minCount, config.maxDroneCount);
+        int count = Random.Range(minCount, maxCount + 1);
+
         // Spawn drones
-        for (int i = 0; i < config.droneCount; i++)
+        for (int i = 0; i < count; i++)
         {
-            SpawnDrone(i);
-            if (i < config.droneCount - 1)
+            SpawnDrone(i, count);
+            if (i < count - 1)
                 yield return new WaitForSeconds(config.spawnInterval);
         }
 
-        // Update drones until all dead or duration expires
+        // Run for the full attack duration. Drones self-destruct after their lifetime,
+        // but the attack remains "running" until duration expires regardless.
         float elapsed = 0f;
-        while (elapsed < duration && HasAliveDrones())
+        while (elapsed < duration)
         {
-            // Refresh cannon target in case it was destroyed and respawned
             if (cannonTarget == null)
                 cannonTarget = FindCannon();
 
@@ -71,10 +77,10 @@ public class DroneSwarmBehaviour : BaseAttackBehaviour
         NotifyAttackComplete();
     }
 
-    private void SpawnDrone(int index)
+    private void SpawnDrone(int index, int totalCount)
     {
         // Spawn position — spread around boss in a circle
-        float angle = (360f / config.droneCount) * index * Mathf.Deg2Rad;
+        float angle = (totalCount > 0 ? (360f / totalCount) : 0f) * index * Mathf.Deg2Rad;
         Vector3 offset = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * config.spawnRadius;
         Vector3 spawnPos = boss.transform.position + offset;
 
@@ -141,6 +147,7 @@ public class DroneSwarmBehaviour : BaseAttackBehaviour
             rb = rb,
             hoverPhase = Random.Range(0f, Mathf.PI * 2f),
             lastDamageTime = -999f,
+            spawnTime = Time.time,
             isAlive = true,
             healthComp = droneHealth
         };
@@ -191,6 +198,15 @@ public class DroneSwarmBehaviour : BaseAttackBehaviour
             var drone = activeDrones[i];
             if (!drone.isAlive || drone.obj == null)
             {
+                activeDrones.RemoveAt(i);
+                continue;
+            }
+
+            // ── Lifetime: drone self-destructs after droneLifetime seconds ──
+            if (config.droneLifetime > 0f &&
+                currentTime - drone.spawnTime >= config.droneLifetime)
+            {
+                OnDroneKilled(drone);
                 activeDrones.RemoveAt(i);
                 continue;
             }

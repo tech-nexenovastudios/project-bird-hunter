@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Stone Gaze Sweep Config
   m_EditorClassIdentifier: Assembly-CSharp::StoneGazeSweepConfig
   cooldown: 3
-  duration: 2
-  damage: 10
+  duration: 3
+  damage: 3
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
@@ -29,7 +29,8 @@ MonoBehaviour:
   glowColor: {r: 0.8773585, g: 0.40550846, b: 0, a: 0.74509805}
   haloColor: {r: 0.9056604, g: 0.3589949, b: 0.046991818, a: 0.28235295}
   widthMultiplier: 1
-  damagePerTick: 10
+  damagePerTick: 3
   ticksPerSecond: 1
   rotateBeforeShoot: 1
   rotationSpeed: 180
+  trackingRotationSpeed: 30

@@ -30,7 +30,8 @@ namespace Gameplay.PowerUps
         HitboxScale,
         ShieldHits,
         Revive,
-        ManaFillRate
+        ManaFillRate,
+        FireRatePercent
         //Use follwing line of code when its about to increase mana fill rate
         //mana += baseFillRate * (1f + cannon.ManaFillRateBonus / 100f) * Time.deltaTime;
     }
@@ -53,8 +54,22 @@ namespace Gameplay.PowerUps
             [Tooltip("Cooldown between invincibility activations")]
             [Min(0f)] public float invincibleCooldown = 30f;
 
+            [Tooltip("How often to poll for an Egg in the scene before starting the invincibility duration countdown.")]
+            [Min(0.05f)] public float eggCheckInterval = 0.2f;
+
+            [Tooltip("Safety cap: if no Egg appears within this many seconds, start the duration countdown anyway.")]
+            [Min(0.1f)] public float maxEggWait = 30f;
+
+            [Tooltip("VFX prefab spawned at the cannon while invincibility is active. Destroyed when the duration ends.")]
+            public GameObject invincibleVfxPrefab;
+
+            [Tooltip("Local offset (relative to the cannon) where the invincibility VFX is placed.")]
+            public Vector3 invincibleVfxOffset = new Vector3(0f, -0.5f, 0f);
+
             private ICannon cannon;
             private IntervalTimer timer;
+            private bool awaitingEgg;
+            private GameObject activeInvincibleVfx;
             private float previousScale;
 
             private float lastHealTime = -999f;       // ensures first heal works
@@ -80,6 +95,10 @@ namespace Gameplay.PowerUps
 
                     case CannonStat.AttackPercent:
                         cannon.AddAttackModifier(0f, value);
+                        break;
+
+                    case CannonStat.FireRatePercent:
+                        cannon.AddFireRateModifier(value);
                         break;
 
                     case CannonStat.Invincible:
@@ -109,6 +128,9 @@ namespace Gameplay.PowerUps
 
                 cannon.Heal(Mathf.RoundToInt(value));
                 lastHealTime = Time.time;
+
+                if (healCooldown > 0f)
+                    GameEvents.FirePowerupCooldownStarted(healCooldown);
             }
 
             private void TryActivateInvincible()
@@ -120,18 +142,92 @@ namespace Gameplay.PowerUps
                 cannon.IsInvincible = true;
                 lastInvincibleTime = Time.time;
 
-                // Start the duration timer that will eventually turn off invincibility
-                if (duration > 0f) StartTimer();
+                if (invincibleCooldown > 0f)
+                    GameEvents.FirePowerupCooldownStarted(invincibleCooldown);
+
+                if (duration <= 0f) return;
+
+                // Defer the duration countdown until an Egg is actually present in the scene —
+                // eggs take a moment to fall after power-up selection, and we don't want the
+                // invincibility window to burn down before the player is in danger.
+                if (IsEggPresent()) StartDurationTimer();
+                else StartEggWaitTimer();
+            }
+
+            private static bool IsEggPresent()
+            {
+                return GameObject.FindGameObjectWithTag("Egg") != null;
+            }
+
+            private void StartEggWaitTimer()
+            {
+                awaitingEgg = true;
+                timer = new IntervalTimer(maxEggWait, eggCheckInterval);
+                timer.OnInterval = OnEggCheckTick;
+                timer.OnTimerStop = OnEggWaitExpired;
+                timer.Start();
+            }
+
+            private void OnEggCheckTick()
+            {
+                if (!IsEggPresent()) return;
+                awaitingEgg = false;     // clear before Stop so OnEggWaitExpired no-ops if it still fires
+                StopActiveTimer();
+                StartDurationTimer();
+            }
+
+            private void OnEggWaitExpired()
+            {
+                // Safety net: no Egg appeared within maxEggWait — start the duration anyway
+                // so the cannon doesn't stay invincible forever.
+                if (!awaitingEgg) return;
+                awaitingEgg = false;
+                StartDurationTimer();
+            }
+
+            private void StartDurationTimer()
+            {
+                SpawnInvincibleVfx();
+                timer = new IntervalTimer(duration, duration);
+                timer.OnTimerStop = Deactivate;
+                timer.Start();
+            }
+
+            private void SpawnInvincibleVfx()
+            {
+                if (invincibleVfxPrefab == null || cannon == null) return;
+                if (activeInvincibleVfx != null) return;
+
+                activeInvincibleVfx = UnityEngine.Object.Instantiate(
+                    invincibleVfxPrefab,
+                    cannon.Transform);
+                activeInvincibleVfx.transform.localPosition = invincibleVfxOffset;
+                activeInvincibleVfx.transform.localRotation = Quaternion.identity;
+            }
+
+            private void DespawnInvincibleVfx()
+            {
+                if (activeInvincibleVfx == null) return;
+                UnityEngine.Object.Destroy(activeInvincibleVfx);
+                activeInvincibleVfx = null;
+            }
+
+            private void StopActiveTimer()
+            {
+                if (timer == null) return;
+                // ImprovedTimers.Timer.Stop() invokes OnTimerStop unconditionally — assign empty
+                // delegates instead of null to detach our handlers without throwing NRE.
+                timer.OnInterval = delegate { };
+                timer.OnTimerStop = delegate { };
+                timer.Stop();
+                timer = null;
             }
 
             public void Deactivate()
             {
-                if (timer != null)
-                {
-                    timer.OnTimerStop = null;
-                    timer.Stop();
-                    timer = null;
-                }
+                StopActiveTimer();
+                awaitingEgg = false;
+                DespawnInvincibleVfx();
 
                 if (cannon == null) return;
 
@@ -143,6 +239,10 @@ namespace Gameplay.PowerUps
 
                     case CannonStat.AttackPercent:
                         cannon.RemoveAttackModifier(0f, value);
+                        break;
+
+                    case CannonStat.FireRatePercent:
+                        cannon.RemoveFireRateModifier(value);
                         break;
 
                     case CannonStat.Invincible:
@@ -164,13 +264,6 @@ namespace Gameplay.PowerUps
                 }
 
                 cannon = null;
-            }
-
-            private void StartTimer()
-            {
-                timer = new IntervalTimer(duration, duration);
-                timer.OnTimerStop = Deactivate;
-                timer.Start();
             }
         }
     
@@ -916,7 +1009,7 @@ namespace Gameplay.PowerUps
     public class LowHpAttackBoostModifier : ICannonModifier
     {
         [Range(0f, 1f)] public float hpThreshold = 0.5f;
-        [Range(0.01f, 2f)] public float percentBonus = 0.30f;
+        [Range(10f, 200f)] public float percentBonus = 30f;
 
         private ICannon cannon;
         private bool isBoosted;
@@ -924,6 +1017,12 @@ namespace Gameplay.PowerUps
         public void Activate(ICannon cannon)
         {
             this.cannon = cannon;
+            GameEvents.OnCannonHealthChanged += OnHealthChanged;
+            EvaluateBoost();
+        }
+
+        private void OnHealthChanged(int currentHp, int maxHp)
+        {
             EvaluateBoost();
         }
 
@@ -934,20 +1033,21 @@ namespace Gameplay.PowerUps
 
             if (should && !isBoosted)
             {
-                cannon.AddAttackModifier(0f, percentBonus);
+                cannon.AddFireRateModifier(percentBonus);
                 isBoosted = true;
             }
             else if (!should && isBoosted)
             {
-                cannon.RemoveAttackModifier(0f, percentBonus);
+                cannon.RemoveFireRateModifier(percentBonus);
                 isBoosted = false;
             }
         }
 
         public void Deactivate()
         {
+            GameEvents.OnCannonHealthChanged -= OnHealthChanged;
             if (isBoosted && cannon != null)
-                cannon.RemoveAttackModifier(0f, percentBonus);
+                cannon.RemoveFireRateModifier(percentBonus);
             isBoosted = false;
             cannon = null;
         }

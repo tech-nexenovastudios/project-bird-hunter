@@ -10,6 +10,7 @@ public class AuraOfDamnationBehaviour : BaseAttackBehaviour
     private readonly List<RingData> activeRings = new();
     private static readonly Collider2D[] overlap = new Collider2D[32];
     private static int bulletMask;
+    private static int playerMask;
     private static bool maskInit;
     private Transform ringSpawnPoint;
 
@@ -35,6 +36,7 @@ public class AuraOfDamnationBehaviour : BaseAttackBehaviour
         if (!maskInit)
         {
             bulletMask = LayerMask.GetMask("Bullet");
+            playerMask = LayerMask.GetMask("Player");
             maskInit = true;
         }
 
@@ -170,22 +172,31 @@ public class AuraOfDamnationBehaviour : BaseAttackBehaviour
     {
         Vector2 ringPos = ring.obj.transform.position;
 
-        // Destroy any player bullets the ring overlaps
-        int count = Physics2D.OverlapCircleNonAlloc(ringPos, 0.1f, overlap, bulletMask);
+        // Collision radius grows over the ring's lifetime, per config.
+        float t = config.ringLifetime > 0f ? Mathf.Clamp01(ring.age / config.ringLifetime) : 1f;
+        float radius = Mathf.Lerp(config.collisionRadiusStart, config.collisionRadiusEnd, t);
+
+        // Destroy any player bullets that fall inside the ring radius.
+        int count = Physics2D.OverlapCircleNonAlloc(ringPos, radius, overlap, bulletMask);
         for (int j = 0; j < count; j++)
         {
             if (overlap[j] != null && overlap[j].TryGetComponent<BaseBullet>(out var bullet))
                 bullet.gameObject.SetActive(false);
         }
 
-        // Damage cannon ONLY when the ring's center physically enters the cannon's collider
-        if (!ring.hasHitCannon && hasTarget && cannonCollider.OverlapPoint(ringPos))
+        // Damage cannon when it enters the ring radius (live position, not the locked
+        // target the ring is travelling toward).
+        if (!ring.hasHitCannon && hasTarget)
         {
-            ring.hasHitCannon = true;
-            cannonComponent.TakeDamage(Mathf.RoundToInt(config.damage));
+            var hit = Physics2D.OverlapCircle(ringPos, radius, playerMask);
+            if (hit != null && hit.TryGetComponent<BaseCannon>(out var cannon))
+            {
+                ring.hasHitCannon = true;
+                cannon.TakeDamage(Mathf.RoundToInt(config.damage));
 
-            ReturnRing(ring);
-            activeRings.RemoveAt(index);
+                ReturnRing(ring);
+                activeRings.RemoveAt(index);
+            }
         }
     }
 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 public class BossBirdController : MonoBehaviour
 {
+    private const float RetreatThreshold = 0.5f;
+
     [Header("Direct Test Mode (remove after testing)")]
     [Tooltip("Drag a BossBirdConfig here to auto-initialize on Start")]
     [SerializeField] private BossBirdConfig directTestConfig;
@@ -102,12 +104,15 @@ public class BossBirdController : MonoBehaviour
             anim.runtimeAnimatorController = config.animatorController;
 
         // ---- Health ----
-        float hp = isLevel20
+        // Phase 1: full HP. Direct level-20 spawn (test mode): scaled max, starting at the
+        // post-retreat 50% mark so the boss matches the "returning at 50%" form.
+        float maxHp = isLevel20
             ? config.maxHealth * config.phase2HealthMultiplier
             : config.maxHealth;
-        health.Initialize(hp, config.enrageThreshold);
+        float startHp = isLevel20 ? maxHp * RetreatThreshold : maxHp;
         health.OnHealthChanged += OnHealthChanged;
         health.OnDeath += OnDeath;
+        health.Initialize(maxHp, startHp, config.enrageThreshold);
 
         // ---- Movement ----
         var moveConfig = isLevel20 && config.phase2Movement != null
@@ -136,7 +141,7 @@ public class BossBirdController : MonoBehaviour
         BossEventBus.RaiseBossSpawned(config.bossName);
 
         Debug.Log($"[BossBird] {cfg.bossName} initialized — " +
-                  $"HP:{hp} | Attacks:{attacks.Count} | " +
+                  $"HP:{startHp:F0}/{maxHp:F0} | Attacks:{attacks.Count} | " +
                   $"Phase:{(isLevel20 ? "2 (Level 20)" : "1 (Pre-20)")}", this);
     }
 
@@ -152,13 +157,15 @@ public class BossBirdController : MonoBehaviour
         _hasRetreated = false;
         _isLevel20 = true;
 
-        // ---- Health: use phase2 multiplier scaled by how much HP was left ----
+        // ---- Health: phase 2 keeps the same normalized HP that phase 1 ended on
+        //              (default: 50% remaining), and uses phase2HealthMultiplier as
+        //              the new max so phase 2 can be a tougher form. ----
         health = GetComponent<BossHealthHandler>();
         float phase2MaxHp = config.maxHealth * config.phase2HealthMultiplier;
-        float startHp = phase2MaxHp * remainingHpNormalized;
-        health.Initialize(startHp, config.enrageThreshold);
+        float startHp = phase2MaxHp * Mathf.Clamp01(remainingHpNormalized);
         health.OnHealthChanged += OnHealthChanged;
         health.OnDeath += OnDeath;
+        health.Initialize(phase2MaxHp, startHp, config.enrageThreshold);
 
         // ---- Movement: use phase2 config ----
         movement = GetComponent<BossMovementHandler>();
@@ -231,14 +238,17 @@ public class BossBirdController : MonoBehaviour
 
     private void OnHealthChanged(float normalized)
     {
-        // If invulnerable, ignore damage (shouldn't happen since colliders are off,
-        // but safety net)
-        if (_invulnerable) return;
-
+        // Always propagate to listeners (UI bar) so the new value shows even when the
+        // boss is invulnerable — Initialize fires this on phase-2 respawn while the
+        // entrance tween still has _invulnerable = true.
         BossEventBus.RaiseHealthChanged(normalized);
 
-        // ── NEW: Retreat at 50% HP on non-level-20 encounters ──
-        if (!_isLevel20 && !_hasRetreated && normalized <= 0.5f)
+        // Skip damage-side reactions (retreat/enrage) during entrance/exit tweens.
+        if (_invulnerable) return;
+
+        // ── Retreat at 50% HP on non-level-20 encounters; boss returns at level 20
+        //    with the same normalized HP (i.e. 50%) on phase-2 max. ──
+        if (!_isLevel20 && !_hasRetreated && normalized <= RetreatThreshold)
         {
             _hasRetreated = true;
             Debug.Log($"[BossBird] {config.bossName} RETREATING at {normalized:P0} HP", this);

@@ -212,6 +212,7 @@ namespace Gameplay.Managers
         public int GetSessionCoinsThisLevel() => _sessionCoinsThisLevel;
 
         public int GetSessionGemsThisLevel() => _sessionGemsThisLevel;
+        public int GetSessionPowerThisLevel() => _sessionPowerRefundsThisLevel;
 
         public Vector2Int GetExpectedCoinDropRange()
         {

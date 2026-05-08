@@ -39,19 +39,20 @@ public class SerpentEggDropBehaviour : BaseAttackBehaviour
             var egg = PoolManager.Get(config.eggPrefab, pos);
             activeEggs.Add(egg);
 
-            // Setup ground detector for rolling
+            // Setup ground detector for rolling + one-hit destruction
             if (!egg.TryGetComponent<HazardGroundDetector>(out var detector))
                 detector = egg.AddComponent<HazardGroundDetector>();
+            detector.OnDestroyed += OnEggDestroyed;
 
             if (egg.TryGetComponent<Rigidbody2D>(out var rb))
             {
                 rb.linearVelocity = Vector2.zero;
                 rb.angularVelocity = 0f;
-                rb.gravityScale = 3f;
+                rb.gravityScale = config.dropGravityScale;
                 rb.constraints = RigidbodyConstraints2D.None;
 
                 float dir = config.randomDirection ? (Random.value > 0.5f ? 1f : -1f) : 1f;
-                detector.Initialize(rb, config.rollSpeed * dir);
+                detector.Initialize(rb, config.rollSpeed * dir, config.maxRollDistance);
             }
 
             if (i < config.dropCount - 1)
@@ -63,10 +64,34 @@ public class SerpentEggDropBehaviour : BaseAttackBehaviour
         isRunning = false;
     }
 
+    private void OnEggDestroyed(HazardGroundDetector detector)
+    {
+        if (detector == null) return;
+
+        var go = detector.gameObject;
+        detector.OnDestroyed -= OnEggDestroyed;
+
+        if (config.deathVfxPrefab != null)
+        {
+            var vfx = Instantiate(config.deathVfxPrefab, go.transform.position, Quaternion.identity);
+            Destroy(vfx, 3f);
+        }
+
+        activeEggs.Remove(go);
+        PoolManager.Return(go);
+    }
+
     private void ReturnAll()
     {
         for (int i = 0; i < activeEggs.Count; i++)
-            if (activeEggs[i] != null) PoolManager.Return(activeEggs[i]);
+        {
+            if (activeEggs[i] == null) continue;
+
+            if (activeEggs[i].TryGetComponent<HazardGroundDetector>(out var detector))
+                detector.OnDestroyed -= OnEggDestroyed;
+
+            PoolManager.Return(activeEggs[i]);
+        }
         activeEggs.Clear();
     }
 
