@@ -29,6 +29,8 @@ public class StoneGazeSweepConfig : BaseAttackConfig
     [Header("Rotation")]
     public bool rotateBeforeShoot = true;
     public float rotationSpeed = 180f;
+    [Tooltip("Degrees/sec the beam tracks the player while firing. Lower = easier to dodge.")]
+    public float trackingRotationSpeed = 45f;
 
     public override BaseAttackBehaviour CreateAttack(GameObject parent)
     {

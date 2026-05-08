@@ -10,6 +10,11 @@ public class HellfireDiveBehaviour : BaseAttackBehaviour
     private Vector3 originalPosition;
     private GameObject activeColumn;
     private Collider2D columnCollider;
+    private Vector2 columnHitCenter;
+    private Vector2 columnHitSize;
+    private bool columnBoundsValid;
+    private static int playerLayerMask;
+    private static bool playerLayerMaskInit;
 
     // Locked once at attack start
     private Vector3 cannonPosition;
@@ -21,6 +26,12 @@ public class HellfireDiveBehaviour : BaseAttackBehaviour
 
     protected override void OnExecute()
     {
+        if (!playerLayerMaskInit)
+        {
+            playerLayerMask = LayerMask.GetMask("Player");
+            playerLayerMaskInit = true;
+        }
+
         var cannonObj = GameObject.FindWithTag("Player");
         if (cannonObj != null)
         {
@@ -65,7 +76,7 @@ public class HellfireDiveBehaviour : BaseAttackBehaviour
         activeColumn = PoolManager.Get(config.fireColumnPrefab, columnMidpoint);
         if (activeColumn != null)
         {
-            //Rotate 180° on X so the VFX faces downward toward the cannon
+            //Rotate 180ï¿½ on X so the VFX faces downward toward the cannon
             activeColumn.transform.rotation = Quaternion.Euler(180f, 0f, 0f);
 
             activeColumn.transform.localScale = new Vector3(
@@ -75,8 +86,22 @@ public class HellfireDiveBehaviour : BaseAttackBehaviour
 
             columnCollider = activeColumn.GetComponent<Collider2D>();
 
+            // Cache the actual world-space damage region â€” the prefab's localScale.y
+            // is a VFX tuning value, not the world-space hit height, so we trust the
+            // dive geometry instead. Pad vertically so a cannon sitting just below the
+            // locked Y is still inside the box.
+            float verticalPad = 1.5f;
+            columnHitCenter = new Vector2(
+                diveTarget.x,
+                cannonPosition.y + (columnHeight * 0.5f) - (verticalPad * 0.5f));
+            columnHitSize = new Vector2(
+                config.columnWidth,
+                columnHeight + verticalPad);
+            columnBoundsValid = true;
+            Debug.Log($"[HellfireDive] Column damage box center={columnHitCenter} size={columnHitSize}");
+
             // FIX 2: Pooled objects keep stale particle state and won't auto-replay
-            // on SetActive — must explicitly stop-clear-play every ParticleSystem
+            // on SetActive ï¿½ must explicitly stop-clear-play every ParticleSystem
             var allPS = activeColumn.GetComponentsInChildren<ParticleSystem>(true);
             foreach (var ps in allPS)
             {
@@ -102,9 +127,10 @@ public class HellfireDiveBehaviour : BaseAttackBehaviour
         }
         boss.transform.position = originalPosition;
 
-        // Phase 4: Column active — damage per second while cannon is inside it
+        // Phase 4: Column active ï¿½ damage per tick while cannon is inside it.
         float columnTimer = 0f;
         float damageCooldown = 0f;
+        float tickInterval = 1f / Mathf.Max(0.01f, config.columnTicksPerSecond);
 
         while (columnTimer < config.columnLifetime)
         {
@@ -112,11 +138,10 @@ public class HellfireDiveBehaviour : BaseAttackBehaviour
             columnTimer += dt;
             damageCooldown += dt;
 
-            if (damageCooldown >= 1f)
+            if (damageCooldown >= tickInterval)
             {
-                damageCooldown -= 1f;
-                if (hasTarget && IsCannonTouchingColumn())
-                    cannonComponent.TakeDamage(config.columnDamagePerTick);
+                damageCooldown -= tickInterval;
+                TryDamageCannonInColumn();
             }
 
             yield return null;
@@ -127,19 +152,29 @@ public class HellfireDiveBehaviour : BaseAttackBehaviour
         NotifyAttackComplete();
     }
 
-    private bool IsCannonTouchingColumn()
+    private void TryDamageCannonInColumn()
     {
-        if (activeColumn == null || !hasTarget) return false;
+        if (activeColumn == null || !columnBoundsValid) return;
 
-        if (columnCollider != null)
-            return cannonCollider.bounds.Intersects(columnCollider.bounds);
+        // Use a fresh physics overlap so the check is robust against:
+        //  - the column prefab having no Collider2D (it's a VFX),
+        //  - 3D Bounds.Intersects z-axis quirks on 2D colliders,
+        //  - the cannon prefab being swapped mid-run (powerup tier change leaves
+        //    cached cannonCollider/cannonComponent pointing at a destroyed object).
+        var hit = Physics2D.OverlapBox(columnHitCenter, columnHitSize, 0f, playerLayerMask);
+        if (hit == null) return;
 
-        // Fallback: manual overlap box
-        float columnHeight = activeColumn.transform.localScale.y;
-        Vector2 size = new Vector2(config.columnWidth, columnHeight);
-        return cannonCollider.OverlapPoint(activeColumn.transform.position) ||
-               Physics2D.OverlapBox(activeColumn.transform.position, size, 0f,
-                   LayerMask.GetMask("Player")) != null;
+        // Resolve the live BaseCannon â€” search up the hierarchy in case the
+        // hit collider is on a child of the cannon root.
+        var cannon = hit.GetComponentInParent<BaseCannon>();
+        if (cannon == null)
+        {
+            Debug.LogWarning($"[HellfireDive] Player-layer hit '{hit.name}' but no BaseCannon in parents.");
+            return;
+        }
+
+        cannon.TakeDamage(config.columnDamagePerTick);
+        Debug.Log($"[HellfireDive] Tick damaged cannon for {config.columnDamagePerTick}");
     }
 
     private void ReturnColumn()
@@ -153,6 +188,7 @@ public class HellfireDiveBehaviour : BaseAttackBehaviour
         PoolManager.Return(activeColumn);
         activeColumn = null;
         columnCollider = null;
+        columnBoundsValid = false;
     }
 
     public override void OnStop()

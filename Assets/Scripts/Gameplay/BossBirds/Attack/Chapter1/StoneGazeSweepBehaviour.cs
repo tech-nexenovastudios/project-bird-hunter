@@ -108,6 +108,8 @@ public class StoneGazeSweepBehaviour : BaseAttackBehaviour
 
     private void UpdateBeam()
     {
+        TrackPlayer();
+
         Vector3 origin = firePoint.position;
         currentBeamLength = CalculateLength(origin, lockedDirection);
         Vector3 end = origin + lockedDirection * currentBeamLength;
@@ -133,6 +135,18 @@ public class StoneGazeSweepBehaviour : BaseAttackBehaviour
             else
                 laserVisual.HideImpact();
         }
+    }
+
+    private void TrackPlayer()
+    {
+        if (cannonTarget == null) return;
+        Vector3 toTarget = cannonTarget.position - firePoint.position;
+        if (toTarget.sqrMagnitude < 0.0001f) return;
+        float targetAngle = Mathf.Atan2(toTarget.y, toTarget.x) * Mathf.Rad2Deg;
+        float current = firePoint.eulerAngles.z;
+        float next = Mathf.MoveTowardsAngle(current, targetAngle, config.trackingRotationSpeed * Time.deltaTime);
+        firePoint.rotation = Quaternion.Euler(0f, 0f, next);
+        lockedDirection = firePoint.right;
     }
 
     private void PetrifyProjectilesInBeam(Vector2 origin, Vector2 dir)

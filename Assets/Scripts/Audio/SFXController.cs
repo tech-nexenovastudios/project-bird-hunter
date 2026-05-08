@@ -28,8 +28,15 @@ namespace Audio
         [SerializeField] private SfxClip slotSpinStarted = SfxClip.Default;
         [SerializeField] private SfxClip slotSpinCompleted = SfxClip.Default;
         [SerializeField] private SfxClip slotPowerSelected = SfxClip.Default;
+
+        [Header("Boss Music")]
+        [Tooltip("Plays while a boss is on screen; previous music resumes when the boss leaves.")]
+        [SerializeField] private AudioClip bossMusic;
+
         [SerializeField] private AudioSource audioSource;
         [SerializeField] private AudioSource spinLoopSource;
+
+        private bool _bossMusicActive;
 
         private void Awake()
         {
@@ -55,6 +62,12 @@ namespace Audio
             GameEvents.OnPowerupCommitted += OnSpinCompleted;
             GameEvents.OnPowerupSelected += OnPowerupSelected;
 
+            if (BossEventBus.Instance != null)
+            {
+                BossEventBus.Instance.OnBossSpawned += OnBossSpawned;
+                BossEventBus.Instance.OnBossDefeated += OnBossDefeated;
+                BossEventBus.Instance.OnBossRetreated += OnBossRetreated;
+            }
         }
 
         private void OnDisable()
@@ -71,6 +84,21 @@ namespace Audio
             GameEvents.OnPowerupCommitted -= OnSpinCompleted;
             GameEvents.OnPowerupSelected -= OnPowerupSelected;
 
+            if (BossEventBus.Instance != null)
+            {
+                BossEventBus.Instance.OnBossSpawned -= OnBossSpawned;
+                BossEventBus.Instance.OnBossDefeated -= OnBossDefeated;
+                BossEventBus.Instance.OnBossRetreated -= OnBossRetreated;
+            }
+
+            // Make sure we leave gameplay music in the right state if we're disabled
+            // mid-boss (scene unload, etc.).
+            if (_bossMusicActive)
+            {
+                AudioManager.Instance?.PopMusic();
+                _bossMusicActive = false;
+            }
+
             StopSpinLoop();
         }
 
@@ -85,6 +113,24 @@ namespace Audio
         private void OnSpinAnimationCompleted() => StopSpinLoop();
         private void OnSpinCompleted(PowerupConfig config) => PlaySound(slotSpinCompleted);
         private void OnPowerupSelected(PowerupConfig config) => PlaySound(slotPowerSelected);
+
+        // ── Boss music ──────────────────────────────────────────────
+        private void OnBossSpawned(string bossName)
+        {
+            if (bossMusic == null || _bossMusicActive) return;
+            AudioManager.Instance?.PushMusic(bossMusic);
+            _bossMusicActive = true;
+        }
+
+        private void OnBossDefeated(string bossName, int score) => RestoreMusicAfterBoss();
+        private void OnBossRetreated(string bossName, float hpNorm) => RestoreMusicAfterBoss();
+
+        private void RestoreMusicAfterBoss()
+        {
+            if (!_bossMusicActive) return;
+            AudioManager.Instance?.PopMusic();
+            _bossMusicActive = false;
+        }
 
         private void PlaySound(SfxClip sfx)
         {

@@ -97,11 +97,10 @@ namespace Gameplay.UI
 
             if (_isLevel20)
             {
-                // Phase 2: HP goes from ~0.5 down to 0.0
-                // We need the starting HP to be our "full bar" reference.
-                // Since ReinitializeForPhase2 re-initializes health with the
-                // remaining HP as the new max, hpNormalized is already 1.0→0.0
-                // relative to that new max. So we can map it directly.
+                // Phase 2: boss returns at 50% HP and fights to 0%.
+                // hpNormalized is current/max where max = phase 2 max HP, so it
+                // genuinely starts at ~0.5 and drains to 0 — map it straight to fill
+                // so the player sees "boss came back with half a bar".
                 fill = Mathf.Clamp01(hpNormalized);
             }
             else

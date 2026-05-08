@@ -276,19 +276,57 @@ namespace Gameplay.Managers
                     continue;
                 }
 
+                // Determine if this powerup should persist across levels.
+                // Persistent = (config.cooldown > 0) OR (any effect implements IProjectileModifier).
+                // Non-persistent (one-shot) powerups apply only on the level immediately after selection.
+                PowerupConfig config = null;
+                if (allPowerups != null)
+                {
+                    for (int p = 0; p < allPowerups.Length; p++)
+                    {
+                        if (allPowerups[p] != null && allPowerups[p].id == slot.equippedPowerupId)
+                        {
+                            config = allPowerups[p];
+                            break;
+                        }
+                    }
+                }
+                bool hasCooldown = config != null && config.cooldown > 0f;
+
                 //Debug.Log($"[ProgressManager]   Slot[{i}]: looking up '{slot.equippedPowerupId}'...");
                 var runtimePowerUp = CannonPowerUpCaster.Instance.FindByID(slot.equippedPowerupId);
 
-                if (runtimePowerUp != null)
-                {
-                    CannonPowerUpCaster.Instance.Equip(runtimePowerUp);
-                    appliedCount++;
-                    //Debug.Log($"[ProgressManager]   Slot[{i}]: ✅ '{slot.equippedPowerupId}' equipped successfully.");
-                }
-                else
+                if (runtimePowerUp == null)
                 {
                     //Debug.LogError($"[ProgressManager]   Slot[{i}]: ❌ No CannonPowerUp found for id '{slot.equippedPowerupId}'. Check hotbar assignments in Inspector.");
+                    continue;
                 }
+
+                bool hasProjectileModifier = false;
+                if (runtimePowerUp.effects != null)
+                {
+                    for (int e = 0; e < runtimePowerUp.effects.Count; e++)
+                    {
+                        if (runtimePowerUp.effects[e] is IProjectileModifier)
+                        {
+                            hasProjectileModifier = true;
+                            break;
+                        }
+                    }
+                }
+
+                bool isPersistent = hasCooldown || hasProjectileModifier;
+
+                if (!isPersistent && slot.hasBeenApplied)
+                {
+                    //Debug.Log($"[ProgressManager]   Slot[{i}]: '{slot.equippedPowerupId}' is one-shot and already applied — skipping.");
+                    continue;
+                }
+
+                CannonPowerUpCaster.Instance.Equip(runtimePowerUp);
+                appliedCount++;
+                if (!isPersistent) slot.hasBeenApplied = true;
+                //Debug.Log($"[ProgressManager]   Slot[{i}]: ✅ '{slot.equippedPowerupId}' equipped successfully.");
             }
 
             //Debug.Log($"[ProgressManager] ApplyPowerUpsToCurrentCannon done — {appliedCount} powerup(s) applied.");

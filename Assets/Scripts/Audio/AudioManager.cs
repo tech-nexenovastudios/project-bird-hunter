@@ -8,34 +8,34 @@ public class AudioManager : MonoBehaviour
 
     private const string PREF_MUSIC = "MusicVolume";   // was "MusicVol"
     private const string PREF_SOUND = "SoundVolume";   // was "SFXVol"
-    // ─────────────────────────────────────────────
-    // AUDIO SOURCES
-    // ─────────────────────────────────────────────
-    [Header("Sources")]
+    // ─────────────────────────────────────────────
+    // AUDIO SOURCES
+    // ─────────────────────────────────────────────
+    [Header("Sources")]
     [SerializeField] private AudioSource musicSource;
     [SerializeField] private AudioSource sfxSource;
 
-    // ─────────────────────────────────────────────
-    // MUSIC CLIPS
-    // ─────────────────────────────────────────────
-    [Header("Music Clips")]
+    // ─────────────────────────────────────────────
+    // MUSIC CLIPS
+    // ─────────────────────────────────────────────
+    [Header("Music Clips")]
     [SerializeField] private AudioClip mainMenuMusic;
     [SerializeField] private AudioClip gameplayMusic;
-    // Add more music clips here as your game grows
+    // Add more music clips here as your game grows
 
-    // ─────────────────────────────────────────────
-    // SFX CLIPS — Main Menu
-    // ─────────────────────────────────────────────
-    [Header("Main Menu SFX")]
+    // ─────────────────────────────────────────────
+    // SFX CLIPS — Main Menu
+    // ─────────────────────────────────────────────
+    [Header("Main Menu SFX")]
     [SerializeField] private AudioClip buttonClickSFX;
     [SerializeField] private AudioClip buttonHoverSFX;
     [SerializeField] private AudioClip panelOpenSFX;
     [SerializeField] private AudioClip panelCloseSFX;
 
-    // ─────────────────────────────────────────────
-    // SFX CLIPS — Gameplay
-    // ─────────────────────────────────────────────
-    [Header("Gameplay SFX")]
+    // ─────────────────────────────────────────────
+    // SFX CLIPS — Gameplay
+    // ─────────────────────────────────────────────
+    [Header("Gameplay SFX")]
     [SerializeField] private AudioClip coinCollectSFX;
     //[SerializeField] private AudioClip playerJumpSFX;
     [SerializeField] private AudioClip playerHitSFX;
@@ -45,17 +45,17 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip powerUpSFX;
     [SerializeField] private AudioClip levelCompleteSFX;
    // [SerializeField] private AudioClip levelFailSFX;
-    // Add more gameplay SFX here as needed
+    // Add more gameplay SFX here as needed
 
-    // ─────────────────────────────────────────────
-    // VOLUME DEFAULTS (tweak in Inspector or here)
-    // ─────────────────────────────────────────────
-    [Header("Default Volume Scales")]
+    // ─────────────────────────────────────────────
+    // VOLUME DEFAULTS (tweak in Inspector or here)
+    // ─────────────────────────────────────────────
+    [Header("Default Volume Scales")]
     [Range(0f, 1f)][SerializeField] private float musicDefaultVolume = 0.6f;
     [Range(0f, 1f)][SerializeField] private float sfxDefaultVolume = 1f;
 
-    // Per-clip default scales — easy to tune without touching call sites
-    [Range(0f, 1f)][SerializeField] private float buttonClickVolume = 0.8f;
+    // Per-clip default scales — easy to tune without touching call sites
+    [Range(0f, 1f)][SerializeField] private float buttonClickVolume = 0.8f;
     [Range(0f, 1f)][SerializeField] private float buttonHoverVolume = 0.4f;
     [Range(0f, 1f)][SerializeField] private float panelOpenVolume = 0.6f;
     [Range(0f, 1f)][SerializeField] private float panelCloseVolume = 0.5f;
@@ -69,16 +69,21 @@ public class AudioManager : MonoBehaviour
     [Range(0f, 1f)][SerializeField] private float levelCompleteVolume = 1.0f;
     [Range(0f, 1f)][SerializeField] private float levelFailVolume = 0.9f;
 
-    // ─────────────────────────────────────────────
-    // MUTE STATE
-    // ─────────────────────────────────────────────
-    private bool isMusicMuted = false;
+    // ─────────────────────────────────────────────
+    // MUTE STATE
+    // ─────────────────────────────────────────────
+    private bool isMusicMuted = false;
     private bool isSFXMuted = false;
 
-    // ─────────────────────────────────────────────
-    // SINGLETON SETUP
-    // ─────────────────────────────────────────────
-    private void Awake()
+    // Stash so callers (e.g. boss-music handler) can temporarily swap to a new clip
+    // and restore the previous one when done.
+    private AudioClip _stashedClip;
+    private bool _hasStashedClip;
+
+    // ─────────────────────────────────────────────
+    // SINGLETON SETUP
+    // ─────────────────────────────────────────────
+    private void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -90,26 +95,66 @@ public class AudioManager : MonoBehaviour
         LoadSettings();
     }
 
-    // ══════════════════════════════════════════════
-    // MUSIC — PUBLIC API
-    // ══════════════════════════════════════════════
+    // ══════════════════════════════════════════════
+    // MUSIC — PUBLIC API
+    // ══════════════════════════════════════════════
 
-    /// <summary>Play any music clip. Skips restart if already playing the same clip.</summary>
-    public void PlayMusic(AudioClip clip, bool loop = true)
+    /// <summary>Play any music clip. Skips restart if already playing the same clip.</summary>
+    public void PlayMusic(AudioClip clip, bool loop = true)
     {
-        if (clip == null) return;
+        if (clip == null)
+        {
+            Debug.LogWarning("[AudioManager] PlayMusic called with null clip — no-op.");
+            return;
+        }
+        if (musicSource == null)
+        {
+            Debug.LogWarning("[AudioManager] musicSource is not assigned in the inspector.");
+            return;
+        }
         if (musicSource.clip == clip && musicSource.isPlaying) return;
 
+        // Cancel any in-flight crossfade so it doesn't overwrite volume mid-play.
+        StopAllCoroutines();
+        musicSource.volume = PlayerPrefs.GetFloat(PREF_MUSIC, musicDefaultVolume);
+        musicSource.Stop();
         musicSource.clip = clip;
         musicSource.loop = loop;
         musicSource.Play();
     }
 
-    /// <summary>Crossfade to a new music clip over a given duration.</summary>
-    public void CrossfadeMusic(AudioClip newClip, float duration = 1f)
+    /// <summary>Crossfade to a new music clip over a given duration.</summary>
+    public void CrossfadeMusic(AudioClip newClip, float duration = 1f)
     {
         if (newClip == null) return;
         StartCoroutine(CrossfadeRoutine(newClip, duration));
+    }
+
+    /// <summary>
+    /// Save the currently-playing clip, then play a new one. Use PopMusic() to restore.
+    /// Used for boss-music intervals where we return to gameplay music when the boss leaves.
+    /// </summary>
+    public void PushMusic(AudioClip clip)
+    {
+        if (clip == null || musicSource == null) return;
+        _stashedClip = musicSource.clip;
+        _hasStashedClip = _stashedClip != null;
+        PlayMusic(clip);
+    }
+
+    /// <summary>Restore the clip saved by PushMusic. No-op if nothing was stashed.</summary>
+    public void PopMusic()
+    {
+        if (!_hasStashedClip || _stashedClip == null)
+        {
+            _hasStashedClip = false;
+            _stashedClip = null;
+            return;
+        }
+        var toRestore = _stashedClip;
+        _stashedClip = null;
+        _hasStashedClip = false;
+        PlayMusic(toRestore);
     }
 
     public void StopMusic() => musicSource.Stop();
@@ -129,18 +174,21 @@ public class AudioManager : MonoBehaviour
         PlayerPrefs.SetInt("MusicMuted", isMusicMuted ? 1 : 0);
     }
 
-    // ─────── Scene-specific music shortcuts ───────
+    // ─────── Scene-specific music shortcuts ───────
 
-    public void PlayMainMenuMusic() => PlayMusic(mainMenuMusic);
-    public void PlayGameplayMusic() => CrossfadeMusic(gameplayMusic, 1.5f);
-    // Add more scenes: public void PlayBossMusic() => CrossfadeMusic(bossMusic, 0.8f);
+    public void PlayMainMenuMusic() => PlayMusic(mainMenuMusic);
+    // Use deterministic stop+play instead of crossfade so the main-menu clip
+    // reliably stops when we enter gameplay (crossfade can fail silently if
+    // the routine gets interrupted).
+    public void PlayGameplayMusic() => PlayMusic(gameplayMusic);
+    // Add more scenes: public void PlayBossMusic() => PlayMusic(bossMusic);
 
-    // ══════════════════════════════════════════════
-    // SFX — PUBLIC API
-    // ══════════════════════════════════════════════
+    // ══════════════════════════════════════════════
+    // SFX — PUBLIC API
+    // ══════════════════════════════════════════════
 
-    /// <summary>Play any SFX clip with an optional volume scale override.</summary>
-    public void PlaySFX(AudioClip clip, float volumeScale = 1f)
+    /// <summary>Play any SFX clip with an optional volume scale override.</summary>
+    public void PlaySFX(AudioClip clip, float volumeScale = 1f)
     {
         if (clip == null || isSFXMuted) return;
         sfxSource.PlayOneShot(clip, Mathf.Clamp01(volumeScale));
@@ -158,16 +206,16 @@ public class AudioManager : MonoBehaviour
         PlayerPrefs.SetInt("SFXMuted", isSFXMuted ? 1 : 0);
     }
 
-    // ─────── Main Menu SFX shortcuts ───────
+    // ─────── Main Menu SFX shortcuts ───────
 
-    public void PlayButtonClick() => PlaySFX(buttonClickSFX, buttonClickVolume);
+    public void PlayButtonClick() => PlaySFX(buttonClickSFX, buttonClickVolume);
     public void PlayButtonHover() => PlaySFX(buttonHoverSFX, buttonHoverVolume);
     public void PlayPanelOpen() => PlaySFX(panelOpenSFX, panelOpenVolume);
     public void PlayPanelClose() => PlaySFX(panelCloseSFX, panelCloseVolume);
 
-    // ─────── Gameplay SFX shortcuts ───────
+    // ─────── Gameplay SFX shortcuts ───────
 
-    public void PlayCoinCollect() => PlaySFX(coinCollectSFX, coinCollectVolume);
+    public void PlayCoinCollect() => PlaySFX(coinCollectSFX, coinCollectVolume);
     //public void PlayPlayerJump() => PlaySFX(playerJumpSFX, playerJumpVolume);
     public void PlayPlayerHit() => PlaySFX(playerHitSFX, playerHitVolume);
     public void PlayPlayerDeath() => PlaySFX(playerDeathSFX, playerDeathVolume);
@@ -190,16 +238,16 @@ public class AudioManager : MonoBehaviour
         musicSource.mute = isMusicMuted;
     }
 
-    // ══════════════════════════════════════════════
-    // INTERNAL HELPERS
-    // ══════════════════════════════════════════════
+    // ══════════════════════════════════════════════
+    // INTERNAL HELPERS
+    // ══════════════════════════════════════════════
 
-    private IEnumerator CrossfadeRoutine(AudioClip newClip, float duration)
+    private IEnumerator CrossfadeRoutine(AudioClip newClip, float duration)
     {
         float startVolume = musicSource.volume;
 
-        // Fade out
-        float timer = 0f;
+        // Fade out
+        float timer = 0f;
         while (timer < duration / 2f)
         {
             timer += Time.deltaTime;
@@ -207,14 +255,14 @@ public class AudioManager : MonoBehaviour
             yield return null;
         }
 
-        // Swap clip
-        musicSource.Stop();
+        // Swap clip
+        musicSource.Stop();
         musicSource.clip = newClip;
         musicSource.loop = true;
         musicSource.Play();
 
-        // Fade in
-        timer = 0f;
+        // Fade in
+        timer = 0f;
         while (timer < duration / 2f)
         {
             timer += Time.deltaTime;

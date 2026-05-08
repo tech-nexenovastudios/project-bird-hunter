@@ -130,6 +130,7 @@ namespace Gameplay
             chapterSlots[slotIndex].equippedPowerupId = powerup.id;
             chapterSlots[slotIndex].isOnCooldown = false;
             chapterSlots[slotIndex].cooldownRemaining = 0f;
+            chapterSlots[slotIndex].hasBeenApplied = false;
             // NOTE: playerSpins++ removed here — GameProgressManager.PlayerSelectedPowerup handles it
 
             if (!globalUnlockedPowerupIds.Contains(powerup.id))

@@ -14,9 +14,10 @@ GameObject:
   - component: {fileID: 7011275789209470235}
   - component: {fileID: 7418872393071726645}
   - component: {fileID: 6154612831396406647}
+  - component: {fileID: 4658072209136696639}
   m_Layer: 6
   m_Name: GrogonEgg
-  m_TagString: Untagged
+  m_TagString: Egg
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -170,6 +171,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1be7341f08c0a51418b96bf0c74a9427, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazardGroundDetector
+  slowMultiplier: 0.6
 --- !u!114 &6154612831396406647
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -185,3 +187,15 @@ MonoBehaviour:
   trailVfxPrefab: {fileID: 2606019355522721787, guid: 0019af1f486577f48b74435941313503, type: 3}
   stampInterval: 0.4
   vfxLifetime: 3
+--- !u!114 &4658072209136696639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3115194600818010901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74ebc58bcddcd1944b952699a65d2fd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazardHealth
