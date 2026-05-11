@@ -26,9 +26,6 @@ public class BootController : MonoBehaviour
     [Tooltip("Assign if AdManager lives in this scene. Leave empty if handled elsewhere.")]
     [SerializeField] private AdManager adManager;
 
-    [Header("Behavior")]
-    [SerializeField] private bool autoGrantConsentInEditor = true;
-
     // ─── Services ───
 
     private AuthService authService;
@@ -172,10 +169,16 @@ public class BootController : MonoBehaviour
     {
         if (adManager == null) return;
 
-#if UNITY_EDITOR
-        if (autoGrantConsentInEditor && !adManager.HasConsentResolved)
+        // Auth has already succeeded by the time we reach this method, so PlayerId
+        // is non-null. Pass it to LevelPlay so AdQuality can key sessions by player.
+        if (authService.IsSignedIn)
+            adManager.SetUserId(authService.PlayerId);
+
+        // TODO(EEA-compliance): replace with a real UMP/consent dialog before
+        // shipping to EEA/UK/Switzerland. Auto-granting here is fine for testing
+        // and non-regulated regions, but it violates GDPR for regulated users.
+        if (!adManager.HasConsentResolved)
             adManager.SetUserConsent(gdprConsent: true);
-#endif
     }
 
     // ─── Failure Handlers ───

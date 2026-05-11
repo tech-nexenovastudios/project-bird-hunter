@@ -238,6 +238,18 @@ public class AdManager : MonoBehaviour
         }
     }
 
+    // LevelPlay's AdQuality module logs "user id can't be null or empty" at init
+    // because we don't know the player ID yet (auth happens later). Call this once
+    // auth resolves to associate subsequent ad sessions with the player.
+    public void SetUserId(string userId)
+    {
+        if (string.IsNullOrEmpty(userId))
+            return;
+
+        LevelPlay.SetDynamicUserId(userId);
+        Log($"LevelPlay user id set: {userId}");
+    }
+
     private void TryLoadAllAds()
     {
         if (!string.IsNullOrEmpty(rewardedAdUnitId))
