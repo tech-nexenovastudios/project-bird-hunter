@@ -14,6 +14,11 @@ namespace Gameplay.Events
         // ───────── Egg ─────────
         public static event Action<IDamageable, int, Vector3> OnEggHit;
         public static event Action<IDamageable, int, Vector3> OnEggDestroyed;
+        // Fires when a bird successfully lays an egg into the playfield. Used by the reward
+        // combo tracker to detect when a "prevention streak" is broken — even if the player
+        // doesn't shoot the bird, the egg landing breaks the streak.
+        public static event Action OnEggSpawned;
+        public static void FireEggSpawned() => OnEggSpawned?.Invoke();
 
         // ───────── Bird ─────────
         public static event Action<IDamageable, int, Vector3> OnBirdHit;
@@ -158,17 +163,26 @@ namespace Gameplay.Events
         public static void FireLevelCompletedEarly(float remaining) => OnLevelCompletedEarly?.Invoke(remaining);
         public static event Action<float> OnLevelCompletedEarly;
 
-        // ───────── Level Grace Time ─────────
-        // Fired after the target score is reached and the min-duration gate has elapsed.
-        // Bird/egg spawning is paused; the player has a fixed window to clear remaining eggs
-        // before they are force-destroyed. See SpawnController.StartDrain.
-        public static event Action<float> OnGraceTimeStarted; // duration (seconds)
-        public static event Action<float> OnGraceTimeTick;    // remaining (seconds)
-        public static event Action OnGraceTimeEnded;
+        // ───────── Reward Notifications ─────────
+        // Per-egg coin drops are intentionally NOT routed through this channel — they fire too
+        // often and would spam the HUD. Only "unique" events (a bird saved, a chase bonus, a gem
+        // drop, level/boss completion, a combo streak) trigger a notification toast.
+        public static event Action<RewardNotification> OnRewardNotification;
+        public static void FireRewardNotification(RewardNotification n) => OnRewardNotification?.Invoke(n);
 
-        public static void FireGraceTimeStarted(float duration) => OnGraceTimeStarted?.Invoke(duration);
-        public static void FireGraceTimeTick(float remaining) => OnGraceTimeTick?.Invoke(remaining);
-        public static void FireGraceTimeEnded() => OnGraceTimeEnded?.Invoke();
+        // ───────── Level Self-Clear ─────────
+        // Fired after target score is hit and the min-duration gate elapsed. Bird/egg spawning
+        // stops, remaining eggs freeze at apex, and the player mops them up at their own pace
+        // for normal coin rewards. Ends when the screen clears or the player taps Finish.
+        public static event Action OnSelfClearStarted;
+        public static event Action OnSelfClearEnded;
+        public static event Action OnFinishButtonReady;    // fires after 15s of self-clear
+        public static event Action OnPlayerFinishedLevel;  // fires when player taps Finish
+
+        public static void FireSelfClearStarted() => OnSelfClearStarted?.Invoke();
+        public static void FireSelfClearEnded() => OnSelfClearEnded?.Invoke();
+        public static void FireFinishButtonReady() => OnFinishButtonReady?.Invoke();
+        public static void FirePlayerFinishedLevel() => OnPlayerFinishedLevel?.Invoke();
         // ───────── Powerup Cooldown ─────────
         public static event Action<float> OnPowerupCooldownStarted;
 
@@ -186,5 +200,34 @@ namespace Gameplay.Events
         public static event Action OnChapterTransitionFinished;
         public static void FireChapterTransitionFinished()
             => OnChapterTransitionFinished?.Invoke();
+    }
+
+    public enum RewardKind
+    {
+        BirdSaved,       // killed a bird before it laid — prevented an egg
+        ChaseBonus,      // killed a bird after it laid, during its flee
+        AttackerDown,    // destroyed an attacking bird
+        GemDrop,         // rare gem dropped from an egg
+        ComboStreak,     // consecutive bird preventions (skill flex)
+        FirstClear,      // first-time clear of the level
+        BossDefeated,    // boss bird killed
+        LevelComplete,   // level completion coin bonus
+        PowerRestored,   // power refund on completion
+    }
+
+    public readonly struct RewardNotification
+    {
+        public readonly RewardKind kind;
+        public readonly string headline;   // e.g. "Bird Saved", "Combo x3"
+        public readonly int amount;        // coins/gems/power amount (0 if non-numeric)
+        public readonly string currency;   // "coins" | "gems" | "power" | ""
+
+        public RewardNotification(RewardKind kind, string headline, int amount = 0, string currency = "coins")
+        {
+            this.kind = kind;
+            this.headline = headline;
+            this.amount = amount;
+            this.currency = currency;
+        }
     }
 }

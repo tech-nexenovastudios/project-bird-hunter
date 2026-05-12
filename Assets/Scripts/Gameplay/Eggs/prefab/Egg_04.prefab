@@ -112,11 +112,11 @@ Rigidbody2D:
   m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
+  m_UseAutoMass: 1
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 0.3
+  m_GravityScale: 1
   m_Material: {fileID: 6200000, guid: 89b6e1a13e18da242803c8edb8fa9ef1, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
@@ -437,7 +437,7 @@ MonoBehaviour:
   spawnMaxSlowVelocity: 1
   wallBounceDamping: 0.65
   minHorizontalVelocity: 0.3
-  bounceDirectionRandomness: 0.3
+  bounceDirectionRandomness: 0.15
 --- !u!114 &96112293446289958
 MonoBehaviour:
   m_ObjectHideFlags: 0

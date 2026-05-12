@@ -53,6 +53,33 @@ namespace Gameplay.Player
             }
         }
 
+        // Live damage-per-second estimate. Multiplies attack × effective fire rate ×
+        // bullets-per-tick × Π active mod multipliers. Consumed by SpawnController's
+        // TTK gate to decide whether the screen workload is sustainable. Returns 0
+        // when the cannon can't shoot (dead, stats missing) so the gate treats it
+        // as "infinite TTK" and skips spawning.
+        public float CurrentDps
+        {
+            get
+            {
+                if (!IsAlive || Stats == null) return 0f;
+                float fireRate = Stats.Get(StatType.FireRate) * (1f + percentFireRateBonus);
+                if (fireRate <= 0f) return 0f;
+
+                int bulletCount = gunTips != null && gunTips.Length > 0 ? gunTips.Length : 1;
+                float modMult = 1f;
+                for (int i = 0; i < activeProjectileMods.Count; i++)
+                {
+                    var mod = activeProjectileMods[i];
+                    if (mod == null || !mod.IsActive) continue;
+                    bulletCount += mod.ExtraProjectiles;
+                    modMult *= Mathf.Max(0f, mod.DpsMultiplier);
+                }
+
+                return CurrentAttack * fireRate * bulletCount * modMult;
+            }
+        }
+
         // ── Defensive properties ─────────────────────────────
         public bool IsInvincible { get; set; }
         private Vector3 originalLocalScale;  // originalBoxSize(cannon)

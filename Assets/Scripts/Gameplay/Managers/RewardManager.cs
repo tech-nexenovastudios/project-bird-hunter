@@ -17,6 +17,13 @@ namespace Gameplay.Managers
         private int _sessionPowerRefundsThisLevel;
         private bool _firstClearBonusAwardedThisLevel;
 
+        // Prevention combo: consecutive birds killed before they could lay. Resets when an egg
+        // successfully lands (FireEggSpawned) or a post-lay bird is killed. Triggers escalating
+        // bonus payouts at milestone counts so a skilled player flexing on bird-prevention gets
+        // visible "Combo x3 / x5 / x8" pulses with extra coins.
+        private int _preventionStreak;
+        private static readonly int[] ComboMilestones = { 3, 5, 8, 12, 18 };
+
         public event Action<int> OnCoinsAwarded;
         public event Action<int> OnGemsAwarded;
         public event Action<int> OnPowerAwarded;
@@ -35,6 +42,7 @@ namespace Gameplay.Managers
             GameEvents.OnEggDestroyed += HandleEggDestroyed;
             GameEvents.OnBirdDestroyed += HandleBirdDestroyed;
             GameEvents.OnLevelCompleted += HandleLevelCompleted;
+            GameEvents.OnEggSpawned += HandleEggSpawned;
         }
 
         private void OnDisable()
@@ -42,6 +50,7 @@ namespace Gameplay.Managers
             GameEvents.OnEggDestroyed -= HandleEggDestroyed;
             GameEvents.OnBirdDestroyed -= HandleBirdDestroyed;
             GameEvents.OnLevelCompleted -= HandleLevelCompleted;
+            GameEvents.OnEggSpawned -= HandleEggSpawned;
         }
 
         public void ResetForNewLevel()
@@ -50,8 +59,12 @@ namespace Gameplay.Managers
             _sessionGemsThisLevel = 0;
             _sessionPowerRefundsThisLevel = 0;
             _firstClearBonusAwardedThisLevel = false;
+            _preventionStreak = 0;
             Debug.Log("[RewardManager] Reset for new level");
         }
+
+        // Combo break — a bird successfully laid an egg, so the prevention streak ends.
+        private void HandleEggSpawned() => _preventionStreak = 0;
 
        
 
@@ -64,31 +77,23 @@ namespace Gameplay.Managers
             }
 
             int chapter = GameProgressManager.Instance?.CurrentChapter ?? 1;
-
-            // Eggs killed via grace-expiry force-destroy pay reduced drops.
-            float multiplier = (SpawnController.Instance != null && SpawnController.Instance.IsForceDestroying)
-                ? Mathf.Clamp01(rewardConfig.forceDestroyRewardMultiplier)
-                : 1f;
-
-            // ── World → screen conversion ─────────────────────────────────
-            // The egg lives in 3D world space; CoinFlowManager expects a
-            // screen-space Vector2.  We project through the main camera first,
-            // then optionally remap for Screen Space - Camera canvases.
             Vector2 screenPos = WorldToCanvasScreenPos(worldPosition);
 
-            // ── Coins ─────────────────────────────────────────────────────
-            int coins = Mathf.RoundToInt(rewardConfig.GetRandomCoinDrop(chapter) * multiplier);
-            AwardCoins(coins, multiplier < 1f ? "egg_destroyed_grace" : "egg_destroyed");
+            int coins = rewardConfig.GetRandomCoinDrop(chapter);
+            AwardCoins(coins, "egg_destroyed");
             GameEvent.CurrencyCollected(CurrencyType.Gold, screenPos, coins);
 
-            // ── Gems (chance-based) ───────────────────────────────────────
             if (rewardConfig.ShouldDropGem(chapter))
             {
-                int gems = Mathf.RoundToInt(rewardConfig.GetRandomGemDrop(chapter) * multiplier);
+                int gems = rewardConfig.GetRandomGemDrop(chapter);
                 if (gems > 0)
                 {
-                    AwardGems(gems, multiplier < 1f ? "egg_gem_drop_grace" : "egg_gem_drop");
+                    AwardGems(gems, "egg_gem_drop");
                     GameEvent.CurrencyCollected(CurrencyType.Gems, screenPos, gems);
+                    // Gem drops are rare and worth surfacing — unlike the per-egg coin drip, which
+                    // happens every kill and would spam the toast.
+                    GameEvents.FireRewardNotification(new RewardNotification(
+                        RewardKind.GemDrop, "Gem Found!", gems, "gems"));
                 }
             }
         }
@@ -104,11 +109,50 @@ namespace Gameplay.Managers
             if (rewardConfig == null) return;
 
             int chapter = GameProgressManager.Instance?.CurrentChapter ?? 1;
-
             int coinRange = rewardConfig.GetRandomCoinDrop(chapter);
-            int coins = Mathf.RoundToInt(coinRange * 0.5f);
 
-            AwardCoins(coins, "bird_destroyed");
+            // One-lay model differentiates the kill:
+            //   • Killed before lay → "prevention" — full coin (rewards saving an egg).
+            //   • Killed after lay (during flee) → "chase bonus" — half coin on top of the egg.
+            var baseBird = bird as Birds.BaseBird;
+            bool preventedLay = baseBird != null && !baseBird.HasLaid;
+            float multiplier = preventedLay ? 1.0f : 0.5f;
+            string reason = preventedLay ? "bird_killed_prevention" : "bird_killed_chase";
+
+            int coins = Mathf.RoundToInt(coinRange * multiplier);
+            AwardCoins(coins, reason);
+
+            if (preventedLay)
+            {
+                _preventionStreak++;
+                GameEvents.FireRewardNotification(new RewardNotification(
+                    RewardKind.BirdSaved, "Bird Saved", coins, "coins"));
+                TryFireComboMilestone();
+            }
+            else
+            {
+                _preventionStreak = 0;
+                GameEvents.FireRewardNotification(new RewardNotification(
+                    RewardKind.ChaseBonus, "Chase Bonus", coins, "coins"));
+            }
+        }
+
+        // Fires a ComboStreak notification + bonus coins when the prevention streak hits a milestone.
+        // Each milestone awards 25 × streak coins so the bonus scales — a Combo x12 is meaningfully
+        // bigger than a Combo x3 and rewards genuine skill flexes.
+        private void TryFireComboMilestone()
+        {
+            for (int i = 0; i < ComboMilestones.Length; i++)
+            {
+                if (_preventionStreak == ComboMilestones[i])
+                {
+                    int bonus = 25 * _preventionStreak;
+                    AwardCoins(bonus, $"combo_streak_x{_preventionStreak}");
+                    GameEvents.FireRewardNotification(new RewardNotification(
+                        RewardKind.ComboStreak, $"Combo x{_preventionStreak}!", bonus, "coins"));
+                    return;
+                }
+            }
         }
 
         private void HandleLevelCompleted(int finalScore)
@@ -123,38 +167,35 @@ namespace Gameplay.Managers
             int targetScore = SpawnController.Instance != null ? SpawnController.Instance.TargetScore : 0;
             float performanceRatio = targetScore > 0 ? (float)finalScore / targetScore : 1f;
 
-            bool forceDestroyed = SpawnController.Instance != null
-                && SpawnController.Instance.LastCompletionWasForceDestroy;
-            float completionMultiplier = forceDestroyed
-                ? Mathf.Clamp01(rewardConfig.forceDestroyRewardMultiplier)
-                : 1f;
+            int completionCoins = rewardConfig.GetLevelCompletionCoins(chapter, performanceRatio);
+            AwardCoins(completionCoins, "level_completion");
+            GameEvents.FireRewardNotification(new RewardNotification(
+                RewardKind.LevelComplete, "Level Complete!", completionCoins, "coins"));
 
-            int completionCoins = Mathf.RoundToInt(
-                rewardConfig.GetLevelCompletionCoins(chapter, performanceRatio) * completionMultiplier);
-            AwardCoins(completionCoins, forceDestroyed ? "level_completion_grace" : "level_completion");
-
-            // Suppress the first-clear gem bonus if the level was force-completed and the config
-            // says so — handing the player a flagship reward they didn't actually clear feels wrong.
-            bool skipFirstClear = forceDestroyed && rewardConfig.suppressFirstClearGemsOnForceDestroy;
-            if (!_firstClearBonusAwardedThisLevel && !skipFirstClear)
+            if (!_firstClearBonusAwardedThisLevel)
             {
                 int firstClearGems = rewardConfig.GetFirstTimeClearGems();
                 AwardGems(firstClearGems, "first_time_clear");
                 _firstClearBonusAwardedThisLevel = true;
+                if (firstClearGems > 0)
+                {
+                    GameEvents.FireRewardNotification(new RewardNotification(
+                        RewardKind.FirstClear, "First Clear!", firstClearGems, "gems"));
+                }
             }
 
-            bool skipPowerRefund = forceDestroyed && rewardConfig.suppressPowerRefundOnForceDestroy;
-            int powerRefund = skipPowerRefund ? 0 : rewardConfig.GetPowerRefund();
+            int powerRefund = rewardConfig.GetPowerRefund();
             if (powerRefund > 0)
             {
                 AwardPower(powerRefund, "level_completion_refund");
+                GameEvents.FireRewardNotification(new RewardNotification(
+                    RewardKind.PowerRestored, "Power Restored", powerRefund, "power"));
             }
 
             Debug.Log($"[RewardManager] Level {chapter} Complete | " +
                       $"Coins: {completionCoins} | " +
                       $"Performance: {performanceRatio:P0} | " +
-                      $"Power Refund: {powerRefund} | " +
-                      $"ForceDestroyed: {forceDestroyed}");
+                      $"Power Refund: {powerRefund}");
         }
 
         // RewardManager.cs  ─  replace the three private Award methods

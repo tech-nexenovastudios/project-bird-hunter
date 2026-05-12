@@ -43,6 +43,7 @@ namespace Gameplay.Birds
         {
             OnLayEgg += LayEgg;
             OnDestroyed += Death;
+            
         }
 
         void FlyNormal()
@@ -57,8 +58,9 @@ namespace Gameplay.Birds
 
         public void LayEgg(BaseBird bird)
         {
-            animationState.SetAnimation(0, LAY_EGG, false);
-            animationState.AddAnimation(0, FLY_NORMAL, true, 0f);
+            // animationState.SetAnimation(0, LAY_EGG, false);
+            // animationState.AddAnimation(0, FLY_NORMAL, true, 0f);
+            
             currentAnimation = FLY_NORMAL;
         }
 

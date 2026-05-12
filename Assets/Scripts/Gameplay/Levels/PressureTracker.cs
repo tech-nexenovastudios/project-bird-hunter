@@ -9,6 +9,27 @@ namespace Gameplay.Levels
 
         public int CurrentPressure { get; private set; }
 
+        // Live sum of remaining HP across all tracked eggs. Drives the TTK
+        // spawn-gate's "seconds-to-clear" estimate. Iterates on demand so splits
+        // (which add HP without a spawn event) and ongoing damage are both reflected
+        // on the next read.
+        public int TotalEggHp
+        {
+            get
+            {
+                int total = 0;
+                for (int i = 0; i < _eggs.Count; i++)
+                {
+                    var egg = _eggs[i];
+                    if (egg == null) continue;
+                    var health = egg.GetComponent<Health.EggHealth>();
+                    if (health == null || !health.IsAlive) continue;
+                    total += health.CurrentHp;
+                }
+                return total;
+            }
+        }
+
         public void RegisterEgg(Eggs.Egg egg)
         {
             if (egg == null || egg.config == null)

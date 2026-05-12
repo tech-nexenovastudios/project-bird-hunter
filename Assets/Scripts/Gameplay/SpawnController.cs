@@ -8,6 +8,7 @@ using Gameplay.Interfaces;
 using Gameplay.Levels;
 using Gameplay.Events;
 using Gameplay.Managers;
+using Gameplay.Player;
 
 namespace Gameplay
 {
@@ -27,6 +28,28 @@ namespace Gameplay
 
         [Header("Boss Prefabs (index = chapter - 1)")]
         public GameObject[] bossPrefabs;
+
+        [Header("TTK Soft-Gate")]
+        [Tooltip("Max seconds of egg HP allowed on screen relative to cannon DPS. Above this, new bird spawns are skipped until the screen drains. Set 0 to disable.")]
+        [SerializeField] float ttkCeilingSeconds = 8f;
+
+        [Header("One-Lay Spawn Compensation")]
+        [Tooltip("Multiplier applied to chapter spawn intervals after the one-lay change. Each bird now lays a single egg instead of ~2-3, so we spawn birds faster to preserve egg density. 0.45 ≈ 2.2× spawn rate.")]
+        [SerializeField] float birdSpawnRateMultiplier = 0.45f;
+
+        [Header("Bird Movement Variety (random weighted per spawn)")]
+        [Tooltip("Normal straight flyer — most common, easy to read.")]
+        [SerializeField] float movementWeightNormal = 0.32f;
+        [Tooltip("Bounces between screen edges before laying.")]
+        [SerializeField] float movementWeightLeftRight = 0.12f;
+        [Tooltip("Zigzags vertically while crossing.")]
+        [SerializeField] float movementWeightZigZag = 0.22f;
+        [Tooltip("Smooth sine-curve arc across the screen.")]
+        [SerializeField] float movementWeightCurve = 0.18f;
+        [Tooltip("Straight diagonal from a corner.")]
+        [SerializeField] float movementWeightDiagonal = 0.10f;
+        [Tooltip("Kamikaze homing on the cannon — rare 'threat' event.")]
+        [SerializeField] float movementWeightTarget = 0.06f;
 
         [Header("State (read-only)")]
         public float elapsedTime;
@@ -69,22 +92,14 @@ namespace Gameplay
         bool _draining;
         int _totalTrackedScore;
 
-        // ── Grace time (non-boss levels only) ──
-        // After target score + min duration, give the player a fixed window to clear
-        // remaining eggs themselves before we force-destroy them.
-        const float GraceDuration = 10f;
-        bool _inGrace;
-        float _graceTimer;
-
-        // True while eggs are being force-destroyed because grace expired. Read by RewardManager
-        // to scale per-egg drops down. Stays true for one frame after the destroy call so the
-        // synchronous egg.TakeDamage chain sees it.
-        bool _isForceDestroying;
-        // True when the *current* level's completion came via force-destroy (grace expired).
-        // Cleared on ResetLevel. Read by RewardManager.HandleLevelCompleted.
-        bool _lastCompletionWasForceDestroy;
-        public bool IsForceDestroying => _isForceDestroying;
-        public bool LastCompletionWasForceDestroy => _lastCompletionWasForceDestroy;
+        // ── Self-clear (non-boss levels only) ──
+        // After target score + min duration, spawning stops and remaining eggs freeze at apex.
+        // Player mops them up at their own pace for normal coin rewards. A Finish button surfaces
+        // after FinishButtonDelay so a stuck player can voluntarily end the level.
+        const float FinishButtonDelay = 15f;
+        bool _inSelfClear;
+        float _selfClearTimer;
+        bool _finishButtonShown;
 
         // Matches the LevelDetailPopup "Starting in 3...2...1...Go!" intro so spawning waits
         // until the countdown finishes. Includes a small buffer for fade-in / "Go!" beat.
@@ -103,6 +118,8 @@ namespace Gameplay
         Coroutine _drainingRoutine;
 
         Vector3 _bossOriginalScale;
+
+        BaseCannon _cachedCannon;
 
         GameObject _parkedBossGO;
         float _parkedBossHpNormalized;
@@ -170,10 +187,9 @@ namespace Gameplay
             elapsedTime = 0f;
             _levelCompleted = false;
             _draining = false;
-            _inGrace = false;
-            _graceTimer = 0f;
-            _isForceDestroying = false;
-            _lastCompletionWasForceDestroy = false;
+            _inSelfClear = false;
+            _selfClearTimer = 0f;
+            _finishButtonShown = false;
             _totalTrackedScore = 0;
             _sortingIndex = 10;
             _eggTierCounts.Clear();
@@ -191,6 +207,10 @@ namespace Gameplay
 
             ClearRegularEnemies();
             _pressureTracker.Clear();
+
+            // Drop the cached cannon ref so a cannon swap / component replacement between
+            // levels can't leave us pointing at a stale BaseCannon component.
+            _cachedCannon = null;
 
             _activeBossGO = null;
             _activeBossController = null;
@@ -237,9 +257,10 @@ namespace Gameplay
             _targetScore = BucketRound(Mathf.RoundToInt(Geom(cfg.targetScoreMin, cfg.targetScoreMax, t)));
             _hpMultiplier = SnapToStep(Geom(cfg.hpMultMin, cfg.hpMultMax, t), 0.05f);
 
-            float center = Mathf.Lerp(cfg.spawnIntervalEarly, cfg.spawnIntervalLate, t);
-            float j = Mathf.Max(0f, cfg.spawnIntervalJitter);
-            _spawnIntervalMin = Mathf.Max(0.3f, center - j);
+            float center = Mathf.Lerp(cfg.spawnIntervalEarly, cfg.spawnIntervalLate, t)
+                           * Mathf.Max(0.1f, birdSpawnRateMultiplier);
+            float j = Mathf.Max(0f, cfg.spawnIntervalJitter) * Mathf.Max(0.1f, birdSpawnRateMultiplier);
+            _spawnIntervalMin = Mathf.Max(0.2f, center - j);
             _spawnIntervalMax = Mathf.Max(_spawnIntervalMin + 0.1f, center + j);
 
             _minDuration = Mathf.Lerp(cfg.minDurationStart, cfg.minDurationEnd, t);
@@ -387,16 +408,13 @@ namespace Gameplay
                 }
             }
 
-            if (_inGrace)
+            if (_inSelfClear && !_finishButtonShown)
             {
-                _graceTimer -= Time.deltaTime;
-                GameEvents.FireGraceTimeTick(Mathf.Max(0f, _graceTimer));
-
-                if (_graceTimer <= 0f)
+                _selfClearTimer += Time.deltaTime;
+                if (_selfClearTimer >= FinishButtonDelay && _activeEggs.Count > 0)
                 {
-                    _inGrace = false;
-                    GameEvents.FireGraceTimeEnded();
-                    KillRemainingEggsViaDamage();
+                    _finishButtonShown = true;
+                    GameEvents.FireFinishButtonReady();
                 }
             }
         }
@@ -671,9 +689,10 @@ namespace Gameplay
                 return;
             }
 
-            // Non-boss: wait out min duration (if any), then enter grace instead of vanishing eggs.
+            // Non-boss: wait out min duration (if any), then enter self-clear. No force-destroy,
+            // no grace countdown — eggs freeze at apex and the player mops them up at their own pace.
             float wait = Mathf.Max(0f, remaining);
-            if (_drainingRoutine == null) _drainingRoutine = StartCoroutine(BeginGraceAfter(wait));
+            if (_drainingRoutine == null) _drainingRoutine = StartCoroutine(BeginSelfClearAfter(wait));
         }
 
         private IEnumerator DelayedDrain(float delay)
@@ -682,13 +701,17 @@ namespace Gameplay
             ExecuteDrain();
         }
 
-        private IEnumerator BeginGraceAfter(float delay)
+        private IEnumerator BeginSelfClearAfter(float delay)
         {
             if (delay > 0f) yield return new WaitForSeconds(delay);
-            BeginGrace();
+            BeginSelfClear();
         }
 
-        private void BeginGrace()
+        // Enter self-clear: stop new spawns, freeze every active egg at its next apex,
+        // start the Finish-button countdown. The level completes when the screen is empty
+        // (via HandleEggDestroyed → FireAllEggsCleared → ExecuteDrain) or when the player
+        // taps Finish.
+        private void BeginSelfClear()
         {
             // Player already cleared the screen during the min-duration wait — finish immediately.
             if (_activeEggs.Count == 0)
@@ -697,34 +720,27 @@ namespace Gameplay
                 return;
             }
 
-            _inGrace = true;
-            _graceTimer = GraceDuration;
-            GameEvents.FireGraceTimeStarted(GraceDuration);
-        }
+            _inSelfClear = true;
+            _selfClearTimer = 0f;
+            _finishButtonShown = false;
 
-        // Called when grace time runs out with eggs still alive. Each remaining egg takes lethal
-        // damage so its destroy VFX, score award, and OnEggDestroyed event fire normally.
-        // Eggs self-remove via HandleEggDestroyed once their death sequence completes; that path
-        // ultimately fires FireAllEggsCleared and the level completes.
-        private void KillRemainingEggsViaDamage()
-        {
-            _isForceDestroying = true;
-            _lastCompletionWasForceDestroy = true;
-
-            // Snapshot — TakeDamage may indirectly mutate _activeEggs through HandleEggDestroyed.
-            var snapshot = new List<Egg>(_activeEggs);
-            foreach (var e in snapshot)
+            for (int i = 0; i < _activeEggs.Count; i++)
             {
-                if (e == null) continue;
-                var dmg = e.GetComponent<IDamageable>();
-                if (dmg != null && dmg.IsAlive) dmg.TakeDamage(int.MaxValue);
+                _activeEggs[i]?.FreezeAtNextApex();
             }
 
-            // Death-sequence animations may run for another frame or two; clear the per-frame
-            // flag here. The persistent flag (LastCompletionWasForceDestroy) lives until ResetLevel
-            // so RewardManager.HandleLevelCompleted picks it up.
-            _isForceDestroying = false;
+            GameEvents.FireSelfClearStarted();
+        }
+
+        // Called when the player taps the Finish button after FinishButtonDelay. Ends the level
+        // immediately; any remaining frozen eggs are silently vanished — they forfeit their coins
+        // because the player chose to bail rather than clear them.
+        public void RequestPlayerFinish()
+        {
+            if (!_inSelfClear || _levelCompleted) return;
             _levelCompleted = true;
+            GameEvents.FirePlayerFinishedLevel();
+            ExecuteDrain();
         }
 
         private void ExecuteDrain()
@@ -798,7 +814,52 @@ namespace Gameplay
         // ═══════════════════════════════════════════════════════════════
 
         float GetCurrentSpawnInterval()
-            => Mathf.Max(0.3f, Random.Range(_spawnIntervalMin, _spawnIntervalMax));
+            => Mathf.Max(0.2f, Random.Range(_spawnIntervalMin, _spawnIntervalMax));
+
+        // Lazily fetch and cache the active cannon. The cannon GameObject is created
+        // by CannonSpawner during StartGameplay and persists until the level ends, so
+        // a single lookup-and-cache is enough; we re-resolve if the cached ref dies.
+        BaseCannon GetCannon()
+        {
+            if (_cachedCannon != null) return _cachedCannon;
+            var go = GameManager.Instance != null ? GameManager.Instance.currentCannon : null;
+            if (go == null) return null;
+            _cachedCannon = go.GetComponent<BaseCannon>();
+            return _cachedCannon;
+        }
+
+        // Returns true when it's safe to spawn another bird given the player's current DPS.
+        // Workload = sum of live egg HP + lookahead for active birds about to lay (estimated
+        // as the running average egg HP, or a chapter-scaled fallback when no eggs exist yet).
+        // Bypassed during boss/grace/force-destroy so scripted flows aren't throttled.
+        bool IsTtkGateOpen()
+        {
+            if (ttkCeilingSeconds <= 0f) return true;
+            if (_isBossLevel || IsBossAlive || _inSelfClear || _draining) return true;
+
+            var cannon = GetCannon();
+            if (cannon == null) return true;
+
+            float dps = cannon.CurrentDps;
+            // Cannon can't shoot (dead/stunned/no stats). Block spawn — TTK is effectively infinite.
+            if (dps <= 0f) return false;
+
+            int eggHp = _pressureTracker != null ? _pressureTracker.TotalEggHp : 0;
+            // Per-bird lookahead uses a stable chapter-scaled estimate (≈ E2 mid-tier HP) instead
+            // of the running average of remaining HP — mid-damage eggs would otherwise depress the
+            // average and make the gate too permissive when the screen is full of half-killed eggs.
+            float perBirdHpEstimate = Mathf.Max(1f, 8f * _hpMultiplier);
+            float pendingBirdHp = _activeBirds.Count * perBirdHpEstimate;
+            float totalWorkload = eggHp + pendingBirdHp;
+            float secondsToClear = totalWorkload / dps;
+
+            bool open = secondsToClear < ttkCeilingSeconds;
+            if (!open)
+            {
+                Debug.Log($"[TTK Gate] CLOSED — eggHp={eggHp} pendingBirdHp={pendingBirdHp:F0} dps={dps:F1} ttc={secondsToClear:F1}s ceiling={ttkCeilingSeconds:F1}s");
+            }
+            return open;
+        }
 
         /// <summary>
         /// Live pressure cap — base value oscillates by ±pressureVariancePercent via slow perlin noise.
@@ -821,6 +882,11 @@ namespace Gameplay
 
         void TrySpawnBird()
         {
+            // TTK soft-gate: if existing screen workload exceeds what the cannon can clear
+            // within ttkCeilingSeconds, skip this tick. Lets the screen drain before
+            // piling on more eggs when the player's loadout is outclassed by the chapter HP curve.
+            if (!IsTtkGateOpen()) return;
+
             int liveMax = GetLivePressureMax();
             int remaining = liveMax - _pressureTracker.CurrentPressure;
 
@@ -934,20 +1000,79 @@ namespace Gameplay
                 t = t.splitInto;
             }
 
-            int expectedEggs = Mathf.Max(1, Mathf.RoundToInt(bird.lifetime / bird.layIntervalMin));
-            return total * expectedEggs;
+            // One-lay model: each bird drops exactly one egg over its lifetime, so the
+            // lifetime-pressure estimate is simply the pressure that egg (and its splits) represent.
+            return total;
+        }
+
+        // Weighted random movement-type selector. Falls back to NormalMove if all weights are zero.
+        // Weights are serialized so designers can re-balance the visual rhythm in the inspector.
+        BirdMovementType PickRandomMovementType()
+        {
+            float w0 = Mathf.Max(0f, movementWeightNormal);
+            float w1 = Mathf.Max(0f, movementWeightLeftRight);
+            float w2 = Mathf.Max(0f, movementWeightZigZag);
+            float w3 = Mathf.Max(0f, movementWeightCurve);
+            float w4 = Mathf.Max(0f, movementWeightDiagonal);
+            float w5 = Mathf.Max(0f, movementWeightTarget);
+            float total = w0 + w1 + w2 + w3 + w4 + w5;
+            if (total <= 0f) return BirdMovementType.NormalMove;
+
+            float pick = Random.Range(0f, total);
+            float accum = 0f;
+            accum += w0; if (pick <= accum) return BirdMovementType.NormalMove;
+            accum += w1; if (pick <= accum) return BirdMovementType.LeftRightMove;
+            accum += w2; if (pick <= accum) return BirdMovementType.ZigZagMove;
+            accum += w3; if (pick <= accum) return BirdMovementType.CurvePathMove;
+            accum += w4; if (pick <= accum) return BirdMovementType.DiagonalMove;
+            return BirdMovementType.TargetMove;
+        }
+
+        // Pick a random screen edge (left/right) and a random upper-half Y so birds enter the
+        // playfield from either side, just off-screen, instead of from a fixed preset point.
+        // The bird's movement strategy carries it inward from there.
+        Vector3 ComputeRandomEdgeSpawnPosition()
+        {
+            bool spawnLeft = Random.value < 0.5f;
+            float edgePadding = 1.0f; // start slightly off-screen so the entry reads as "flying in"
+            float x = spawnLeft ? ScreenBounds.minX - edgePadding : ScreenBounds.maxX + edgePadding;
+
+            // Upper-mid Y band: high enough to stay above the cannon's reach, with ~1.5 units of
+            // vertical headroom so zigzag/curve amplitudes don't push the bird off the top of the screen.
+            float yMid = (ScreenBounds.minY + ScreenBounds.maxY) * 0.5f;
+            float yBandBottom = yMid + 0.5f;
+            float yBandTop = ScreenBounds.maxY - 1.5f;
+            if (yBandTop <= yBandBottom) yBandTop = yBandBottom + 0.5f; // degenerate-screen safety
+            float y = Random.Range(yBandBottom, yBandTop);
+
+            return new Vector3(x, y, 0f);
         }
 
         void SpawnBirdInstance(BirdConfig birdConfig)
         {
             if (birdConfig.birdPrefab == null) return;
 
-            Transform spawnPoint = birdSpawnPoints[Random.Range(0, birdSpawnPoints.Length)];
-            var go = Instantiate(birdConfig.birdPrefab, spawnPoint.position, Quaternion.identity);
+            Vector3 spawnPos = ComputeRandomEdgeSpawnPosition();
+            bool spawnedOnLeft = spawnPos.x < (ScreenBounds.minX + ScreenBounds.maxX) * 0.5f;
+
+            var go = Instantiate(birdConfig.birdPrefab, spawnPos, Quaternion.identity);
+
+            // Sprite faces "right" in the asset by default — flip horizontally when entering
+            // from the right edge so the bird visually faces the direction it's flying.
+            if (!spawnedOnLeft)
+            {
+                var scale = go.transform.localScale;
+                scale.x = -Mathf.Abs(scale.x);
+                go.transform.localScale = scale;
+            }
+
             var bird = go.GetComponent<BaseBird>();
 
             int hp = Mathf.Max(1, Mathf.RoundToInt(birdConfig.baseHp * _hpMultiplier));
-            bird.Init(birdConfig, hp);
+            // Pick a movement pattern per spawn so consecutive birds don't all fly identically —
+            // the variety drives "game feel" without designers having to authorize each pattern.
+            var movement = PickRandomMovementType();
+            bird.Init(birdConfig, hp, movement);
 
             bird.OnLayEgg += HandleBirdLayEgg;
             bird.OnDestroyed += HandleBirdDestroyed;
@@ -1038,6 +1163,10 @@ namespace Gameplay
             _pressureTracker.RegisterEgg(egg);
             TrackEggAdded(tier);
             _totalTrackedScore += CalculateEggMaxScore(tier);
+
+            // Signal that an egg landed — RewardManager's combo tracker uses this to break the
+            // prevention streak. Only fires from lay events; egg splits don't reset the combo.
+            GameEvents.FireEggSpawned();
         }
 
         private void HandleEggSplit(Egg egg)
@@ -1068,6 +1197,10 @@ namespace Gameplay
                         _activeEggs.Add(newEgg);
                         _pressureTracker.RegisterEgg(newEgg);
                         TrackEggAdded(splitTier);
+
+                        // Self-clear: split children inherit the frozen state immediately so the
+                        // suspended-eggs aesthetic stays intact instead of new eggs bouncing in.
+                        if (_inSelfClear) newEgg.FreezeNow();
                     }
                 }
             }
@@ -1091,10 +1224,10 @@ namespace Gameplay
 
             if (_activeEggs.Count == 0)
             {
-                if (_inGrace)
+                if (_inSelfClear)
                 {
-                    _inGrace = false;
-                    GameEvents.FireGraceTimeEnded();
+                    _inSelfClear = false;
+                    GameEvents.FireSelfClearEnded();
                 }
                 GameEvents.FireAllEggsCleared();
             }

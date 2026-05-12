@@ -43,18 +43,13 @@ namespace Gameplay.UI
             // Post-level "Level X Complete!" popup is intentionally skipped — the next-level
             // popup follows immediately and already shows "Level N+1 / Starting in 3..."; the
             // duplicate countdown was a 4.5s dead beat between levels.
-            GameEvents.OnGraceTimeStarted += OnGraceTimeStarted;
-            GameEvents.OnGraceTimeTick += OnGraceTimeTick;
-            GameEvents.OnGraceTimeEnded += OnGraceTimeEnded;
+            // Grace-time popup removed — replaced by the self-clear freeze (no UI countdown).
             GameEvents.OnChapterCompleted += OnChapterCompletedHandler;
         }
 
         private void OnDisable()
         {
             GameEvents.OnGameLevelUpdated -= OnGameLevelUpdated;
-            GameEvents.OnGraceTimeStarted -= OnGraceTimeStarted;
-            GameEvents.OnGraceTimeTick -= OnGraceTimeTick;
-            GameEvents.OnGraceTimeEnded -= OnGraceTimeEnded;
             GameEvents.OnChapterCompleted -= OnChapterCompletedHandler;
         }
 
@@ -88,50 +83,6 @@ namespace Gameplay.UI
                 title: $"Level {_currentLevel}",
                 countdownPrefix: "Starting in"
             );
-        }
-
-        // ───────── Grace Time ─────────
-
-        private void OnGraceTimeStarted(float duration)
-        {
-            // Grace runs during gameplay (after target score + min duration). Stop any
-            // active level-start routine so we own the panel for the grace window.
-            if (_activeRoutine != null)
-            {
-                StopCoroutine(_activeRoutine);
-                _activeRoutine = null;
-            }
-
-            levelTitleText.transform.DOKill();
-            levelTitleText.DOKill();
-            popupCanvasGroup.DOKill();
-
-            levelTitleText.text = $"Grace Time +{Mathf.CeilToInt(duration)}s";
-            if (countdownText != null) countdownText.text = string.Empty;
-
-            popupPanel.SetActive(true);
-            popupCanvasGroup.alpha = 1f;
-            levelTitleText.transform.localScale = Vector3.one;
-            levelTitleText.alpha = 1f;
-        }
-
-        private void OnGraceTimeTick(float remaining)
-        {
-            if (levelTitleText != null)
-                levelTitleText.text = $"Grace Time: {Mathf.CeilToInt(remaining)}s";
-        }
-
-        private void OnGraceTimeEnded()
-        {
-            levelTitleText.transform.DOKill();
-            levelTitleText.DOKill();
-            popupCanvasGroup.DOKill();
-
-            popupCanvasGroup
-                .DOFade(0f, fadeOutDuration)
-                .SetEase(Ease.InCubic)
-                .SetUpdate(true)
-                .OnComplete(HideInstant);
         }
 
         // ───────── Core Display ─────────

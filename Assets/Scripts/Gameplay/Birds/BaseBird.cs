@@ -40,6 +40,13 @@ namespace Gameplay.Birds
         private BoxCollider2D _collider;
         private float _halfWidth;
 
+        // One-lay model: each bird drops exactly one egg, then enters "flee" mode
+        // (faster movement, short remaining lifetime). RewardManager reads HasLaid
+        // to differentiate "kill-before-lay" (prevention) vs "kill-after-lay" (chase) rewards.
+        public bool HasLaid { get; private set; }
+        protected const float PostLaySpeedMultiplier = 1.6f;
+        protected const float PostLayRemainingLifetime = 3f;
+
         private Transform _eggSpawnPoint;
         public Transform EggSpawnPoint => _eggSpawnPoint ??= transform.GetChild(0);
 
@@ -48,14 +55,18 @@ namespace Gameplay.Birds
 
         protected IBirdMovementStrategy _movementStrategy;
         private readonly List<IEffect<IEntity>> activeEffects = new();
+        private SpriteRenderer _spriteRenderer;
 
-        public virtual void Init(BirdConfig birdConfig, int hp)
+        // movementOverride lets SpawnController pick a movement type per-spawn (random/weighted)
+        // without mutating the shared BirdConfig asset. Passing null falls back to the config value.
+        public virtual void Init(BirdConfig birdConfig, int hp, BirdMovementType? movementOverride = null)
         {
             config = birdConfig;
             MaxHp = hp;
             CurrentHp = hp;
             _isDead = false;
             _currentSpeedMultiplier = 1f;
+            HasLaid = false;
 
             var birdHealth = GetComponent<BirdHealth>();
             if (birdHealth != null)
@@ -69,8 +80,12 @@ namespace Gameplay.Birds
 
             _collider = GetComponent<BoxCollider2D>();
             _halfWidth = _collider.bounds.extents.x;
+            _spriteRenderer = GetComponent<SpriteRenderer>();
 
-            _movementStrategy = BirdMovementFactory.Create(BirdMovementType.NormalMove);
+            // SpawnController may override the movement type per-spawn (random weighted) for
+            // visual variety; if no override is given, fall back to the BirdConfig default.
+            var movementType = movementOverride ?? config.movementType;
+            _movementStrategy = BirdMovementFactory.Create(movementType);
             _movementStrategy.Initialize(this, config);
         }
 
@@ -114,16 +129,33 @@ namespace Gameplay.Birds
             _prevBirdX = birdX;
             _hasPrevBirdX = true;
 
-            if (_isInScreen && _layCooldown <= 0f && (crossedCannon || _fallbackTimer <= 0f))
+            // One-lay model: a bird drops a single egg, then enters flee mode. HasLaid gates
+            // further attempts so a bird oscillating across the cannon line can't machine-gun eggs.
+            if (!HasLaid && _isInScreen && _layCooldown <= 0f && (crossedCannon || _fallbackTimer <= 0f))
             {
                 OnLayEgg?.Invoke(this);
-                _layCooldown = config.layIntervalMin;
-                _fallbackTimer = config.layIntervalMax;
+                HasLaid = true;
+                EnterFleeMode();
             }
 
             _remainingLifetime -= Time.deltaTime;
             if (_remainingLifetime <= 0f)
                 Die(false);
+        }
+        public void FlipDirection(float direction)
+        {
+            if (_spriteRenderer == null)
+                _spriteRenderer = GetComponent<SpriteRenderer>();
+
+            _spriteRenderer.flipX = direction < 0f;
+        }
+        // Bird has just dropped its single egg — speed up and shorten remaining lifetime so it
+        // makes a brief "flee" pass for the player to chase. Subclasses can override to add a
+        // distinct flee animation or tint without re-implementing the timing.
+        protected virtual void EnterFleeMode()
+        {
+            _currentSpeedMultiplier *= PostLaySpeedMultiplier;
+            _remainingLifetime = Mathf.Min(_remainingLifetime, PostLayRemainingLifetime);
         }
 
         public void TakeDamage(int damage)
@@ -202,5 +234,6 @@ namespace Gameplay.Birds
         LeftRightMove,
         CurvePathMove,
         TargetMove,
+        DiagonalMove,
     }
 }

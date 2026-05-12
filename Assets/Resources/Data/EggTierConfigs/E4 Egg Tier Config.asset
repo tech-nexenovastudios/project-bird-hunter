@@ -18,20 +18,29 @@ MonoBehaviour:
   pressureValue: 8
   scorePerHit: 7
   scoreOnDestroy: 50
-  spriteRenderer: {fileID: 0}
-  hitEffect: {fileID: 0}
-  destroyEffect: {fileID: 0}
-  hitSound: {fileID: 0}
-  destroySounds: []
   eggPrefab: {fileID: 1251663967950569254, guid: 824d1d42665e6e6418e2e4767823682a, type: 3}
-  bounceIncrease: 1.2
-  horizontalIncrease: 1.15
-  maxSpeed: 14
-  gravityScale: 1.35
-  mass: 1.8
-  linearDamping: 0
-  desiredBounceHeight: 30
+  bounceIncrease: 0.4
+  horizontalIncrease: 0.9
+  maxSpeed: 1
+  gravityScale: 0.35
+  bounceHeightPercent: 0.4
   splitForce: 4
   splitInto: {fileID: 11400000, guid: 0bec7192586925a4abb8106c9479ca52, type: 2}
   splitCount: 2
   cannonDamage: 40
+  sizeRange: {x: 1.25, y: 1.4}
+  bounceFrequencyRange: {x: 1.2, y: 2.2}
+  bounceAmplitudeRange: {x: 0.05, y: 0.14}
+  squashOnHit: 1.22
+  stretchOnHit: 0.78
+  groundSquashX: 1.4
+  groundSquashY: 0.55
+  groundSquashDuration: 0.22
+  bounceHeightDecay: 0.18
+  maxLeanDegrees: 12
+  leanSmoothing: 6
+  bulletImpulsePerHit: 1
+  bulletImpulseDecay: 1.5
+  evasiveLaunchThreshold: 6
+  cannonDangerRadius: 6
+  cannonProximityMultiplier: 2

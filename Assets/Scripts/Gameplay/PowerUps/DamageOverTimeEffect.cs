@@ -39,6 +39,13 @@ namespace Gameplay.PowerUps
         void ModifyBullet(BaseBullet bullet, int cannonAttack);
         int ExtraProjectiles { get; }
         float[] GetExtraAngles();
+
+        // DPS uplift this mod contributes when active. The TTK spawn-gate multiplies
+        // this across all active mods to estimate true player DPS. Default 1f means
+        // "no DPS effect" (e.g. multi-shot mods, since extra bullets are already
+        // counted via ExtraProjectiles). Mods with real damage uplift (bounce, pierce,
+        // rocket, DoT) override this with a value-derived formula.
+        float DpsMultiplier => 1f;
     }
 
     public interface IReactiveEffect : IPowerUpEffect

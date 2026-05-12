@@ -98,8 +98,8 @@ namespace Audio
 
             GameEvents.OnLevelCompleted         += OnLevelCompleted;
             GameEvents.OnChapterCompleted       += OnChapterCompleted;
-            GameEvents.OnGraceTimeStarted       += OnGraceStarted;
-            GameEvents.OnGraceTimeEnded         += OnGraceEnded;
+            GameEvents.OnSelfClearStarted       += OnSelfClearStarted;
+            GameEvents.OnSelfClearEnded         += OnSelfClearEnded;
 
             GameEvents.OnPowerupCommitted       += OnReelTap;
             GameEvents.OnPowerupSelected        += OnPowerupConfirm;
@@ -118,8 +118,8 @@ namespace Audio
 
             GameEvents.OnLevelCompleted         -= OnLevelCompleted;
             GameEvents.OnChapterCompleted       -= OnChapterCompleted;
-            GameEvents.OnGraceTimeStarted       -= OnGraceStarted;
-            GameEvents.OnGraceTimeEnded         -= OnGraceEnded;
+            GameEvents.OnSelfClearStarted       -= OnSelfClearStarted;
+            GameEvents.OnSelfClearEnded         -= OnSelfClearEnded;
 
             GameEvents.OnPowerupCommitted       -= OnReelTap;
             GameEvents.OnPowerupSelected        -= OnPowerupConfirm;
@@ -138,8 +138,8 @@ namespace Audio
         // Level flow
         private void OnLevelCompleted(int _)   => Play(levelCompletedIntensity);
         private void OnChapterCompleted(int _) => Play(chapterCompletedIntensity);
-        private void OnGraceStarted(float _)   => Play(graceStartedIntensity);
-        private void OnGraceEnded()            => Play(graceEndedIntensity);
+        private void OnSelfClearStarted()      => Play(graceStartedIntensity);
+        private void OnSelfClearEnded()        => Play(graceEndedIntensity);
 
         // Slot machine
         private void OnReelTap(PowerupConfig _)         => Play(reelTapIntensity);

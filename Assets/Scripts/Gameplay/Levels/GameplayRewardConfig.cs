@@ -57,13 +57,6 @@ namespace Gameplay.Rewards
         public int powerPerAdRefill = 5;
         public int gemsPerAdReward = 10;
 
-        [Header("═══ GRACE-TIME PENALTY ═══")]
-        [Tooltip("Reward multiplier when the level is force-completed because grace expired with eggs still alive. Player-cleared grace pays full. 1 = no penalty, 0 = nothing.")]
-        [Range(0f, 1f)] public float forceDestroyRewardMultiplier = 0.5f;
-        [Tooltip("If true, the first-time-clear gem bonus is suppressed when the level was force-completed.")]
-        public bool suppressFirstClearGemsOnForceDestroy = true;
-        [Tooltip("If true, the random power refund is suppressed when the level was force-completed.")]
-        public bool suppressPowerRefundOnForceDestroy = true;
 
         // ────────────────────────────────────────────────────────────────
         // PUBLIC API — In-Level Coin Drops

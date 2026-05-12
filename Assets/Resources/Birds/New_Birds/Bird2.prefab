@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 1215255219788062542}
   - component: {fileID: 7216776654008943301}
   - component: {fileID: 1048912477550149799}
-  - component: {fileID: 1513530195718669566}
   - component: {fileID: 6175061232240149584}
   - component: {fileID: 4576196522101662293}
   - component: {fileID: -2986608738252808118}
@@ -138,32 +137,6 @@ MonoBehaviour:
   _animationName: fly_N
   loop: 1
   timeScale: 1
---- !u!114 &1513530195718669566
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7356847927084898976}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f21c9538588898a45a3da22bf4779ab3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: spine-unity::Spine.Unity.SkeletonRootMotion
-  rootMotionBoneName: root
-  transformPositionX: 1
-  transformPositionY: 1
-  transformRotation: 0
-  rootMotionScaleX: 1
-  rootMotionScaleY: 1
-  rootMotionScaleRotation: 1
-  rootMotionTranslateXPerY: 0
-  rootMotionTranslateYPerX: 0
-  rigidBody2D: {fileID: 6175061232240149584}
-  applyRigidbody2DGravity: 0
-  rigidBody: {fileID: 0}
-  disableOnOverride: 1
-  animationTrackFlags: -1
 --- !u!50 &6175061232240149584
 Rigidbody2D:
   serializedVersion: 5

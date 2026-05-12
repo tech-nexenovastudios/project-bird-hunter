@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Gameplay.Birds
 {
@@ -9,34 +9,62 @@ namespace Gameplay.Birds
 
         private float _minX;
         private float _maxX;
-        private bool _movingRight = true;
+        private float _direction;
 
         public void Initialize(BaseBird bird, BirdConfig config)
         {
             _bird = bird;
             _config = config;
 
-            bird.transform.PlayerBoundCalculate(
-                bird.GetComponent<BoxCollider2D>(),
-                out Vector2 size);
+            var collider = bird.GetComponent<Collider2D>();
+            float halfWidth = collider != null ? collider.bounds.extents.x : 0.5f;
 
-            _minX = ScreenBounds.minX + size.x;
-            _maxX = ScreenBounds.maxX - size.x;
+            _minX = ScreenBounds.minX + halfWidth;
+            _maxX = ScreenBounds.maxX - halfWidth;
+
+            Vector3 position = bird.transform.position;
+            float screenMidX = (ScreenBounds.minX + ScreenBounds.maxX) * 0.5f;
+
+            _direction = position.x < screenMidX ? 1f : -1f;
+
+            position.x = _direction > 0f ? _minX : _maxX;
+            bird.transform.position = position;
+
+            _bird.FlipDirection(_direction);
         }
 
         public void Tick()
         {
-            float direction = _movingRight ? 1f : -1f;
+            float speed = _config.moveSpeed * _bird.SpeedMultiplier;
+            Vector3 position = _bird.transform.position;
 
-            _bird.transform.position +=
-                Vector3.right * direction * _config.moveSpeed * Time.deltaTime;
+            if (_bird.HasLaid)
+            {
+                position.x += _direction * speed * Time.deltaTime;
+                _bird.transform.position = position;
+                return;
+            }
 
-            if (_bird.transform.position.x >= _maxX)
-                _movingRight = false;
-            else if (_bird.transform.position.x <= _minX)
-                _movingRight = true;
+            position.x += _direction * speed * Time.deltaTime;
+
+            if (position.x >= _maxX)
+            {
+                position.x = _maxX;
+                _direction = -1f;
+                _bird.FlipDirection(_direction);
+            }
+            else if (position.x <= _minX)
+            {
+                position.x = _minX;
+                _direction = 1f;
+                _bird.FlipDirection(_direction);
+            }
+
+            _bird.transform.position = position;
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+        }
     }
 }

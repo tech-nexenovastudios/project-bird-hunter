@@ -308,6 +308,23 @@ namespace Gameplay.PowerUps
             _ => 0
         };
 
+        // Progressive DPS uplift derived from this mod's serialized `value`.
+        // Spread/Extra return 1f — their extra bullets are already counted via ExtraProjectiles.
+        public float DpsMultiplier => mode switch
+        {
+            // Each bounce ~40% effective rehit on a fresh target. Scales linearly with bounce count.
+            BulletModType.AddBounce  => 1f + 0.4f * value,
+            // value is instakill chance (0..1). Expected DPS = base / (1 - p), capped at 5×
+            // so designer-set value=1.0 doesn't yield a 100× multiplier that swamps the gate.
+            BulletModType.AddPierce  => Mathf.Min(5f, 1f / Mathf.Max(0.01f, 1f - Mathf.Clamp01(value))),
+            BulletModType.SpreadShot => 1f,
+            BulletModType.ExtraShot  => 1f,
+            // Rocket fires every rocketInterval seconds at attack × value damage.
+            // Normalized against an assumed baseline fire rate of 4 shots/sec.
+            BulletModType.SetRocket  => 1f + (value / Mathf.Max(0.5f, rocketInterval * 4f)),
+            _ => 1f
+        };
+
         private float[] cachedAngles;
         private ICannon cannon;
         private float rocketTimer;
@@ -441,6 +458,32 @@ namespace Gameplay.PowerUps
         public void Activate() => IsActive = true;
         public void Deactivate() => IsActive = false;
         public float[] GetExtraAngles() => Array.Empty<float>();
+
+        // On-hit effects (DoT, chain, AoE) add per-hit damage that the bullet's base
+        // damage doesn't capture. We estimate uplift from the effectTemplate's own
+        // fields so designer tuning flows through automatically. Uplift is expressed
+        // as a fraction of a nominal baseline (10) — close enough for the gate's
+        // purpose without coupling to live cannon attack.
+        public float DpsMultiplier
+        {
+            get
+            {
+                const float baseline = 10f;
+                float uplift = effectTemplate switch
+                {
+                    DamageEffect d            => d.damageAmount / baseline,
+                    DamageOverTimeEffect dot  => dot.tickInterval > 0f
+                                                 ? (dot.damagePerTick * (dot.duration / dot.tickInterval)) / baseline
+                                                 : 0f,
+                    MultiHitDamageEffect mh   => (mh.hitCount * mh.damagePerHit) / baseline,
+                    ChainLightningEffect cl   => cl.baseDamage * (1f + cl.damageDecay * (cl.maxChains - 1)) / baseline,
+                    AreaDamageEffect ad       => ad.damage / baseline,
+                    FreezeEffect fz           => 0.2f + (fz.damagePerTick * fz.duration / Mathf.Max(0.1f, fz.tickInterval)) / baseline,
+                    _                          => 0.15f
+                };
+                return 1f + Mathf.Max(0f, uplift);
+            }
+        }
 
         public void ModifyBullet(BaseBullet bullet, int cannonAttack)
         {

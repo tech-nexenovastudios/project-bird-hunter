@@ -1,12 +1,13 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Gameplay.Birds
 {
     public class DiagonalMovement : IBirdMovementStrategy
     {
+        private const float EXIT_OVERSHOOT = 1.5f;
+
         private BaseBird _bird;
         private BirdConfig _config;
-
         private Vector2 _target;
 
         public void Initialize(BaseBird bird, BirdConfig config)
@@ -14,26 +15,35 @@ namespace Gameplay.Birds
             _bird = bird;
             _config = config;
 
-            _bird.transform.position =
-                new Vector2(ScreenBounds.minX - 2, ScreenBounds.maxY + 2);
+            Vector2 spawnPos = bird.transform.position;
 
-            _target =
-                new Vector2(ScreenBounds.maxX + 2, ScreenBounds.minY - 2);
+            float screenMidX = (ScreenBounds.minX + ScreenBounds.maxX) * 0.5f;
+
+            float exitX = spawnPos.x < screenMidX
+                ? ScreenBounds.maxX + EXIT_OVERSHOOT
+                : ScreenBounds.minX - EXIT_OVERSHOOT;
+
+            float screenHeight = ScreenBounds.maxY - ScreenBounds.minY;
+            float upperLimitY = ScreenBounds.minY + screenHeight / 3f;
+
+            float exitY = Mathf.Max(spawnPos.y - screenHeight * 0.25f, upperLimitY);
+
+            _target = new Vector2(exitX, exitY);
         }
 
         public void Tick()
         {
+            float speed = _config.moveSpeed * _bird.SpeedMultiplier;
+
             _bird.transform.position = Vector2.MoveTowards(
                 _bird.transform.position,
                 _target,
-                _config.moveSpeed * Time.deltaTime);
-
-            if (Vector2.Distance(_bird.transform.position, _target) < 0.1f)
-            {
-                _bird.ForceKill();
-            }
+                speed * Time.deltaTime
+            );
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+        }
     }
 }
