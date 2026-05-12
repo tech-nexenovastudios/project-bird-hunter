@@ -16,21 +16,21 @@ namespace Gameplay.Editor
 
         // Global geometric endpoints (Ch1 L1 → Ch30 L20)
         float hpMultGlobalMin = 1.0f;
-        float hpMultGlobalMax = 10.0f;
+        float hpMultGlobalMax = 4.0f;
         int targetScoreGlobalMin = 500;
         int targetScoreGlobalMax = 200000;
 
         // Linear chapter-to-chapter endpoints
-        int pressureMaxCh1 = 15;
-        int pressureMaxCh30 = 55;
-        float pressureAvgStartCh1 = 6f;
-        float pressureAvgStartCh30 = 18f;
+        int pressureMaxCh1 = 10;
+        int pressureMaxCh30 = 32;
+        float pressureAvgStartCh1 = 4f;
+        float pressureAvgStartCh30 = 11f;
         float pressureAvgStep = 0.5f;
 
         float spawnEarlyCh1 = 4.5f;
         float spawnEarlyCh30 = 1.2f;
         float spawnLateCh1 = 1.0f;
-        float spawnLateCh30 = 0.35f;
+        float spawnLateCh30 = 0.6f;
         float spawnJitter = 0.25f;
 
         float minDurStartCh1 = 25f, minDurStartCh30 = 55f;
@@ -199,9 +199,9 @@ namespace Gameplay.Editor
         {
             cfg.pressureVariancePercent = Mathf.Lerp(0.10f, 0.20f, chT);
             cfg.pressureNoiseFrequency  = Mathf.Lerp(0.14f, 0.22f, chT);
-            cfg.replayHpStep            = 0.05f;
-            cfg.replayPressureStep      = 0.06f;
-            cfg.replayMaxBumps          = 5;
+            cfg.replayHpStep            = 0.02f;
+            cfg.replayPressureStep      = 0.03f;
+            cfg.replayMaxBumps          = 3;
             cfg.replayJitterPercent     = 0.5f;
         }
 
