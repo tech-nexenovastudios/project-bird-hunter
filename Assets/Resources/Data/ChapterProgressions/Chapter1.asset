@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.Levels.ChapterProgressionConfig
   chapter: 1
   totalLevels: 20
-  pressureMax: 15
-  pressureAvgStart: 6
+  pressureMax: 10
+  pressureAvgStart: 4
   pressureAvgStep: 0.5
-  pressureAvgCap: 13.5
+  pressureAvgCap: 9
   targetScoreMin: 80
   targetScoreMax: 1500
   hpMultMin: 1
-  hpMultMax: 2
+  hpMultMax: 1.044954
   spawnIntervalEarly: 4.5
   spawnIntervalLate: 1
   spawnIntervalJitter: 0.25

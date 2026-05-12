@@ -66,12 +66,12 @@ namespace Gameplay.Levels
         public float pressureNoiseFrequency = 0.18f;
 
         [Header("Replay Difficulty (per session retry of the same level)")]
-        [Tooltip("HP multiplier added per retry (e.g. 0.05 = +5% HP).")]
-        [Range(0f, 0.25f)] public float replayHpStep = 0.05f;
+        [Tooltip("HP multiplier added per retry (e.g. 0.02 = +2% HP).")]
+        [Range(0f, 0.25f)] public float replayHpStep = 0.02f;
         [Tooltip("Pressure multiplier added per retry.")]
-        [Range(0f, 0.25f)] public float replayPressureStep = 0.06f;
+        [Range(0f, 0.25f)] public float replayPressureStep = 0.03f;
         [Tooltip("Cap on the number of stacked retry bumps.")]
-        public int replayMaxBumps = 5;
+        public int replayMaxBumps = 3;
         [Tooltip("Random jitter applied per retry bump (± fraction of the step).")]
         [Range(0f, 1f)] public float replayJitterPercent = 0.5f;
 
