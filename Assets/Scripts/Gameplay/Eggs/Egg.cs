@@ -276,8 +276,10 @@ namespace Gameplay.Eggs
             if (collision.TryGetComponent(out IDamageable damageable))
             {
                 damageable.TakeDamage(config.cannonDamage);
-                // _eggHealth?.TakeDamage(Mathf.CeilToInt(config.cannonDamage * 0.5f));
-                // Invoke(nameof(ExecuteBounceEffect), 0.05f);
+                // Sync EggHealth state — the visual death sequence runs without going through
+                // EggHealth.Die, so end-of-level force-destroy would otherwise re-kill this egg
+                // and award coins for a hit that damaged the player.
+                _eggHealth?.MarkDeadSilent();
                 PlayDeathSequence();
             }
         }

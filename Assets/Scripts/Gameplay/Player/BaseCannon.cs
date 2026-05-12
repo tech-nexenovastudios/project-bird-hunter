@@ -334,6 +334,14 @@ namespace Gameplay.Player
 
         protected virtual void HandleInput()
         {
+            // Dead cannon must ignore input — otherwise StartFiring() below would re-set
+            // IsFiring every frame the player still holds the mouse, undoing Die().
+            if (!IsAlive)
+            {
+                movementInput = Vector2.zero;
+                return;
+            }
+
             if (Gameplay.Managers.GameManager.Instance != null && Gameplay.Managers.GameManager.Instance.state != GameState.Gameplay)
             {
                 movementInput = Vector2.zero;
@@ -398,6 +406,7 @@ namespace Gameplay.Player
 
         protected virtual void HandleFiring()
         {
+            if (!IsAlive) return;
             if (Stats == null || BulletPrefab == null || !IsFiring) return;
             if (SuppressBullets) return;
 

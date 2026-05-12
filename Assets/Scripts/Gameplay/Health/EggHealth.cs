@@ -91,6 +91,17 @@ namespace Gameplay.Health
             }
         }
 
+        // Mark the egg dead without firing the reward/score event. Used when the egg destroys
+        // itself by ramming the cannon — the player took damage, so awarding coins for that
+        // self-destruct would be backwards. Also prevents the end-of-level force-destroy pass
+        // from re-rewarding an egg whose visual death sequence is still mid-flight.
+        public void MarkDeadSilent()
+        {
+            if (_isDead) return;
+            _isDead = true;
+            _currentHp = 0;
+        }
+
         private void Die()
         {
             if (_isDead) return;
