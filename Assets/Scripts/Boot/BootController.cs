@@ -40,7 +40,11 @@ public class BootController : MonoBehaviour
     {
         timeoutCts = new CancellationTokenSource();
 
-        timeoutCts.CancelAfterSlim(TimeSpan.FromSeconds(20));
+        // First-launch on a real device routinely takes >20s: GPGS popup + user
+        // interaction + auth code exchange + RemoteConfig + CloudSave + currency
+        // load can easily reach 30–60s on a cold network. 90s leaves room without
+        // hanging forever on a truly dead connection.
+        timeoutCts.CancelAfterSlim(TimeSpan.FromSeconds(90));
 
         using var linkedCts =
             CancellationTokenSource.CreateLinkedTokenSource(
@@ -154,6 +158,14 @@ public class BootController : MonoBehaviour
         catch (OperationCanceledException)
         {
             Debug.Log("[BootController] Boot sequence cancelled.");
+            // If the GameObject is still alive, cancellation came from the timeout
+            // (not OnDestroy/scene unload), so the user is staring at a frozen
+            // BootStrapper — surface retry UI instead of leaving them stuck.
+            if (this != null)
+            {
+                SetStatus("Connection timed out. Please retry.");
+                ShowLoginPanels();
+            }
         }
         catch (Exception ex)
         {
@@ -194,6 +206,7 @@ public class BootController : MonoBehaviour
     public void OnGuestButtonClicked()
     {
         HideAllButtons();
+        ResetTimeoutCts();
         ContinueWithAnonymousAsync(timeoutCts.Token).Forget();
     }
 
@@ -203,6 +216,7 @@ public class BootController : MonoBehaviour
     {
         HideAllButtons();
         SetStatus("Signing in with Google...");
+        ResetTimeoutCts();
         RetryAutoSignInAsync(timeoutCts.Token).Forget();
     }
 
@@ -212,7 +226,19 @@ public class BootController : MonoBehaviour
     {
         HideAllButtons();
         SetStatus("Signing in with Game Center...");
+        ResetTimeoutCts();
         RetryAutoSignInAsync(timeoutCts.Token).Forget();
+    }
+
+    // Retries fire after a prior boot may have already cancelled timeoutCts (via
+    // timeout or destroy). Dispose the old one and arm a fresh 90s timer so the
+    // new attempt isn't dead-on-arrival.
+    private void ResetTimeoutCts()
+    {
+        timeoutCts?.Cancel();
+        timeoutCts?.Dispose();
+        timeoutCts = new CancellationTokenSource();
+        timeoutCts.CancelAfterSlim(TimeSpan.FromSeconds(90));
     }
 
     private async UniTaskVoid RetryAutoSignInAsync(CancellationToken ct)

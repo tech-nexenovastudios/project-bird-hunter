@@ -19,10 +19,16 @@ dependencyResolutionManagement {
 // Android Resolver Repos Start
         def unityProjectPath = $/file:///**DIR_UNITYPROJECT**/$.replace("\\", "/")
         maven {
+            url "https://repo.maven.apache.org/maven2" // Assets/Push Notifications/Editor/Android/PushSDKDependencies.xml:8
+        }
+        maven {
+            url "https://maven.google.com" // Assets/Push Notifications/Editor/Android/PushSDKDependencies.xml:8
+        }
+        maven {
             url (unityProjectPath + "/Assets/GeneratedLocalRepo/GooglePlayGames/com.google.play.games/Editor/m2repository") // Assets/GooglePlayGames/com.google.play.games/Editor/GooglePlayGamesPluginDependencies.xml:11
         }
         maven {
-            url "https://maven.google.com/" // Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml:12, Assets/LevelPlay/Editor/ISAdMobAdapterDependencies.xml:8
+            url "https://maven.google.com/" // Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml:12
         }
         mavenLocal()
 // Android Resolver Repos End
