@@ -40,7 +40,7 @@ namespace Gameplay.Birds
         {
             float screenMid = (ScreenBounds.minX + ScreenBounds.maxX) * 0.5f;
             bool fromLeft = spawn.x < screenMid;
-            float exitX = fromLeft ? ScreenBounds.maxX + 1f : ScreenBounds.minX - 1f;
+            float exitX = fromLeft ? ScreenBounds.maxX + 3.5f : ScreenBounds.minX - 3.5f;
 
             var pts = new Vector3[WaypointCount];
             for (int i = 0; i < WaypointCount; i++)

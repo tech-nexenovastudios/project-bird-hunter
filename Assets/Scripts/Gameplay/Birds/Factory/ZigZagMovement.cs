@@ -30,7 +30,7 @@ namespace Gameplay.Birds
             bool fromLeft = spawn.x < screenMid;
 
             // Cross the full width, ending just past the opposite edge so the bird exits cleanly.
-            float exitX = fromLeft ? ScreenBounds.maxX + 1f : ScreenBounds.minX - 1f;
+            float exitX = fromLeft ? ScreenBounds.maxX + 3.5f : ScreenBounds.minX - 3.5f;
             float totalDx = exitX - spawn.x;
 
             var pts = new Vector3[WaypointCount];

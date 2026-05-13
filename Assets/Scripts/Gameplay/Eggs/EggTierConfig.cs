@@ -15,7 +15,6 @@ namespace Gameplay.Eggs
         public GameObject eggPrefab;
 
         [Header("Physics")]
-        public float bounceIncrease = 1.5f;
         public float horizontalIncrease = 1.0f;
         public float maxSpeed = 12f;
         public float gravityScale = 1f;
@@ -52,11 +51,5 @@ namespace Gameplay.Eggs
         public float evasiveLaunchThreshold = 4.0f;
         public float cannonDangerRadius = 4.0f;
         public float cannonProximityMultiplier = 2.0f;
-
-        public Vector2 GetSplitImpulse(int splitIndex)
-        {
-            Vector2 dir = splitIndex == 0 ? Vector2.left : Vector2.right;
-            return new Vector2(dir.x * splitForce * horizontalIncrease, splitForce);
-        }
     }
 }

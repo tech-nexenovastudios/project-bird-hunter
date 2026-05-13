@@ -643,6 +643,8 @@ namespace Gameplay
         //  CLEAR / DRAIN
         // ═══════════════════════════════════════════════════════════════
 
+        private const float CascadePopStagger = 0.07f;
+
         private void ClearRegularEnemies()
         {
             for (int i = _activeBirds.Count - 1; i >= 0; i--)
@@ -652,13 +654,14 @@ namespace Gameplay
             }
             _activeBirds.Clear();
 
-            for (int i = _activeEggs.Count - 1; i >= 0; i--)
+            // Cascade-pop remaining eggs so the level-end visual reads as a celebration chain
+            // rather than a single-frame disappearance. Each egg's own PlayDeathSequence plays
+            // its blast VFX; HandleEggDestroyed removes them as they finish, and the final one
+            // triggers FireAllEggsCleared for the celebration.
+            if (_activeEggs.Count > 0)
             {
-                var e = _activeEggs[i];
-                if (e != null) Destroy(e.gameObject);
+                StartCoroutine(CascadePopEggs());
             }
-            _activeEggs.Clear();
-            _eggTierCounts.Clear();
 
             for (int i = _activeAttackingBirds.Count - 1; i >= 0; i--)
             {
@@ -666,6 +669,18 @@ namespace Gameplay
                 if (ab != null) ab.ForceKill();
             }
             _activeAttackingBirds.Clear();
+        }
+
+        private IEnumerator CascadePopEggs()
+        {
+            var snapshot = new List<Egg>(_activeEggs);
+            for (int i = 0; i < snapshot.Count; i++)
+            {
+                var egg = snapshot[i];
+                if (egg != null) egg.PlayDeathSequence();
+                if (i < snapshot.Count - 1)
+                    yield return new WaitForSeconds(CascadePopStagger);
+            }
         }
 
         public void StartDrain(int scoreAtTrigger)
