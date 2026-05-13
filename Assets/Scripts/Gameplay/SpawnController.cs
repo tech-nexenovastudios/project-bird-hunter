@@ -551,7 +551,14 @@ namespace Gameplay
             topRight.z = 0f;
             go.transform.position = topRight;
 
-            _bossOriginalScale = go.transform.localScale;
+            // The parked GO is already shrunk (exit animation left it at 0.7x), so reading
+            // its current localScale here would compound: each level-20 spawn would land at
+            // 0.7 * prefab. Pull the authored scale from the prefab asset instead.
+            int prefabIdx = _chapter - 1;
+            if (bossPrefabs != null && prefabIdx >= 0 && prefabIdx < bossPrefabs.Length
+                && bossPrefabs[prefabIdx] != null)
+                _bossOriginalScale = bossPrefabs[prefabIdx].transform.localScale;
+
             go.transform.localScale = _bossOriginalScale * 0.7f;
 
             Vector3 targetPos = bossSpawnPoint.position;
@@ -621,18 +628,39 @@ namespace Gameplay
         {
             _bossDefeated = true;
 
+            // Chapter-end boss (L20): the boss is killed outright. Nothing else on the
+            // screen will fire OnAllEggsCleared on its own (spawning is gated by
+            // !_isBossLevel), so the level completion path has to be triggered here —
+            // otherwise the player kills the boss and the run stalls with no chapter
+            // rollover. Mirrors the L10 HandleBossRetreated → CompleteLevel pattern.
+            bool isChapterEndBossLevel = _globalLevel % 20 == 0;
+
             if (_activeBossGO != null)
             {
                 GameObject bossGO = _activeBossGO;
                 _activeBossController = null;
                 _activeBossGO = null;
 
-                AnimateBossExit(bossGO, () => Destroy(bossGO));
+                AnimateBossExit(bossGO, () =>
+                {
+                    Destroy(bossGO);
+                    if (isChapterEndBossLevel && !_levelCompleted)
+                    {
+                        _levelCompleted = true;
+                        GameProgressManager.Instance.CompleteLevel(score);
+                    }
+                });
             }
             else
             {
                 _activeBossController = null;
                 _activeBossGO = null;
+
+                if (isChapterEndBossLevel && !_levelCompleted)
+                {
+                    _levelCompleted = true;
+                    GameProgressManager.Instance.CompleteLevel(score);
+                }
             }
 
             _hasBossWaitingForLevel20 = false;

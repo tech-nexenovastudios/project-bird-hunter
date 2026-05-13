@@ -12,18 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4268caa0fc6d5c04ab08de7ac4e4a802, type: 3}
   m_Name: Serpent Egg Drop Config
   m_EditorClassIdentifier: Assembly-CSharp::SerpentEggDropConfig
-  cooldown: 3
-  duration: 3
-  damage: 4
+  cooldown: 1.5
+  duration: 1.5
+  damage: 5
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
   dropParentName: HazardDropPosition
   eggPrefab: {fileID: 3115194600818010901, guid: 1bd1cedc146da12408dcde00e24b7d03, type: 3}
-  dropCount: 1
-  dropInterval: 2
+  dropCount: 2
+  dropInterval: 1.5
   dropGravityScale: 1
-  eggHealth: 3
   eggLifetime: 6
   deathVfxPrefab: {fileID: 0}
   rollSpeed: 2.5

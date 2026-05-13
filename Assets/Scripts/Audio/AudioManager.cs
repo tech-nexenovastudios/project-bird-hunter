@@ -183,7 +183,7 @@ public class AudioManager : MonoBehaviour
     {
         if (_duckRoutine != null) StopCoroutine(_duckRoutine);
 
-        float originalVolume = PlayerPrefs.GetFloat(PREF_MUSIC, musicDefaultVolume);
+        float originalVolume = musicSource.volume;
         float duckedVolume = originalVolume * dipFactor;
         const float fadeTime = 0.15f;
 

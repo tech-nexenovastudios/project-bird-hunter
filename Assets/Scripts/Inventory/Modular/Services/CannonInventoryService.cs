@@ -23,7 +23,7 @@ namespace BirdHunter.Inventory.Services
 
         [Header("Progression Curve")]
         [Tooltip("Percent per upgrade level, applied as PctAdd. Level N adds (N-1) * this.")]
-        [SerializeField] private float damagePerLevelPct = 0.10f;
+        [SerializeField] private float damagePerLevelPct = 0.2f;
         [SerializeField] private float healthPerLevelPct = 0.10f;
         [SerializeField] private float fireRatePerLevelPct = 0.05f;
         [SerializeField] private float moveSpeedPerLevelPct = 0.02f;
