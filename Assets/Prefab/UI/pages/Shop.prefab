@@ -364,6 +364,7 @@ GameObject:
   - component: {fileID: 6257345997426414987}
   - component: {fileID: 4975876901162483619}
   - component: {fileID: 4688258342069199803}
+  - component: {fileID: 173652208140830521}
   m_Layer: 5
   m_Name: Powerbtn
   m_TagString: Untagged
@@ -498,6 +499,20 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &173652208140830521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 597008671051535852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
 --- !u!1 &1472552565033635194
 GameObject:
   m_ObjectHideFlags: 0
@@ -2144,6 +2159,7 @@ GameObject:
   - component: {fileID: 1985578700261324045}
   - component: {fileID: 3705312926544079251}
   - component: {fileID: 5385452580898991313}
+  - component: {fileID: 8285442280600329604}
   m_Layer: 5
   m_Name: DiamondBtn
   m_TagString: Untagged
@@ -2278,6 +2294,20 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &8285442280600329604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3495566867900371990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
 --- !u!1 &3617731345287578452
 GameObject:
   m_ObjectHideFlags: 0
@@ -3669,6 +3699,7 @@ GameObject:
   - component: {fileID: 3202391029547961370}
   - component: {fileID: 9177063120959519907}
   - component: {fileID: 7753057287816765363}
+  - component: {fileID: 8001046436363439267}
   m_Layer: 5
   m_Name: CoinBtn
   m_TagString: Untagged
@@ -3803,6 +3834,20 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &8001046436363439267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5973723267152265087}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
 --- !u!1 &6284529082024664010
 GameObject:
   m_ObjectHideFlags: 0
@@ -4922,7 +4967,6 @@ GameObject:
   - component: {fileID: 1960652324902377273}
   - component: {fileID: 87762792145926946}
   - component: {fileID: 6074800769866609394}
-  - component: {fileID: 7961733639342516169}
   m_Layer: 5
   m_Name: 7500Gems
   m_TagString: Untagged
@@ -5034,20 +5078,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &7961733639342516169
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7772537971294572577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!1 &8046001607564642755
 GameObject:
   m_ObjectHideFlags: 0
@@ -6072,9 +6102,6 @@ PrefabInstance:
       addedObject: {fileID: 1781579824483568258}
     - targetCorrespondingSourceObject: {fileID: 1223885614378095063, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 7933704712082823512}
-    - targetCorrespondingSourceObject: {fileID: 1223885614378095063, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1013382048401415045}
     - targetCorrespondingSourceObject: {fileID: 1223885614378095063, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
       insertIndex: -1
@@ -6082,21 +6109,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8987118601338973945, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2948092546286164098}
-    - targetCorrespondingSourceObject: {fileID: 8987118601338973945, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 4250845977279371788}
     - targetCorrespondingSourceObject: {fileID: 2631020451945817237, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4815302863780944612}
-    - targetCorrespondingSourceObject: {fileID: 2631020451945817237, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5293123333637301007}
     - targetCorrespondingSourceObject: {fileID: 2268777626979292198, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4790195444857784255}
-    - targetCorrespondingSourceObject: {fileID: 2268777626979292198, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 9201959578821159547}
   m_SourcePrefab: {fileID: 100100000, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
 --- !u!1 &1686871240054970946 stripped
 GameObject:
@@ -6147,20 +6165,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &9201959578821159547
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1686871240054970946}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!1 &1794882591192473523 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1223885614378095063, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
@@ -6230,20 +6234,6 @@ MonoBehaviour:
   rewardText: {fileID: 0}
   claimReadyIndicator: {fileID: 0}
   adNotReadyIndicator: {fileID: 0}
---- !u!114 &7933704712082823512
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1794882591192473523}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!114 &1013382048401415045
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6329,20 +6319,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &5293123333637301007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3213294586923084529}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!224 &3424423423404927089 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2851156497485473301, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
@@ -6460,20 +6436,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &4250845977279371788
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8407096318826487965}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!114 &8633606287688852831 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9206503753111120699, guid: b0f43d3ce361549b8b94b167d6552c8f, type: 3}
@@ -7091,9 +7053,6 @@ PrefabInstance:
       addedObject: {fileID: 2493446554293305893}
     - targetCorrespondingSourceObject: {fileID: 1214602342389553174, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8296865868701411068}
-    - targetCorrespondingSourceObject: {fileID: 1214602342389553174, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 6081954684705705909}
     - targetCorrespondingSourceObject: {fileID: 1214602342389553174, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
       insertIndex: -1
@@ -7101,33 +7060,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3799761723589513549, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1867947823838071568}
-    - targetCorrespondingSourceObject: {fileID: 3799761723589513549, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 7294242683169314172}
     - targetCorrespondingSourceObject: {fileID: 8322766326315629929, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
       insertIndex: -1
       addedObject: {fileID: 9065167379514622402}
-    - targetCorrespondingSourceObject: {fileID: 8322766326315629929, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 3721295498477426500}
     - targetCorrespondingSourceObject: {fileID: 5546445557809666710, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3134475982859406025}
-    - targetCorrespondingSourceObject: {fileID: 5546445557809666710, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1465071743666551422}
     - targetCorrespondingSourceObject: {fileID: 408763695219178428, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8864121489619507111}
-    - targetCorrespondingSourceObject: {fileID: 408763695219178428, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 365401114402911857}
     - targetCorrespondingSourceObject: {fileID: 6414433934160398024, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6949663578045000091}
-    - targetCorrespondingSourceObject: {fileID: 6414433934160398024, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1960458430315990172}
   m_SourcePrefab: {fileID: 100100000, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
 --- !u!114 &284282263307385445 stripped
 MonoBehaviour:
@@ -7194,20 +7138,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &7294242683169314172
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1179405401174426639}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!114 &1775970174170575029 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4341719250786854391, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
@@ -7295,20 +7225,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &365401114402911857
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2398546937186709246}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!114 &2757961434388524803 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 190099644300425793, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
@@ -7349,28 +7265,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gemProducts:
-  - googlePlayProductId: 
+  - productId: 
     gemAmount: 0
+    lastButtonScreenPos: {x: 0, y: 0}
     purchaseButton: {fileID: 6074800769866609394}
     priceText: {fileID: 6246581084976067018}
-  - googlePlayProductId: 
+  - productId: 
     gemAmount: 0
+    lastButtonScreenPos: {x: 0, y: 0}
     purchaseButton: {fileID: 6949663578045000091}
     priceText: {fileID: 2029117381712514269}
-  - googlePlayProductId: 
+  - productId: 
     gemAmount: 0
+    lastButtonScreenPos: {x: 0, y: 0}
     purchaseButton: {fileID: 8864121489619507111}
     priceText: {fileID: 8940647910372005953}
-  - googlePlayProductId: 
+  - productId: 
     gemAmount: 0
+    lastButtonScreenPos: {x: 0, y: 0}
     purchaseButton: {fileID: 3134475982859406025}
     priceText: {fileID: 3359567164411602977}
-  - googlePlayProductId: 
+  - productId: 
     gemAmount: 0
+    lastButtonScreenPos: {x: 0, y: 0}
     purchaseButton: {fileID: 9065167379514622402}
     priceText: {fileID: 7922045568449586404}
-  - googlePlayProductId: 
+  - productId: 
     gemAmount: 0
+    lastButtonScreenPos: {x: 0, y: 0}
     purchaseButton: {fileID: 1867947823838071568}
     priceText: {fileID: 1775970174170575029}
   loadingPanel: {fileID: 291250323957024679}
@@ -7456,20 +7378,6 @@ MonoBehaviour:
   rewardText: {fileID: 0}
   claimReadyIndicator: {fileID: 0}
   adNotReadyIndicator: {fileID: 0}
---- !u!114 &8296865868701411068
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3764520780310547796}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!114 &6081954684705705909
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7561,20 +7469,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &3721295498477426500
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6297446464794667051}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!114 &6806859128759756554 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8832600662167106120, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
@@ -7635,20 +7529,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &1465071743666551422
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7502309820096696276}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!114 &7922045568449586404 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5266295288668434854, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
@@ -7720,20 +7600,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &1960458430315990172
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9070747165287486346}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 4
-  hoverSound: 1
 --- !u!114 &9140790996420044707 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6503194745004929761, guid: 7793e5cea6b174fadaa385b3c68d9033, type: 3}
@@ -7951,9 +7817,6 @@ PrefabInstance:
       addedObject: {fileID: 3356005327532996190}
     - targetCorrespondingSourceObject: {fileID: 547866187252232239, guid: b92ae453756c740448f4ab594a17b658, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4301749267062467795}
-    - targetCorrespondingSourceObject: {fileID: 547866187252232239, guid: b92ae453756c740448f4ab594a17b658, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 7812804614474059186}
     - targetCorrespondingSourceObject: {fileID: 547866187252232239, guid: b92ae453756c740448f4ab594a17b658, type: 3}
       insertIndex: -1
@@ -7961,9 +7824,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5137862656935625379, guid: b92ae453756c740448f4ab594a17b658, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7577891076313614196}
-    - targetCorrespondingSourceObject: {fileID: 5137862656935625379, guid: b92ae453756c740448f4ab594a17b658, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 905813819484464828}
   m_SourcePrefab: {fileID: 100100000, guid: b92ae453756c740448f4ab594a17b658, type: 3}
 --- !u!114 &1004947478950330877 stripped
 MonoBehaviour:
@@ -8025,20 +7885,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &905813819484464828
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1206629698553886811}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 0
-  hoverSound: 1
 --- !u!114 &1543779447400601942 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4800571904039953326, guid: b92ae453756c740448f4ab594a17b658, type: 3}
@@ -8124,20 +7970,6 @@ MonoBehaviour:
   rewardText: {fileID: 0}
   claimReadyIndicator: {fileID: 0}
   adNotReadyIndicator: {fileID: 0}
---- !u!114 &4301749267062467795
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5794440474140134103}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
-  clickSound: 0
-  hoverSound: 1
 --- !u!114 &7812804614474059186
 MonoBehaviour:
   m_ObjectHideFlags: 0

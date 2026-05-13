@@ -13,6 +13,7 @@ public class ButtonSoundHelper : MonoBehaviour, IPointerEnterHandler
         PowerUp,
         CoinCollect,
         LevelComplete,
+        UpgradeSound,
         None
     }
 
@@ -46,6 +47,7 @@ public class ButtonSoundHelper : MonoBehaviour, IPointerEnterHandler
             case ClickSoundType.PowerUp: AudioManager.Instance.PlayPowerUp(); break;
             case ClickSoundType.CoinCollect: AudioManager.Instance.PlayCoinCollect(); break;
             case ClickSoundType.LevelComplete: AudioManager.Instance.PlayLevelComplete(); break;
+            case ClickSoundType.UpgradeSound: AudioManager.Instance.PlayUpgradeSound(); break;
             case ClickSoundType.None: break;
         }
     }

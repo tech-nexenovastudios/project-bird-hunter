@@ -703,7 +703,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
-  m_FillAmount: 1
+  m_FillAmount: 0
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
@@ -10889,6 +10889,8 @@ MonoBehaviour:
   continueButton: {fileID: 5978602295194276305}
   finishButton: {fileID: 3949556381312760136}
   rewardText: {fileID: 2530550518156213819}
+  rewardHoldDuration: 1
+  rewardFadeDuration: 0.18
 --- !u!225 &5653757792367257470
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -13399,7 +13401,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &983298842934593985
 RectTransform:
   m_ObjectHideFlags: 0
@@ -15932,7 +15934,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &5019331331675322049
 RectTransform:
   m_ObjectHideFlags: 0

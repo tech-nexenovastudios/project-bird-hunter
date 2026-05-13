@@ -1851,7 +1851,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 40.899895, y: -52.599953}
+  m_AnchoredPosition: {x: 40.899887, y: -52.599945}
   m_SizeDelta: {x: 68.59, y: 92}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6908794129179160215
@@ -3085,6 +3085,7 @@ GameObject:
   - component: {fileID: 3950793122066039790}
   - component: {fileID: 7182132893572896597}
   - component: {fileID: 3800265638842953065}
+  - component: {fileID: 3635664531148482907}
   m_Layer: 5
   m_Name: UpgradeBtn
   m_TagString: Untagged
@@ -3239,6 +3240,20 @@ MonoBehaviour:
   duration: 0.8
   interval: 3
   ease: 4
+--- !u!114 &3635664531148482907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5098059376843540138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 6
+  hoverSound: 1
 --- !u!1 &5428897711484822908
 GameObject:
   m_ObjectHideFlags: 0

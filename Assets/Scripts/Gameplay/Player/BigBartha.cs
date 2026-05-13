@@ -51,6 +51,8 @@ namespace Gameplay.Player
 
         protected override void Shoot()
         {
+            if (!IsAlive) return;
+
             recoilSequence?.Kill();
 
             if (muzzleTransform != null)

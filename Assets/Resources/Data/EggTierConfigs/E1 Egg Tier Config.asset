@@ -21,9 +21,10 @@ MonoBehaviour:
   eggPrefab: {fileID: 1251663967950569254, guid: f66e0802351514cbca329f14bb654164, type: 3}
   bounceIncrease: 1
   horizontalIncrease: 1.2
-  maxSpeed: 4
-  gravityScale: 1.2
-  bounceHeightPercent: 0.7
+  maxSpeed: 1
+  gravityScale: 0.8
+  bounceHeightPercent: 0.5
+  apexHangDuration: 0.25
   splitForce: 4
   splitInto: {fileID: 0}
   splitCount: 0
@@ -39,6 +40,7 @@ MonoBehaviour:
   bounceHeightDecay: 0.1
   maxLeanDegrees: 18
   leanSmoothing: 10
+  enableBulletUpwardPush: 0
   bulletImpulsePerHit: 1
   bulletImpulseDecay: 1.5
   evasiveLaunchThreshold: 3

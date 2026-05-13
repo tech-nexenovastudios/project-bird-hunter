@@ -1555,7 +1555,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 540, y: -128.54584}
+  m_AnchoredPosition: {x: 540, y: -128.5459}
   m_SizeDelta: {x: 1080, y: 257.09167}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1144354091
@@ -1888,10 +1888,14 @@ MonoBehaviour:
   sfxSource: {fileID: 740483660}
   mainMenuMusic: {fileID: 8300000, guid: 0b02cc8489b785d4b9b3ae824d7e302b, type: 3}
   gameplayMusic: {fileID: 8300000, guid: af195dcba53d1d34480c068841c0aef9, type: 3}
-  buttonClickSFX: {fileID: 8300000, guid: f780ecab94c104247bb691dd3bc3ac49, type: 3}
+  buttonClickSFX: {fileID: 8300000, guid: 0afb01eae8e85444d8d086149111fb81, type: 3}
+  buttonClickPanelOpenSFX: {fileID: 8300000, guid: 0f6e1cc5508d6824d9442ee4fea908a6, type: 3}
   buttonHoverSFX: {fileID: 0}
   panelOpenSFX: {fileID: 8300000, guid: 5232244c71aec1344ba2e709effd3fd9, type: 3}
   panelCloseSFX: {fileID: 8300000, guid: 5232244c71aec1344ba2e709effd3fd9, type: 3}
+  upgradeSFX: {fileID: 8300000, guid: edd54457092bab7478e7563255f6f7a1, type: 3}
+  uiSuccessSFX: {fileID: 8300000, guid: 9d73634adb6628d489aa47809de64992, type: 3}
+  uiFailSFX: {fileID: 8300000, guid: f6b7c3d27cdc9de419eb8de5d6dfc52a, type: 3}
   coinCollectSFX: {fileID: 0}
   playerHitSFX: {fileID: 8300000, guid: 89f208f5a993ab649bc81b1b7efee54e, type: 3}
   playerDeathSFX: {fileID: 8300000, guid: 4d384fba329eede45b1aeb5ac50847e6, type: 3}
@@ -1905,6 +1909,9 @@ MonoBehaviour:
   buttonHoverVolume: 0.4
   panelOpenVolume: 0.6
   panelCloseVolume: 0.5
+  upgradeVolume: 1
+  uiSuccessVolume: 1
+  uiFailVolume: 1
   coinCollectVolume: 0.9
   playerJumpVolume: 0.7
   playerHitVolume: 1

@@ -80,6 +80,8 @@ namespace Gameplay.Player
 
         protected override void Shoot()
         {
+            if (!IsAlive) return;
+
             muzzleSequence?.Kill();
 
             if (muzzleTransform != null)
@@ -145,6 +147,7 @@ namespace Gameplay.Player
 
         protected override void OnDeathVFX()
         {
+            base.StopFiring();
             if (deathVFXPrefab != null)
             {
                 Vector3 pos = deathVFXPoint != null ? deathVFXPoint.position : transform.position;
@@ -243,6 +246,7 @@ namespace Gameplay.Player
         protected override void OnReviveVFX()
         {
             RestoreParts();
+            base.StartFiring();
             if (reviveVFXPrefab != null)
                 VFXPoolManager.Instance.Play(reviveVFXPrefab, transform.position);
         }

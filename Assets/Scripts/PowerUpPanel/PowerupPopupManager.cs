@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Gameplay.PowerUps;
 
 public class PowerupPopupManager : MonoBehaviour
 {
@@ -131,6 +132,7 @@ public class PowerupPopupManager : MonoBehaviour
         startScreenPos = RectTransformUtility.WorldToScreenPoint(cam, clickedCard.transform.position);
 
         panelOpener.OpenPanel(popupPanel);
+        AudioManager.Instance?.PlayButtonClickPanelOpen(1f);
 
         if (descriptionText != null)
             descriptionText.gameObject.SetActive(false);
@@ -165,11 +167,6 @@ public class PowerupPopupManager : MonoBehaviour
         openSeq.Join(clonedCard.transform.DOScale(Vector3.one * cardScale, flyDuration).SetEase(Ease.OutBack));
         openSeq.OnComplete(() =>
         {
-            if (descriptionText != null)
-            {
-                descriptionText.text = "This powerup enhances your cannon abilities during battle.";
-                descriptionText.gameObject.SetActive(true);
-            }
             FetchAndSetDescription();
         });
 
@@ -208,13 +205,49 @@ public class PowerupPopupManager : MonoBehaviour
 
     // ==================== Description ====================
 
-    private void FetchAndSetDescription() { /* Fill later */ }
+    private void FetchAndSetDescription()
+    {
+        if (descriptionText == null) return;
+
+        var cfg = ResolveConfig(originalCard);
+        string text = cfg != null ? cfg.description : string.Empty;
+
+        if (string.IsNullOrEmpty(text))
+        {
+            descriptionText.text = string.Empty;
+            descriptionText.gameObject.SetActive(false);
+            if (cfg == null)
+                Debug.LogWarning($"[PowerupPopup] No PowerupConfig resolved for '{(originalCard != null ? originalCard.name : "null")}'.");
+            return;
+        }
+
+        descriptionText.text = text;
+        descriptionText.gameObject.SetActive(true);
+    }
+
+    private static PowerupConfig ResolveConfig(GameObject card)
+    {
+        if (card == null) return null;
+
+        var controller = card.GetComponent<PowerupCardController>();
+        var db = PowerupGate.Database;
+
+        if (controller != null && !string.IsNullOrEmpty(controller.PowerupId) && db != null)
+        {
+            var byId = db.GetPowerupById(controller.PowerupId);
+            if (byId != null) return byId;
+        }
+
+        return PowerupGate.FindByNameOrId(card.name);
+    }
 
     // ==================== Close ====================
 
     private void ClosePopup()
     {
         if (!isOpen) return;
+
+        AudioManager.Instance?.PlayButtonClickPanelOpen(0.5f);
 
         if (descriptionText != null)
             descriptionText.gameObject.SetActive(false);

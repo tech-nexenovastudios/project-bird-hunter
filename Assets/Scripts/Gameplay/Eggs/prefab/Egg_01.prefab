@@ -113,7 +113,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 1
-  m_Mass: 1
+  m_Mass: 0.30470744
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 1
@@ -393,9 +393,6 @@ MonoBehaviour:
   hitVFXPoint: {fileID: 4485802080005590418}
   blastVFXPoint: {fileID: 6354196126979454820}
   smokeParticle: {fileID: 2815520671769793254, guid: 23a256d34d4de1444b7c3353c2de03fb, type: 3}
-  hitScaleMultiplier: 1.1
-  hitScaleUpDuration: 0.08
-  hitScaleDownDuration: 0.08
   deathScaleTarget: 0.1
   deathScaleDuration: 0.1
   spawnSlowMovementDuration: 0.5
@@ -403,6 +400,7 @@ MonoBehaviour:
   wallBounceDamping: 0.25
   minHorizontalVelocity: 0.12
   bounceDirectionRandomness: 0.15
+  enableBulletUpwardPush: 0
 --- !u!114 &96112293446289958
 MonoBehaviour:
   m_ObjectHideFlags: 0

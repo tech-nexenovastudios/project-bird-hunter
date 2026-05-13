@@ -24,6 +24,7 @@ MonoBehaviour:
   maxSpeed: 2
   gravityScale: 0.5
   bounceHeightPercent: 0.5
+  apexHangDuration: 0
   splitForce: 4
   splitInto: {fileID: 11400000, guid: c9b8a1748e1724041a1625144404c80f, type: 2}
   splitCount: 2
@@ -39,6 +40,7 @@ MonoBehaviour:
   bounceHeightDecay: 0.15
   maxLeanDegrees: 14
   leanSmoothing: 7
+  enableBulletUpwardPush: 0
   bulletImpulsePerHit: 1
   bulletImpulseDecay: 1.5
   evasiveLaunchThreshold: 5

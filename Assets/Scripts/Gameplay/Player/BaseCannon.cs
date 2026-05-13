@@ -452,6 +452,7 @@ namespace Gameplay.Player
 
         protected virtual void Shoot()
         {
+            if (!IsAlive) return;
             if (gunTips == null || gunTips.Length == 0)
             {
                 SpawnBullet(transform.position, transform.rotation);
@@ -472,6 +473,7 @@ namespace Gameplay.Player
         /// </summary>
         protected virtual void SpawnBullet(Vector3 position, Quaternion rotation)
         {
+            if (!IsAlive) return;
             BaseBullet bullet = CreateBullet(position, rotation);
             if (bullet == null) return;
 
@@ -497,6 +499,7 @@ namespace Gameplay.Player
         private BaseBullet CreateBullet(Vector3 position, Quaternion rotation)
         {
             BaseBullet bullet;
+           
 
             if (bulletPool != null)
             {

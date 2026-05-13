@@ -6,8 +6,10 @@ public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
 
-    private const string PREF_MUSIC = "MusicVolume";   // was "MusicVol"
-    private const string PREF_SOUND = "SoundVolume";   // was "SFXVol"
+    // Source-of-truth for on/off — same keys SettingPanelController writes, so
+    // boot honors the saved toggle even when the settings panel object is inactive.
+    private const string PREF_MUSIC_ENABLED = "MusicEnabled";
+    private const string PREF_SOUND_ENABLED = "SoundEnabled";
     // ─────────────────────────────────────────────
     // AUDIO SOURCES
     // ─────────────────────────────────────────────
@@ -28,9 +30,13 @@ public class AudioManager : MonoBehaviour
     // ─────────────────────────────────────────────
     [Header("Main Menu SFX")]
     [SerializeField] private AudioClip buttonClickSFX;
+    [SerializeField] private AudioClip buttonClickPanelOpenSFX;
     [SerializeField] private AudioClip buttonHoverSFX;
     [SerializeField] private AudioClip panelOpenSFX;
     [SerializeField] private AudioClip panelCloseSFX;
+    [SerializeField] private AudioClip upgradeSFX;
+    [SerializeField] private AudioClip uiSuccessSFX;
+    [SerializeField] private AudioClip uiFailSFX;
 
     // ─────────────────────────────────────────────
     // SFX CLIPS — Gameplay
@@ -59,6 +65,9 @@ public class AudioManager : MonoBehaviour
     [Range(0f, 1f)][SerializeField] private float buttonHoverVolume = 0.4f;
     [Range(0f, 1f)][SerializeField] private float panelOpenVolume = 0.6f;
     [Range(0f, 1f)][SerializeField] private float panelCloseVolume = 0.5f;
+    [Range(0f, 1f)][SerializeField] private float upgradeVolume = 1f;
+    [Range(0f, 1f)][SerializeField] private float uiSuccessVolume = 1f;
+    [Range(0f, 1f)][SerializeField] private float uiFailVolume = 1f;
     [Range(0f, 1f)][SerializeField] private float coinCollectVolume = 0.9f;
     [Range(0f, 1f)][SerializeField] private float playerJumpVolume = 0.7f;
     [Range(0f, 1f)][SerializeField] private float playerHitVolume = 1.0f;
@@ -116,7 +125,7 @@ public class AudioManager : MonoBehaviour
 
         // Cancel any in-flight crossfade so it doesn't overwrite volume mid-play.
         StopAllCoroutines();
-        musicSource.volume = PlayerPrefs.GetFloat(PREF_MUSIC, musicDefaultVolume);
+        musicSource.volume = PlayerPrefs.GetInt(PREF_MUSIC_ENABLED, 1) == 1 ? musicDefaultVolume : 0f;
         musicSource.Stop();
         musicSource.clip = clip;
         musicSource.loop = loop;
@@ -212,6 +221,10 @@ public class AudioManager : MonoBehaviour
     public void PlayButtonHover() => PlaySFX(buttonHoverSFX, buttonHoverVolume);
     public void PlayPanelOpen() => PlaySFX(panelOpenSFX, panelOpenVolume);
     public void PlayPanelClose() => PlaySFX(panelCloseSFX, panelCloseVolume);
+    public void PlayButtonClickPanelOpen(float volumeScale = 1f) => PlaySFX(buttonClickPanelOpenSFX, volumeScale);
+    public void PlayUpgradeSound() => PlaySFX(upgradeSFX, upgradeVolume);
+    public void PlayUISuccess() => PlaySFX(uiSuccessSFX, uiSuccessVolume);
+    public void PlayUIFail() => PlaySFX(uiFailSFX, uiFailVolume);
 
     // ─────── Gameplay SFX shortcuts ───────
 
@@ -231,11 +244,13 @@ public class AudioManager : MonoBehaviour
 
     private void LoadSettings()
     {
-        musicSource.volume = PlayerPrefs.GetFloat(PREF_MUSIC, musicDefaultVolume);
-        sfxSource.volume = PlayerPrefs.GetFloat(PREF_SOUND, sfxDefaultVolume);
-        isMusicMuted = PlayerPrefs.GetInt("MusicMuted", 0) == 1;
-        isSFXMuted = PlayerPrefs.GetInt("SFXMuted", 0) == 1;
-        musicSource.mute = isMusicMuted;
+        bool musicEnabled = PlayerPrefs.GetInt(PREF_MUSIC_ENABLED, 1) == 1;
+        bool soundEnabled = PlayerPrefs.GetInt(PREF_SOUND_ENABLED, 1) == 1;
+        // Volume=0 is our only silencing mechanism — don't also flip AudioSource.mute
+        // or isSFXMuted here, because SetMusicVolume/SetSFXVolume won't clear those
+        // when the user toggles audio back on, leaving the source permanently silenced.
+        musicSource.volume = musicEnabled ? musicDefaultVolume : 0f;
+        sfxSource.volume = soundEnabled ? sfxDefaultVolume : 0f;
     }
 
     // ══════════════════════════════════════════════

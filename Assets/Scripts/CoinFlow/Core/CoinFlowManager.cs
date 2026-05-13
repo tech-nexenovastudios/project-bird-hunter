@@ -142,9 +142,14 @@ public class CoinFlowManager : MonoBehaviour
 
     private void PlayCoinFlowSfx()
     {
-        if (coinSfxSource == null || coinFlowSfx == null) return;
-        coinSfxSource.pitch = coinSfxPitch == 0f ? 1f : coinSfxPitch;
-        coinSfxSource.PlayOneShot(coinFlowSfx, coinSfxVolume);
+        if (coinSfxSource != null && coinFlowSfx != null)
+        {
+            coinSfxSource.pitch = coinSfxPitch == 0f ? 1f : coinSfxPitch;
+            coinSfxSource.PlayOneShot(coinFlowSfx, coinSfxVolume);
+            return;
+        }
+
+        AudioManager.Instance?.PlayCoinCollect();
     }
 
     private void StopCoinFlowSfx()

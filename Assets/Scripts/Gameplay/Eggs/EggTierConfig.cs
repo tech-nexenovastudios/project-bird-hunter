@@ -21,6 +21,9 @@ namespace Gameplay.Eggs
         public float gravityScale = 1f;
         [Range(0.05f, 1f)] public float bounceHeightPercent = 0.5f;
 
+        [Tooltip("Seconds the egg hovers at its bounce apex before gravity resumes. 0 = no hang.")]
+        [Min(0f)] public float apexHangDuration = 0f;
+
         [Header("Split")]
         public float splitForce = 4f;
         public EggTierConfig splitInto;
@@ -47,6 +50,8 @@ namespace Gameplay.Eggs
         public float leanSmoothing = 8f;
 
         [Header("Bullet Impulse Accumulator")]
+        [Tooltip("ON: bullet hits shake the egg upward + can trigger an evasive vertical launch. OFF: bullet hits halt the egg's vertical motion entirely (no upward push, no downward drop from the collision) — the egg appears to absorb the hit in place.")]
+        public bool enableBulletUpwardPush = true;
         public float bulletImpulsePerHit = 1.0f;
         public float bulletImpulseDecay = 1.5f;
         public float evasiveLaunchThreshold = 4.0f;

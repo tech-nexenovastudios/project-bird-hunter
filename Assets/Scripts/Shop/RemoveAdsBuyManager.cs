@@ -87,12 +87,20 @@ public class RemoveAdsBuyManager : MonoBehaviour
         try
         {
             var result = await IAPManager.Instance.PurchaseAsync(IAPManager.ProductRemoveAds);
-            if (result != PurchaseResult.Success)
+            if (result == PurchaseResult.Success)
+            {
+                AudioManager.Instance?.PlayUISuccess();
+            }
+            else
+            {
                 Debug.LogWarning($"[RemoveAds] Purchase did not complete: {result}");
+                AudioManager.Instance?.PlayUIFail();
+            }
         }
         catch (Exception ex)
         {
             Debug.LogError($"[RemoveAds] Purchase error: {ex.Message}");
+            AudioManager.Instance?.PlayUIFail();
         }
         finally
         {

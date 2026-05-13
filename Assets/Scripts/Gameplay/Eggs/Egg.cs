@@ -27,6 +27,8 @@ namespace Gameplay.Eggs
         [SerializeField] private float minHorizontalVelocity = 0.3f;
         [SerializeField] private float bounceDirectionRandomness = 0.15f;
 
+   
+
         public Action<Egg> OnDestroyed;
         public Action<Egg> OnTrySplit;
 
@@ -75,6 +77,11 @@ namespace Gameplay.Eggs
         private bool _pendingFreezeAtApex;
         private float _frozenAnchorY;
         private float _bobPhase;
+
+        // Apex-hang: pause vertical motion at the top of each bounce arc for config.apexHangDuration.
+        private bool _wasAscending;
+        private bool _isHangingAtApex;
+        private float _hangTimer;
 
         // Personality pulse (HP-modulated breathing).
         private float _personalityFreq;
@@ -126,6 +133,9 @@ namespace Gameplay.Eggs
             _lastBounceTime = -1f;
             _bulletImpulseAccumulator = 0f;
             _currentLeanZ = 0f;
+            _wasAscending = false;
+            _isHangingAtApex = false;
+            _hangTimer = 0f;
 
             ApplyPersonality(tierConfig, hp);
 
@@ -237,6 +247,12 @@ namespace Gameplay.Eggs
                 return;
             }
 
+            if (_isHangingAtApex)
+            {
+                TickApexHang();
+                return;
+            }
+
             if (_isInSpawnPhase) HandleSpawnPhase();
 
             if (transform.position.y > _maxHeightReachedSinceLastBounce)
@@ -248,6 +264,13 @@ namespace Gameplay.Eggs
             if (_pendingFreezeAtApex && _rb.linearVelocity.y <= 0.1f)
             {
                 FreezeNow();
+                return;
+            }
+
+            // Apex hang: when the ascent flips to descent, pause for the configured duration.
+            if (_wasAscending && _rb.linearVelocity.y <= 0f && config != null && config.apexHangDuration > 0f)
+            {
+                BeginApexHang();
                 return;
             }
 
@@ -383,7 +406,28 @@ namespace Gameplay.Eggs
             ApplyBounceBehavior();
             _lastBouncePosition = transform.position;
             _maxHeightReachedSinceLastBounce = transform.position.y;
+            // Arm the apex-hang detector — fires once the upward velocity flips to descent.
+            _wasAscending = true;
             PlayGroundSquash();
+        }
+
+        private void BeginApexHang()
+        {
+            _isHangingAtApex = true;
+            _wasAscending = false;
+            _hangTimer = config.apexHangDuration;
+            _rb.linearVelocity = Vector2.zero;
+            _rb.gravityScale = 0f;
+        }
+
+        private void TickApexHang()
+        {
+            _hangTimer -= Time.fixedDeltaTime;
+            if (_hangTimer > 0f) return;
+
+            _isHangingAtApex = false;
+            _rb.gravityScale = config != null ? config.gravityScale : 1f;
+            // vy left at 0 — gravity now pulls the egg down naturally.
         }
 
         private void ApplyBounceBehavior()
@@ -426,7 +470,18 @@ namespace Gameplay.Eggs
 
         public void ApplyBulletHitForce()
         {
-            if (_isDying || _isFrozen || config == null) return;
+            if (_isDying || _isFrozen || _isHangingAtApex || config == null) return;
+
+            if (!config.enableBulletUpwardPush)
+            {
+                // Hit-stop: halt vertical motion completely so the egg appears to absorb the
+                // bullet in place. Gravity resumes between hits; rapid fire pins the egg.
+                // Horizontal momentum is preserved.
+                Vector2 vClamp = _rb.linearVelocity;
+                vClamp.y = 0f;
+                _rb.linearVelocity = vClamp;
+                return;
+            }
 
             float proximity = ComputeCannonProximityBoost();
             float deposit = config.bulletImpulsePerHit * (1f + proximity * config.cannonProximityMultiplier);
@@ -463,7 +518,7 @@ namespace Gameplay.Eggs
             float remainingHeight = Mathf.Max(0f, _desiredBounceHeight - currentAlt);
             float gravity = Mathf.Abs(Physics2D.gravity.y * _rb.gravityScale);
             float vyNeeded = remainingHeight > 0f ? Mathf.Sqrt(2f * gravity * remainingHeight) : 0f;
-            if (v.y < vyNeeded) v.y = vyNeeded; 
+            if (v.y < vyNeeded) v.y = vyNeeded;
 
             float awayDir;
             EnsureCannonReference();

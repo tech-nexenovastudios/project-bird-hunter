@@ -127,6 +127,22 @@ namespace Gameplay
         {
             if (powerup == null || slotIndex < 0 || slotIndex > 3) return;
 
+            // Single-active-powerup rule: selecting a new powerup displaces whatever was
+            // previously equipped. The displaced powerup is NOT re-applied on later levels —
+            // the player must pick it again at a future spin to bring it back.
+            for (int i = 0; i < chapterSlots.Length; i++)
+            {
+                if (i == slotIndex) continue;
+                var other = chapterSlots[i];
+                if (other == null || string.IsNullOrEmpty(other.equippedPowerupId)) continue;
+
+                Debug.Log($"[GameProgress] EquipPowerup — clearing displaced slot[{i}] = '{other.equippedPowerupId}'");
+                other.equippedPowerupId = null;
+                other.isOnCooldown = false;
+                other.cooldownRemaining = 0f;
+                other.hasBeenApplied = false;
+            }
+
             chapterSlots[slotIndex].equippedPowerupId = powerup.id;
             chapterSlots[slotIndex].isOnCooldown = false;
             chapterSlots[slotIndex].cooldownRemaining = 0f;

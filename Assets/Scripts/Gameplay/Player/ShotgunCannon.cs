@@ -56,6 +56,8 @@ namespace Gameplay.Player
 
         protected override void Shoot()
         {
+            if (!IsAlive) return;
+
             if (gunTips == null || gunTips.Length < TIP_COUNT)
             {
                 base.Shoot();

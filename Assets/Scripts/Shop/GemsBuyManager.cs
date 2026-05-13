@@ -131,13 +131,20 @@ public class GemsBuyManager : MonoBehaviour
         {
             var result = await IAPManager.Instance.PurchaseAsync(gem.productId);
             if (result == PurchaseResult.Success)
+            {
                 Debug.Log($"[GemsBuy] '{gem.productId}' purchased — {gem.gemAmount} gems granted.");
+                AudioManager.Instance?.PlayUISuccess();
+            }
             else
+            {
                 Debug.LogWarning($"[GemsBuy] '{gem.productId}' did not complete: {result}");
+                AudioManager.Instance?.PlayUIFail();
+            }
         }
         catch (Exception ex)
         {
             Debug.LogError($"[GemsBuy] Purchase error: {ex.Message}");
+            AudioManager.Instance?.PlayUIFail();
         }
         finally
         {

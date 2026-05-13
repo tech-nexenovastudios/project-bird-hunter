@@ -53,6 +53,8 @@ namespace Gameplay.Player
 
         protected override void Shoot()
         {
+            if (!IsAlive) return;
+
             int index = PickWeightedIndex();
 
             if (gunTips != null && index < gunTips.Length && gunTips[index] != null)

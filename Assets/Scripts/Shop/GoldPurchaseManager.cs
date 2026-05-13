@@ -101,6 +101,7 @@ public class GoldPurchaseManager : MonoBehaviour
                     GameEvent.CurrencyCollected(CurrencyType.Gold, buttonScreenPos, goldAmount);
 
                 await CurrencyManager.Instance.Refresh();
+                AudioManager.Instance?.PlayUISuccess();
             }
         }
         catch (EconomyException ex)
@@ -109,15 +110,18 @@ public class GoldPurchaseManager : MonoBehaviour
             {
                 case 10504:
                     CurrencyManager.Instance.NotifyInsufficientFunds(CurrencyType.Gems, 0);
+                    AudioManager.Instance?.PlayUIFail();
                     break;
                 default:
                     Debug.LogError($"[GoldPurchase] Economy error {ex.ErrorCode}: {ex.Message}");
+                    AudioManager.Instance?.PlayUIFail();
                     break;
             }
         }
         catch (Exception ex)
         {
             Debug.LogError($"[GoldPurchase] Error: {ex.Message}");
+            AudioManager.Instance?.PlayUIFail();
         }
         finally
         {

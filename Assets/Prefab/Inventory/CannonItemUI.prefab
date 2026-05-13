@@ -526,6 +526,7 @@ GameObject:
   - component: {fileID: 3186006934883295194}
   - component: {fileID: 761141743613652365}
   - component: {fileID: 7278216190614717605}
+  - component: {fileID: 8973410769539885649}
   m_Layer: 5
   m_Name: CannonItemUI
   m_TagString: Untagged
@@ -651,7 +652,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1eef8060aaf4575abd9d7d02ecc0d20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BirdHunter.Inventory.UI.CannonItem
-  cannonId: 0
+  cannonKey: 
   button: {fileID: 761141743613652365}
   cannonSprite: {fileID: 4313537851239504124}
   cannonImgComp: {fileID: 5027931219132566892}
@@ -660,3 +661,17 @@ MonoBehaviour:
   lockImageObj: {fileID: 2546402838053296904}
   unlockRequirementContainer: {fileID: 3897937245953938636}
   unlockRequirementText: {fileID: 4056380435296781055}
+--- !u!114 &8973410769539885649
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8044719808747038557}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
