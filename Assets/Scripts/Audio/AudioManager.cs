@@ -170,6 +170,46 @@ public class AudioManager : MonoBehaviour
     public void PauseMusic() => musicSource.Pause();
     public void ResumeMusic() => musicSource.UnPause();
 
+    // Temporarily dip the music volume so a transient SFX (toast, celebration, finish-now)
+    // reads cleanly without fighting the music bed. Volume returns automatically.
+    public void DuckMusic(float duration, float dipFactor = 0.4f)
+    {
+        if (musicSource == null) return;
+        StartCoroutine(DuckMusicRoutine(duration, Mathf.Clamp01(dipFactor)));
+    }
+
+    private Coroutine _duckRoutine;
+    private IEnumerator DuckMusicRoutine(float duration, float dipFactor)
+    {
+        if (_duckRoutine != null) StopCoroutine(_duckRoutine);
+
+        float originalVolume = PlayerPrefs.GetFloat(PREF_MUSIC, musicDefaultVolume);
+        float duckedVolume = originalVolume * dipFactor;
+        const float fadeTime = 0.15f;
+
+        float t = 0f;
+        while (t < fadeTime)
+        {
+            t += Time.unscaledDeltaTime;
+            musicSource.volume = Mathf.Lerp(originalVolume, duckedVolume, t / fadeTime);
+            yield return null;
+        }
+        musicSource.volume = duckedVolume;
+
+        float hold = Mathf.Max(0f, duration - fadeTime * 2f);
+        if (hold > 0f) yield return new WaitForSecondsRealtime(hold);
+
+        t = 0f;
+        while (t < fadeTime)
+        {
+            t += Time.unscaledDeltaTime;
+            musicSource.volume = Mathf.Lerp(duckedVolume, originalVolume, t / fadeTime);
+            yield return null;
+        }
+        musicSource.volume = originalVolume;
+        _duckRoutine = null;
+    }
+
     public void SetMusicVolume(float vol)
     {
         musicSource.volume = Mathf.Clamp01(vol);

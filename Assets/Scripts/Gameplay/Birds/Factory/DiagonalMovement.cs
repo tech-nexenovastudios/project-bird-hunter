@@ -4,7 +4,7 @@ namespace Gameplay.Birds
 {
     public class DiagonalMovement : IBirdMovementStrategy
     {
-        private const float EXIT_OVERSHOOT = 1.5f;
+        private const float EXIT_OVERSHOOT = 3.5f;
 
         private BaseBird _bird;
         private BirdConfig _config;

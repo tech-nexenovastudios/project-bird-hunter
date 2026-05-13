@@ -14,13 +14,19 @@ public class CannonHealthBar : MonoBehaviour
     [SerializeField] private float damageBarDelay = 0.6f;
     [SerializeField] private float damageBarDuration = 0.5f;
 
+    [Header("Damage Punch")]
+    [SerializeField] private float damagePunchStrength = 0.08f;
+    [SerializeField] private float damagePunchDuration = 0.22f;
+
     private Material _healthBarMaterial;
     private Tweener _healthTween;
     private Sequence _damageSequence;
+    private RectTransform _rootRect;
+    private int _lastHp = -1;
 
-    private float _maxHealth = 100f; // Default max health, can be updated via events
+    private float _maxHealth = 100f;
 
-    private static readonly int ShaderValue = Shader.PropertyToID("_Health"); 
+    private static readonly int ShaderValue = Shader.PropertyToID("_Health");
 
     private bool _initialized = false;
 
@@ -64,8 +70,19 @@ public class CannonHealthBar : MonoBehaviour
         }
         if (maxHp <= 0) return;
 
+        if (_lastHp >= 0 && currentHp < _lastHp) PunchOnDamage();
+        _lastHp = currentHp;
+
         float fill = Mathf.Clamp01((float)currentHp / maxHp);
         AnimateHealthBar(fill);
+    }
+
+    private void PunchOnDamage()
+    {
+        if (_rootRect == null) _rootRect = transform as RectTransform;
+        if (_rootRect == null) return;
+        _rootRect.DOComplete();
+        _rootRect.DOPunchScale(Vector3.one * damagePunchStrength, damagePunchDuration, 8, 0.5f);
     }
 
     private void AnimateHealthBar(float targetFill)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
@@ -24,8 +25,21 @@ namespace Gameplay.Birds
 
         public event Action<BaseBird> OnLayEgg;
         public event Action<BaseBird> OnDestroyed;
+        // Fired the moment HP reaches zero (or ForceKill). Subclasses subscribe here to trigger
+        // their death visuals (e.g., NormalBird plays the Spine "death" clip). OnDestroyed fires
+        // AFTER the death sequence completes — used by SpawnController for cleanup.
+        public event Action<BaseBird> OnDeathStarted;
 
         protected void InvokeLayEgg() => OnLayEgg?.Invoke(this);
+
+        [Header("Death Sequence")]
+        [SerializeField] private float deathSequenceDuration = 1.0f;
+        [SerializeField] private float deathFallDistance = 3.0f;
+        [SerializeField] private float deathSpinMagnitude = 180f;
+
+        // Once lifetime hits zero, give the bird up to this many extra seconds to fly fully
+        // offscreen before force-despawning. Prevents the "bird disappears mid-flight" bug.
+        private const float OffscreenGraceSeconds = 3.0f;
 
         private const float CANNON_CROSS_TOLERANCE = 1.0f;
 
@@ -139,7 +153,10 @@ namespace Gameplay.Birds
             }
 
             _remainingLifetime -= Time.deltaTime;
-            if (_remainingLifetime <= 0f)
+            // Grace period: if the bird is still on-screen when lifetime expires, give it up to
+            // OffscreenGraceSeconds to exit before force-despawning. Movement strategies aim past
+            // the edge so this almost always exits cleanly.
+            if (_remainingLifetime <= 0f && (!_isInScreen || _remainingLifetime < -OffscreenGraceSeconds))
                 Die(false);
         }
         public void FlipDirection(float direction)
@@ -213,10 +230,31 @@ namespace Gameplay.Birds
                 effect.OnCompleted -= RemoveEffect;
                 effect.Cancel();
             }
-
             activeEffects.Clear();
+
             _movementStrategy?.Dispose();
             DOTween.Kill(transform);
+            if (_collider != null) _collider.enabled = false;
+
+            OnDeathStarted?.Invoke(this);
+            StartCoroutine(DeathSequenceRoutine());
+        }
+
+        private IEnumerator DeathSequenceRoutine()
+        {
+            float spin = Random.Range(-deathSpinMagnitude, deathSpinMagnitude);
+            transform.DOMoveY(transform.position.y - deathFallDistance, deathSequenceDuration)
+                .SetEase(Ease.InQuad);
+            transform.DORotate(new Vector3(0f, 0f, spin), deathSequenceDuration)
+                .SetEase(Ease.OutQuad);
+
+            if (_spriteRenderer != null)
+            {
+                float fadeDuration = deathSequenceDuration * 0.5f;
+                _spriteRenderer.DOFade(0f, fadeDuration).SetDelay(deathSequenceDuration - fadeDuration);
+            }
+
+            yield return new WaitForSeconds(deathSequenceDuration);
             OnDestroyed?.Invoke(this);
         }
 

@@ -20,6 +20,12 @@ namespace Gameplay.Events
         public static event Action OnEggSpawned;
         public static void FireEggSpawned() => OnEggSpawned?.Invoke();
 
+        // Fires every time an egg launches off the ground. Used by the SFX bridge to play a
+        // bounce sound at the impact point. Per-egg, so this fires frequently — only routed
+        // through SFXController which throttles via AudioSource voice limits.
+        public static event Action<Vector3> OnEggBounced;
+        public static void FireEggBounced(Vector3 pos) => OnEggBounced?.Invoke(pos);
+
         // ───────── Bird ─────────
         public static event Action<IDamageable, int, Vector3> OnBirdHit;
         public static event Action<IDamageable, int, Vector3> OnBirdDestroyed;

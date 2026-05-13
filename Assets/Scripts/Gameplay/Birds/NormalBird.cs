@@ -42,8 +42,14 @@ namespace Gameplay.Birds
         private void OnEnable()
         {
             OnLayEgg += LayEgg;
-            OnDestroyed += Death;
-            
+            OnDeathStarted += Death;
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            OnLayEgg -= LayEgg;
+            OnDeathStarted -= Death;
         }
 
         void FlyNormal()

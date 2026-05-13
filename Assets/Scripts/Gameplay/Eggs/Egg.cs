@@ -403,6 +403,7 @@ namespace Gameplay.Eggs
         {
             _lastBounceTime = Time.time;
             SpawnSmoke(contactPoint);
+            Gameplay.Events.GameEvents.FireEggBounced(contactPoint);
             ApplyBounceBehavior();
             _lastBouncePosition = transform.position;
             _maxHeightReachedSinceLastBounce = transform.position.y;
