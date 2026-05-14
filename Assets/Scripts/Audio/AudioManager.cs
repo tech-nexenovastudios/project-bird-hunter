@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,10 +7,20 @@ public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
 
-    // Source-of-truth for on/off — same keys SettingPanelController writes, so
-    // boot honors the saved toggle even when the settings panel object is inactive.
+    // Two independent axes drive volume:
+    //   • slider value (pause panel) — the user's chosen level 0..1
+    //   • enabled flag (main-menu settings toggle) — a separate mute switch
+    // Effective volume = sliderValue when enabled, 0 when disabled. Muting from settings
+    // therefore does NOT lose the slider value the user set in the pause panel.
+    private const string PREF_MUSIC_VOL = "MusicVol";
+    private const string PREF_SFX_VOL = "SFXVol";
     private const string PREF_MUSIC_ENABLED = "MusicEnabled";
     private const string PREF_SOUND_ENABLED = "SoundEnabled";
+
+    // Broadcast EFFECTIVE volume (after mute) so subscribers can apply it directly
+    // without needing to track the enabled flag themselves.
+    public static event Action<float> OnMusicVolumeChanged;
+    public static event Action<float> OnSFXVolumeChanged;
     // ─────────────────────────────────────────────
     // AUDIO SOURCES
     // ─────────────────────────────────────────────
@@ -78,12 +89,6 @@ public class AudioManager : MonoBehaviour
     [Range(0f, 1f)][SerializeField] private float levelCompleteVolume = 1.0f;
     [Range(0f, 1f)][SerializeField] private float levelFailVolume = 0.9f;
 
-    // ─────────────────────────────────────────────
-    // MUTE STATE
-    // ─────────────────────────────────────────────
-    private bool isMusicMuted = false;
-    private bool isSFXMuted = false;
-
     // Stash so callers (e.g. boss-music handler) can temporarily swap to a new clip
     // and restore the previous one when done.
     private AudioClip _stashedClip;
@@ -125,7 +130,8 @@ public class AudioManager : MonoBehaviour
 
         // Cancel any in-flight crossfade so it doesn't overwrite volume mid-play.
         StopAllCoroutines();
-        musicSource.volume = PlayerPrefs.GetInt(PREF_MUSIC_ENABLED, 1) == 1 ? musicDefaultVolume : 0f;
+        // Honor both slider and mute toggle whenever a new track starts.
+        musicSource.volume = EffectiveMusicVolume;
         musicSource.Stop();
         musicSource.clip = clip;
         musicSource.loop = loop;
@@ -212,15 +218,27 @@ public class AudioManager : MonoBehaviour
 
     public void SetMusicVolume(float vol)
     {
-        musicSource.volume = Mathf.Clamp01(vol);
-        PlayerPrefs.SetFloat("MusicVol", musicSource.volume);
+        PlayerPrefs.SetFloat(PREF_MUSIC_VOL, Mathf.Clamp01(vol));
+        ApplyMusicVolume();
     }
 
-    public void ToggleMusicMute()
+    public void SetMusicEnabled(bool enabled)
     {
-        isMusicMuted = !isMusicMuted;
-        musicSource.mute = isMusicMuted;
-        PlayerPrefs.SetInt("MusicMuted", isMusicMuted ? 1 : 0);
+        PlayerPrefs.SetInt(PREF_MUSIC_ENABLED, enabled ? 1 : 0);
+        ApplyMusicVolume();
+    }
+
+    // Returns the slider value the user set (what the slider UI should display).
+    public float GetMusicVolume() => PlayerPrefs.GetFloat(PREF_MUSIC_VOL, musicDefaultVolume);
+    public bool IsMusicEnabled() => PlayerPrefs.GetInt(PREF_MUSIC_ENABLED, 1) == 1;
+
+    private float EffectiveMusicVolume => IsMusicEnabled() ? GetMusicVolume() : 0f;
+
+    private void ApplyMusicVolume()
+    {
+        float eff = EffectiveMusicVolume;
+        if (musicSource != null) musicSource.volume = eff;
+        OnMusicVolumeChanged?.Invoke(eff);
     }
 
     // ─────── Scene-specific music shortcuts ───────
@@ -239,20 +257,32 @@ public class AudioManager : MonoBehaviour
     /// <summary>Play any SFX clip with an optional volume scale override.</summary>
     public void PlaySFX(AudioClip clip, float volumeScale = 1f)
     {
-        if (clip == null || isSFXMuted) return;
+        if (clip == null) return;
         sfxSource.PlayOneShot(clip, Mathf.Clamp01(volumeScale));
     }
 
     public void SetSFXVolume(float vol)
     {
-        sfxSource.volume = Mathf.Clamp01(vol);
-        PlayerPrefs.SetFloat("SFXVol", sfxSource.volume);
+        PlayerPrefs.SetFloat(PREF_SFX_VOL, Mathf.Clamp01(vol));
+        ApplySFXVolume();
     }
 
-    public void ToggleSFXMute()
+    public void SetSFXEnabled(bool enabled)
     {
-        isSFXMuted = !isSFXMuted;
-        PlayerPrefs.SetInt("SFXMuted", isSFXMuted ? 1 : 0);
+        PlayerPrefs.SetInt(PREF_SOUND_ENABLED, enabled ? 1 : 0);
+        ApplySFXVolume();
+    }
+
+    public float GetSFXVolume() => PlayerPrefs.GetFloat(PREF_SFX_VOL, sfxDefaultVolume);
+    public bool IsSFXEnabled() => PlayerPrefs.GetInt(PREF_SOUND_ENABLED, 1) == 1;
+
+    private float EffectiveSFXVolume => IsSFXEnabled() ? GetSFXVolume() : 0f;
+
+    private void ApplySFXVolume()
+    {
+        float eff = EffectiveSFXVolume;
+        if (sfxSource != null) sfxSource.volume = eff;
+        OnSFXVolumeChanged?.Invoke(eff);
     }
 
     // ─────── Main Menu SFX shortcuts ───────
@@ -284,13 +314,9 @@ public class AudioManager : MonoBehaviour
 
     private void LoadSettings()
     {
-        bool musicEnabled = PlayerPrefs.GetInt(PREF_MUSIC_ENABLED, 1) == 1;
-        bool soundEnabled = PlayerPrefs.GetInt(PREF_SOUND_ENABLED, 1) == 1;
-        // Volume=0 is our only silencing mechanism — don't also flip AudioSource.mute
-        // or isSFXMuted here, because SetMusicVolume/SetSFXVolume won't clear those
-        // when the user toggles audio back on, leaving the source permanently silenced.
-        musicSource.volume = musicEnabled ? musicDefaultVolume : 0f;
-        sfxSource.volume = soundEnabled ? sfxDefaultVolume : 0f;
+        // Apply effective volume (slider × mute toggle) at boot so both axes are honored.
+        ApplyMusicVolume();
+        ApplySFXVolume();
     }
 
     // ══════════════════════════════════════════════

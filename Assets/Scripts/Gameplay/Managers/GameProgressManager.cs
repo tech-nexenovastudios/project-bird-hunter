@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Cysharp.Threading.Tasks;
 using Gameplay.Events;
 using Gameplay.Levels;
 using Gameplay.PowerUps;
@@ -170,6 +171,13 @@ namespace Gameplay.Managers
                 _progress.currentLevel = 1;
                 _progress.ResetSlotsForNewChapter();
                 //Debug.Log($"[ProgressManager] 🎰 Chapter start spin → Ch{_progress.currentChapter}");
+
+                // Tell the cloud-backed unlock service the new chapter is available so the
+                // main-menu carousel reflects it on next return. ChapterUnlockService uses
+                // 0-based indices; _progress.currentChapter is 1-based and was just bumped
+                // to the newly entered chapter, so subtract 1.
+                ServiceLocator.Get<ChapterUnlockService>()
+                    ?.UnlockChapterAsync(_progress.currentChapter - 1).Forget();
 
                 // Play the chapter-end animation first; trigger the chapter-start
                 // spin only after the transition signals it has finished.

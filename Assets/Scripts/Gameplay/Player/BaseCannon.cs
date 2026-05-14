@@ -311,6 +311,7 @@ namespace Gameplay.Player
 
             IsFiring = false;
             movementInput = Vector2.zero;
+            GameEvents.FireCannonDestroyStarted();
             OnDeathVFX();
             if (!DeferDeathEvent) RaisePlayerDeath();
         }

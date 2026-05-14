@@ -26,6 +26,7 @@ namespace Audio
         [SerializeField] private SfxClip cannonHitSound = SfxClip.Default;
         [SerializeField] private SfxClip cannonShootSound = SfxClip.Default;
         [SerializeField] private SfxClip cannonDestroyedSound = SfxClip.Default;
+        [SerializeField] private SfxClip gameOverSound = SfxClip.Default;
         [SerializeField] private SfxClip slotSpinStarted = SfxClip.Default;
         [SerializeField] private SfxClip slotSpinCompleted = SfxClip.Default;
         [SerializeField] private SfxClip slotPowerSelected = SfxClip.Default;
@@ -33,6 +34,12 @@ namespace Audio
         [SerializeField] private SfxClip selfClearStartedSound = SfxClip.Default;
         [SerializeField] private SfxClip finishNowSound = SfxClip.Default;
         [SerializeField] private SfxClip rewardToastSound = SfxClip.Default;
+
+        [Header("Level Countdown SFX")]
+        [Tooltip("Plays at each tick of the countdown (3, 2, 1). Use a short beep / tick clip.")]
+        [SerializeField] private SfxClip levelCountdownSound = SfxClip.Default;
+        [Tooltip("Plays once on the final 'Go!' beat. Use a brighter / higher-pitched cue to signal the start.")]
+        [SerializeField] private SfxClip levelCountdownGoSound = SfxClip.Default;
 
         [Header("Bounce SFX Throttle")]
         [Tooltip("Minimum time between bounce sounds across all eggs. Prevents audio spam when many eggs land in the same frame.")]
@@ -56,6 +63,12 @@ namespace Audio
                 spinLoopSource = gameObject.AddComponent<AudioSource>();
             spinLoopSource.loop = true;
             spinLoopSource.playOnAwake = false;
+
+            // SFXController owns its own AudioSources (separate from AudioManager.sfxSource),
+            // so the pause-panel slider would have no effect here unless we sync explicitly.
+            ApplySfxVolume(AudioManager.Instance != null
+                ? AudioManager.Instance.GetSFXVolume()
+                : PlayerPrefs.GetFloat("SFXVol", 1f));
         }
 
         private void OnEnable()
@@ -67,7 +80,8 @@ namespace Audio
             GameEvents.OnBirdDestroyed += OnBirdDestroyed;
             GameEvents.OnCannonHit += OnCannonHit;
             GameEvents.OnCannonShoot += OnCannonShoot;
-            GameEvents.OnPlayerDeath += OnCannonDestroyed;
+            GameEvents.OnCannonDestroyStarted += OnCannonDestroyed;
+            GameEvents.OnPlayerDeath += OnGameOver;
             GameEvents.OnSpinStarted += OnSpinStarted;
             GameEvents.OnSpinAnimationCompleted += OnSpinAnimationCompleted;
             GameEvents.OnPowerupCommitted += OnSpinCompleted;
@@ -76,6 +90,10 @@ namespace Audio
             GameEvents.OnSelfClearStarted += OnSelfClearStarted;
             GameEvents.OnPlayerFinishedLevel += OnFinishNow;
             GameEvents.OnRewardNotification += OnRewardToast;
+            GameEvents.OnLevelCountdownTick += OnLevelCountdownTick;
+            GameEvents.OnLevelCountdownGo += OnLevelCountdownGo;
+
+            AudioManager.OnSFXVolumeChanged += ApplySfxVolume;
 
             if (BossEventBus.Instance != null)
             {
@@ -94,7 +112,8 @@ namespace Audio
             GameEvents.OnBirdDestroyed -= OnBirdDestroyed;
             GameEvents.OnCannonHit -= OnCannonHit;
             GameEvents.OnCannonShoot -= OnCannonShoot;
-            GameEvents.OnPlayerDeath -= OnCannonDestroyed;
+            GameEvents.OnCannonDestroyStarted -= OnCannonDestroyed;
+            GameEvents.OnPlayerDeath -= OnGameOver;
             GameEvents.OnSpinStarted -= OnSpinStarted;
             GameEvents.OnSpinAnimationCompleted -= OnSpinAnimationCompleted;
             GameEvents.OnPowerupCommitted -= OnSpinCompleted;
@@ -103,6 +122,10 @@ namespace Audio
             GameEvents.OnSelfClearStarted -= OnSelfClearStarted;
             GameEvents.OnPlayerFinishedLevel -= OnFinishNow;
             GameEvents.OnRewardNotification -= OnRewardToast;
+            GameEvents.OnLevelCountdownTick -= OnLevelCountdownTick;
+            GameEvents.OnLevelCountdownGo -= OnLevelCountdownGo;
+
+            AudioManager.OnSFXVolumeChanged -= ApplySfxVolume;
 
             if (BossEventBus.Instance != null)
             {
@@ -129,6 +152,7 @@ namespace Audio
         private void OnCannonHit(int damage) => PlaySound(cannonHitSound);
         private void OnCannonShoot() => PlaySound(cannonShootSound);
         private void OnCannonDestroyed() => PlaySound(cannonDestroyedSound);
+        private void OnGameOver() => PlaySound(gameOverSound);
         private void OnSpinStarted(List<PowerupConfig> options) => StartSpinLoop();
         private void OnSpinAnimationCompleted() => StopSpinLoop();
         private void OnSpinCompleted(PowerupConfig config) => PlaySound(slotSpinCompleted);
@@ -159,6 +183,9 @@ namespace Audio
 
         private void OnRewardToast(RewardNotification _) => PlaySound(rewardToastSound);
 
+        private void OnLevelCountdownTick() => PlaySound(levelCountdownSound);
+        private void OnLevelCountdownGo() => PlaySound(levelCountdownGoSound);
+
         // ── Boss music ──────────────────────────────────────────────
         private void OnBossSpawned(string bossName)
         {
@@ -175,6 +202,13 @@ namespace Audio
             if (!_bossMusicActive) return;
             AudioManager.Instance?.PopMusic();
             _bossMusicActive = false;
+        }
+
+        private void ApplySfxVolume(float vol)
+        {
+            float v = Mathf.Clamp01(vol);
+            if (audioSource != null) audioSource.volume = v;
+            if (spinLoopSource != null) spinLoopSource.volume = v;
         }
 
         private void PlaySound(SfxClip sfx)

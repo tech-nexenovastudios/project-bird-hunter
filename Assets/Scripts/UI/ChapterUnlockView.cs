@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
@@ -16,6 +17,10 @@ public class ChapterUnlockView : MonoBehaviour
     [Header("Main Menu Background")]
     [SerializeField] private ChaptersConfig chaptersConfig;
     [SerializeField] private Image mainMenuBackgroundImage;
+
+    [Header("Carousel")]
+    [Tooltip("Reference to the chapter-thumbnail carousel. On enter and whenever the highest unlocked chapter changes, the carousel snaps to that index.")]
+    [SerializeField] private ScrollCarouselEffect carousel;
 
     // ─── Runtime ───
     private readonly Dictionary<int, Material> savedMaterials = new();
@@ -38,6 +43,23 @@ public class ChapterUnlockView : MonoBehaviour
         ApplyAllLevelImageStates();
         RefreshPlayButton(currentCarouselIndex);
         ApplyMainMenuBackground();
+
+        // ScrollCarouselEffect.Start caches its own snap positions and snaps to
+        // index 0; defer one frame so our scroll lands AFTER that initial snap,
+        // since script execution order between the two MonoBehaviours isn't fixed.
+        StartCoroutine(ScrollToHighestUnlockedNextFrame());
+    }
+
+    private IEnumerator ScrollToHighestUnlockedNextFrame()
+    {
+        yield return null;
+        ScrollToHighestUnlocked();
+    }
+
+    private void ScrollToHighestUnlocked()
+    {
+        if (carousel == null || unlockService == null) return;
+        carousel.GoToIndex(unlockService.HighestUnlockedIndex);
     }
 
     private void OnEnable()
@@ -72,6 +94,7 @@ public class ChapterUnlockView : MonoBehaviour
     private void OnHighestChanged(HighestChapterChangedEvent evt)
     {
         ApplyMainMenuBackground();
+        ScrollToHighestUnlocked();
     }
 
     // ─── UI Updates ───

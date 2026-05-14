@@ -48,9 +48,17 @@ namespace Gameplay.Events
         // ───────── Level Flow ─────────
         public static event Action<int> OnLevelCompleted;
         public static event Action OnAllEggsCleared;
+        // Level-start "3-2-1-Go!" countdown beats (UI shown in LevelDetailPopup). Tick fires
+        // 3 times (at 3, 2, 1); Go fires once on the final "Go!" beat. Neither fires for the
+        // post-level "Next level in N..." popup.
+        public static event Action OnLevelCountdownTick;
+        public static event Action OnLevelCountdownGo;
 
         // ───────── Player / Cannon─────────
         public static event Action OnPlayerDeath;
+        // Fires the moment the cannon's destroy animation begins (before OnPlayerDeath,
+        // which only fires once the death sequence finishes and the GameOver UI is shown).
+        public static event Action OnCannonDestroyStarted;
         
 
 
@@ -113,8 +121,17 @@ namespace Gameplay.Events
         public static void FireAllEggsCleared()
             => OnAllEggsCleared?.Invoke();
 
+        public static void FireLevelCountdownTick()
+            => OnLevelCountdownTick?.Invoke();
+
+        public static void FireLevelCountdownGo()
+            => OnLevelCountdownGo?.Invoke();
+
         public static void FirePlayerDeath()
             => OnPlayerDeath?.Invoke();
+
+        public static void FireCannonDestroyStarted()
+            => OnCannonDestroyStarted?.Invoke();
 
         public static void FireSpinTriggered(PowerupConfig[] options)
             => OnSpinTriggered?.Invoke(options);

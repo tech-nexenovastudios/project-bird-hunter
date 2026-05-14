@@ -132,19 +132,25 @@ namespace Gameplay.UI
             yield return titleSeq.WaitForCompletion();
 
             // ── Countdown ──
+            // Only the level-START path gets the 3-2-1-Go SFX; the post-level "Next level in N"
+            // popup ends in "Loading..." and uses no audio cue.
+            bool isLevelStart = !countdownPrefix.Contains("Next");
+
             int count = countdownFrom;
             while (count > 0)
             {
                 countdownText.text = $"{countdownPrefix} {count}...";
                 PulseCountdown();
+                if (isLevelStart) GameEvents.FireLevelCountdownTick();
                 yield return new WaitForSecondsRealtime(1f);
                 count--;
             }
 
             // ── Final beat ──
-            string finalWord = countdownPrefix.Contains("Next") ? "Loading..." : "Go!";
+            string finalWord = isLevelStart ? "Go!" : "Loading...";
             countdownText.text = finalWord;
             PulseCountdown();
+            if (isLevelStart) GameEvents.FireLevelCountdownGo();
             yield return new WaitForSecondsRealtime(0.6f);
 
             // ── Fade out ──

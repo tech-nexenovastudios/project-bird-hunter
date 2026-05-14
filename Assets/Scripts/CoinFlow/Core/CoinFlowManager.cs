@@ -64,8 +64,28 @@ public class CoinFlowManager : MonoBehaviour
         }
     }
 
-    private void OnEnable() => GameEvent.OnCurrencyCollected += HandleCurrencyCollected;
-    private void OnDisable() => GameEvent.OnCurrencyCollected -= HandleCurrencyCollected;
+    private void OnEnable()
+    {
+        GameEvent.OnCurrencyCollected += HandleCurrencyCollected;
+        // coinSfxSource is owned by this manager (not AudioManager.sfxSource), so it
+        // would ignore the pause-panel slider unless we sync explicitly — same pattern
+        // we use for SFXController.
+        AudioManager.OnSFXVolumeChanged += ApplyCoinSfxVolume;
+        ApplyCoinSfxVolume(AudioManager.Instance != null
+            ? (AudioManager.Instance.IsSFXEnabled() ? AudioManager.Instance.GetSFXVolume() : 0f)
+            : PlayerPrefs.GetFloat("SFXVol", 1f));
+    }
+
+    private void OnDisable()
+    {
+        GameEvent.OnCurrencyCollected -= HandleCurrencyCollected;
+        AudioManager.OnSFXVolumeChanged -= ApplyCoinSfxVolume;
+    }
+
+    private void ApplyCoinSfxVolume(float vol)
+    {
+        if (coinSfxSource != null) coinSfxSource.volume = Mathf.Clamp01(vol);
+    }
 
     private void HandleCurrencyCollected(CurrencyType type, Vector2 screenPos, int totalValue)
     {

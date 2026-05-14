@@ -84,15 +84,19 @@ namespace Gameplay.UI
 
         private void LoadSettings()
         {
-            float music = PlayerPrefs.GetFloat(PREF_MUSIC, 1f);
-            float sound = PlayerPrefs.GetFloat(PREF_SOUND, 1f);
+            // AudioManager is the source of truth — it has already hydrated from PlayerPrefs
+            // at boot, and its volumes may have been changed elsewhere. Read from there
+            // rather than re-reading prefs (which would risk drift if multiple panels touch them).
+            float music = AudioManager.Instance != null
+                ? AudioManager.Instance.GetMusicVolume()
+                : PlayerPrefs.GetFloat(PREF_MUSIC, 1f);
+            float sound = AudioManager.Instance != null
+                ? AudioManager.Instance.GetSFXVolume()
+                : PlayerPrefs.GetFloat(PREF_SOUND, 1f);
             vibrationOn = PlayerPrefs.GetInt(PREF_VIBRATION, 1) == 1;
 
             musicSlider.SetValueWithoutNotify(music);
             soundSlider.SetValueWithoutNotify(sound);
-
-            if (AudioManager.Instance != null) AudioManager.Instance.SetMusicVolume(music);
-            if (AudioManager.Instance != null) AudioManager.Instance.SetSFXVolume(sound);
 
             RefreshMusicBar(music);
             RefreshSoundBar(sound);
@@ -102,8 +106,9 @@ namespace Gameplay.UI
 
         private void SaveSettings()
         {
-            PlayerPrefs.SetFloat(PREF_MUSIC, musicSlider.value);
-            PlayerPrefs.SetFloat(PREF_SOUND, soundSlider.value);
+            // Volume keys are owned by AudioManager.SetMusicVolume / SetSFXVolume (called from
+            // OnMusicChanged / OnSoundChanged). Don't double-write them here, or we risk
+            // overwriting a value that was just normalized/clamped inside AudioManager.
             PlayerPrefs.SetInt(PREF_VIBRATION, vibrationOn ? 1 : 0);
             PlayerPrefs.Save();
         }

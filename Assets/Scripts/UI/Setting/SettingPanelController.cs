@@ -86,19 +86,19 @@ public class SettingPanelController : MonoBehaviour
 
     private void ApplySoundSetting()
     {
+        // Use the mute API rather than SetSFXVolume(0|1) so we don't stomp the
+        // slider value the user set in the pause panel.
         if (AudioManager.Instance != null)
-            AudioManager.Instance.SetSFXVolume(isEnabled ? 1f : 0f);
+            AudioManager.Instance.SetSFXEnabled(isEnabled);
 
-       
         Debug.Log($"Sound {(isEnabled ? "Enabled" : "Disabled")}");
     }
 
     private void ApplyMusicSetting()
     {
         if (AudioManager.Instance != null)
-            AudioManager.Instance.SetMusicVolume(isEnabled ? 1f : 0f);
+            AudioManager.Instance.SetMusicEnabled(isEnabled);
 
-        
         Debug.Log($"Music {(isEnabled ? "Enabled" : "Disabled")}");
     }
 

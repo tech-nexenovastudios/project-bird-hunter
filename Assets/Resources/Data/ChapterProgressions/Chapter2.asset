@@ -35,8 +35,23 @@ MonoBehaviour:
   maxE3End: 0
   maxE2Start: 2
   maxE2End: 4
-  bossBirdConfig: {fileID: 0}
-  bossSpawnDelay: 12
+  b1WeightStart: 0.55
+  b1WeightEnd: 0.35
+  b2WeightStart: 0.3
+  b2WeightEnd: 0.3
+  b3WeightStart: 0.12
+  b3WeightEnd: 0.22
+  b4WeightStart: 0.03
+  b4WeightEnd: 0.13
+  perSpawnWeightJitter: 0.25
+  pressureVariancePercent: 0.15
+  pressureNoiseFrequency: 0.18
+  replayHpStep: 0.02
+  replayPressureStep: 0.03
+  replayMaxBumps: 3
+  replayJitterPercent: 0.5
+  bossBirdConfig: {fileID: 11400000, guid: bc0533c2204c4854487851933b0dcd5f, type: 2}
+  bossSpawnDelay: 3
   attackingBirdPool: []
   attackingBirdSpawnInterval: 20
   attackingBirdSpawnChance: 0.6
