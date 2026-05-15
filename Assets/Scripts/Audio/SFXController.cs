@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Gameplay.Birds;
 using Gameplay.Events;
 using Gameplay.Interfaces;
 using Gameplay.PowerUps;
@@ -35,6 +36,10 @@ namespace Audio
         [SerializeField] private SfxClip finishNowSound = SfxClip.Default;
         [SerializeField] private SfxClip rewardToastSound = SfxClip.Default;
 
+        [Header("Bird Looping SFX")]
+        [Tooltip("Loops on each normal bird while its fly_N Spine animation is playing.")]
+        [SerializeField] private SfxClip birdFlapSound = SfxClip.Default;
+
         [Header("Level Countdown SFX")]
         [Tooltip("Plays at each tick of the countdown (3, 2, 1). Use a short beep / tick clip.")]
         [SerializeField] private SfxClip levelCountdownSound = SfxClip.Default;
@@ -52,8 +57,14 @@ namespace Audio
 
         [SerializeField] private AudioSource audioSource;
         [SerializeField] private AudioSource spinLoopSource;
+        [SerializeField] private AudioSource flapLoopSource;
 
         private bool _bossMusicActive;
+
+        // One shared flap loop for every flying bird. We track which birds are currently
+        // flapping so duplicate Start/Stop events for the same bird don't desync the count;
+        // the loop runs whenever the set is non-empty.
+        private readonly HashSet<NormalBird> _flappingBirds = new();
 
         private void Awake()
         {
@@ -63,6 +74,11 @@ namespace Audio
                 spinLoopSource = gameObject.AddComponent<AudioSource>();
             spinLoopSource.loop = true;
             spinLoopSource.playOnAwake = false;
+
+            if (flapLoopSource == null)
+                flapLoopSource = gameObject.AddComponent<AudioSource>();
+            flapLoopSource.loop = true;
+            flapLoopSource.playOnAwake = false;
 
             // SFXController owns its own AudioSources (separate from AudioManager.sfxSource),
             // so the pause-panel slider would have no effect here unless we sync explicitly.
@@ -92,6 +108,8 @@ namespace Audio
             GameEvents.OnRewardNotification += OnRewardToast;
             GameEvents.OnLevelCountdownTick += OnLevelCountdownTick;
             GameEvents.OnLevelCountdownGo += OnLevelCountdownGo;
+            GameEvents.OnBirdFlapStart += OnBirdFlapStart;
+            GameEvents.OnBirdFlapStop += OnBirdFlapStop;
 
             AudioManager.OnSFXVolumeChanged += ApplySfxVolume;
 
@@ -124,6 +142,8 @@ namespace Audio
             GameEvents.OnRewardNotification -= OnRewardToast;
             GameEvents.OnLevelCountdownTick -= OnLevelCountdownTick;
             GameEvents.OnLevelCountdownGo -= OnLevelCountdownGo;
+            GameEvents.OnBirdFlapStart -= OnBirdFlapStart;
+            GameEvents.OnBirdFlapStop -= OnBirdFlapStop;
 
             AudioManager.OnSFXVolumeChanged -= ApplySfxVolume;
 
@@ -143,6 +163,7 @@ namespace Audio
             }
 
             StopSpinLoop();
+            StopAllFlapLoops();
         }
 
         private void OnEggHit(IDamageable e, int d, Vector3 p) => PlaySound(eggHitSound);
@@ -209,6 +230,43 @@ namespace Audio
             float v = Mathf.Clamp01(vol);
             if (audioSource != null) audioSource.volume = v;
             if (spinLoopSource != null) spinLoopSource.volume = v;
+            if (flapLoopSource != null) flapLoopSource.volume = v;
+        }
+
+        private void OnBirdFlapStart(NormalBird bird)
+        {
+            if (bird == null || birdFlapSound.clip == null || flapLoopSource == null) return;
+
+            // First flapping bird turns the shared loop on; subsequent ones just join the set.
+            bool wasEmpty = _flappingBirds.Count == 0;
+            if (!_flappingBirds.Add(bird)) return;
+
+            if (wasEmpty && !flapLoopSource.isPlaying)
+            {
+                flapLoopSource.clip = birdFlapSound.clip;
+                flapLoopSource.pitch = birdFlapSound.pitch == 0f ? 1f : birdFlapSound.pitch;
+                flapLoopSource.loop = true;
+                flapLoopSource.Play();
+            }
+        }
+
+        private void OnBirdFlapStop(NormalBird bird)
+        {
+            if (bird == null) return;
+            if (!_flappingBirds.Remove(bird)) return;
+            if (_flappingBirds.Count == 0) StopFlapLoop();
+        }
+
+        private void StopFlapLoop()
+        {
+            if (flapLoopSource != null && flapLoopSource.isPlaying)
+                flapLoopSource.Stop();
+        }
+
+        private void StopAllFlapLoops()
+        {
+            _flappingBirds.Clear();
+            StopFlapLoop();
         }
 
         private void PlaySound(SfxClip sfx)

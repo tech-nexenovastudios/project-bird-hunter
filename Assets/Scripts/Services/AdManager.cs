@@ -25,7 +25,7 @@ public class AdManager : MonoBehaviour
     private string appKey = "";
     [SerializeField] private string androidAppKey = "";
     [SerializeField] private string iosAppKey = "";
-    [SerializeField] private bool isDevelopmentMode = true;
+    [SerializeField] private bool isDevelopmentMode = false;
 
     [Header("=== Ad Unit IDs (from LevelPlay Dashboard) ===")]
     private string rewardedAdUnitId = "";

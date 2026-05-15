@@ -1,6 +1,7 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Gameplay.Events;
 using Spine.Unity;
 using UnityEngine;
 
@@ -18,13 +19,21 @@ namespace Gameplay.Birds
         public const string FLY_FAST = "fly_Fast";
         public const string LAY_EGG = "lay_egg";
         public const string DEATH = "death";
-        
+
         private void PlayAnimation(string animationName, bool loop)
         {
             if (currentAnimation == animationName)
                 return;
 
             animationState.SetAnimation(0, animationName, loop);
+
+            // Flap SFX tracks fly_N specifically. Transitions in/out of fly_N drive the
+            // looping AudioSource that SFXController attaches to the bird.
+            bool wasFlapping = currentAnimation == FLY_NORMAL;
+            bool isFlapping = animationName == FLY_NORMAL;
+            if (isFlapping && !wasFlapping) GameEvents.FireBirdFlapStart(this);
+            else if (wasFlapping && !isFlapping) GameEvents.FireBirdFlapStop(this);
+
             currentAnimation = animationName;
         }
         
@@ -50,6 +59,14 @@ namespace Gameplay.Birds
             base.OnDisable();
             OnLayEgg -= LayEgg;
             OnDeathStarted -= Death;
+
+            // Guarantee the flap loop is torn down if the bird is disabled mid-flight
+            // (pooling, scene unload) before any animation transition fires it for us.
+            if (currentAnimation == FLY_NORMAL)
+            {
+                GameEvents.FireBirdFlapStop(this);
+                currentAnimation = null;
+            }
         }
 
         void FlyNormal()

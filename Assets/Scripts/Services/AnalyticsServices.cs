@@ -633,7 +633,7 @@ public class AnalyticsServices : IAnalyticsService
     private string GetEnvironment()
     {
 #if DEVELOPMENT_BUILD
-            return "development";
+            return "production";
 #elif UNITY_EDITOR
         return "editor";
 #else

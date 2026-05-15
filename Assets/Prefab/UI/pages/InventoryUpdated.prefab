@@ -3254,6 +3254,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 6
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &5428897711484822908
 GameObject:
   m_ObjectHideFlags: 0
@@ -3543,6 +3546,7 @@ GameObject:
   - component: {fileID: 8149904429365345318}
   - component: {fileID: 6639932008309314254}
   - component: {fileID: 8325892777275474949}
+  - component: {fileID: 3004716286204736209}
   m_Layer: 5
   m_Name: UnlockedCannonsBtn
   m_TagString: Untagged
@@ -3651,6 +3655,23 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3004716286204736209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5892294221084025417}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &5968769306491114556
 GameObject:
   m_ObjectHideFlags: 0
@@ -4106,6 +4127,7 @@ GameObject:
   - component: {fileID: 2913960069757460649}
   - component: {fileID: 3667739485124253973}
   - component: {fileID: 4063115324007788497}
+  - component: {fileID: 8014161650135809743}
   m_Layer: 5
   m_Name: LockedCannonsBtn
   m_TagString: Untagged
@@ -4214,6 +4236,23 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8014161650135809743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6268283650685089228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &6333214623627024537
 GameObject:
   m_ObjectHideFlags: 0
@@ -5932,6 +5971,7 @@ GameObject:
   - component: {fileID: 8080409450490845269}
   - component: {fileID: 4819916147845015329}
   - component: {fileID: 7222718900455819696}
+  - component: {fileID: 2113067679640917625}
   m_Layer: 5
   m_Name: AllCannonBtn
   m_TagString: Untagged
@@ -6040,6 +6080,23 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &2113067679640917625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7485569635000153039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7915ec7dd25930740b20fc4f74a47ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
+  clickSound: 0
+  hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &7638009787421549780
 GameObject:
   m_ObjectHideFlags: 0
@@ -6729,7 +6786,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 40dadb9b7160f7d4ca86580c15de7b9d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2bb3e51dc07e8ce4b9e86f0b6d694213, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1

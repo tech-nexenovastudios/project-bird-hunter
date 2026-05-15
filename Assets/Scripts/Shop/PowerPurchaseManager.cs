@@ -12,22 +12,12 @@ public class PowerPurchaseManager : MonoBehaviour
 
     [Header("Loading UI")]
     [SerializeField] private GameObject loadingPanel;
-    [SerializeField] private Transform loadingIcon;
-    [SerializeField] private float rotateSpeed = 300f;
-
-    private bool isLoading = false;
 
     private void Awake()
     {
         SetupPurchaseButtons();
         if (loadingPanel != null)
             loadingPanel.SetActive(false);
-    }
-
-    private void Update()
-    {
-        if (isLoading && loadingIcon != null)
-            loadingIcon.Rotate(0f, 0f, -rotateSpeed * Time.deltaTime);
     }
 
     private void Start()
@@ -142,13 +132,11 @@ public class PowerPurchaseManager : MonoBehaviour
     }
     private void ShowLoading()
     {
-        isLoading = true;
         if (loadingPanel != null) loadingPanel.SetActive(true);
     }
 
     private void HideLoading()
     {
-        isLoading = false;
         if (loadingPanel != null) loadingPanel.SetActive(false);
     }
 

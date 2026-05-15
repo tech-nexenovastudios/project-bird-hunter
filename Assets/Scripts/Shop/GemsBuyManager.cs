@@ -12,10 +12,7 @@ public class GemsBuyManager : MonoBehaviour
 
     [Header("Loading UI")]
     [SerializeField] private GameObject loadingPanel;
-    [SerializeField] private Transform loadingIcon;
-    [SerializeField] private float rotateSpeed = 300f;
 
-    private bool _isLoading;
     private bool _isPurchasing;
 
     // Fixed gem amounts mapped 1:1 to indices in the gemProducts array.
@@ -48,12 +45,6 @@ public class GemsBuyManager : MonoBehaviour
                 IAPManager.Instance.UnregisterFulfillment(product.productId);
         }
         IAPManager.Instance.Initialized -= OnIAPReady;
-    }
-
-    private void Update()
-    {
-        if (_isLoading && loadingIcon != null)
-            loadingIcon.Rotate(0f, 0f, -rotateSpeed * Time.deltaTime);
     }
 
     // ─── Setup ───
@@ -189,13 +180,11 @@ public class GemsBuyManager : MonoBehaviour
 
     private void ShowLoading()
     {
-        _isLoading = true;
         if (loadingPanel != null) loadingPanel.SetActive(true);
     }
 
     private void HideLoading()
     {
-        _isLoading = false;
         if (loadingPanel != null) loadingPanel.SetActive(false);
     }
 

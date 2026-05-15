@@ -168,7 +168,7 @@ public class AuthService
                 gpgsActivated = true;
             }
 #endif
-            var options = new InitializationOptions().SetEnvironmentName("development");
+            var options = new InitializationOptions().SetEnvironmentName("production");
             await UnityServices.InitializeAsync(options).AsUniTask().AttachExternalCancellation(ct);
             return true;
         }

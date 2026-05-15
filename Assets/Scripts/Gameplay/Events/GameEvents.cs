@@ -30,6 +30,13 @@ namespace Gameplay.Events
         public static event Action<IDamageable, int, Vector3> OnBirdHit;
         public static event Action<IDamageable, int, Vector3> OnBirdDestroyed;
 
+        // Per-bird flap loop lifecycle. Routed through SFXController which owns the clip and
+        // attaches a looping AudioSource to the bird while fly_N is the active Spine animation.
+        public static event Action<NormalBird> OnBirdFlapStart;
+        public static event Action<NormalBird> OnBirdFlapStop;
+        public static void FireBirdFlapStart(NormalBird bird) => OnBirdFlapStart?.Invoke(bird);
+        public static void FireBirdFlapStop(NormalBird bird) => OnBirdFlapStop?.Invoke(bird);
+
         // ───────── Cannon ─────────
         public static event Action<int> OnCannonHit;
         public static event Action OnCannonShoot;
