@@ -87,6 +87,10 @@ namespace Gameplay.Managers
 
             GameProgressManager.Instance.LoadProgress();
 
+            // New Gameplay scene = new run. RewardManager is DontDestroyOnLoad so its
+            // run counters survive scene loads; we explicitly clear them here.
+            RewardManager.Instance?.ResetForNewRun();
+
             var progress = GameProgressManager.Instance.Data;
 
             if (IsSpinPending(progress))
@@ -225,6 +229,7 @@ namespace Gameplay.Managers
         public void ResetGame()
         {
             GameProgressManager.Instance.ResetProgress();
+            RewardManager.Instance?.ResetForNewRun();
             StartGameplay();
         }
 

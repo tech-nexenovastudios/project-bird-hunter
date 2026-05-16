@@ -111,11 +111,13 @@ namespace Gameplay.UI
             _level = progress != null ? progress.CurrentLevel : 1;
             _highScore = progress != null ? progress.HighScore : 0;
 
-            // Session rewards — pulled from RewardManager, which tracks per-level accrual.
+            // Run rewards — RewardManager accumulates across every level the player cleared
+            // this run, so the Game Over panel reflects the full run, not just the level
+            // they died on.
             var rewards = RewardManager.Instance;
-            _baseCoins = rewards != null ? rewards.GetSessionCoinsThisLevel() : 0;
-            _baseGems = rewards != null ? rewards.GetSessionGemsThisLevel() : 0;
-            _basePower = rewards != null ? rewards.GetSessionPowerThisLevel() : 0;
+            _baseCoins = rewards != null ? rewards.GetRunCoins() : 0;
+            _baseGems = rewards != null ? rewards.GetRunGems() : 0;
+            _basePower = rewards != null ? rewards.GetRunPower() : 0;
 
             int playerLevel = progress?.Data?.playerLevel ?? 1;
      

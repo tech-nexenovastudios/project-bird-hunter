@@ -171,6 +171,12 @@ namespace Gameplay.UI
                 .From(Vector3.zero)
                 .SetEase(Ease.OutBack)
                 .SetUpdate(true);
+
+            // Re-hydrate the pause panel's sliders/vibration knob from the latest
+            // AudioManager + PlayerPrefs values. Without this they'd be stuck at
+            // whatever they were when PausePanel.Start() first ran.
+            Gameplay.UI.PausePanel.Instance?.RefreshSettings();
+
             GameEvents.FirePauseToggled(true);
         }
 

@@ -17,6 +17,14 @@ namespace Gameplay.Managers
         private int _sessionPowerRefundsThisLevel;
         private bool _firstClearBonusAwardedThisLevel;
 
+        // Per-run totals — accumulate across every level in a single play session and
+        // only reset when a new run begins (GameManager.InitWithDelay / ResetGame).
+        // Game Over UI reads these so the player sees their full run earnings, not
+        // just the final level's contribution.
+        private int _runCoins;
+        private int _runGems;
+        private int _runPower;
+
         // Prevention combo: consecutive birds killed before they could lay. Resets when an egg
         // successfully lands (FireEggSpawned) or a post-lay bird is killed. Triggers escalating
         // bonus payouts at milestone counts so a skilled player flexing on bird-prevention gets
@@ -61,6 +69,16 @@ namespace Gameplay.Managers
             _firstClearBonusAwardedThisLevel = false;
             _preventionStreak = 0;
             Debug.Log("[RewardManager] Reset for new level");
+        }
+
+        // Called when a fresh run starts (entering Gameplay scene). Does NOT fire between
+        // levels — that's ResetForNewLevel's job.
+        public void ResetForNewRun()
+        {
+            _runCoins = 0;
+            _runGems = 0;
+            _runPower = 0;
+            Debug.Log("[RewardManager] Reset for new run");
         }
 
         // Combo break — a bird successfully laid an egg, so the prevention streak ends.
@@ -200,17 +218,22 @@ namespace Gameplay.Managers
 
         // RewardManager.cs  ─  replace the three private Award methods
 
-        private void AwardCoins(int amount, string reason = "")
+        // Counters are bumped only after the Economy credit confirms. Otherwise a failed
+        // network call (which CurrencyManager logs but swallows) would leave Game Over
+        // showing coins the player never actually banked.
+        private async UniTaskVoid AwardCoins(int amount, string reason = "")
         {
             if (amount <= 0) return;
 
+            bool credited = await CurrencyManager.Instance.AddGold(amount);
+            if (!credited)
+            {
+                Debug.LogWarning($"[RewardManager] AddGold failed for {amount} ({reason}); counters not bumped");
+                return;
+            }
 
             _sessionCoinsThisLevel += amount;
-
-        
-
-            // ── Persist to Unity Economy + fire OnCurrencyChanged in real-time ─
-            CurrencyManager.Instance.AddGold(amount).Forget();
+            _runCoins += amount;
 
             OnCoinsAwarded?.Invoke(amount);
             OnRewardBroadcast?.Invoke("coins", amount);
@@ -218,15 +241,19 @@ namespace Gameplay.Managers
             Debug.Log($"[RewardManager] +{amount} coins ({reason}) ");
         }
 
-        private void AwardGems(int amount, string reason = "")
+        private async UniTaskVoid AwardGems(int amount, string reason = "")
         {
             if (amount <= 0) return;
 
+            bool credited = await CurrencyManager.Instance.AddGems(amount);
+            if (!credited)
+            {
+                Debug.LogWarning($"[RewardManager] AddGems failed for {amount} ({reason}); counters not bumped");
+                return;
+            }
+
             _sessionGemsThisLevel += amount;
-
-    
-
-            CurrencyManager.Instance.AddGems(amount).Forget();
+            _runGems += amount;
 
             OnGemsAwarded?.Invoke(amount);
             OnRewardBroadcast?.Invoke("gems", amount);
@@ -234,15 +261,19 @@ namespace Gameplay.Managers
             Debug.Log($"[RewardManager] +{amount} gems ({reason}) ");
         }
 
-        private void AwardPower(int amount, string reason = "")
+        private async UniTaskVoid AwardPower(int amount, string reason = "")
         {
             if (amount <= 0) return;
 
+            bool credited = await CurrencyManager.Instance.AddPower(amount);
+            if (!credited)
+            {
+                Debug.LogWarning($"[RewardManager] AddPower failed for {amount} ({reason}); counters not bumped");
+                return;
+            }
+
             _sessionPowerRefundsThisLevel += amount;
-
-         
-
-            CurrencyManager.Instance.AddPower(amount).Forget();
+            _runPower += amount;
 
             OnPowerAwarded?.Invoke(amount);
             OnRewardBroadcast?.Invoke("power", amount);
@@ -254,6 +285,10 @@ namespace Gameplay.Managers
 
         public int GetSessionGemsThisLevel() => _sessionGemsThisLevel;
         public int GetSessionPowerThisLevel() => _sessionPowerRefundsThisLevel;
+
+        public int GetRunCoins() => _runCoins;
+        public int GetRunGems() => _runGems;
+        public int GetRunPower() => _runPower;
 
         public Vector2Int GetExpectedCoinDropRange()
         {

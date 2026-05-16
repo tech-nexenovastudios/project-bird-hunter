@@ -119,19 +119,21 @@ public class CurrencyManager
 
     // ==================== Add (Increment) ====================
 
-    public async UniTask AddGold(long amount)
+    // Returns true if the credit landed on the server, false otherwise. Callers that need
+    // to keep mirrored counters in sync with the balance should await this.
+    public async UniTask<bool> AddGold(long amount)
     {
-        await IncrementCurrency(CurrencyType.Gold, GOLD_ID, amount);
+        return await IncrementCurrency(CurrencyType.Gold, GOLD_ID, amount);
     }
 
-    public async UniTask AddGems(long amount)
+    public async UniTask<bool> AddGems(long amount)
     {
-        await IncrementCurrency(CurrencyType.Gems, GEM_ID, amount);
+        return await IncrementCurrency(CurrencyType.Gems, GEM_ID, amount);
     }
 
-    public async UniTask AddPower(long amount)
+    public async UniTask<bool> AddPower(long amount)
     {
-        await IncrementCurrency(CurrencyType.Power, POWER_ID, amount);
+        return await IncrementCurrency(CurrencyType.Power, POWER_ID, amount);
     }
 
     // ==================== Spend (Decrement) ====================
@@ -259,12 +261,12 @@ public class CurrencyManager
 
     // ==================== Internal ====================
 
-    private async UniTask IncrementCurrency(CurrencyType type, string currencyId, long amount)
+    private async UniTask<bool> IncrementCurrency(CurrencyType type, string currencyId, long amount)
     {
         if (amount <= 0)
         {
             Debug.LogWarning($"[Currency] Cannot add negative or zero amount to {type}.");
-            return;
+            return false;
         }
 
         await _lock.WaitAsync();
@@ -273,10 +275,12 @@ public class CurrencyManager
             var result = await EconomyService.Instance.PlayerBalances.IncrementBalanceAsync(currencyId, (int)amount);
             UpdateLocalBalance(type, result.Balance);
             Debug.Log($"[Currency] Added {amount} {type}. New balance: {result.Balance}");
+            return true;
         }
         catch (Exception ex)
         {
             Debug.LogError($"[Currency] Failed to add {type}: {ex.Message}");
+            return false;
         }
         finally
         {

@@ -110,6 +110,7 @@ namespace Audio
             GameEvents.OnLevelCountdownGo += OnLevelCountdownGo;
             GameEvents.OnBirdFlapStart += OnBirdFlapStart;
             GameEvents.OnBirdFlapStop += OnBirdFlapStop;
+            GameEvents.OnPauseToggled += OnPauseToggled;
 
             AudioManager.OnSFXVolumeChanged += ApplySfxVolume;
 
@@ -144,6 +145,7 @@ namespace Audio
             GameEvents.OnLevelCountdownGo -= OnLevelCountdownGo;
             GameEvents.OnBirdFlapStart -= OnBirdFlapStart;
             GameEvents.OnBirdFlapStop -= OnBirdFlapStop;
+            GameEvents.OnPauseToggled -= OnPauseToggled;
 
             AudioManager.OnSFXVolumeChanged -= ApplySfxVolume;
 
@@ -231,6 +233,26 @@ namespace Audio
             if (audioSource != null) audioSource.volume = v;
             if (spinLoopSource != null) spinLoopSource.volume = v;
             if (flapLoopSource != null) flapLoopSource.volume = v;
+        }
+
+        // AudioSource playback is not affected by Time.timeScale, so the bird-flap loop and
+        // any in-flight countdown one-shots would keep going while the pause panel is open.
+        // Pause/UnPause halts and resumes everything on each source (including PlayOneShot
+        // clips on audioSource) so SFX freeze with the game.
+        private void OnPauseToggled(bool isPaused)
+        {
+            if (isPaused)
+            {
+                if (audioSource != null) audioSource.Pause();
+                if (spinLoopSource != null) spinLoopSource.Pause();
+                if (flapLoopSource != null) flapLoopSource.Pause();
+            }
+            else
+            {
+                if (audioSource != null) audioSource.UnPause();
+                if (spinLoopSource != null) spinLoopSource.UnPause();
+                if (flapLoopSource != null) flapLoopSource.UnPause();
+            }
         }
 
         private void OnBirdFlapStart(NormalBird bird)

@@ -202,6 +202,15 @@ namespace Gameplay.UI
             LoadSettings();
         }
 
+        // Called by GameplayHUD.PauseGame so the sliders reflect any volume/vibration
+        // changes that happened since the panel was last opened (e.g. from the main-menu
+        // settings panel). HUD owns the panel's active-state/animation, so this only
+        // re-hydrates the UI — it must NOT touch timeScale or SetActive.
+        public void RefreshSettings()
+        {
+            LoadSettings();
+        }
+
         public void HidePanel()
         {
             if (pausePanelRoot) pausePanelRoot.SetActive(false);

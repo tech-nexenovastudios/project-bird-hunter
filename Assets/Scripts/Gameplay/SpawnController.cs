@@ -255,6 +255,8 @@ namespace Gameplay
             _pressureMax = cfg.pressureMax;
 
             _targetScore = BucketRound(Mathf.RoundToInt(Geom(cfg.targetScoreMin, cfg.targetScoreMax, t)));
+            // TEMP TESTING — fast level complete. REVERT before merging.
+            _targetScore = 10;
             _hpMultiplier = SnapToStep(Geom(cfg.hpMultMin, cfg.hpMultMax, t), 0.05f);
 
             float center = Mathf.Lerp(cfg.spawnIntervalEarly, cfg.spawnIntervalLate, t)

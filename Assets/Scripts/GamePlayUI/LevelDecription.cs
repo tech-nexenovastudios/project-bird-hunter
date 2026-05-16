@@ -128,7 +128,7 @@ namespace Gameplay.UI
                 countdownText.text = $"{countdownPrefix} {count}...";
                 PulseCountdown();
                 if (isLevelStart) GameEvents.FireLevelCountdownTick();
-                yield return new WaitForSecondsRealtime(1f);
+                yield return WaitPausableRealtime(1f);
                 count--;
             }
 
@@ -137,7 +137,7 @@ namespace Gameplay.UI
             countdownText.text = finalWord;
             PulseCountdown();
             if (isLevelStart) GameEvents.FireLevelCountdownGo();
-            yield return new WaitForSecondsRealtime(0.6f);
+            yield return WaitPausableRealtime(0.6f);
 
             // ── Fade out ──
             Sequence fadeOut = DOTween.Sequence();
@@ -166,6 +166,21 @@ namespace Gameplay.UI
         {
             popupPanel.SetActive(false);
             popupCanvasGroup.alpha = 0f;
+        }
+
+        // Unscaled wait that freezes while the game is paused. We can't use
+        // WaitForSeconds (gets stuck forever at timeScale=0) or WaitForSecondsRealtime
+        // (keeps ticking through pause, firing fresh countdown SFX). Pause is signalled
+        // by Time.timeScale == 0 via GameplayHUD.PauseGame.
+        private IEnumerator WaitPausableRealtime(float seconds)
+        {
+            float elapsed = 0f;
+            while (elapsed < seconds)
+            {
+                if (Time.timeScale > 0f)
+                    elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
         }
     }
 }
