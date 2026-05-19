@@ -43,6 +43,8 @@ namespace Gameplay.UI
         private int _basePower;
         private int _baseXP;
         private bool _adRewardClaimed;
+        private bool _watchAdInProgress;
+        private bool _adRewardGrantedThisAttempt;
 
         // ScoreManager has no namespace — reference by class name directly.
         // Cached here to avoid repeated FindObjectOfType calls.
@@ -70,8 +72,15 @@ namespace Gameplay.UI
         {
             //GameEvents.OnPlayerDeath += HandlePlayerDeath;
             _adRewardClaimed = false;
+            _watchAdInProgress = false;
+            _adRewardGrantedThisAttempt = false;
             SnapshotRunData();
             RefreshUI();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeAdEvents();
         }
 
         //private void OnDisable()
@@ -154,14 +163,74 @@ namespace Gameplay.UI
 
         public void OnClickWatchAd()
         {
-            if (_adRewardClaimed) return;
+            if (_adRewardClaimed || _watchAdInProgress) return;
 
-            // ── Swap stub for real AdManager call when ready: ──
-            // AdManager.Instance.ShowRewarded("GameOver_x2Reward");
-            // Then handle reward in HandleAdRewardGranted() subscribed to
-            // AdManager.Instance.OnRewardGranted
+            var ads = AdManager.Instance;
+            if (ads == null || !ads.IsRewardedReady)
+            {
+                Debug.LogWarning("[GameOverScreen] Rewarded ad not ready.");
+                return;
+            }
 
-            OnAdComplete(success: true); // stub for testing
+            // Disable immediately so the player can't double-tap while the ad is loading/showing.
+            _watchAdInProgress = true;
+            _adRewardGrantedThisAttempt = false;
+            if (watchAdButton) watchAdButton.interactable = false;
+
+            ads.OnRewardGranted += HandleAdRewardGranted;
+            ads.OnRewardedDismissed += HandleAdRewardedDismissed;
+            ads.OnRewardedUnavailable += HandleAdRewardedUnavailable;
+
+            bool shown = ads.ShowRewarded("GameOver_x2Reward");
+            if (!shown)
+            {
+                UnsubscribeAdEvents();
+                _watchAdInProgress = false;
+                if (watchAdButton) watchAdButton.interactable = true;
+            }
+        }
+
+        private void HandleAdRewardGranted(string rewardName, int amount)
+        {
+            // Granted fires before Dismissed. Stash and finalize in Dismissed so the
+            // ad has fully closed before we tween reward UI.
+            _adRewardGrantedThisAttempt = true;
+        }
+
+        private void HandleAdRewardedDismissed()
+        {
+            bool granted = _adRewardGrantedThisAttempt;
+            UnsubscribeAdEvents();
+            _watchAdInProgress = false;
+
+            if (granted)
+            {
+                OnAdComplete(success: true);
+            }
+            else
+            {
+                // User closed without earning the reward — allow a retry.
+                if (watchAdButton && !_adRewardClaimed)
+                    watchAdButton.interactable = true;
+            }
+        }
+
+        private void HandleAdRewardedUnavailable()
+        {
+            // Display failed or ad expired — let the player try again.
+            UnsubscribeAdEvents();
+            _watchAdInProgress = false;
+            if (watchAdButton && !_adRewardClaimed)
+                watchAdButton.interactable = true;
+        }
+
+        private void UnsubscribeAdEvents()
+        {
+            var ads = AdManager.Instance;
+            if (ads == null) return;
+            ads.OnRewardGranted -= HandleAdRewardGranted;
+            ads.OnRewardedDismissed -= HandleAdRewardedDismissed;
+            ads.OnRewardedUnavailable -= HandleAdRewardedUnavailable;
         }
 
         private void OnAdComplete(bool success)
@@ -176,6 +245,7 @@ namespace Gameplay.UI
             XPManager.Instance?.AddXP(_baseXP);
             if (_baseCoins > 0) CurrencyManager.Instance?.AddGold(_baseCoins).Forget();
             if (_baseGems > 0) CurrencyManager.Instance?.AddGems(_baseGems).Forget();
+            if (_basePower > 0) CurrencyManager.Instance?.AddPower(_basePower).Forget();
 
             RefreshUI();
         }
