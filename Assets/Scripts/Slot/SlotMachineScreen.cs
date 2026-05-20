@@ -51,6 +51,8 @@ namespace Gameplay.UI
 
         public void ShowSlot(PowerupConfig[] options)
         {
+            if(slotCanvas is null) slotRect.TryGetComponent(out slotCanvas);
+            
             _currentOptions = options.ToList();
             _selectedPowerup = null;
             ResetButtons();

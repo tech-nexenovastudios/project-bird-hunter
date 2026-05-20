@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6927744005276304156}
   - component: {fileID: 4033313031059568558}
   - component: {fileID: 6230713193289242514}
+  - component: {fileID: 2896721584731780209}
   m_Layer: 0
   m_Name: SlotMachine
   m_TagString: Untagged
@@ -136,10 +137,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9d2d81c123069346b0c46b22da65d9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.UI.SlotMachineScreen
-  slotCanvas: {fileID: 0}
+  slotCanvas: {fileID: 2896721584731780209}
   slotRect: {fileID: 5117933006550781673}
-  autoSpinDelay: 0.5
   confirmButton: {fileID: 4815407237310569825}
+--- !u!225 &2896721584731780209
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 51759140781252659}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &162235144287909865
 GameObject:
   m_ObjectHideFlags: 0
@@ -409,6 +421,15 @@ MonoBehaviour:
   _powerupImage: {fileID: 1826413138919254651}
   _powerupNameText: {fileID: 272908912275376224}
   _powerupDescriptionText: {fileID: 8017751655994754843}
+  _persistentIconRoot: {fileID: 0}
+  _persistentIconSprite: {fileID: 0}
+  _persistentIconFill: {fileID: 0}
+  _pulseScale: 1.1
+  _pulseDuration: 0.6
+  _activeColor: {r: 1, g: 1, b: 1, a: 1}
+  _cooldownColor: {r: 0.4, g: 0.4, b: 0.4, a: 1}
+  _slideDuration: 0.5
+  _holdDuration: 2
 --- !u!223 &3762265362440789780
 Canvas:
   m_ObjectHideFlags: 0
@@ -3296,6 +3317,8 @@ MonoBehaviour:
   _damageBar: {fileID: 5550895703568025363}
   damageBarDelay: 0.5
   damageBarDuration: 0.4
+  damagePunchStrength: 0.08
+  damagePunchDuration: 0.22
 --- !u!1 &1821675521693713363
 GameObject:
   m_ObjectHideFlags: 0
@@ -4271,12 +4294,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.UI.GameOverScreenHandler
   scoreTMP: {fileID: 615953660908998221}
+  targetScoreTMP: {fileID: 0}
+  chapterLevelTMP: {fileID: 0}
+  highScoreTMP: {fileID: 0}
   coinsTMP: {fileID: 5476121646233620376}
   gemsTMP: {fileID: 2456964334558139866}
-  xpTMP: {fileID: 8922850869766316128}
-  coinsX2Label: {fileID: 5673605847746222573}
-  gemsX2Label: {fileID: 1366376731834301239}
-  xpX2Label: {fileID: 8879349648346754336}
+  powerTMP: {fileID: 0}
   watchAdButton: {fileID: 6313708680029236872}
 --- !u!1 &2755610577047061424
 GameObject:
@@ -4800,6 +4823,7 @@ MonoBehaviour:
   pauseButton: {fileID: 7956365875868794325}
   pausePanel: {fileID: 1694657924031155116}
   continueButton: {fileID: 5978602295194276305}
+  finishButton: {fileID: 0}
 --- !u!225 &5653757792367257470
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -8874,6 +8898,7 @@ GameObject:
   - component: {fileID: 8144491110192052416}
   - component: {fileID: 488035232667010938}
   - component: {fileID: 1291483016191027952}
+  - component: {fileID: 3088489880942093725}
   m_Layer: 5
   m_Name: SlotMachine
   m_TagString: Untagged
@@ -8981,9 +9006,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9d2d81c123069346b0c46b22da65d9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.UI.SlotMachineScreen
-  slotCanvas: {fileID: 0}
+  slotCanvas: {fileID: 3088489880942093725}
   slotRect: {fileID: 9170075875505110819}
-  autoSpinDelay: 0.5
   confirmButton: {fileID: 7341666825755321607}
 --- !u!114 &1291483016191027952
 MonoBehaviour:
@@ -9031,6 +9055,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fe6e966ce9d611340815d2614e4d1b2a, type: 2}
   - {fileID: 11400000, guid: acf89800014271c4c8f42d15ca4d5708, type: 2}
   - {fileID: 11400000, guid: a56dd120d7e73a744bd581f9612da150, type: 2}
+--- !u!225 &3088489880942093725
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5491756249385119040}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &5611587217297926105
 GameObject:
   m_ObjectHideFlags: 0
@@ -14140,6 +14176,17 @@ MonoBehaviour:
   gameplayHUD: {fileID: 828271347290885909}
   slotMachineScreen: {fileID: 488035232667010938}
   gameoverUI: {fileID: 2609657758699262626}
+  clearCelebrationVfxPrefab: {fileID: 0}
+  clearCelebrationAnchor: {fileID: 0}
+  clearCelebrationVfxLifetime: 2.5
+  finishNowOverlay: {fileID: 0}
+  finishNowToast: {fileID: 0}
+  finishNowCoinTally: {fileID: 0}
+  finishNowButton: {fileID: 0}
+  finishNowDimDuration: 0.35
+  finishNowToastHold: 1.2
+  finishNowCoinTallyDuration: 0.9
+  finishNowOverlayAlpha: 0.6
 --- !u!225 &4715352866755330612
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -16556,7 +16603,6 @@ MonoBehaviour:
   progressBarFill: {fileID: 1682066718651862194}
   EggImage: {fileID: 1354843715412716360}
   BirdImage: {fileID: 7600304892980726951}
-  bossLevels: 0a00000014000000
 --- !u!1 &8912369897974375700
 GameObject:
   m_ObjectHideFlags: 0

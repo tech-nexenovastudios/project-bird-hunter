@@ -17,8 +17,7 @@ public class CriticalMassConfig : BaseAttackConfig
     public GameObject fragmentPrefab;   // glow/idle state
     public GameObject explosionPrefab;  // blast VFX
     public float dropInterval = 1.4f;   // seconds between drops
-    [Tooltip("How long the fragment glows before exploding")]
-    public float warningDuration = 1.8f;
+    // warningDuration inherited from BaseAttackConfig — fragment glow time before explosion.
     [Tooltip("How long the explosion VFX lingers before pool return")]
     public float explosionLingerDuration = 0.5f;
 

@@ -16,6 +16,15 @@ namespace Gameplay.Player
         [SerializeField] private Vector3 muzzleEndPosition;
         [SerializeField] private Vector3 muzzleEndScale;
 
+        [Header("Body Recoil")]
+        [SerializeField] private Transform bodyRecoilTransform;
+        [SerializeField] private Vector3 bodyRecoilOffset = new Vector3(0f, -0.06f, 0f);
+        [SerializeField] private float bodyRecoilKickDuration = 0.06f;
+        [SerializeField] private float bodyRecoilReturnDuration = 0.12f;
+
+        [Header("Wheel Recoil")]
+        [SerializeField] private Vector2 wheelSquashScale = new Vector2(1.08f, 0.88f);
+
         [Header("Hit VFX")]
         [SerializeField] private GameObject hitVFXPrefab;
         [SerializeField] private Transform hitVFXPoint;
@@ -42,8 +51,10 @@ namespace Gameplay.Player
         private Quaternion muzzleStartRotation;
         private Vector3 middleStartScale;
         private Quaternion middleStartRotation;
+        private Vector3 bodyRecoilStartPosition;
         private Vector3 leftWheelStartPos, rightWheelStartPos;
         private Quaternion leftWheelStartRot, rightWheelStartRot;
+        private Vector3 leftWheelStartScale, rightWheelStartScale;
         private Transform leftWheelParent, rightWheelParent;
 
         private Sequence muzzleSequence;
@@ -53,6 +64,8 @@ namespace Gameplay.Player
         protected override void Awake()
         {
             base.Awake();
+            if (bodyRecoilTransform == null) bodyRecoilTransform = transform;
+            bodyRecoilStartPosition = bodyRecoilTransform.localPosition;
             if (muzzleTransform != null)
             {
                 muzzleStartPosition = muzzleTransform.localPosition;
@@ -69,12 +82,14 @@ namespace Gameplay.Player
                 leftWheelParent = leftWheel.parent;
                 leftWheelStartPos = leftWheel.localPosition;
                 leftWheelStartRot = leftWheel.localRotation;
+                leftWheelStartScale = leftWheel.localScale;
             }
             if (rightWheel != null)
             {
                 rightWheelParent = rightWheel.parent;
                 rightWheelStartPos = rightWheel.localPosition;
                 rightWheelStartRot = rightWheel.localRotation;
+                rightWheelStartScale = rightWheel.localScale;
             }
         }
 
@@ -84,11 +99,10 @@ namespace Gameplay.Player
 
             muzzleSequence?.Kill();
 
+            if (bodyRecoilTransform != null)
+                bodyRecoilTransform.localPosition = bodyRecoilStartPosition;
             if (muzzleTransform != null)
-            {
-                muzzleTransform.localPosition = muzzleStartPosition;
                 muzzleTransform.localScale = muzzleStartScale;
-            }
 
             muzzleSequence = DOTween.Sequence();
 
@@ -98,8 +112,15 @@ namespace Gameplay.Player
                     _currentFlash = VFXPoolManager.Instance.PlayAttached(muzzleFlashPrefab, muzzleFlashPoint);
             });
 
-            if (muzzleTransform != null)
-                muzzleSequence.Append(muzzleTransform.DOLocalMove(muzzleEndPosition, 0.1f).SetEase(Ease.OutSine));
+            if (bodyRecoilTransform != null)
+                muzzleSequence.Append(bodyRecoilTransform.DOLocalMove(bodyRecoilStartPosition + bodyRecoilOffset, bodyRecoilKickDuration).SetEase(Ease.OutSine));
+
+            Vector3 squashedLeft = new Vector3(leftWheelStartScale.x * wheelSquashScale.x, leftWheelStartScale.y * wheelSquashScale.y, leftWheelStartScale.z);
+            Vector3 squashedRight = new Vector3(rightWheelStartScale.x * wheelSquashScale.x, rightWheelStartScale.y * wheelSquashScale.y, rightWheelStartScale.z);
+            if (leftWheel != null)
+                muzzleSequence.Join(leftWheel.DOScale(squashedLeft, bodyRecoilKickDuration).SetEase(Ease.OutSine));
+            if (rightWheel != null)
+                muzzleSequence.Join(rightWheel.DOScale(squashedRight, bodyRecoilKickDuration).SetEase(Ease.OutSine));
 
             muzzleSequence.AppendCallback(() =>
             {
@@ -110,20 +131,29 @@ namespace Gameplay.Player
                 }
             });
 
+            if (bodyRecoilTransform != null)
+                muzzleSequence.Append(bodyRecoilTransform.DOLocalMove(bodyRecoilStartPosition, bodyRecoilReturnDuration).SetEase(Ease.OutBack));
+            if (leftWheel != null)
+                muzzleSequence.Join(leftWheel.DOScale(leftWheelStartScale, bodyRecoilReturnDuration).SetEase(Ease.OutBack));
+            if (rightWheel != null)
+                muzzleSequence.Join(rightWheel.DOScale(rightWheelStartScale, bodyRecoilReturnDuration).SetEase(Ease.OutBack));
+
             if (muzzleTransform != null)
             {
-                muzzleSequence.Append(muzzleTransform.DOLocalMove(muzzleStartPosition, 0.1f).SetEase(Ease.OutBack));
                 muzzleSequence.Append(muzzleTransform.DOScale(muzzleEndScale, 0.05f).SetEase(Ease.OutSine));
                 muzzleSequence.Append(muzzleTransform.DOScale(muzzleStartScale, 0.05f).SetEase(Ease.InSine));
             }
 
             muzzleSequence.OnKill(() =>
             {
+                if (bodyRecoilTransform != null)
+                    bodyRecoilTransform.localPosition = bodyRecoilStartPosition;
                 if (muzzleTransform != null)
-                {
-                    muzzleTransform.localPosition = muzzleStartPosition;
                     muzzleTransform.localScale = muzzleStartScale;
-                }
+                if (leftWheel != null)
+                    leftWheel.localScale = leftWheelStartScale;
+                if (rightWheel != null)
+                    rightWheel.localScale = rightWheelStartScale;
                 if (_currentFlash != null && muzzleFlashPrefab != null)
                 {
                     VFXPoolManager.Instance.StopAndReturn(muzzleFlashPrefab, _currentFlash);
@@ -200,21 +230,27 @@ namespace Gameplay.Player
         private void RestoreParts()
         {
             deathSequence?.Kill();
+            muzzleSequence?.Kill();
 
             var col = GetComponent<Collider2D>();
             if (col != null) col.enabled = true;
+
+            if (bodyRecoilTransform != null)
+                bodyRecoilTransform.localPosition = bodyRecoilStartPosition;
 
             if (leftWheel != null)
             {
                 leftWheel.SetParent(leftWheelParent, false);
                 leftWheel.localPosition = leftWheelStartPos;
                 leftWheel.localRotation = leftWheelStartRot;
+                leftWheel.localScale = leftWheelStartScale;
             }
             if (rightWheel != null)
             {
                 rightWheel.SetParent(rightWheelParent, false);
                 rightWheel.localPosition = rightWheelStartPos;
                 rightWheel.localRotation = rightWheelStartRot;
+                rightWheel.localScale = rightWheelStartScale;
             }
             if (muzzleTransform != null)
             {
@@ -231,10 +267,8 @@ namespace Gameplay.Player
 
         protected override void OnHealVFX(int amount)
         {
-            Vector3 spawnPos = transform.position;
-            spawnPos.y = -3.75f;
             if (healVFXPrefab != null)
-                VFXPoolManager.Instance.Play(healVFXPrefab, spawnPos);
+                VFXPoolManager.Instance.Play(healVFXPrefab, transform.position);
         }
 
         protected override void OnShieldAbsorbVFX()

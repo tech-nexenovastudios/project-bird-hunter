@@ -87,11 +87,19 @@ public class CoinFlowManager : MonoBehaviour
         if (coinSfxSource != null) coinSfxSource.volume = Mathf.Clamp01(vol);
     }
 
+    private readonly HashSet<CurrencyType> _missingTargetWarned = new();
+
     private void HandleCurrencyCollected(CurrencyType type, Vector2 screenPos, int totalValue)
     {
-        if (!runtimeMap.ContainsKey(type))
+        if (!runtimeMap.TryGetValue(type, out var runtime))
         {
             Debug.LogWarning($"[CoinFlowManager] No entry configured for {type}!");
+            return;
+        }
+        if (runtime.targetUI == null)
+        {
+            if (_missingTargetWarned.Add(type))
+                Debug.LogError($"[CoinFlowManager] CurrencyFlowEntry '{type}' has no targetUI assigned — coin flow skipped. Wire it on the CoinFlowManager prefab.");
             return;
         }
         StartCoroutine(SpawnFlowRoutine(type, screenPos, totalValue));
@@ -116,7 +124,7 @@ public class CoinFlowManager : MonoBehaviour
             ? parentCanvas.worldCamera : null;
 
         Vector2 targetScreenPos = RectTransformUtility.WorldToScreenPoint(canvasCam, runtime.targetUI.position);
-        Vector3 spawnWorldPos = ScreenToCanvasWorldPos(originScreen, canvasCam);
+        //Vector3 spawnWorldPos = ScreenToCanvasWorldPos(originScreen, canvasCam);
         Vector3 targetWorldPos = ScreenToCanvasWorldPos(targetScreenPos, canvasCam);
 
         for (int i = 0; i < coinCount; i++)

@@ -1,5 +1,6 @@
 using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Gameplay.Interfaces;
 using Gameplay.Pooling;
@@ -27,28 +28,41 @@ namespace Gameplay.Eggs
         [SerializeField] private float minHorizontalVelocity = 0.3f;
         [SerializeField] private float bounceDirectionRandomness = 0.15f;
 
-   
+        [Header("Self-Clear Drift")]
+        [SerializeField] private float driftMinSpeed = 0.4f;
+        [SerializeField] private float driftMaxSpeed = 1.0f;
+        [SerializeField] private float driftRetargetMin = 1.5f;
+        [SerializeField] private float driftRetargetMax = 3.5f;
+        [Tooltip("Y floor for drift mode as a fraction of screen height (0 = bottom, 1 = top).")]
+        [SerializeField, Range(0f, 1f)] private float driftMinHeightPercent = 0.5f;
 
-        public Action<Egg> OnDestroyed;
+        public Action<Egg> OnDestroyed;        // fires at logical death (HP=0) — synchronous with kill
+        public Action<Egg> OnReleaseReady;     // fires after death animation — safe to return to pool
         public Action<Egg> OnTrySplit;
 
         private const float BounceCooldown = 0.08f;
         private const float ApexClampSlack = 1.0f;
         private const float MinBounceHeight = 0.5f;
-        private const float BobAmplitude = 0.1f;
-        private const float BobFrequency = 0.8f;
+        private const float LeanEpsilon = 0.01f;
+        private const float EvasiveRaycastDistance = 50f;
 
         private static readonly int EdgeWidthID = Shader.PropertyToID("_EdgeWidth");
-        private static Transform s_cannonTransform;
+        private static Transform _cannonTransform;
+        private static MaterialPropertyBlock _mpb;
+        private static Camera _cachedScreenCamera;
+        private static int _cachedScreenWidth;
+        private static int _cachedScreenHeight;
+        private static Vector2 _cachedScreenWorldBottomLeft;
+        private static Vector2 _cachedScreenWorldTopRight;
+        private static float _cachedScreenWorldHeight;
 
         private Rigidbody2D _rb;
+        private Transform _t;
         private SpriteRenderer _spriteRenderer;
         private SortingGroup _sortingGroup;
-        private Material _mat;
         private Collider2D _collider;
         private Renderer[] _allRenderers;
         private Canvas[] _allCanvases;
-        private ParticleSystem _minorHitVFXInstance;
         private Health.EggHealth _eggHealth;
 
         private Vector3 _prefabScale;
@@ -59,7 +73,6 @@ namespace Gameplay.Eggs
         private Vector3 _lastBouncePosition;
         private float _maxHeightReachedSinceLastBounce;
 
-        // Cached per-spawn launch / bounds / layer values.
         private float _baseBounceVelocity;
         private float _maxHorizontalLaunch;
         private float _desiredBounceHeight;
@@ -69,28 +82,33 @@ namespace Gameplay.Eggs
         private float _lastBounceTime;
         private float _currentLeanZ;
 
-        // Bullet impulse pressure — drains over time, fires evasive launch at threshold.
         private float _bulletImpulseAccumulator;
 
-        // Self-clear freeze state.
         private bool _isFrozen;
         private bool _pendingFreezeAtApex;
-        private float _frozenAnchorY;
-        private float _bobPhase;
+        private Vector2 _driftDirection;
+        private float _driftSpeed;
+        private float _driftRetargetTimer;
+        private float _driftMinY;
 
-        // Apex-hang: pause vertical motion at the top of each bounce arc for config.apexHangDuration.
         private bool _wasAscending;
         private bool _isHangingAtApex;
         private float _hangTimer;
 
-        // Personality pulse (HP-modulated breathing).
         private float _personalityFreq;
         private float _personalityAmp;
         private float _personalityPhase;
         private bool _hitTweenActive;
 
+        private IEggState _currentState;
+        private CancellationTokenSource _cts;
+        private TweenCallback _onHitTweenComplete;
+
+        // ─── Unity lifecycle ───
+
         private void Awake()
         {
+            _t = transform;
             _rb = GetComponent<Rigidbody2D>();
             _sortingGroup = GetComponent<SortingGroup>();
             _spriteRenderer = GetComponent<SpriteRenderer>();
@@ -100,10 +118,9 @@ namespace Gameplay.Eggs
             _allRenderers = GetComponentsInChildren<Renderer>(true);
             _allCanvases = GetComponentsInChildren<Canvas>(true);
 
-            if (_spriteRenderer != null) _mat = _spriteRenderer.material;
             if (mainCam == null) mainCam = Camera.main;
 
-            _prefabScale = transform.localScale;
+            _prefabScale = _t.localScale;
             _originalScale = _prefabScale;
 
             int layer = LayerMask.NameToLayer("Ground");
@@ -112,23 +129,26 @@ namespace Gameplay.Eggs
                 _groundLayerMask = 1 << layer;
                 _groundLayerCached = true;
             }
+
+            _onHitTweenComplete = () => _hitTweenActive = false;
+        }
+
+        private void OnDestroy()
+        {
+            CancelAsync();
         }
 
         public void Init(EggTierConfig tierConfig, int hp, int sortingIndex)
         {
             if (tierConfig == null) return;
-
             config = tierConfig;
             if (_sortingGroup != null) _sortingGroup.sortingOrder = sortingIndex;
 
             _isDying = false;
-            _isInSpawnPhase = true;
-            _spawnPhaseTimer = 0f;
-            _maxHeightReachedSinceLastBounce = transform.position.y;
-            _lastBouncePosition = transform.position;
+            _maxHeightReachedSinceLastBounce = _t.position.y;
+            _lastBouncePosition = _t.position;
             _isFrozen = false;
             _pendingFreezeAtApex = false;
-            _bobPhase = 0f;
             _hitTweenActive = false;
             _lastBounceTime = -1f;
             _bulletImpulseAccumulator = 0f;
@@ -136,26 +156,70 @@ namespace Gameplay.Eggs
             _wasAscending = false;
             _isHangingAtApex = false;
             _hangTimer = 0f;
+            _spawnPhaseTimer = 0f;
 
             ApplyPersonality(tierConfig, hp);
 
-            transform.localScale = _originalScale;
-            transform.rotation = Quaternion.identity;
+            _t.localScale = _originalScale;
+            _t.rotation = Quaternion.identity;
 
-            if (_mat != null) _mat.SetFloat(EdgeWidthID, 0f);
+            SetEdgeWidth(0f);
             SetVisualsActive(true);
             if (_collider != null) _collider.enabled = true;
             _eggHealth?.Init(tierConfig, hp);
 
             if (_rb != null)
             {
+                _rb.bodyType = RigidbodyType2D.Dynamic;
                 _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+                _rb.linearVelocity = Vector2.zero;
                 _rb.angularVelocity = 0f;
                 _rb.gravityScale = tierConfig.gravityScale;
             }
 
             CacheScreenBounds();
             CacheBounceConstants(tierConfig);
+
+            CancelAsync();
+            _cts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+
+            EnterState(EggStates.Spawn);
+        }
+
+        public void OnPoolAcquire()
+        {
+            gameObject.SetActive(true);
+        }
+
+        public void OnPoolRelease()
+        {
+            CancelAsync();
+            _t.DOKill();
+            _hitTweenActive = false;
+
+            _currentState?.OnExit(this);
+            _currentState = null;
+
+            OnDestroyed = null;
+            OnReleaseReady = null;
+            OnTrySplit = null;
+
+            if (_rb != null)
+            {
+                _rb.linearVelocity = Vector2.zero;
+                _rb.angularVelocity = 0f;
+                _rb.bodyType = RigidbodyType2D.Kinematic;
+            }
+
+            gameObject.SetActive(false);
+        }
+
+        private void CancelAsync()
+        {
+            if (_cts == null) return;
+            try { _cts.Cancel(); } catch { /* already disposed */ }
+            _cts.Dispose();
+            _cts = null;
         }
 
         private void ApplyPersonality(EggTierConfig tier, int hp)
@@ -175,23 +239,31 @@ namespace Gameplay.Eggs
         {
             if (mainCam == null || _collider == null) return;
 
-            Vector3 bottomLeft = mainCam.ViewportToWorldPoint(Vector3.zero);
-            Vector3 topRight = mainCam.ViewportToWorldPoint(Vector3.one);
+            if (_cachedScreenCamera != mainCam ||
+                _cachedScreenWidth != Screen.width ||
+                _cachedScreenHeight != Screen.height)
+            {
+                _cachedScreenCamera = mainCam;
+                _cachedScreenWidth = Screen.width;
+                _cachedScreenHeight = Screen.height;
+                Vector3 bottomLeft = mainCam.ViewportToWorldPoint(Vector3.zero);
+                Vector3 topRight = mainCam.ViewportToWorldPoint(Vector3.one);
+                _cachedScreenWorldBottomLeft = bottomLeft;
+                _cachedScreenWorldTopRight = topRight;
+                _cachedScreenWorldHeight = topRight.y - bottomLeft.y;
+            }
+
             float bw = _collider.bounds.extents.x;
             float bh = _collider.bounds.extents.y;
-
-            _leftBound = bottomLeft.x + bw;
-            _rightBound = topRight.x - bw;
-            _bottomBound = bottomLeft.y + bh;
-            _topBound = topRight.y - bh;
+            _leftBound = _cachedScreenWorldBottomLeft.x + bw;
+            _rightBound = _cachedScreenWorldTopRight.x - bw;
+            _bottomBound = _cachedScreenWorldBottomLeft.y + bh;
+            _topBound = _cachedScreenWorldTopRight.y - bh;
         }
 
         private void CacheBounceConstants(EggTierConfig tier)
         {
-            float worldScreenHeight = mainCam != null
-                ? (mainCam.ViewportToWorldPoint(Vector3.one).y - mainCam.ViewportToWorldPoint(Vector3.zero).y)
-                : 12f;
-
+            float worldScreenHeight = _cachedScreenWorldHeight > 0f ? _cachedScreenWorldHeight : 12f;
             _desiredBounceHeight = Mathf.Max(MinBounceHeight, worldScreenHeight * tier.bounceHeightPercent);
 
             float gScale = _rb != null ? _rb.gravityScale : tier.gravityScale;
@@ -200,7 +272,7 @@ namespace Gameplay.Eggs
             _maxHorizontalLaunch = tier.maxSpeed * tier.horizontalIncrease * 0.5f;
         }
 
-        // ──────────────── Update Loops ────────────────
+        // ─── Update loops ───
 
         private void LateUpdate()
         {
@@ -216,7 +288,7 @@ namespace Gameplay.Eggs
             _personalityPhase += Time.deltaTime * _personalityFreq * Mathf.PI * 2f;
             float pulse = Mathf.Sin(_personalityPhase) * _personalityAmp;
 
-            transform.localScale = new Vector3(
+            _t.localScale = new Vector3(
                 _originalScale.x * (1f - pulse * 0.4f),
                 _originalScale.y * (1f + pulse),
                 _originalScale.z);
@@ -225,65 +297,135 @@ namespace Gameplay.Eggs
         private void TickFlightLean()
         {
             if (_isDying || _isFrozen || _isInSpawnPhase) return;
-            if (_rb == null || config == null) return;
-            if (config.maxLeanDegrees <= 0f) return;
+            if (_rb == null || config == null || config.maxLeanDegrees <= 0f) return;
 
             float vx = _rb.linearVelocity.x;
             float maxSpeedRef = Mathf.Max(0.1f, config.maxSpeed);
             float leanFactor = Mathf.Clamp(vx / maxSpeedRef, -1f, 1f);
             float targetTilt = -leanFactor * config.maxLeanDegrees;
 
-            _currentLeanZ = Mathf.Lerp(_currentLeanZ, targetTilt, Time.deltaTime * config.leanSmoothing);
-            transform.rotation = Quaternion.Euler(0f, 0f, _currentLeanZ);
+            float newLean = Mathf.Lerp(_currentLeanZ, targetTilt, Time.deltaTime * config.leanSmoothing);
+            if (Mathf.Abs(newLean - _currentLeanZ) > LeanEpsilon)
+            {
+                _currentLeanZ = newLean;
+                _t.rotation = Quaternion.Euler(0f, 0f, _currentLeanZ);
+            }
         }
 
         private void FixedUpdate()
         {
             if (_isDying) return;
-
-            if (_isFrozen)
-            {
-                TickFrozenBob();
-                return;
-            }
-
-            if (_isHangingAtApex)
-            {
-                TickApexHang();
-                return;
-            }
-
-            if (_isInSpawnPhase) HandleSpawnPhase();
-
-            if (transform.position.y > _maxHeightReachedSinceLastBounce)
-                _maxHeightReachedSinceLastBounce = transform.position.y;
-
-            TryGroundBounce();
-            TickBulletImpulseDecay();
-
-            if (_pendingFreezeAtApex && _rb.linearVelocity.y <= 0.1f)
-            {
-                FreezeNow();
-                return;
-            }
-
-            // Apex hang: when the ascent flips to descent, pause for the configured duration.
-            if (_wasAscending && _rb.linearVelocity.y <= 0f && config != null && config.apexHangDuration > 0f)
-            {
-                BeginApexHang();
-                return;
-            }
-
-            Vector2 v = _rb.linearVelocity;
-            v.x = Mathf.Clamp(v.x, -config.maxSpeed, config.maxSpeed);
-            float maxUp = _baseBounceVelocity * ApexClampSlack;
-            if (v.y > maxUp) v.y = maxUp;
-            _rb.linearVelocity = v;
-
-            HandleScreenEdges();
+            _currentState?.FixedTick(this);
         }
 
-        // ──────────────── Self-Clear Freeze ────────────────
+        // ─── Strategy pattern: egg states ───
+
+        private interface IEggState
+        {
+            void OnEnter(Egg e);
+            void OnExit(Egg e);
+            void FixedTick(Egg e);
+        }
+
+        private static class EggStates
+        {
+            public static readonly IEggState Spawn = new SpawnEggState();
+            public static readonly IEggState Bouncing = new BouncingEggState();
+            public static readonly IEggState ApexHang = new ApexHangEggState();
+            public static readonly IEggState Drift = new DriftEggState();
+        }
+
+        private void EnterState(IEggState newState)
+        {
+            _currentState?.OnExit(this);
+            _currentState = newState;
+            newState?.OnEnter(this);
+        }
+
+        private sealed class SpawnEggState : IEggState
+        {
+            public void OnEnter(Egg e) { e._isInSpawnPhase = true; e._spawnPhaseTimer = 0f; }
+            public void OnExit(Egg e)  { e._isInSpawnPhase = false; }
+            public void FixedTick(Egg e) { e.TickSpawnPhase(); }
+        }
+
+        private sealed class BouncingEggState : IEggState
+        {
+            public void OnEnter(Egg e) { }
+            public void OnExit(Egg e) { }
+            public void FixedTick(Egg e)
+            {
+                if (e._t.position.y > e._maxHeightReachedSinceLastBounce)
+                    e._maxHeightReachedSinceLastBounce = e._t.position.y;
+
+                e.TryGroundBounce();
+                e.TickBulletImpulseDecay();
+
+                if (e._pendingFreezeAtApex && e._rb.linearVelocity.y <= 0.1f)
+                {
+                    e.FreezeNow();
+                    return;
+                }
+
+                if (e._wasAscending && e._rb.linearVelocity.y <= 0f && e.config != null && e.config.apexHangDuration > 0f)
+                {
+                    e.EnterState(EggStates.ApexHang);
+                    return;
+                }
+
+                Vector2 v = e._rb.linearVelocity;
+                v.x = Mathf.Clamp(v.x, -e.config.maxSpeed, e.config.maxSpeed);
+                float maxUp = e._baseBounceVelocity * ApexClampSlack;
+                if (v.y > maxUp) v.y = maxUp;
+                e._rb.linearVelocity = v;
+
+                e.HandleScreenEdges();
+            }
+        }
+
+        private sealed class ApexHangEggState : IEggState
+        {
+            public void OnEnter(Egg e)
+            {
+                e._isHangingAtApex = true;
+                e._wasAscending = false;
+                e._hangTimer = e.config.apexHangDuration;
+                e._rb.linearVelocity = Vector2.zero;
+                e._rb.gravityScale = 0f;
+            }
+            public void OnExit(Egg e)
+            {
+                e._isHangingAtApex = false;
+                e._rb.gravityScale = e.config != null ? e.config.gravityScale : 1f;
+            }
+            public void FixedTick(Egg e)
+            {
+                e._hangTimer -= Time.fixedDeltaTime;
+                if (e._hangTimer <= 0f) e.EnterState(EggStates.Bouncing);
+            }
+        }
+
+        private sealed class DriftEggState : IEggState
+        {
+            public void OnEnter(Egg e) { e.PickDriftTarget(); }
+            public void OnExit(Egg e) { }
+            public void FixedTick(Egg e) { e.TickDrift(); }
+        }
+
+        // ─── Spawn phase ───
+
+        private void TickSpawnPhase()
+        {
+            _spawnPhaseTimer += Time.fixedDeltaTime;
+            if (_rb.linearVelocity.magnitude > spawnMaxSlowVelocity)
+                _rb.linearVelocity = _rb.linearVelocity.normalized * spawnMaxSlowVelocity;
+            if (_spawnPhaseTimer < spawnSlowMovementDuration) return;
+
+            _rb.linearVelocity = Vector2.zero;
+            EnterState(EggStates.Bouncing);
+        }
+
+        // ─── Self-clear drift ───
 
         public void FreezeAtNextApex()
         {
@@ -296,12 +438,10 @@ namespace Gameplay.Eggs
             if (_isFrozen || _isDying) return;
             _isFrozen = true;
             _pendingFreezeAtApex = false;
-            _frozenAnchorY = transform.position.y;
-            _bobPhase = Random.Range(0f, Mathf.PI * 2f);
             _currentLeanZ = 0f;
             _bulletImpulseAccumulator = 0f;
-            transform.localScale = _originalScale;
-            transform.rotation = Quaternion.identity;
+            _t.localScale = _originalScale;
+            _t.rotation = Quaternion.identity;
 
             if (_rb != null)
             {
@@ -310,68 +450,62 @@ namespace Gameplay.Eggs
                 _rb.bodyType = RigidbodyType2D.Kinematic;
                 _rb.gravityScale = 0f;
             }
+
+            ComputeDriftFloor();
+            EnterState(EggStates.Drift);
         }
 
-        private void TickFrozenBob()
+        private void ComputeDriftFloor()
         {
-            _bobPhase += Time.fixedDeltaTime * BobFrequency * Mathf.PI * 2f;
-            Vector3 pos = transform.position;
-            pos.y = _frozenAnchorY + Mathf.Sin(_bobPhase) * BobAmplitude;
-            transform.position = pos;
+            _driftMinY = _cachedScreenWorldBottomLeft.y + _cachedScreenWorldHeight * driftMinHeightPercent;
         }
 
-        // ──────────────── Spawn / Bounds ────────────────
-
-        private void HandleSpawnPhase()
+        private void PickDriftTarget()
         {
-            _spawnPhaseTimer += Time.fixedDeltaTime;
-
-            if (_rb.linearVelocity.magnitude > spawnMaxSlowVelocity)
-                _rb.linearVelocity = _rb.linearVelocity.normalized * spawnMaxSlowVelocity;
-
-            if (_spawnPhaseTimer < spawnSlowMovementDuration) return;
-
-            _isInSpawnPhase = false;
-            _spawnPhaseTimer = 0f;
-            _rb.linearVelocity = Vector2.zero;
+            Vector2 dir = Random.insideUnitCircle;
+            if (dir.sqrMagnitude < 0.001f) dir = Vector2.up;
+            else dir.Normalize();
+            _driftDirection = dir;
+            _driftSpeed = Random.Range(driftMinSpeed, driftMaxSpeed);
+            _driftRetargetTimer = Random.Range(driftRetargetMin, driftRetargetMax);
         }
+
+        private void TickDrift()
+        {
+            _driftRetargetTimer -= Time.fixedDeltaTime;
+            if (_driftRetargetTimer <= 0f) PickDriftTarget();
+
+            Vector2 pos = _rb.position;
+            pos += _driftDirection * (_driftSpeed * Time.fixedDeltaTime);
+
+            if (pos.x < _leftBound)       { pos.x = _leftBound;  _driftDirection.x =  Mathf.Abs(_driftDirection.x); }
+            else if (pos.x > _rightBound) { pos.x = _rightBound; _driftDirection.x = -Mathf.Abs(_driftDirection.x); }
+
+            if (pos.y < _driftMinY)       { pos.y = _driftMinY;  _driftDirection.y =  Mathf.Abs(_driftDirection.y); }
+            else if (pos.y > _topBound)   { pos.y = _topBound;   _driftDirection.y = -Mathf.Abs(_driftDirection.y); }
+
+            _rb.MovePosition(pos);
+        }
+
+        // ─── Bounds + bounce ───
 
         private void HandleScreenEdges()
         {
-            Vector3 position = transform.position;
+            Vector3 position = _t.position;
             Vector2 velocity = _rb.linearVelocity;
 
-            if (position.x < _leftBound)
-            {
-                position.x = _leftBound;
-                velocity.x = Mathf.Abs(velocity.x) * wallBounceDamping;
-            }
-            else if (position.x > _rightBound)
-            {
-                position.x = _rightBound;
-                velocity.x = -Mathf.Abs(velocity.x) * wallBounceDamping;
-            }
+            if (position.x < _leftBound) { position.x = _leftBound; velocity.x = Mathf.Abs(velocity.x) * wallBounceDamping; }
+            else if (position.x > _rightBound) { position.x = _rightBound; velocity.x = -Mathf.Abs(velocity.x) * wallBounceDamping; }
 
             if (Mathf.Abs(velocity.x) < minHorizontalVelocity) velocity.x = 0f;
 
-            if (position.y < _bottomBound)
-            {
-                position.y = _bottomBound;
-                velocity.y = Mathf.Max(velocity.y, config.maxSpeed * 0.3f);
-            }
-            else if (position.y > _topBound)
-            {
-                position.y = _topBound;
-                velocity.y = Mathf.Min(velocity.y, -config.maxSpeed * 0.2f);
-            }
+            if (position.y < _bottomBound) { position.y = _bottomBound; velocity.y = Mathf.Max(velocity.y, config.maxSpeed * 0.3f); }
+            else if (position.y > _topBound) { position.y = _topBound; velocity.y = Mathf.Min(velocity.y, -config.maxSpeed * 0.2f); }
 
-            transform.position = position;
+            _t.position = position;
             _rb.linearVelocity = velocity;
         }
 
-        // ──────────────── Ground Bounce ────────────────
-
-        // Primary trigger: raycast in FixedUpdate. Cooldown gates re-entry from the collision fallback.
         private void TryGroundBounce()
         {
             if (_isInSpawnPhase || !_groundLayerCached) return;
@@ -387,14 +521,13 @@ namespace Gameplay.Eggs
             ExecuteBounceLaunch(hit.point);
         }
 
-        // Safety net for high-vy frames that skip past the raycast distance.
         private void OnCollisionEnter2D(Collision2D collision)
         {
             if (_isDying || !collision.gameObject.CompareTag("Ground")) return;
             if (Time.time - _lastBounceTime < BounceCooldown) return;
 
             Vector2 contactPoint = collision.contactCount > 0
-                ? collision.contacts[0].point
+                ? collision.GetContact(0).point
                 : _rb.position;
             ExecuteBounceLaunch(contactPoint);
         }
@@ -405,30 +538,10 @@ namespace Gameplay.Eggs
             SpawnSmoke(contactPoint);
             Gameplay.Events.GameEvents.FireEggBounced(contactPoint);
             ApplyBounceBehavior();
-            _lastBouncePosition = transform.position;
-            _maxHeightReachedSinceLastBounce = transform.position.y;
-            // Arm the apex-hang detector — fires once the upward velocity flips to descent.
+            _lastBouncePosition = _t.position;
+            _maxHeightReachedSinceLastBounce = _t.position.y;
             _wasAscending = true;
             PlayGroundSquash();
-        }
-
-        private void BeginApexHang()
-        {
-            _isHangingAtApex = true;
-            _wasAscending = false;
-            _hangTimer = config.apexHangDuration;
-            _rb.linearVelocity = Vector2.zero;
-            _rb.gravityScale = 0f;
-        }
-
-        private void TickApexHang()
-        {
-            _hangTimer -= Time.fixedDeltaTime;
-            if (_hangTimer > 0f) return;
-
-            _isHangingAtApex = false;
-            _rb.gravityScale = config != null ? config.gravityScale : 1f;
-            // vy left at 0 — gravity now pulls the egg down naturally.
         }
 
         private void ApplyBounceBehavior()
@@ -438,7 +551,6 @@ namespace Gameplay.Eggs
             _rb.linearVelocity = new Vector2(randomDirection.x, bounceVelocity);
         }
 
-        // Self-correcting: peak of last arc damps overshoots, pumps undershoots back to target.
         private float CalculateBounceVelocity()
         {
             float lastArcHeight = Mathf.Max(0f, _maxHeightReachedSinceLastBounce - _lastBouncePosition.y);
@@ -454,7 +566,7 @@ namespace Gameplay.Eggs
             return new Vector2(horizontalVelocity * (1f + randomAngle), 0f);
         }
 
-        // ──────────────── Player Collision ────────────────
+        // ─── Player collision ───
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
@@ -467,7 +579,7 @@ namespace Gameplay.Eggs
             PlayDeathSequence();
         }
 
-        // ──────────────── Bullet Impulse Accumulator ────────────────
+        // ─── Bullet impulse ───
 
         public void ApplyBulletHitForce()
         {
@@ -475,9 +587,6 @@ namespace Gameplay.Eggs
 
             if (!config.enableBulletUpwardPush)
             {
-                // Hit-stop: halt vertical motion completely so the egg appears to absorb the
-                // bullet in place. Gravity resumes between hits; rapid fire pins the egg.
-                // Horizontal momentum is preserved.
                 Vector2 vClamp = _rb.linearVelocity;
                 vClamp.y = 0f;
                 _rb.linearVelocity = vClamp;
@@ -500,21 +609,17 @@ namespace Gameplay.Eggs
             }
         }
 
-        // Horizontal-only proximity — an egg high above the cannon isn't in immediate danger.
         private float ComputeCannonProximityBoost()
         {
             EnsureCannonReference();
-            if (s_cannonTransform == null || config.cannonDangerRadius <= 0f) return 0f;
-
-            float dx = Mathf.Abs(_rb.position.x - s_cannonTransform.position.x);
+            if (_cannonTransform == null || config.cannonDangerRadius <= 0f) return 0f;
+            float dx = Mathf.Abs(_rb.position.x - _cannonTransform.position.x);
             return Mathf.Clamp01(1f - dx / config.cannonDangerRadius);
         }
 
-        // Launches with exactly the velocity needed to reach desiredBounceHeight from current altitude.
         private void TriggerEvasiveLaunch()
         {
             Vector2 v = _rb.linearVelocity;
-
             float currentAlt = GetHeightAboveGround();
             float remainingHeight = Mathf.Max(0f, _desiredBounceHeight - currentAlt);
             float gravity = Mathf.Abs(Physics2D.gravity.y * _rb.gravityScale);
@@ -523,24 +628,20 @@ namespace Gameplay.Eggs
 
             float awayDir;
             EnsureCannonReference();
-            if (s_cannonTransform != null)
+            if (_cannonTransform != null)
             {
-                float dx = _rb.position.x - s_cannonTransform.position.x;
+                float dx = _rb.position.x - _cannonTransform.position.x;
                 awayDir = dx >= 0f ? 1f : -1f;
             }
-            else
-            {
-                awayDir = Random.value > 0.5f ? 1f : -1f;
-            }
+            else awayDir = Random.value > 0.5f ? 1f : -1f;
             v.x = awayDir * _maxHorizontalLaunch;
-
             _rb.linearVelocity = v;
         }
 
         private float GetHeightAboveGround()
         {
             if (!_groundLayerCached || _collider == null) return 0f;
-            RaycastHit2D hit = Physics2D.Raycast(_rb.position, Vector2.down, Mathf.Infinity, _groundLayerMask);
+            RaycastHit2D hit = Physics2D.Raycast(_rb.position, Vector2.down, EvasiveRaycastDistance, _groundLayerMask);
             if (hit.collider == null) return 0f;
             return Mathf.Max(0f, hit.distance - _collider.bounds.extents.y);
         }
@@ -552,14 +653,16 @@ namespace Gameplay.Eggs
                 _bulletImpulseAccumulator - config.bulletImpulseDecay * Time.fixedDeltaTime);
         }
 
+        public static void InvalidateCannonReference() => _cannonTransform = null;
+
         private static void EnsureCannonReference()
         {
-            if (s_cannonTransform != null) return;
+            if (_cannonTransform != null) return;
             var cannon = GameObject.FindGameObjectWithTag("Player");
-            if (cannon != null) s_cannonTransform = cannon.transform;
+            if (cannon != null) _cannonTransform = cannon.transform;
         }
 
-        // ──────────────── Hit Reaction / Death ────────────────
+        // ─── Hit / death ───
 
         public void PlayHitReaction(float healthPercent)
         {
@@ -577,37 +680,63 @@ namespace Gameplay.Eggs
                 _originalScale.z);
 
             _hitTweenActive = true;
-            transform.DOKill();
-            transform.DOScale(squashed, 0.06f).SetEase(Ease.OutQuad)
-                .OnComplete(() =>
-                {
-                    transform.DOScale(_originalScale, 0.22f)
-                        .SetEase(Ease.OutElastic, 1f, 0.4f)
-                        .OnComplete(() => _hitTweenActive = false);
-                });
+            _t.DOKill();
+
+            DOTween.Sequence()
+                .Append(_t.DOScale(squashed, 0.06f).SetEase(Ease.OutQuad))
+                .Append(_t.DOScale(_originalScale, 0.22f).SetEase(Ease.OutElastic, 1f, 0.4f))
+                .OnComplete(_onHitTweenComplete);
         }
 
         private void PlayMinorHitVFX()
         {
             if (minorHitVFXPrefab == null || hitVFXPoint == null) return;
 
-            if (_minorHitVFXInstance == null)
-            {
-                GameObject go = Instantiate(minorHitVFXPrefab, hitVFXPoint.position, Quaternion.identity, transform);
-                _minorHitVFXInstance = go.GetComponent<ParticleSystem>();
-                if (_minorHitVFXInstance == null) { Destroy(go); return; }
-            }
+            GameObject instance = ParticlePoolManager.Spawn(minorHitVFXPrefab, hitVFXPoint.position);
+            if (instance == null) return;
 
-            _minorHitVFXInstance.transform.position = hitVFXPoint.position;
-            _minorHitVFXInstance.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-            _minorHitVFXInstance.Play(true);
+            float lifetime = ConfigureOneShotAndGetLifetime(instance);
+            ParticlePoolManager.Despawn(minorHitVFXPrefab, instance, lifetime);
+        }
+
+        // Walks every ParticleSystem (root + children), disables looping, and returns the worst-case
+        // single-cycle visible time — emission duration plus longest particle lifetime — so the pool
+        // can despawn as soon as the burst finishes naturally.
+        private static float ConfigureOneShotAndGetLifetime(GameObject instance)
+        {
+            if (instance == null) return 1f;
+            var systems = instance.GetComponentsInChildren<ParticleSystem>(true);
+            float worst = 0f;
+            for (int i = 0; i < systems.Length; i++)
+            {
+                var ps = systems[i];
+                if (ps == null) continue;
+                var main = ps.main;
+                if (main.loop) main.loop = false;
+                main.stopAction = ParticleSystemStopAction.None;
+
+                float lifetime = main.startLifetime.mode == ParticleSystemCurveMode.Constant
+                    ? main.startLifetime.constant
+                    : main.startLifetime.constantMax;
+                float total = main.duration + lifetime;
+                if (total > worst) worst = total;
+            }
+            return worst > 0f ? worst : 1f;
         }
 
         private void UpdateEdgeWidth(float health)
         {
-            if (_mat == null || _eggHealth == null || _eggHealth.MaxHp <= 0) return;
-            float healthPercent = health / _eggHealth.MaxHp;
-            _mat.SetFloat(EdgeWidthID, 1f - Mathf.Clamp01(healthPercent));
+            if (_eggHealth == null || _eggHealth.MaxHp <= 0) return;
+            SetEdgeWidth(1f - Mathf.Clamp01(health / _eggHealth.MaxHp));
+        }
+
+        private void SetEdgeWidth(float value)
+        {
+            if (_spriteRenderer == null) return;
+            _mpb ??= new MaterialPropertyBlock();
+            _spriteRenderer.GetPropertyBlock(_mpb);
+            _mpb.SetFloat(EdgeWidthID, value);
+            _spriteRenderer.SetPropertyBlock(_mpb);
         }
 
         private void PlayGroundSquash()
@@ -621,79 +750,71 @@ namespace Gameplay.Eggs
                 _originalScale.z);
 
             _hitTweenActive = true;
-            transform.DOKill();
-            transform.localScale = squashed;
-            transform.DOScale(_originalScale, dur)
+            _t.DOKill();
+            _t.localScale = squashed;
+            _t.DOScale(_originalScale, dur)
                 .SetEase(Ease.OutElastic, 1f, 0.5f)
-                .OnComplete(() => _hitTweenActive = false);
+                .OnComplete(_onHitTweenComplete);
         }
 
         public void PlayDeathSequence()
         {
             if (_isDying) return;
-
             _isDying = true;
             _hitTweenActive = false;
-            transform.DOKill();
+            _t.DOKill();
 
-            if (_minorHitVFXInstance != null)
-            {
-                _minorHitVFXInstance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                Destroy(_minorHitVFXInstance.gameObject);
-                _minorHitVFXInstance = null;
-            }
-
-            if (_mat != null) _mat.SetFloat(EdgeWidthID, 1f);
-
+            SetEdgeWidth(1f);
             OnTrySplit?.Invoke(this);
-            StartCoroutine(DeathSequenceRoutine());
+            OnDestroyed?.Invoke(this);   // fires NOW so listeners (level-complete, scoring) react instantly
+
+            DeathSequenceAsync(_cts != null ? _cts.Token : default).Forget();
         }
 
-        private IEnumerator DeathSequenceRoutine()
+        private async UniTaskVoid DeathSequenceAsync(CancellationToken ct)
         {
-            _rb.linearVelocity = Vector2.zero;
-            _rb.angularVelocity = 0f;
-            _rb.bodyType = RigidbodyType2D.Kinematic;
-            if (_collider != null) _collider.enabled = false;
-
-            Vector3 deathScale = _originalScale * deathScaleTarget;
-            yield return AnimateScale(transform.localScale, deathScale, deathScaleDuration);
-
-            SetVisualsActive(false);
-
-            if (blastVFXPrefab != null)
+            try
             {
-                Vector3 blastPos = blastVFXPoint != null ? blastVFXPoint.position : transform.position;
-                GameObject blastInstance = ParticlePoolManager.Spawn(blastVFXPrefab, blastPos);
+                _rb.linearVelocity = Vector2.zero;
+                _rb.angularVelocity = 0f;
+                _rb.bodyType = RigidbodyType2D.Kinematic;
+                if (_collider != null) _collider.enabled = false;
 
-                float blastTotalTime = 0f;
-                if (blastInstance != null && blastInstance.TryGetComponent(out ParticleSystem blastPS))
+                Vector3 deathScale = _originalScale * deathScaleTarget;
+                await AnimateScaleAsync(_t.localScale, deathScale, deathScaleDuration, ct);
+
+                SetVisualsActive(false);
+
+                if (blastVFXPrefab != null)
                 {
-                    ParticleSystem.MainModule main = blastPS.main;
-                    blastTotalTime = main.duration + main.startLifetime.constantMax;
+                    Vector3 blastPos = blastVFXPoint != null ? blastVFXPoint.position : _t.position;
+                    GameObject blastInstance = ParticlePoolManager.Spawn(blastVFXPrefab, blastPos);
+                    float blastTotalTime = ConfigureOneShotAndGetLifetime(blastInstance);
+
+                    ParticlePoolManager.Despawn(blastVFXPrefab, blastInstance, blastTotalTime);
+                    if (blastTotalTime > 0f)
+                        await UniTask.Delay(TimeSpan.FromSeconds(blastTotalTime), DelayType.DeltaTime, PlayerLoopTiming.Update, ct);
                 }
 
-                ParticlePoolManager.Despawn(blastVFXPrefab, blastInstance, blastTotalTime);
-                if (blastTotalTime > 0f) yield return new WaitForSeconds(blastTotalTime);
+                OnReleaseReady?.Invoke(this);
             }
-
-            OnDestroyed?.Invoke(this);
+            catch (OperationCanceledException) { /* released to pool mid-sequence */ }
         }
 
-        private IEnumerator AnimateScale(Vector3 from, Vector3 to, float duration)
+        private async UniTask AnimateScaleAsync(Vector3 from, Vector3 to, float duration, CancellationToken ct)
         {
-            if (duration <= 0f) { transform.localScale = to; yield break; }
+            if (duration <= 0f) { _t.localScale = to; return; }
 
             float elapsed = 0f;
             while (elapsed < duration)
             {
+                ct.ThrowIfCancellationRequested();
                 elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                float eased = InBack(t);
-                transform.localScale = Vector3.LerpUnclamped(from, to, eased);
-                yield return null;
+                float tNorm = Mathf.Clamp01(elapsed / duration);
+                _t.localScale = Vector3.LerpUnclamped(from, to, InBack(tNorm));
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
             }
-            transform.localScale = to;
+            _t.localScale = to;
         }
 
         private static float InBack(float t)
@@ -716,15 +837,6 @@ namespace Gameplay.Eggs
             {
                 Canvas c = _allCanvases[i];
                 if (c != null) c.enabled = active;
-            }
-        }
-
-        private void OnDestroy()
-        {
-            if (_minorHitVFXInstance != null)
-            {
-                Destroy(_minorHitVFXInstance.gameObject);
-                _minorHitVFXInstance = null;
             }
         }
 

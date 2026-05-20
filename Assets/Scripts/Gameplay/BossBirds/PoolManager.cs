@@ -3,6 +3,7 @@
 // Handles all object pooling game-wide
 
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 public class PoolManager : MonoBehaviour
@@ -34,6 +35,24 @@ public class PoolManager : MonoBehaviour
         }
         instance = this;
         DontDestroyOnLoad(gameObject);
+        SceneManager.sceneUnloaded += HandleSceneUnloaded;
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            SceneManager.sceneUnloaded -= HandleSceneUnloaded;
+            instance = null;
+        }
+    }
+
+    // Pooled objects (boss attacks, VFX) live under this DontDestroyOnLoad GameObject,
+    // so they survive scene unloads and would render on top of whatever loads next
+    // (e.g. boss VFX visible in MainMenu after Game Over -> Home). Clear on unload.
+    private void HandleSceneUnloaded(Scene scene)
+    {
+        ClearAllInternal();
     }
 
     // ---- Pool Storage ----

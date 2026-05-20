@@ -34,6 +34,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8695964344807192376
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -52,6 +53,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -73,9 +76,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 171004211
-  m_SortingLayer: 2
+  m_SortingLayer: 8
   m_SortingOrder: 4
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -1853939390812212860, guid: b5686629e4312fd4ab4f8a0e5fed7b84, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -85,7 +90,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &1664039211328954146
 GameObject:
@@ -4903,7 +4907,7 @@ ParticleSystem:
     vectorLabel1_3: W
 --- !u!199 &3180762435536182143
 ParticleSystemRenderer:
-  serializedVersion: 6
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4922,6 +4926,8 @@ ParticleSystemRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -4943,9 +4949,11 @@ ParticleSystemRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 8
   m_SortingOrder: -1
+  m_MaskInteraction: 0
   m_RenderMode: 0
   m_MeshDistribution: 0
   m_SortMode: 0
@@ -4977,7 +4985,6 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
-  m_MaskInteraction: 0
 --- !u!1 &2168855557344103410
 GameObject:
   m_ObjectHideFlags: 0
@@ -5169,6 +5176,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &522006034534414138
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5187,6 +5195,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -5208,9 +5218,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
   m_Color: {r: 0.254717, g: 0.254717, b: 0.254717, a: 0.48235294}
   m_FlipX: 0
@@ -5220,7 +5232,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &3703058164206311058
 GameObject:
@@ -5397,6 +5408,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &137602745108426167
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5415,6 +5427,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -5436,9 +5450,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 171004211
-  m_SortingLayer: 2
+  m_SortingLayer: 8
   m_SortingOrder: 5
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 5689594437415382752, guid: b5686629e4312fd4ab4f8a0e5fed7b84, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -5448,7 +5464,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!58 &7671549262571695088
 CircleCollider2D:
@@ -5497,14 +5512,8 @@ GameObject:
   - component: {fileID: 7208315946610468137}
   - component: {fileID: 8417259787570205037}
   - component: {fileID: 3086154174782474510}
-  - component: {fileID: 4358869403772803014}
-  - component: {fileID: 3354249289649101962}
-  - component: {fileID: 2215142268067350792}
   - component: {fileID: 4945933264508844107}
   - component: {fileID: 124533836552528939}
-  - component: {fileID: 947473091816074254}
-  - component: {fileID: 2120772847372651409}
-  - component: {fileID: 1097563727740280958}
   m_Layer: 0
   m_Name: Single Cannon
   m_TagString: Player
@@ -5615,166 +5624,6 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.4527011, y: 1.4382142}
   m_EdgeRadius: 0
---- !u!114 &4358869403772803014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5770455109350928326}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 540e85b0d9391d041bdcbbcc83ee9e7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cannonStats: {fileID: 11400000, guid: faa4ba72d6350364abe2966d5071b28a, type: 2}
-  cannonFire: {fileID: 2215142268067350792}
-  cannonMove: {fileID: 3354249289649101962}
-  cannonHealth: {fileID: 2120772847372651409}
---- !u!114 &3354249289649101962
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5770455109350928326}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 603aa2d48ca2f5748884962788eed3c3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rb: {fileID: 8417259787570205037}
-  col: {fileID: 3086154174782474510}
-  MainCam: {fileID: 0}
-  speed: 1
-  minY: -4.089
-  maxY: 3.48
-  leftWall: {fileID: 0}
-  rightWall: {fileID: 0}
-  wheelParent: {fileID: 7170573409280472735}
-  wheelList:
-  - {fileID: 272792255732340153}
-  - {fileID: 9021125407979048967}
-  tyre1: {fileID: 272792255732340153}
-  tyre2: {fileID: 9021125407979048967}
-  offset: 0
-  FreeMove: 0
-  firePower: 0
-  fireDamage: 0
-  fireDamageDuration: 0
-  fireDestroyTime: 3
-  firePrefab: {fileID: 418498308608624835, guid: abc5e22e6675c1640b101845bd906cc8, type: 3}
-  rightWheel: {fileID: 1357241057101600642}
-  leftWheel: {fileID: 8968259438306771386}
-  distanceToSpawnFire: 0.5
-  midPos: {fileID: 4513086471454121473}
-  distance: 0.75
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 512
-  cannonStats: {fileID: 11400000, guid: faa4ba72d6350364abe2966d5071b28a, type: 2}
-  boundOffset: {x: 0, y: 0}
-  movementCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 12.519564
-      tangentMode: 0
-      weightedMode: 3
-      inWeight: 0
-      outWeight: 0.5916667
-    - serializedVersion: 3
-      time: 0.225
-      value: 1
-      inSlope: -4.402922
-      outSlope: -3.2624085
-      tangentMode: 0
-      weightedMode: 3
-      inWeight: 0.59166664
-      outWeight: 0.3916667
-    - serializedVersion: 3
-      time: 0.525
-      value: 1
-      inSlope: -0.55036545
-      outSlope: -0.40816337
-      tangentMode: 0
-      weightedMode: 3
-      inWeight: 0.8666667
-      outWeight: 0.40833333
-    - serializedVersion: 3
-      time: 0.825
-      value: 1
-      inSlope: -0.06879558
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 3
-      inWeight: 0.8916666
-      outWeight: 0.008331367
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0.014328615
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 3
-      inWeight: 1
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  moveValue: 0.377
---- !u!114 &2215142268067350792
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5770455109350928326}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a046791569f035499cd71f69f654b7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  GunTipParent: {fileID: 298377623083270390}
-  bulletContainer: {fileID: 0}
-  cannonHead:
-  - {fileID: 5443291413945332501}
-  bulletPrefab: {fileID: 0}
-  shotsPerSecond: 12
-  bulletSpeed: 30
-  Damage: 1
-  initialDamage: 0
-  damagePercentage: 0
-  increaseDamageWhenStand: 0
-  idleTime: 0
-  idleDamageIncrease: 0
-  damageBelowHealth: 0
-  damageBelowHealthValue: 0
-  chanceOfBulletPierceEnemies: 0
-  chanceOfBulletPierceEnemiesProbability: 0
-  numberOfMinBulletInShot: 1
-  numberOfMaxBulletInShot: 1
-  bulletCountInShot: 0
-  SideBullet: 0
-  sideBulletDamage: 0
-  bulletBounce: 2
-  electricEffect: 0
-  electricEffectDuration: 0
-  igniteEffect: 0
-  igniteEffectDuration: 0
-  bigBulletPrefab: {fileID: 2362509683938174150, guid: 81e3d909f676fd441bb0c8887c296035, type: 3}
-  ChargingTime: 4
-  ActiveBigBullet: 0
-  bigBulletDamage: 25
-  coolDownTimer: 1
-  increaseDamageAfterHit: 0
-  alreadyIncreaseDamage: 0
-  increaseHitDamage: 5
-  increaseHitDuration: 5
-  cannonStats: {fileID: 11400000, guid: faa4ba72d6350364abe2966d5071b28a, type: 2}
 --- !u!114 &4945933264508844107
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5806,124 +5655,6 @@ MonoBehaviour:
   - {fileID: 7933489716483771388}
   - {fileID: 8201257740979033032}
   alphaValue: 1
---- !u!114 &947473091816074254
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5770455109350928326}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b974f8b631985f24ca9fc70d8436ec9d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultSize: 0.5
-  decreaseSize: 75
-  electricBulletEffect: 0
-  igniteFireEffect: 0
-  laserCheck: 0
-  sideFire: 0
-  Invincible: 0
-  destroyDamageObj: 0
-  ChanceToHealKillBird: 1
-  swordCheck: 0
-  damageIncreaseBelowHealth: 0
-  swordDamage: 1
-  swordDelay: 3
-  swordSpeed: 10
-  laserDelayTime: 3
-  probabilityToGetBackHealth: 5
-  chanceOfBulletPierceEnemies: 1
-  chanceOfBulletPierceEnemiesProbability: 5
-  numberOfBullets: 1
-  bulletSpeed: 10
-  bulletDamage: 1
-  laserObj: {fileID: 9064145634148236016, guid: 6fcd10eec7528a347abf741867b5401b, type: 3}
-  laserDamage: 1
-  swordHolder: {fileID: 3665257232788731228}
-  swordPrefab: {fileID: 2467485001138828304, guid: 6e7218cceced38140b46d7ff740927cf, type: 3}
-  health: {fileID: 2120772847372651409}
-  cannonFire: {fileID: 2215142268067350792}
-  cannonMove: {fileID: 3354249289649101962}
-  freezeHolder: {fileID: 7788035745548591669}
-  freezePrefab: {fileID: 7105668124011164709, guid: d36165ad1a40cdb418285e2241cffe45, type: 3}
-  freezeCheck: 0
-  poisonHolder: {fileID: 5693194496377964094}
-  poisonPrefab: {fileID: 425233074132974277, guid: 749401e89e4b1d04e9063c2d83568d5f, type: 3}
-  poisonCheck: 0
-  rocketHolder: {fileID: 0}
-  rocketPrefab: {fileID: 0}
-  rocketCheck: 0
-  increaseDamageAfterHit: 1
-  increaseHitDamage: 5
-  increaseHitDuration: 5
-  ThunderSpellFlaskPower: 0
-  getBackHealth: 0
-  reduceGravity: 0
-  changeVelocity: {x: 0.9, y: 0.3}
-  miniCannonPrefab: {fileID: 5770455109350928326, guid: 8e3f3d89e63ba254dbcc1dbc88f50851, type: 3}
-  forceFieldPrefab: {fileID: 56121970648982726, guid: 3a2ce0b4c757fc846897f5d64dd7f80e, type: 3}
-  steelSpikeObj: {fileID: 6966207953256170849, guid: d044776fc2a4a7b419253f9a99ab02ca, type: 3}
-  barrier: {fileID: 0}
-  orbHolder: {fileID: 8356209895572000745}
-  orbParent: {fileID: 9131838790236581406, guid: ea760105bba776e4689d541349eef452, type: 3}
-  poisonOrb: {fileID: 3593167253797294892, guid: 269147c700cc4a6438f6edce2cf7def6, type: 3}
-  freezingOrb: {fileID: 1722894672186795957, guid: 86f004ff74154f342a8a80a6db392b59, type: 3}
-  fireOrb: {fileID: 2479904761019881255, guid: 6a17311f67d06944ca49da8c64cc094b, type: 3}
-  shadowCannonHolder: {fileID: 5232177241726134924}
-  shadowCannon: {fileID: 5770455109350928326, guid: 49d25e064841a7749bbd6f22a03e5d8a, type: 3}
---- !u!114 &2120772847372651409
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5770455109350928326}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69ee5eb5011374a45a49fae2c19b0cd8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHealth: 10
-  currentHealth: 0
-  materials:
-  - {fileID: 137602745108426167}
-  - {fileID: 7933489716483771388}
-  - {fileID: 8201257740979033032}
-  - {fileID: 8695964344807192376}
-  healthBarSlider: {fileID: 0}
-  healthText: {fileID: 0}
-  cannonStats: {fileID: 11400000, guid: faa4ba72d6350364abe2966d5071b28a, type: 2}
-  healthMaterial: {fileID: 0}
-  greenBar: {fileID: -3957531853184498711, guid: c3acc77b7f0891c48be50a52ce9f22c2, type: 3}
-  yellowBar: {fileID: 2471068241067695908, guid: 9844f79fa59030e4d9e6c11e3444c104, type: 3}
-  orangeBar: {fileID: 172089562770960825, guid: c58f1b44f08b3364cb8fc05bbf3ae76c, type: 3}
-  redBar: {fileID: 1798222368101053885, guid: 2d2827872c2154c40bbcc534b96db72c, type: 3}
-  maxInvincibleCount: 0
-  currentInvincibleCount: 0
-  invincibleDuration: 0
-  destroyDamageObj: 0
-  damageObject: 0
-  damageValueWhenHit: 0
-  fullHealBeforeBoss: 0
-  healBeforeBossBattleValue: 0
-  revivePlayer: 0
-  revivePlayerHealth: 0
---- !u!114 &1097563727740280958
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5770455109350928326}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b007bf92b869c3a4a9a3943571dd0510, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  birdHolder: {fileID: 8932530999619599770}
-  activeAbility: {fileID: 0}
 --- !u!1 &6699309855038046221
 GameObject:
   m_ObjectHideFlags: 0
@@ -6085,6 +5816,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8201257740979033032
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6103,6 +5835,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6124,9 +5858,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 171004211
-  m_SortingLayer: 2
+  m_SortingLayer: 8
   m_SortingOrder: 1
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 9197612511269659088, guid: b5686629e4312fd4ab4f8a0e5fed7b84, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -6136,7 +5872,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!70 &2412925180533230461
 CapsuleCollider2D:
@@ -6272,6 +6007,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &7933489716483771388
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6290,6 +6026,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6311,9 +6049,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 171004211
-  m_SortingLayer: 2
+  m_SortingLayer: 8
   m_SortingOrder: 5
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 121775097554117844, guid: b5686629e4312fd4ab4f8a0e5fed7b84, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -6323,7 +6063,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!58 &7225403170199795864
 CircleCollider2D:

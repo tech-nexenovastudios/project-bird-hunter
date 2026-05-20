@@ -142,6 +142,10 @@ namespace Gameplay.PowerUps
                 cannon.IsInvincible = true;
                 lastInvincibleTime = Time.time;
 
+                // Spawn VFX immediately on pick so the player sees feedback the moment they
+                // select. The duration countdown is still deferred until an Egg appears (below).
+                SpawnInvincibleVfx();
+
                 if (invincibleCooldown > 0f)
                     GameEvents.FirePowerupCooldownStarted(invincibleCooldown);
 
@@ -187,7 +191,7 @@ namespace Gameplay.PowerUps
 
             private void StartDurationTimer()
             {
-                SpawnInvincibleVfx();
+                // VFX is spawned at pick time in TryActivateInvincible — only run the countdown here.
                 timer = new IntervalTimer(duration, duration);
                 timer.OnTimerStop = Deactivate;
                 timer.Start();

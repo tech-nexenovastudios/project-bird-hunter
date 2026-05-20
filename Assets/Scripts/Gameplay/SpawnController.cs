@@ -92,14 +92,16 @@ namespace Gameplay
         bool _draining;
         int _totalTrackedScore;
 
-        // ── Self-clear (non-boss levels only) ──
         // After target score + min duration, spawning stops and remaining eggs freeze at apex.
-        // Player mops them up at their own pace for normal coin rewards. A Finish button surfaces
-        // after FinishButtonDelay so a stuck player can voluntarily end the level.
-        const float FinishButtonDelay = 15f;
+        // The Finish button surfaces mid-clear (see ComputeFinishButtonDelay) so the player has
+        // to make a rushed "push for coins or bail" call rather than waiting for frozen eggs.
+        const float FinishButtonDelayMin = 3f;
+        const float FinishButtonDelayMax = 8f;
+        const float FinishButtonRushFactor = 0.6f;
         bool _inSelfClear;
         float _selfClearTimer;
         bool _finishButtonShown;
+        float _finishButtonDelay;
 
         // Matches the LevelDetailPopup "Starting in 3...2...1...Go!" intro so spawning waits
         // until the countdown finishes. Includes a small buffer for fade-in / "Go!" beat.
@@ -136,10 +138,13 @@ namespace Gameplay
 
         public bool IsBossAlive => _activeBossController != null && !_activeBossController.IsDead;
 
+        private IEggFactory _eggFactory;
+
         void Awake()
         {
             Instance = this;
             _pressureTracker = new PressureTracker();
+            _eggFactory = new PooledEggFactory(transform);
         }
 
         void OnEnable()
@@ -193,6 +198,8 @@ namespace Gameplay
             _totalTrackedScore = 0;
             _sortingIndex = 10;
             _eggTierCounts.Clear();
+
+            Eggs.Egg.InvalidateCannonReference();
 
             // Spawning is gated by elapsedTime < StartupSpawnDelay so the player gets a clean
             // 3-2-1 countdown. The first bird arrives just after "Go!".
@@ -255,8 +262,6 @@ namespace Gameplay
             _pressureMax = cfg.pressureMax;
 
             _targetScore = BucketRound(Mathf.RoundToInt(Geom(cfg.targetScoreMin, cfg.targetScoreMax, t)));
-            // TEMP TESTING — fast level complete. REVERT before merging.
-            _targetScore = 10;
             _hpMultiplier = SnapToStep(Geom(cfg.hpMultMin, cfg.hpMultMax, t), 0.05f);
 
             float center = Mathf.Lerp(cfg.spawnIntervalEarly, cfg.spawnIntervalLate, t)
@@ -413,7 +418,7 @@ namespace Gameplay
             if (_inSelfClear && !_finishButtonShown)
             {
                 _selfClearTimer += Time.deltaTime;
-                if (_selfClearTimer >= FinishButtonDelay && _activeEggs.Count > 0)
+                if (_selfClearTimer >= _finishButtonDelay && _activeEggs.Count > 0)
                 {
                     _finishButtonShown = true;
                     GameEvents.FireFinishButtonReady();
@@ -452,13 +457,7 @@ namespace Gameplay
                 return;
             }
 
-            BossBirdConfig cfg = _levelBossBirdConfig;
-            if (cfg == null && chapterBossConfigs != null)
-            {
-                int idx = _chapter - 1;
-                if (idx >= 0 && idx < chapterBossConfigs.Length)
-                    cfg = chapterBossConfigs[idx];
-            }
+            BossBirdConfig cfg = chapterConfig.bossBirdConfig;
 
             if (cfg == null)
             {
@@ -768,6 +767,7 @@ namespace Gameplay
             _inSelfClear = true;
             _selfClearTimer = 0f;
             _finishButtonShown = false;
+            _finishButtonDelay = ComputeFinishButtonDelay();
 
             for (int i = 0; i < _activeEggs.Count; i++)
             {
@@ -777,9 +777,20 @@ namespace Gameplay
             GameEvents.FireSelfClearStarted();
         }
 
-        // Called when the player taps the Finish button after FinishButtonDelay. Ends the level
-        // immediately; any remaining frozen eggs are silently vanished — they forfeit their coins
-        // because the player chose to bail rather than clear them.
+        private float ComputeFinishButtonDelay()
+        {
+            var cannon = GetCannon();
+            float dps = cannon != null ? cannon.CurrentDps : 0f;
+            int eggHp = _pressureTracker != null ? _pressureTracker.TotalEggHp : 0;
+
+            if (dps <= 0f || eggHp <= 0) return FinishButtonDelayMin;
+
+            float timeToClear = eggHp / dps;
+            return Mathf.Clamp(timeToClear * FinishButtonRushFactor,
+                               FinishButtonDelayMin, FinishButtonDelayMax);
+        }
+
+        // Player tapped Finish: any remaining frozen eggs forfeit their coins.
         public void RequestPlayerFinish()
         {
             if (!_inSelfClear || _levelCompleted) return;
@@ -1194,8 +1205,8 @@ namespace Gameplay
                 tier = tier.splitInto;
             if (tier == null) return;
 
-            var go = Instantiate(tier.eggPrefab, bird.transform.position, Quaternion.identity);
-            var egg = go.GetComponent<Egg>();
+            var egg = _eggFactory.Acquire(tier, bird.transform.position, Quaternion.identity);
+            if (egg == null) return;
 
             int baseHp = Random.Range(tier.baseHpMin, tier.baseHpMax + 1);
             int hp = Mathf.Max(1, Mathf.RoundToInt(baseHp * _hpMultiplier));
@@ -1203,6 +1214,7 @@ namespace Gameplay
             egg.Init(tier, hp, sortingIndex: _sortingIndex++);
             egg.OnTrySplit += HandleEggSplit;
             egg.OnDestroyed += HandleEggDestroyed;
+            egg.OnReleaseReady += HandleEggReleaseReady;
 
             _activeEggs.Add(egg);
             _pressureTracker.RegisterEgg(egg);
@@ -1228,16 +1240,17 @@ namespace Gameplay
                         if (!IsEggTierAllowed(splitTier)) continue;
 
                         var offset = i == 0 ? new Vector3(-.5f, 0.5f, 0f) : new Vector3(.5f, 0.5f, 0f);
-                        var go = Instantiate(splitTier.eggPrefab, egg.transform.position, Quaternion.identity);
-                        go.transform.DOJump(egg.transform.position + offset, 0.5f, 1, 0.5f).SetEase(Ease.OutBack);
+                        var newEgg = _eggFactory.Acquire(splitTier, egg.transform.position, Quaternion.identity);
+                        if (newEgg == null) continue;
+                        newEgg.transform.DOJump(egg.transform.position + offset, 0.5f, 1, 0.5f).SetEase(Ease.OutBack);
 
-                        var newEgg = go.GetComponent<Egg>();
                         int baseHp = Random.Range(splitTier.baseHpMin, splitTier.baseHpMax + 1);
                         int hp = Mathf.Max(1, Mathf.RoundToInt(baseHp * _hpMultiplier));
 
                         newEgg.Init(splitTier, hp, _sortingIndex++);
                         newEgg.OnTrySplit += HandleEggSplit;
                         newEgg.OnDestroyed += HandleEggDestroyed;
+                        newEgg.OnReleaseReady += HandleEggReleaseReady;
 
                         _activeEggs.Add(newEgg);
                         _pressureTracker.RegisterEgg(newEgg);
@@ -1259,13 +1272,14 @@ namespace Gameplay
             Destroy(bird.gameObject);
         }
 
+        // Fires at LOGICAL death — egg just hit zero HP. Removing from _activeEggs now means
+        // FireAllEggsCleared lands the instant the last egg is killed, not after its blast animation.
         void HandleEggDestroyed(Egg egg)
         {
             egg.OnTrySplit -= HandleEggSplit;
             egg.OnDestroyed -= HandleEggDestroyed;
             _activeEggs.Remove(egg);
             TrackEggRemoved(egg.config);
-            Destroy(egg.gameObject);
 
             if (_activeEggs.Count == 0)
             {
@@ -1273,9 +1287,22 @@ namespace Gameplay
                 {
                     _inSelfClear = false;
                     GameEvents.FireSelfClearEnded();
+                    GameEvents.FireAllEggsCleared();
                 }
-                GameEvents.FireAllEggsCleared();
+                else if (_levelCompleted)
+                {
+                    GameEvents.FireAllEggsCleared();
+                }
+                // else: mid-level zero-crossing between bird lays — not a level clear.
             }
+        }
+
+        // Fires after the death animation finishes — safe to return the egg to the pool now without
+        // cutting off its visual blast.
+        void HandleEggReleaseReady(Egg egg)
+        {
+            egg.OnReleaseReady -= HandleEggReleaseReady;
+            _eggFactory.Release(egg);
         }
 
         private int CalculateEggMaxScore(EggTierConfig tier)

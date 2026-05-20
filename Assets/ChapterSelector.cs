@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+using Gameplay.Managers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,8 +9,6 @@ public class ChapterSelector : MonoBehaviour
     [SerializeField] ChaptersConfig worlds;
 
     [Header("UI")]
-    //[SerializeField] TMP_Text locationText;
-    //[SerializeField] TMP_Text worldText;
     [SerializeField] TMP_Text chapterText;
 
     int currentIndex;
@@ -18,29 +16,22 @@ public class ChapterSelector : MonoBehaviour
     private void OnEnable() => ScrollCarouselEffect.currentLevelChange += ChangeWorld;
     private void OnDisable() => ScrollCarouselEffect.currentLevelChange -= ChangeWorld;
 
-    private void Start() => ChangeWorld(1);
-
-    public void ChangeWorld(int index)
+    public void ChangeWorld(int oneBasedIndex)
     {
-        currentIndex = index - 1;
-
+        currentIndex = oneBasedIndex - 1;
         ChapterData data = worlds.GetWorldData(currentIndex);
-
-        //worldText.text = $"{data.worldName.ToUpper()}";
-        chapterText.text = $"{data.chapterName.ToUpper()}";
-        //locationText.text = $"LOCATION: {currentIndex + 1}/{worlds.GetWorldCount()}";
+        if (data != null) chapterText.text = data.chapterName.ToUpper();
     }
 
     public void LoadCurrentWorld()
     {
         var unlockService = ServiceLocator.Get<ChapterUnlockService>();
-        if (unlockService != null && !unlockService.IsUnlocked(currentIndex))
+        if (unlockService != null && !unlockService.IsUnlocked(currentIndex)) return;
 
-            PlayerPrefs.SetInt("SelectedWorld", currentIndex);
-        PlayerPrefs.SetInt("SelectedLevel", 1);
+        GameProgressManager.Instance?.SelectChapter(currentIndex + 1);
 
         ChapterData data = worlds.GetWorldData(currentIndex);
-        ChapterEnvironmentApplier.SetChapterData(data);
+        if (data != null) ChapterEnvironmentApplier.SetChapterData(data);
 
         SceneManager.LoadScene("GamePlayScene");
     }

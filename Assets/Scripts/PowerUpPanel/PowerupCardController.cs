@@ -77,7 +77,6 @@ public class PowerupCardController : MonoBehaviour
             {
                 PowerupId = cfg.id;
                 Rarity = cfg.rarity;
-                Debug.Log($"[PowerupCard] '{goName}' auto-resolved → id='{cfg.id}', rarity={cfg.rarity}");
                 return;
             }
         }
@@ -90,7 +89,6 @@ public class PowerupCardController : MonoBehaviour
             {
                 PowerupId = cfg.id;
                 Rarity = cfg.rarity;
-                Debug.Log($"[PowerupCard] '{goName}' auto-resolved (stripped) → id='{cfg.id}', rarity={cfg.rarity}");
                 return;
             }
         }

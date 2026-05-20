@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Gameplay
 {
     [Serializable]
-    public partial class GameProgress
+    public class GameProgress
     {
         public int currentChapter = 1;
         public int currentLevel   = 1;

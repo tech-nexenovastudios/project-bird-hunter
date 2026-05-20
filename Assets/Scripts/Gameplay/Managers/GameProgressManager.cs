@@ -90,12 +90,8 @@ namespace Gameplay.Managers
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            //Debug.Log("[ProgressManager] Awake — Instance set.");
         }
 
-        // ─────────────────────────────────────────────
-        // Level Loading
-        // ─────────────────────────────────────────────
 
         public LevelProfile GetCurrentLevelProfile()
             => LoadLevelProfile(CurrentChapter, CurrentLevel);
@@ -139,9 +135,23 @@ namespace Gameplay.Managers
             return profile;
         }
 
-        // ─────────────────────────────────────────────
-        // Level Completion
-        // ─────────────────────────────────────────────
+        // Persist the player's chapter choice from the main-menu carousel. Switching
+        // to a different chapter resets level to 1 and clears the per-chapter powerup
+        // slots so the chapter-start spin fires. Same chapter keeps current level (resume).
+        public void SelectChapter(int chapter)
+        {
+            if (_progress == null) _progress = new GameProgress();
+            chapter = Mathf.Max(1, chapter);
+
+            if (_progress.currentChapter != chapter)
+            {
+                _progress.currentChapter = chapter;
+                _progress.currentLevel = 1;
+                _progress.ResetSlotsForNewChapter();
+            }
+            SaveProgress();
+        }
+
 
         public void CompleteLevel(int scoreAchieved)
         {
@@ -156,7 +166,6 @@ namespace Gameplay.Managers
             if (IsSpinLevel(completedLevel))
             {
                 int slotIndex = GetSpinSlotIndex(completedLevel);
-                //Debug.Log($"[ProgressManager] 🎰 Mid-chapter spin after L{completedLevel} → Slot {slotIndex}");
                 TriggerSpin(slotIndex);
             }
 
@@ -170,7 +179,6 @@ namespace Gameplay.Managers
                 _progress.currentChapter++;
                 _progress.currentLevel = 1;
                 _progress.ResetSlotsForNewChapter();
-                //Debug.Log($"[ProgressManager] 🎰 Chapter start spin → Ch{_progress.currentChapter}");
 
                 // Tell the cloud-backed unlock service the new chapter is available so the
                 // main-menu carousel reflects it on next return. ChapterUnlockService uses
@@ -198,74 +206,56 @@ namespace Gameplay.Managers
         public void TriggerSpin(int slotIndex)
         {
             _currentSpinSlotIndex = slotIndex;
-            //Debug.Log($"[ProgressManager] TriggerSpin — storing slotIndex: {_currentSpinSlotIndex}");
 
             var options = _progress.GetAvailablePowerUpForSpin(
                 _progress.currentChapter, slotIndex, allPowerups, maxOptions: 3);
 
-            //Debug.Log($"[ProgressManager] 🎰 TriggerSpin — Slot {slotIndex} | Options count: {options.Length}");
             for (int i = 0; i < options.Length; i++)
-                //Debug.Log($"[ProgressManager]   Option[{i}]: {options[i]?.displayName ?? "NULL"} (id: {options[i]?.id ?? "NULL"})");
 
             OnSpinTriggered?.Invoke(slotIndex, options);
         }
 
-        // ─────────────────────────────────────────────
-        // Powerup Selection
-        // ─────────────────────────────────────────────
 
         public void PlayerSelectedPowerup(PowerupConfig powerup)
         {
             if (powerup == null)
             {
-                //Debug.LogWarning("[ProgressManager] ⚠️ PlayerSelectedPowerup called with NULL powerup.");
                 return;
             }
 
-            //Debug.Log($"[ProgressManager] PlayerSelectedPowerup — '{powerup.displayName}' (id: {powerup.id}) → slot {_currentSpinSlotIndex}");
 
             LastSelectedPowerup = powerup;
             _progress.EquipPowerup(powerup, _currentSpinSlotIndex);  // ← pass slot
             _progress.playerSpins++;
             SaveProgress();
 
-            //Debug.Log($"[ProgressManager] ✅ LastSelectedPowerup set. playerSpins now: {_progress.playerSpins}");
 
             for (int i = 0; i < _progress.chapterSlots.Length; i++)
             {
                 var slot = _progress.chapterSlots[i];
-                //Debug.Log($"[ProgressManager]   Slot[{i}]: equippedPowerupId = '{slot?.equippedPowerupId ?? "empty"}' | isOnCooldown = {slot?.isOnCooldown}");
             }
         }
 
         public void ClearLastSelectedPowerup()
         {
-            //Debug.Log($"[ProgressManager] ClearLastSelectedPowerup — was: '{LastSelectedPowerup?.displayName ?? "NULL"}'");
             LastSelectedPowerup = null;
         }
 
-        // ─────────────────────────────────────────────
-        // Apply Powerups to Cannon
-        // ─────────────────────────────────────────────
 
         public void ApplyPowerUpsToCurrentCannon(GameObject cannon)
         {
-            //Debug.Log($"[ProgressManager] ApplyPowerUpsToCurrentCannon — cannon: {cannon?.name ?? "NULL"}");
 
             if (cannon == null)
             {
-                //Debug.LogError("[ProgressManager] ❌ Cannot apply powerups — cannon GameObject is null.");
                 return;
             }
 
             if (CannonPowerUpCaster.Instance == null)
             {
-                //Debug.LogError("[ProgressManager] ❌ CannonPowerUpCaster.Instance is null.");
                 return;
             }
 
             CannonPowerUpCaster.Instance.UnequipAll();
-            //Debug.Log("[ProgressManager] UnequipAll called — starting fresh.");
 
             int appliedCount = 0;
             for (int i = 0; i < _progress.chapterSlots.Length; i++)
@@ -274,13 +264,11 @@ namespace Gameplay.Managers
 
                 if (string.IsNullOrEmpty(slot?.equippedPowerupId))
                 {
-                    //Debug.Log($"[ProgressManager]   Slot[{i}]: empty — skipping.");
                     continue;
                 }
 
                 if (slot.isOnCooldown)
                 {
-                    //Debug.Log($"[ProgressManager]   Slot[{i}]: '{slot.equippedPowerupId}' is on cooldown — skipping.");
                     continue;
                 }
 
@@ -301,12 +289,10 @@ namespace Gameplay.Managers
                 }
                 bool hasCooldown = config != null && config.cooldown > 0f;
 
-                //Debug.Log($"[ProgressManager]   Slot[{i}]: looking up '{slot.equippedPowerupId}'...");
                 var runtimePowerUp = CannonPowerUpCaster.Instance.FindByID(slot.equippedPowerupId);
 
                 if (runtimePowerUp == null)
                 {
-                    //Debug.LogError($"[ProgressManager]   Slot[{i}]: ❌ No CannonPowerUp found for id '{slot.equippedPowerupId}'. Check hotbar assignments in Inspector.");
                     continue;
                 }
 
@@ -327,35 +313,25 @@ namespace Gameplay.Managers
 
                 if (!isPersistent && slot.hasBeenApplied)
                 {
-                    //Debug.Log($"[ProgressManager]   Slot[{i}]: '{slot.equippedPowerupId}' is one-shot and already applied — skipping.");
                     continue;
                 }
 
                 CannonPowerUpCaster.Instance.Equip(runtimePowerUp);
                 appliedCount++;
                 if (!isPersistent) slot.hasBeenApplied = true;
-                //Debug.Log($"[ProgressManager]   Slot[{i}]: ✅ '{slot.equippedPowerupId}' equipped successfully.");
             }
 
-            //Debug.Log($"[ProgressManager] ApplyPowerUpsToCurrentCannon done — {appliedCount} powerup(s) applied.");
         }
 
-        // ─────────────────────────────────────────────
-        // Reset
-        // ─────────────────────────────────────────────
 
         public void ResetProgress()
         {
-            //Debug.Log("[ProgressManager] ResetProgress called.");
             _progress = new GameProgress();
             LastSelectedPowerup = null;
             SaveProgress();
             OnProgressChanged?.Invoke(_progress);
         }
 
-        // ─────────────────────────────────────────────
-        // Save / Load
-        // ─────────────────────────────────────────────
 
         [Serializable]
         private class SaveData
@@ -397,8 +373,12 @@ namespace Gameplay.Managers
                 firstTimeClearedLevels = _progress.firstTimeClearedLevels ?? new()
             };
 
-            // for (int i = 0; i < 4; i++)
-            //     data.slotPowerupIds[i] = _progress.chapterSlots[i]?.equippedPowerupId ?? "";
+            if (_progress.chapterSlots != null)
+            {
+                int slotCount = Mathf.Min(data.slotPowerupIds.Length, _progress.chapterSlots.Length);
+                for (int i = 0; i < slotCount; i++)
+                    data.slotPowerupIds[i] = _progress.chapterSlots[i]?.equippedPowerupId ?? "";
+            }
 
             string path = Path.Combine(Application.persistentDataPath, saveFileName);
             try
@@ -406,7 +386,6 @@ namespace Gameplay.Managers
                 var bf = new BinaryFormatter();
                 using var fs = new FileStream(path, FileMode.Create);
                 bf.Serialize(fs, data);
-                //Debug.Log($"[ProgressManager] 💾 Saved: Ch{data.currentChapter} L{data.currentLevel}");
             }
             catch (Exception ex) 
             {
@@ -417,11 +396,9 @@ namespace Gameplay.Managers
         public void LoadProgress()
         {
             string path = Path.Combine(Application.persistentDataPath, saveFileName);
-            //Debug.Log($"[ProgressManager] LoadProgress — path: {path}");
 
             if (!File.Exists(path))
             {
-                //Debug.Log("[ProgressManager] No save file found — starting fresh.");
                 _progress = new GameProgress();
                 OnProgressChanged?.Invoke(_progress);
                 return;
@@ -450,15 +427,17 @@ namespace Gameplay.Managers
                     firstTimeClearedLevels = data.firstTimeClearedLevels ?? new()
                 };
 
-                // for (int i = 0; i < 4; i++)
-                //     if (!string.IsNullOrEmpty(data.slotPowerupIds[i]))
-                //         _progress.chapterSlots[i].equippedPowerupId = data.slotPowerupIds[i];
+                if (data.slotPowerupIds != null && _progress.chapterSlots != null)
+                {
+                    int slotCount = Mathf.Min(data.slotPowerupIds.Length, _progress.chapterSlots.Length);
+                    for (int i = 0; i < slotCount; i++)
+                        if (!string.IsNullOrEmpty(data.slotPowerupIds[i]) && _progress.chapterSlots[i] != null)
+                            _progress.chapterSlots[i].equippedPowerupId = data.slotPowerupIds[i];
+                }
 
-                //Debug.Log($"[ProgressManager] 📂 Loaded: Ch{data.currentChapter} L{data.currentLevel} Spins:{data.playerSpins}");
             }
             catch (Exception ex)
             {
-                //Debug.LogError("[ProgressManager] Load error: " + ex.Message);
                 _progress = new GameProgress();
             }
 

@@ -4817,8 +4817,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 8
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_RenderMode: 4
@@ -9554,8 +9554,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 8
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_RenderMode: 4
@@ -9644,15 +9644,27 @@ MonoBehaviour:
   - {fileID: 7302994082672350299}
   - {fileID: 6557629579210602280}
   wheelRadius: 0.21
+  edgeOverhang: 0.4
   muzzleFlashPrefab: {fileID: 3971395785658530128}
   muzzleFlashPoint: {fileID: 3090945473354348864}
   muzzleTransform: {fileID: 3090945473354348864}
   muzzleEndPosition: {x: 0, y: -0.4, z: 0}
   muzzleEndScale: {x: 1, y: 1.1, z: 1}
+  bodyRecoilTransform: {fileID: 0}
+  bodyRecoilOffset: {x: 0, y: -0.06, z: 0}
+  bodyRecoilKickDuration: 0.06
+  bodyRecoilReturnDuration: 0.12
+  wheelSquashScale: {x: 1.08, y: 0.88}
   hitVFXPrefab: {fileID: 7304504059222719615}
   hitVFXPoint: {fileID: 4594453694566474373}
   deathVFXPrefab: {fileID: 0}
   deathVFXPoint: {fileID: 0}
+  middleTransform: {fileID: 0}
+  leftWheel: {fileID: 0}
+  rightWheel: {fileID: 0}
+  wheelFlyDistance: 2
+  wheelHopHeight: 1
+  wheelSpin: 720
   healVFXPrefab: {fileID: 7157426614441174199}
   shieldAbsorbVFXPrefab: {fileID: 0}
   reviveVFXPrefab: {fileID: 0}
@@ -14519,8 +14531,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 8
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_RenderMode: 4
@@ -19714,8 +19726,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 8
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_RenderMode: 4
@@ -24531,8 +24543,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 171004211
+  m_SortingLayer: 8
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_RenderMode: 4
@@ -24705,6 +24717,22 @@ PrefabInstance:
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4166838573271573759, guid: c0c270b6defce8147bcfcc393780a15c, type: 3}
+      propertyPath: m_SortingLayer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4166838573271573759, guid: c0c270b6defce8147bcfcc393780a15c, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 171004211
+      objectReference: {fileID: 0}
+    - target: {fileID: 4166896695068805919, guid: c0c270b6defce8147bcfcc393780a15c, type: 3}
+      propertyPath: m_SortingLayer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4166896695068805919, guid: c0c270b6defce8147bcfcc393780a15c, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 171004211
+      objectReference: {fileID: 0}
     - target: {fileID: 4251559908879559493, guid: c0c270b6defce8147bcfcc393780a15c, type: 3}
       propertyPath: m_LocalScale.x
       value: 3.333333
@@ -24835,6 +24863,14 @@ PrefabInstance:
     - target: {fileID: 4589630868991345874, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
       propertyPath: m_Name
       value: 7-InstantHeal
+      objectReference: {fileID: 0}
+    - target: {fileID: 5073918278556656971, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+      propertyPath: m_SortingLayer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5073918278556656971, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 171004211
       objectReference: {fileID: 0}
     - target: {fileID: 8111485395299387427, guid: c90c26b65e0f9de44909bf16955aff5a, type: 3}
       propertyPath: playOnAwake

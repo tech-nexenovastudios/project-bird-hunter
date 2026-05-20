@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Gameplay.Birds;
+using Gameplay.Events;
 using Gameplay.Interfaces;
 using Gameplay.Player;
 using UnityEngine;
@@ -20,6 +21,7 @@ namespace Gameplay.PowerUps
         private IEntity cachedTarget;
         private MonoBehaviour cachedTargetMb;
         private readonly List<CannonPowerUp> equippedPowerUps = new();
+        private GameObject _activeRunningVfx;
 
         private void Start()
         {
@@ -132,6 +134,26 @@ namespace Gameplay.PowerUps
             UnityEngine.Debug.Log($"[PowerUpCaster] ✅ Equip complete. Total equipped: {equippedPowerUps.Count}");
         }
 
+        private void OnEnable()
+        {
+            GameEvents.OnPowerupSelected += OnPowerupSelectedFromUI;
+        }
+
+        private void OnDisable()
+        {
+            GameEvents.OnPowerupSelected -= OnPowerupSelectedFromUI;
+        }
+
+        // Fires only when the player commits a powerup via the spin UI, not on every level reapply.
+        // This is the right moment for the "you just picked this!" cast burst + running VFX.
+        private void OnPowerupSelectedFromUI(PowerupConfig config)
+        {
+            if (config == null) return;
+            CannonPowerUp powerUp = FindByID(config.id);
+            if (powerUp == null) return;
+            PlayFeedback(powerUp, cannonRef as MonoBehaviour);
+        }
+
         public void Unequip(CannonPowerUp powerUp)
         {
             if (powerUp == null) return;
@@ -192,10 +214,18 @@ namespace Gameplay.PowerUps
                     Instantiate(powerUp.castVfx, pos, Quaternion.identity);
                 }
 
+                // Kill any lingering runningVfx from a previous selection so they don't stack on the cannon.
+                if (_activeRunningVfx != null) Destroy(_activeRunningVfx);
+
                 if (powerUp.runningVfx != null)
                 {
-                    var instance = Instantiate(powerUp.runningVfx, targetMb.transform);
-                    Destroy(instance, runningVfxLifetime);
+                    _activeRunningVfx = Instantiate(powerUp.runningVfx, targetMb.transform);
+                    // Snap to cannon pivot — ignore the prefab's authored world offset so it never
+                    // floats away from the cannon when parented.
+                    var t = _activeRunningVfx.transform;
+                    t.localPosition = Vector3.zero;
+                    t.localRotation = Quaternion.identity;
+                    Destroy(_activeRunningVfx, runningVfxLifetime);
                 }
             }
 

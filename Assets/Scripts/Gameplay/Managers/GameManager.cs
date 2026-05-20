@@ -93,6 +93,16 @@ namespace Gameplay.Managers
 
             var progress = GameProgressManager.Instance.Data;
 
+            // Spins fire at L1, L6, L11, L16 of every chapter (slot 0/1/2/3). When the player
+            // enters L1 of a chapter — whether from a fresh launch, chapter transition, or
+            // returning to the menu and back — clear chapterSlots so the chapter-start spin
+            // (slot 0) appears, even if the previous session left a powerup equipped.
+            if (progress.currentLevel == 1)
+            {
+                progress.ResetSlotsForNewChapter();
+                GameProgressManager.Instance.SaveProgress();
+            }
+
             if (IsSpinPending(progress))
             {
                 TriggerPendingSpin(progress);
@@ -202,7 +212,7 @@ namespace Gameplay.Managers
         private void OnProgressChanged(GameProgress progress)
         {
             Debug.Log($"Progress → Ch{progress.currentChapter} L{progress.currentLevel}");
-            currentLevelText.text = $"Level {progress.currentLevel}";
+            if (currentLevelText != null) currentLevelText.text = $"Level {progress.currentLevel}";
 
             if (!_pendingLevelStart) return;
             _pendingLevelStart = false;

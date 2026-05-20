@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using DG.Tweening;
 using Gameplay.Events;
@@ -6,6 +7,7 @@ using Gameplay.PowerUps;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Gameplay.UI
 {
@@ -28,13 +30,38 @@ namespace Gameplay.UI
         [Header("Finish-Now Wrap-Up")]
         [SerializeField] private CanvasGroup finishNowOverlay;
         [SerializeField] private TextMeshProUGUI finishNowToast;
-        [SerializeField] private TextMeshProUGUI finishNowCoinTally;
+        [SerializeField] private TextMeshProUGUI  finishNowCoinTally;
+        [SerializeField] private Button finishNowButton;
         [SerializeField] private float finishNowDimDuration = 0.35f;
         [SerializeField] private float finishNowToastHold = 1.2f;
         [SerializeField] private float finishNowCoinTallyDuration = 0.9f;
         [SerializeField] private float finishNowOverlayAlpha = 0.6f;
 
         private Coroutine _finishNowRoutine;
+
+        private static readonly string[] FinishNowToastPhrases =
+        {
+            "Wrap-up!",
+            "That's a wrap!",
+            "Show's over!",
+            "Boom! Done.",
+            "Mic drop.",
+            "Level smashed!",
+            "Nailed it!",
+            "Birds, beware.",
+        };
+
+        private const string CoinTag = "<sprite=\"Nove SDF Sprites\" name=coin>";
+
+        private static readonly string[] FinishNowCoinPhrases =
+        {
+            "Cha-ching! +{0} " + CoinTag,
+            "Bagged +{0} " + CoinTag + "!",
+            "Snagged +{0} " + CoinTag + "!",
+            "Pocketed +{0} " + CoinTag,
+            "Sweet loot! +{0} " + CoinTag,
+            "Nice haul: +{0} " + CoinTag,
+        };
 
         private void Awake()
         {
@@ -45,6 +72,12 @@ namespace Gameplay.UI
                 finishNowOverlay.blocksRaycasts = false;
                 finishNowOverlay.gameObject.SetActive(false);
             }
+        }
+
+        private void Start()
+        {
+            finishNowButton.onClick.RemoveAllListeners();
+            finishNowButton.onClick.AddListener(OnClickReturnToMenu);
         }
 
         private void OnEnable()
@@ -122,7 +155,7 @@ namespace Gameplay.UI
 
             if (finishNowToast != null)
             {
-                finishNowToast.text = "Wrap-up!";
+                finishNowToast.text = FinishNowToastPhrases[UnityEngine.Random.Range(0, FinishNowToastPhrases.Length)];
                 finishNowToast.transform.localScale = Vector3.zero;
                 finishNowToast.gameObject.SetActive(true);
                 finishNowToast.transform
@@ -137,13 +170,14 @@ namespace Gameplay.UI
 
             if (finishNowCoinTally != null)
             {
+                string phrase = FinishNowCoinPhrases[UnityEngine.Random.Range(0, FinishNowCoinPhrases.Length)];
                 finishNowCoinTally.gameObject.SetActive(true);
-                finishNowCoinTally.text = "+0";
+                finishNowCoinTally.text = string.Format(phrase, 0);
                 int displayed = 0;
                 DOTween.To(() => displayed, v =>
                     {
                         displayed = v;
-                        finishNowCoinTally.text = $"+{v}";
+                        finishNowCoinTally.text = string.Format(phrase, v);
                     }, sessionCoins, finishNowCoinTallyDuration)
                     .SetEase(Ease.OutCubic)
                     .SetUpdate(true);

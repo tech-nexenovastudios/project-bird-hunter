@@ -17,7 +17,7 @@ public class PlayBtnController : MonoBehaviour
         }
         else
         {
-            powerCostText.text="Not enough Power!";
+            powerCostText.text = "Not enough <sprite=\"Nove SDF Sprites\" name=power>!";
         }
             
     }

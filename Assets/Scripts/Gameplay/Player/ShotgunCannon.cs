@@ -143,10 +143,8 @@ namespace Gameplay.Player
 
         protected override void OnHealVFX(int amount)
         {
-            Vector3 spawnPos = transform.position;
-            spawnPos.y = -3.75f;
             if (healVFXPrefab != null)
-                VFXPoolManager.Instance.Play(healVFXPrefab, spawnPos);
+                VFXPoolManager.Instance.Play(healVFXPrefab, transform.position);
         }
 
         protected override void OnShieldAbsorbVFX()
