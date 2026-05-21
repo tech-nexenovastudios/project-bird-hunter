@@ -1,4 +1,5 @@
-﻿using Gameplay.Managers;
+﻿using Cysharp.Threading.Tasks;
+using Gameplay.Managers;
 using UnityEditor;
 using UnityEngine;
 
@@ -35,8 +36,8 @@ public class GameProgressManagerEditor : Editor
 
         if (GUILayout.Button("Test Load"))
         {
-            mgr.LoadProgress();
-            Debug.Log("Loaded");
+            mgr.LoadProgress().Forget();
+            Debug.Log("Loaded (fire-and-forget — check console for cloud-save result)");
         }
         
         if (GUILayout.Button("Reset"))

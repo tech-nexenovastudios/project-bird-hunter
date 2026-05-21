@@ -1,4 +1,5 @@
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using Gameplay.PowerUps;
 using UnityEngine;
 using Gameplay.Events;
@@ -85,7 +86,8 @@ namespace Gameplay.Managers
         {
             yield return null;
 
-            GameProgressManager.Instance.LoadProgress();
+            yield return GameProgressManager.Instance.LoadProgress()
+                .ToCoroutine(ex => Debug.LogError($"[GameManager] LoadProgress failed: {ex.Message}"));
 
             // New Gameplay scene = new run. RewardManager is DontDestroyOnLoad so its
             // run counters survive scene loads; we explicitly clear them here.

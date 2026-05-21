@@ -84,7 +84,9 @@ public class PowerUpIndicator : MonoBehaviour, ICooldownIndicator
     {
         if (prefab == null) return;
         Vector3 pos = bgVFXSpawnPoint != null ? bgVFXSpawnPoint.position : transform.position;
-        Instantiate(prefab, pos, Quaternion.identity);
+        var go = Instantiate(prefab, bgVFXSpawnPoint);
+        //go.transform.parent = bgVFXSpawnPoint;
+        
     }
 
     private void OnDestroy()

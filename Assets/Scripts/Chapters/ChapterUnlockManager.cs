@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Gameplay.Managers;
 using Unity.Services.Authentication;
 using Unity.Services.CloudSave;
 using Unity.Services.Core;
@@ -102,7 +103,26 @@ public class ChapterUnlockManager : MonoBehaviour
     {
         CacheLevelImageMaterials();
         HideAllUI();
+        BindPlayButtonChapterCommit();
         InitAsync().Forget();
+    }
+
+    // Play button's scene-load is wired via UnityEvent in the inspector, but
+    // nothing tells GameProgressManager which chapter the carousel is on. Without
+    // this, gameplay always reads whatever _progress.currentChapter was loaded from
+    // cloud — so picking a different chapter from the carousel silently runs the
+    // previous one. We add a runtime listener to commit the carousel index before
+    // the scene change fires.
+    private void BindPlayButtonChapterCommit()
+    {
+        if (playButton == null) return;
+        var btn = playButton.GetComponent<Button>();
+        if (btn == null) return;
+        btn.onClick.AddListener(() =>
+        {
+            if (GameProgressManager.Instance != null)
+                GameProgressManager.Instance.SelectChapter(_currentIndex + 1);
+        });
     }
 
     // ═════════════════════════════════════════════════════════════════════════

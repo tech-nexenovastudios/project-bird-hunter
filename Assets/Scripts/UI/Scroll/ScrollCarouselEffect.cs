@@ -56,7 +56,7 @@ public class ScrollCarouselEffect : MonoBehaviour,
     {
         SetupDynamicPadding();
         CacheSnapPositions();
-        SnapToIndex(0, false);
+        SnapToIndex(0, false); // Don't animate first snap and snap to current unlocked chapter
     }
 
     void SetupDynamicPadding()

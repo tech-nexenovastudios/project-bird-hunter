@@ -1,19 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using Cysharp.Threading.Tasks;
 using Gameplay.Events;
 using Gameplay.Levels;
 using Gameplay.PowerUps;
+using Newtonsoft.Json;
+using Unity.Services.CloudSave.Models;
 using UnityEngine;
+using UnityUtils;
 
 namespace Gameplay.Managers
 {
-    public class GameProgressManager : MonoBehaviour
+    public class GameProgressManager : Singleton<GameProgressManager>
     {
-        public static GameProgressManager Instance { get; private set; }
-
         [Header("Powerup Pool")]
         public PowerupConfig[] allPowerups;
 
@@ -21,9 +20,6 @@ namespace Gameplay.Managers
         public string levelResourcesPath = "Data/GeneratedLevels";
         [Tooltip("Resources path for ChapterProgressionConfig assets (Chapter{n}.asset). If a chapter config is found here, per-level profiles are resolved from it and the legacy per-level assets are ignored.")]
         public string chapterConfigResourcesPath = "Data/ChapterProgressions";
-
-        [Header("Save")]
-        public string saveFileName = "birdhunter_progress.dat";
 
         private GameProgress _progress;
 
@@ -85,10 +81,8 @@ namespace Gameplay.Managers
             };
         }
 
-        private void Awake()
+        protected override void Awake()
         {
-            if (Instance != null) { Destroy(gameObject); return; }
-            Instance = this;
             DontDestroyOnLoad(gameObject);
         }
 
@@ -352,71 +346,117 @@ namespace Gameplay.Managers
             public List<string> firstTimeClearedLevels = new();
         }
 
-        public void SaveProgress()
+        public async void SaveProgress()
         {
             if (_progress == null) return;
 
-            var data = new SaveData
-            {
-                currentChapter = _progress.currentChapter,
-                currentLevel = _progress.currentLevel,
-                highScore = _progress.highScore,
-                totalScore = _progress.totalScore,
-                globalUnlocked = _progress.globalUnlockedPowerupIds ?? new(),
-                playerXP = _progress.playerXP,
-                playerLevel = _progress.playerLevel,
-                lastLevelUpXP = _progress.lastLevelUpXP,
-                playerSpins = _progress.playerSpins,
-                totalCoins = _progress.totalCoins,
-                totalGems = _progress.totalGems,
-                totalPower = _progress.totalPower,
-                firstTimeClearedLevels = _progress.firstTimeClearedLevels ?? new()
-            };
-
-            if (_progress.chapterSlots != null)
-            {
-                int slotCount = Mathf.Min(data.slotPowerupIds.Length, _progress.chapterSlots.Length);
-                for (int i = 0; i < slotCount; i++)
-                    data.slotPowerupIds[i] = _progress.chapterSlots[i]?.equippedPowerupId ?? "";
-            }
-
-            string path = Path.Combine(Application.persistentDataPath, saveFileName);
             try
             {
-                var bf = new BinaryFormatter();
-                using var fs = new FileStream(path, FileMode.Create);
-                bf.Serialize(fs, data);
+                var data = new SaveData
+                {
+                    currentChapter = _progress.currentChapter,
+                    currentLevel = _progress.currentLevel,
+                    highScore = _progress.highScore,
+                    totalScore = _progress.totalScore,
+                    globalUnlocked = _progress.globalUnlockedPowerupIds ?? new(),
+                    playerXP = _progress.playerXP,
+                    playerLevel = _progress.playerLevel,
+                    lastLevelUpXP = _progress.lastLevelUpXP,
+                    playerSpins = _progress.playerSpins,
+                    totalCoins = _progress.totalCoins,
+                    totalGems = _progress.totalGems,
+                    totalPower = _progress.totalPower,
+                    firstTimeClearedLevels = _progress.firstTimeClearedLevels ?? new()
+                };
+
+                if (_progress.chapterSlots != null)
+                {
+                    int slotCount = Mathf.Min(data.slotPowerupIds.Length, _progress.chapterSlots.Length);
+                    for (int i = 0; i < slotCount; i++)
+                        data.slotPowerupIds[i] = _progress.chapterSlots[i]?.equippedPowerupId ?? "";
+                }
+
+                await CloudSaveManager.Instance.SaveAsync(new Dictionary<string, object>
+                {
+                    { "chapter_progress",          data.currentChapter },
+                    { "level_progress",            data.currentLevel },
+                    { "high_score",                data.highScore },
+                    { "total_score",               data.totalScore },
+                    { "global_unlocked",           JsonConvert.SerializeObject(data.globalUnlocked) },
+                    { "player_xp",                 data.playerXP },
+                    { "player_level",              data.playerLevel },
+                    { "last_level_up_xp",          data.lastLevelUpXP },
+                    { "player_spins",              data.playerSpins },
+                    { "total_coins",               data.totalCoins },
+                    { "total_gems",                data.totalGems },
+                    { "total_power",               data.totalPower },
+                    { "slot_powerup_ids",          JsonConvert.SerializeObject(data.slotPowerupIds) },
+                    { "first_time_cleared_levels", JsonConvert.SerializeObject(data.firstTimeClearedLevels) },
+                });
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Debug.LogError("[ProgressManager] Save error: " + ex.Message);
             }
         }
 
-        public void LoadProgress()
+        public async UniTask LoadProgress()
         {
-            string path = Path.Combine(Application.persistentDataPath, saveFileName);
-
-            if (!File.Exists(path))
-            {
-                _progress = new GameProgress();
-                OnProgressChanged?.Invoke(_progress);
-                return;
-            }
-
             try
             {
-                var bf = new BinaryFormatter();
-                using var fs = new FileStream(path, FileMode.Open);
-                var data = (SaveData)bf.Deserialize(fs);
+                var res = await CloudSaveManager.Instance.LoadAsync(new HashSet<string>
+                {
+                    "chapter_progress", "level_progress", "high_score", "total_score",
+                    "global_unlocked", "player_xp", "player_level", "last_level_up_xp",
+                    "player_spins", "total_coins", "total_gems", "total_power",
+                    "slot_powerup_ids", "first_time_cleared_levels"
+                });
 
+                if (res.Count == 0)
+                {
+                    _progress = new GameProgress();
+                    OnProgressChanged?.Invoke(_progress);
+                    return;
+                }
+
+                T Get<T>(string key, T fallback = default)
+                {
+                    if (!res.TryGetValue(key, out Item item)) return fallback;
+                    try { return item.Value.GetAs<T>(); }
+                    catch
+                    {
+                        try { return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item.Value)); }
+                        catch { return fallback; }
+                    }
+                }
+
+                var data = new SaveData
+                {
+                    currentChapter = Get("chapter_progress", 1),
+                    currentLevel = Get("level_progress", 1),
+                    highScore = Get<int>("high_score"),
+                    totalScore = Get<int>("total_score"),
+                    playerXP = Get<int>("player_xp"),
+                    playerLevel = Get("player_level", 1),
+                    lastLevelUpXP = Get<int>("last_level_up_xp"),
+                    playerSpins = Get<int>("player_spins"),
+                    totalCoins = Get<int>("total_coins"),
+                    totalGems = Get<int>("total_gems"),
+                    totalPower = Get<int>("total_power"),
+                    globalUnlocked = JsonConvert.DeserializeObject<List<string>>(Get("global_unlocked", "[]")) ?? new(),
+                    slotPowerupIds = JsonConvert.DeserializeObject<string[]>(Get("slot_powerup_ids", "[\"\",\"\",\"\",\"\"]")) ?? new string[4],
+                    firstTimeClearedLevels = JsonConvert.DeserializeObject<List<string>>(Get("first_time_cleared_levels", "[]")) ?? new(),
+                };
+
+                // Always resume the chapter at level 1 — level progress within a chapter
+                // is not carried across sessions (matches pre-revert behaviour).
                 _progress = new GameProgress
                 {
                     currentChapter = data.currentChapter,
                     currentLevel = 1,
                     highScore = data.highScore,
                     totalScore = data.totalScore,
-                    globalUnlockedPowerupIds = data.globalUnlocked ?? new(),
+                    globalUnlockedPowerupIds = data.globalUnlocked,
                     playerXP = data.playerXP,
                     playerLevel = Mathf.Max(1, data.playerLevel),
                     lastLevelUpXP = data.lastLevelUpXP,
@@ -424,7 +464,7 @@ namespace Gameplay.Managers
                     totalCoins = data.totalCoins,
                     totalGems = data.totalGems,
                     totalPower = data.totalPower,
-                    firstTimeClearedLevels = data.firstTimeClearedLevels ?? new()
+                    firstTimeClearedLevels = data.firstTimeClearedLevels
                 };
 
                 if (data.slotPowerupIds != null && _progress.chapterSlots != null)
@@ -434,10 +474,10 @@ namespace Gameplay.Managers
                         if (!string.IsNullOrEmpty(data.slotPowerupIds[i]) && _progress.chapterSlots[i] != null)
                             _progress.chapterSlots[i].equippedPowerupId = data.slotPowerupIds[i];
                 }
-
             }
             catch (Exception ex)
             {
+                Debug.LogError("[ProgressManager] Load error: " + ex.Message);
                 _progress = new GameProgress();
             }
 
