@@ -289,7 +289,7 @@ namespace Gameplay.UI
         private void HideInPanelExtras()
         {
             if (countdownIconContainer != null) countdownIconContainer.gameObject.SetActive(false);
-            if (powerUpIcon != null) powerUpIcon.enabled = false;
+            //if (powerUpIcon != null) powerUpIcon.enabled = false;
         }
 
         // ── Persistent indicator (single in-scene instance, re-skinned per pick) ─

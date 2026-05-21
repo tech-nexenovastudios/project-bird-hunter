@@ -147,7 +147,11 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
         _destroyCT = this.GetCancellationTokenOnDestroy();
 
-        PopulateItems();
+        // Spread Instantiate() across frames. Synchronous population of N
+        // cannon prefabs during MAIN_MENU load was the visible hitch right
+        // after the splash; the first item still lands this frame so the page
+        // isn't blank.
+        PopulateItemsAsync(_destroyCT).Forget();
 
         if (equipButton != null)        equipButton.onClick.AddListener(OnEquipPressed);
         if (upgradeButton != null)      upgradeButton.onClick.AddListener(OnUpgradePressed);
@@ -417,13 +421,17 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     // Wiring
     // ════════════════════════════════════════════════════════════════════
 
-    private void PopulateItems()
+    private async UniTaskVoid PopulateItemsAsync(CancellationToken ct)
     {
         if (database == null || cannonItemPrefab == null || itemContainer == null) return;
         if (database.entries == null) return;
 
-        foreach (var entry in database.entries)
+        var entries = database.entries;
+        for (int i = 0; i < entries.Count; i++)
         {
+            if (ct.IsCancellationRequested) return;
+
+            var entry = entries[i];
             var item = Instantiate(cannonItemPrefab, itemContainer);
             if (item.cannonSprite != null) item.cannonSprite.sprite = entry.icon;
             item.cannonKey = entry.cannonKey;
@@ -437,7 +445,18 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
             WireItem(item);
             _items.Add(item);
+
+            // First item lands synchronously so the inventory page never
+            // renders empty; the rest trickle in one per frame to keep each
+            // frame under budget.
+            if (i + 1 < entries.Count)
+                await UniTask.NextFrame(ct);
         }
+
+        // OnEnable's HandleReady / Filter may have run while _items was
+        // partial; replay against the full list.
+        if (service != null && service.IsReady) HandleReady();
+        Filter(_activeTabFilter);
     }
 
     private void WireItem(CannonItem item)
@@ -507,11 +526,11 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         if (item.cannonBgComp != null)
             item.cannonBgComp.sprite = selected ? selectedBgSprite : normalBgSprite;
         else if (selected)
-            Debug.LogWarning($"[CannonInventoryView] {key}: cannonBgComp is null — assign it in the CannonItem prefab.");
+            GameLog.LogWarning($"[CannonInventoryView] {key}: cannonBgComp is null — assign it in the CannonItem prefab.");
         if (item.frameComp != null)
             item.frameComp.sprite = selected ? selectedFrameSprite : normalFrameSprite;
         else if (selected)
-            Debug.LogWarning($"[CannonInventoryView] {key}: frameComp is null — assign it in the CannonItem prefab.");
+            GameLog.LogWarning($"[CannonInventoryView] {key}: frameComp is null — assign it in the CannonItem prefab.");
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -812,7 +831,7 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         if (popupCannonImage != null && item?.cannonSprite?.sprite != null)
             popupCannonImage.sprite = item.cannonSprite.sprite;
         if (popupCannonNameText != null) popupCannonNameText.text = dto.displayName ?? dto.name;
-        Debug.Log("cannon name: " + dto.name);
+        GameLog.Log("cannon name: " + dto.name);
 
         int coinCost = service.GetUnlockCoinCost(key);
         int gemCost = service.GetUnlockGemCost(key);

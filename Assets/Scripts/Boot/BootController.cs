@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Services;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class BootController : MonoBehaviour
 {
@@ -11,14 +12,13 @@ public class BootController : MonoBehaviour
 
     [Header("UI Feedback")]
     [SerializeField] private TextMeshProUGUI statusText;
-    [SerializeField] private GameObject guestButton;
     [SerializeField] private UpdatePanelController updatePanel;
 
-    [Header("Login UI (shown on auto sign-in failure)")]
-    [Tooltip("Container of UpperPanel + LowerPanel. Hidden by default; shown when auto GPGS sign-in fails.")]
-    [SerializeField] private GameObject loginPanel;
-    [SerializeField] private GameObject upperPanel;
-    [SerializeField] private GameObject lowerPanel;
+    [Header("Auth Buttons")]
+    [Tooltip("All start non-interactable; enabled only after auto sign-in fails.")]
+    [SerializeField] private Button guestButton;
+    [SerializeField] private Button googleBtn;
+    [SerializeField] private Button appleBtn;
 
     private const string LastLaunchedVersionKey = "LastLaunchedAppVersion";
 
@@ -39,11 +39,6 @@ public class BootController : MonoBehaviour
     private void Awake()
     {
         timeoutCts = new CancellationTokenSource();
-
-        // First-launch on a real device routinely takes >20s: GPGS popup + user
-        // interaction + auth code exchange + RemoteConfig + CloudSave + currency
-        // load can easily reach 30–60s on a cold network. 90s leaves room without
-        // hanging forever on a truly dead connection.
         timeoutCts.CancelAfterSlim(TimeSpan.FromSeconds(90));
 
         using var linkedCts =
@@ -51,25 +46,32 @@ public class BootController : MonoBehaviour
                 timeoutCts.Token,
                 this.GetCancellationTokenOnDestroy(),
                 AppLifetime.Token);
-        
+
         DetectVersionChange();
         InitializeServices();
         SubscribeToEvents();
-        HideAllButtons();
+
+        SetButtonsInteractable(false);
+        HidePlatformIrrelevantButton();
     }
 
-    // App update detection: PlayerPrefs survive reinstalls/updates but the
-    // app process is killed by the OS, so this Awake always fires fresh from
-    // BootStrapper (scene 0) on the first launch after an update.
+    // Hide the platform-irrelevant login button at startup — the object itself
+    // is disabled so it takes no space and can't be clicked even by accident.
+    private void HidePlatformIrrelevantButton()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        if (appleBtn  != null) appleBtn.gameObject.SetActive(false);
+#elif UNITY_IOS && !UNITY_EDITOR
+        if (googleBtn != null) googleBtn.gameObject.SetActive(false);
+#endif
+    }
+
     private void DetectVersionChange()
     {
         string previous = PlayerPrefs.GetString(LastLaunchedVersionKey, "");
-        string current = Application.version;
+        string current  = Application.version;
         if (!string.IsNullOrEmpty(previous) && previous != current)
-        {
-            Debug.Log($"[BootController] App updated: {previous} -> {current}. Clear any stale state here if needed.");
-            // Hook for future cleanup of version-sensitive cached state.
-        }
+            GameLog.Log($"[BootController] App updated: {previous} -> {current}.");
         PlayerPrefs.SetString(LastLaunchedVersionKey, current);
         PlayerPrefs.Save();
     }
@@ -90,9 +92,9 @@ public class BootController : MonoBehaviour
 
     private void InitializeServices()
     {
-        authService = new AuthService();
+        authService   = new AuthService();
         cloudDatabase = new CloudDatabase();
-        sceneLoader = new SceneLoader();
+        sceneLoader   = new SceneLoader();
 
         ServiceLocator.Register<AuthService>(authService);
         ServiceLocator.Register<ICloudSaveManager>(CloudSaveManager.Instance);
@@ -122,7 +124,7 @@ public class BootController : MonoBehaviour
         EventBus.Unsubscribe<DataLoadProgressEvent>(OnDataLoadProgress);
     }
 
-    private void OnAuthProgress(AuthProgressEvent evt) => SetStatus(evt.currentStep);
+    private void OnAuthProgress(AuthProgressEvent evt)         => SetStatus(evt.currentStep);
     private void OnDataLoadProgress(DataLoadProgressEvent evt) => SetStatus(evt.currentStep);
 
     // ─── Boot Sequence ───
@@ -131,25 +133,17 @@ public class BootController : MonoBehaviour
     {
         try
         {
-            HideAllButtons();
-
             SetStatus("Starting up...");
             bool signedIn = await authService.SignInAsync(ct);
 
-            if (!signedIn)
-            {
-                OnAuthFailed();
-                return;
-            }
+            if (!signedIn) { OnAuthFailed(); return; }
 
-            if (!await CheckRemoteGatesAsync(ct))
-                return;
+            if (!await CheckRemoteGatesAsync(ct)) return;
 
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.LOADING, setActive: false, ct: ct);
             InitializeAdsInParallel();
 
-            if (!await LoadGameDataAsync(ct))
-                return;
+            if (!await LoadGameDataAsync(ct)) return;
 
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.MAIN_MENU, setActive: true, ct: ct);
             await sceneLoader.UnloadSceneAsync(SceneNames.LOADING, ct);
@@ -157,21 +151,18 @@ public class BootController : MonoBehaviour
         }
         catch (OperationCanceledException)
         {
-            Debug.Log("[BootController] Boot sequence cancelled.");
-            // If the GameObject is still alive, cancellation came from the timeout
-            // (not OnDestroy/scene unload), so the user is staring at a frozen
-            // BootStrapper — surface retry UI instead of leaving them stuck.
+            GameLog.Log("[BootController] Boot sequence cancelled.");
             if (this != null)
             {
                 SetStatus("Connection timed out. Please retry.");
-                ShowLoginPanels();
+                SetButtonsInteractable(true);
             }
         }
         catch (Exception ex)
         {
             Debug.LogError($"[BootController] Boot failed: {ex.Message}\n{ex.StackTrace}");
             SetStatus("Something went wrong. Please retry.");
-            ShowLoginPanels();
+            SetButtonsInteractable(true);
         }
     }
 
@@ -180,59 +171,45 @@ public class BootController : MonoBehaviour
     private void InitializeAdsInParallel()
     {
         if (adManager == null) return;
-
-        // Auth has already succeeded by the time we reach this method, so PlayerId
-        // is non-null. Pass it to LevelPlay so AdQuality can key sessions by player.
         if (authService.IsSignedIn)
             adManager.SetUserId(authService.PlayerId);
-
-        // TODO(EEA-compliance): replace with a real UMP/consent dialog before
-        // shipping to EEA/UK/Switzerland. Auto-granting here is fine for testing
-        // and non-regulated regions, but it violates GDPR for regulated users.
         if (!adManager.HasConsentResolved)
             adManager.SetUserConsent(gdprConsent: true);
     }
 
-    // ─── Failure Handlers ───
+    // ─── Failure Handler ───
 
     private void OnAuthFailed()
     {
         SetStatus("Sign-in failed. Choose how to continue.");
-        ShowLoginPanels();
+        SetButtonsInteractable(true);
     }
 
     // ─── UI Button Handlers ───
 
     public void OnGuestButtonClicked()
     {
-        HideAllButtons();
+        SetButtonsInteractable(false);
         ResetTimeoutCts();
         ContinueWithAnonymousAsync(timeoutCts.Token).Forget();
     }
 
-    // Wire on the Google login button. Re-runs the full auto sign-in flow,
-    // which on Android attempts GPGS again.
     public void OnGoogleLoginClicked()
     {
-        HideAllButtons();
+        SetButtonsInteractable(false);
         SetStatus("Signing in with Google...");
         ResetTimeoutCts();
         RetryAutoSignInAsync(timeoutCts.Token).Forget();
     }
 
-    // Wire on the Apple login button. AuthService.SignInAsync routes to
-    // Game Center on iOS, so the same retry path used by Google works here.
     public void OnAppleLoginClicked()
     {
-        HideAllButtons();
+        SetButtonsInteractable(false);
         SetStatus("Signing in with Game Center...");
         ResetTimeoutCts();
         RetryAutoSignInAsync(timeoutCts.Token).Forget();
     }
 
-    // Retries fire after a prior boot may have already cancelled timeoutCts (via
-    // timeout or destroy). Dispose the old one and arm a fresh 90s timer so the
-    // new attempt isn't dead-on-arrival.
     private void ResetTimeoutCts()
     {
         timeoutCts?.Cancel();
@@ -246,20 +223,14 @@ public class BootController : MonoBehaviour
         try
         {
             bool signedIn = await authService.SignInAsync(ct);
-            if (!signedIn)
-            {
-                OnAuthFailed();
-                return;
-            }
+            if (!signedIn) { OnAuthFailed(); return; }
 
-            if (!await CheckRemoteGatesAsync(ct))
-                return;
+            if (!await CheckRemoteGatesAsync(ct)) return;
 
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.LOADING, setActive: false, ct: ct);
             InitializeAdsInParallel();
 
-            if (!await LoadGameDataAsync(ct))
-                return;
+            if (!await LoadGameDataAsync(ct)) return;
 
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.MAIN_MENU, setActive: true, ct: ct);
             await sceneLoader.UnloadSceneAsync(SceneNames.LOADING, ct);
@@ -270,37 +241,20 @@ public class BootController : MonoBehaviour
         {
             Debug.LogError($"[BootController] Retry sign-in failed: {ex.Message}");
             SetStatus("Sign-in failed. Try another option.");
-            ShowLoginPanels();
+            SetButtonsInteractable(true);
         }
     }
 
-    // Runs on BootStrapper before the loading scene loads, so the maintenance
-    // text and update panel surface immediately on the boot UI.
     private async UniTask<bool> CheckRemoteGatesAsync(CancellationToken ct)
     {
-        Debug.Log("[Boot] CheckRemoteGatesAsync: fetching config");
         SetStatus("Fetching config...");
         await RemoteConfigManager.Instance.FetchConfig();
 
         var rc = RemoteConfigManager.Instance;
-        Debug.Log($"[Boot] Config fetched. appVer={Application.version} latest={rc.LatestVersion} min={rc.MinRequiredVersion} force={rc.ForceUpdate} maintenance={rc.MaintenanceMode}");
+        if (rc.MaintenanceMode) { SetStatus(rc.MaintenanceMessage); return false; }
 
-        if (rc.MaintenanceMode)
-        {
-            Debug.Log("[Boot] Maintenance mode active — halting boot");
-            SetStatus(rc.MaintenanceMessage);
-            return false;
-        }
-
-        bool updateAvailable = rc.IsUpdateAvailable();
-        Debug.Log($"[Boot] IsUpdateAvailable={updateAvailable}");
-        if (updateAvailable)
-        {
-            bool shouldContinue = await HandleUpdatePromptAsync(ct);
-            Debug.Log($"[Boot] HandleUpdatePromptAsync returned {shouldContinue}");
-            if (!shouldContinue)
-                return false;
-        }
+        if (rc.IsUpdateAvailable())
+            if (!await HandleUpdatePromptAsync(ct)) return false;
 
         return true;
     }
@@ -310,9 +264,7 @@ public class BootController : MonoBehaviour
         await cloudDatabase.InitializeAsync(ct);
 
         var chapterService = ServiceLocator.Get<ChapterUnlockService>();
-        int totalChapterCount = 10;
-        int[] defaultUnlocked = new[] { 0 };
-        chapterService.Initialize(cloudDatabase.ChapterUnlockStatusData, totalChapterCount, defaultUnlocked);
+        chapterService.Initialize(cloudDatabase.ChapterUnlockStatusData, 10, new[] { 0 });
 
         var userDataRepo = ServiceLocator.Get<UserDataRepository>();
         userDataRepo.Initialize(cloudDatabase, CloudSaveManager.Instance);
@@ -329,58 +281,29 @@ public class BootController : MonoBehaviour
             await UniTask.Delay(2000, cancellationToken: ct);
             await CurrencyManager.Instance.LoadBalances(forceReload: true);
         }
-
         return true;
     }
 
-    // Fire-and-forget so the OS permission prompt (iOS first launch) overlays the
-    // loading screen instead of blocking the boot sequence. RemoteConfig kill-switch
-    // lets us disable registration globally without shipping a new build.
     private void TryRegisterPushNotifications(CancellationToken ct)
     {
-        if (!RemoteConfigManager.Instance.PushNotificationsEnabled)
-        {
-            Debug.Log("[Boot] Push notifications disabled by RemoteConfig — skipping.");
-            return;
-        }
-
-        if (PushNotificationService.Instance == null)
-            return;
-
+        if (!RemoteConfigManager.Instance.PushNotificationsEnabled) return;
+        if (PushNotificationService.Instance == null) return;
         PushNotificationService.Instance.RegisterIfEnabledAsync(ct).Forget();
     }
 
-    // Returns true if the boot sequence should continue (user dismissed an
-    // optional update). Returns false if the update is mandatory and boot
-    // must halt — the panel stays visible until the user updates and relaunches.
     private async UniTask<bool> HandleUpdatePromptAsync(CancellationToken ct)
     {
-        var rc = RemoteConfigManager.Instance;
+        var rc       = RemoteConfigManager.Instance;
         bool isForce = rc.IsForceUpdate();
-        string url = rc.GetPlatformUpdateURL();
-        string message = rc.UpdatePromptMessage;
+        string url   = rc.GetPlatformUpdateURL();
+        string msg   = rc.UpdatePromptMessage;
 
-        Debug.Log($"[Boot] HandleUpdatePromptAsync isForce={isForce} url='{url}' panelWired={(updatePanel != null)}");
+        if (updatePanel == null) { SetStatus(msg); return !isForce; }
 
-        if (updatePanel == null)
-        {
-            // No panel wired — fail safe: block on force update, allow otherwise.
-            Debug.LogWarning("[Boot] updatePanel reference is null — falling back to status text only");
-            SetStatus(message);
-            return !isForce;
-        }
+        updatePanel.Configure(isForce, url, msg);
+        if (isForce) return false;
 
-        updatePanel.Configure(isForce, url, message);
-
-        if (isForce)
-        {
-            Debug.Log("[Boot] Force update — halting boot, panel stays visible");
-            return false;
-        }
-
-        Debug.Log("[Boot] Awaiting Not Now click...");
         await updatePanel.AwaitDismissAsync(ct);
-        Debug.Log("[Boot] Update panel dismissed by user");
         return true;
     }
 
@@ -390,22 +313,19 @@ public class BootController : MonoBehaviour
         {
             SetStatus("Signing in as guest...");
             bool signedIn = await authService.SignInAnonymouslyAsync(ct);
-
             if (!signedIn)
             {
                 SetStatus("Sign-in failed. Check your connection.");
-                ShowLoginPanels();
+                SetButtonsInteractable(true);
                 return;
             }
 
-            if (!await CheckRemoteGatesAsync(ct))
-                return;
+            if (!await CheckRemoteGatesAsync(ct)) return;
 
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.LOADING, setActive: false, ct: ct);
             InitializeAdsInParallel();
 
-            if (!await LoadGameDataAsync(ct))
-                return;
+            if (!await LoadGameDataAsync(ct)) return;
 
             await sceneLoader.LoadSceneAdditiveAsync(SceneNames.MAIN_MENU, setActive: true, ct: ct);
             await sceneLoader.UnloadSceneAsync(SceneNames.LOADING, ct);
@@ -416,7 +336,7 @@ public class BootController : MonoBehaviour
         {
             Debug.LogError($"[BootController] Anonymous flow failed: {ex.Message}");
             SetStatus("Something went wrong. Please retry.");
-            ShowLoginPanels();
+            SetButtonsInteractable(true);
         }
     }
 
@@ -427,19 +347,13 @@ public class BootController : MonoBehaviour
         if (statusText != null) statusText.text = message;
     }
 
-    private void HideAllButtons()
+    // Locks or unlocks all three buttons. HidePlatformIrrelevantButton() already
+    // disabled the wrong-platform button's GameObject, so interactable changes
+    // on it are harmless but we guard anyway for clarity.
+    private void SetButtonsInteractable(bool interactable)
     {
-        if (guestButton != null) guestButton.SetActive(false);
-        if (loginPanel != null) loginPanel.SetActive(false);
-        if (upperPanel != null) upperPanel.SetActive(false);
-        if (lowerPanel != null) lowerPanel.SetActive(false);
-    }
-
-    private void ShowLoginPanels()
-    {
-        if (loginPanel != null) loginPanel.SetActive(true);
-        if (upperPanel != null) upperPanel.SetActive(true);
-        if (lowerPanel != null) lowerPanel.SetActive(true);
-        if (guestButton != null) guestButton.SetActive(true);
+        if (guestButton != null) guestButton.interactable = interactable;
+        if (googleBtn   != null) googleBtn.interactable   = interactable;
+        if (appleBtn    != null) appleBtn.interactable     = interactable;
     }
 }
