@@ -393,9 +393,6 @@ MonoBehaviour:
   hitVFXPoint: {fileID: 4191383718542492538}
   blastVFXPoint: {fileID: 7603715050661542508}
   smokeParticle: {fileID: 2815520671769793254, guid: 23a256d34d4de1444b7c3353c2de03fb, type: 3}
-  hitScaleMultiplier: 1.1
-  hitScaleUpDuration: 0.08
-  hitScaleDownDuration: 0.08
   deathScaleTarget: 0.1
   deathScaleDuration: 0.1
   spawnSlowMovementDuration: 1
@@ -403,6 +400,11 @@ MonoBehaviour:
   wallBounceDamping: 0.65
   minHorizontalVelocity: 0.3
   bounceDirectionRandomness: 0.15
+  driftMinSpeed: 0.4
+  driftMaxSpeed: 1
+  driftRetargetMin: 1.5
+  driftRetargetMax: 3.5
+  driftMinHeightPercent: 0.5
 --- !u!114 &96112293446289958
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -439,8 +441,8 @@ SortingGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1251663967950569254}
   m_Enabled: 1
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1335775815
+  m_SortingLayer: 3
   m_SortingOrder: 0
   m_SortAtRoot: 0
   m_Sort3DAs2D: 0

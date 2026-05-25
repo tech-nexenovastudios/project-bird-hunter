@@ -400,7 +400,11 @@ MonoBehaviour:
   wallBounceDamping: 0.25
   minHorizontalVelocity: 0.12
   bounceDirectionRandomness: 0.15
-  enableBulletUpwardPush: 0
+  driftMinSpeed: 0.4
+  driftMaxSpeed: 1
+  driftRetargetMin: 1.5
+  driftRetargetMax: 3.5
+  driftMinHeightPercent: 0.5
 --- !u!114 &96112293446289958
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -437,8 +441,8 @@ SortingGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1251663967950569254}
   m_Enabled: 1
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1335775815
+  m_SortingLayer: 3
   m_SortingOrder: 0
   m_SortAtRoot: 0
   m_Sort3DAs2D: 0

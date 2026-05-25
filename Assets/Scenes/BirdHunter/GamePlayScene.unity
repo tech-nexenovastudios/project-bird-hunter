@@ -579,7 +579,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: -0.2837243}
+  m_Offset: {x: 0, y: -0.6618723}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -589,7 +589,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 12.93, y: 4.3025513}
+  m_Size: {x: 12.93, y: 3.546255}
   m_EdgeRadius: 0
 --- !u!212 &183455012
 SpriteRenderer:
@@ -30888,6 +30888,7 @@ MonoBehaviour:
   levelTitleText: {fileID: 2955030291230459178}
   countdownFrom: 3
   titleHoldDuration: 1
+  nextLevelCountdownDelay: 1.5
   fadeInDuration: 0.3
   fadeOutDuration: 0.25
   levelStartSFX: {fileID: 1910265653}
