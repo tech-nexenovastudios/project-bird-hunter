@@ -21,11 +21,16 @@ namespace BirdHunter.Inventory.Services
         [Header("Config")]
         [SerializeField] private EconomyFormulaConfig economy;
 
-        [Header("Progression Curve")]
-        [Tooltip("Percent per upgrade level, applied as PctAdd. Level N adds (N-1) * this.")]
-        [SerializeField] private float damagePerLevelPct = 0.2f;
+        [Header("Progression Curve — see docs/Cannon_DPS_and_Egg_Workload_Design.md §3")]
+        [Tooltip("Damage growth per level (geometric). target = round(base * g^(L-1)), floored at +1/level so every upgrade is a distinct integer. 1.06 ≈ 320× at L100.")]
+        [SerializeField] private float damageGrowthPerLevel = 1.06f;
+        [Tooltip("Fire-rate ceiling as a fraction over base (0.5 = +50% max). Front-loaded & saturating, so bullet count can't blow up at high levels.")]
+        [SerializeField] private float fireRateCap = 0.5f;
+        [Tooltip("Fire-rate saturation decay; ~0.924 reaches ~90% of the cap by L30, then plateaus.")]
+        [SerializeField] private float fireRateDecay = 0.924f;
+        [Tooltip("Health % per upgrade level, linear PctAdd. Level N adds (N-1) * this.")]
         [SerializeField] private float healthPerLevelPct = 0.10f;
-        [SerializeField] private float fireRatePerLevelPct = 0.05f;
+        [Tooltip("Move speed % per upgrade level, linear PctAdd.")]
         [SerializeField] private float moveSpeedPerLevelPct = 0.02f;
 
         [Header("Defaults")]
@@ -222,6 +227,24 @@ namespace BirdHunter.Inventory.Services
 
         public bool IsMaxLevel(string key) => GetLevel(key) >= GetMaxLevel(key);
 
+        // ── DPS-preview helpers (inventory UI) ──────────────────────────────
+        // Compute the upgraded stat a cannon *would* have at an arbitrary level,
+        // using the same curves as ApplyUpgradeModifier. Lets the UI preview the
+        // next level's DPS without mutating the live StatSheet.
+        public int GetDamageAtLevel(string key, int level)
+        {
+            var dto = GetBaseData(key);
+            return dto == null ? 0 : ComputeUpgradedDamage(dto.baseDamage, Mathf.Max(1, level));
+        }
+
+        public float GetFireRateAtLevel(string key, int level)
+        {
+            var dto = GetBaseData(key);
+            if (dto == null) return 0f;
+            float bonus = fireRateCap * (1f - Mathf.Pow(fireRateDecay, Mathf.Max(0, level - 1)));
+            return dto.baseFireRate * (1f + bonus);
+        }
+
         // ── Costs ───────────────────────────────────────────────────────────
         // Unlock costs come straight from cloud save (CannonBaseStatsDto). The
         // EconomyFormulaConfig formula is an editor-side calculator only — see
@@ -340,10 +363,33 @@ namespace BirdHunter.Inventory.Services
             if (level <= 1) return;
 
             int steps = level - 1;
-            sheet.Add(new StatModifier(StatType.Damage,    steps * damagePerLevelPct,    StatModOp.PctAdd, UpgradeSource));
+
+            // Damage: geometric with a +1/level integer floor. Egg HP is integer, so damage must
+            // be too — applied as a Flat delta over base so GetInt(Damage) returns the exact target.
+            float baseDmg = sheet.GetBase(StatType.Damage);
+            int targetDmg = ComputeUpgradedDamage(baseDmg, level);
+            sheet.Add(new StatModifier(StatType.Damage, targetDmg - baseDmg, StatModOp.Flat, UpgradeSource));
+
+            // Fire rate: front-loaded, saturating to (1 + fireRateCap)×. Plateaus ~L30.
+            float frBonus = fireRateCap * (1f - Mathf.Pow(fireRateDecay, steps));
+            sheet.Add(new StatModifier(StatType.FireRate, frBonus, StatModOp.PctAdd, UpgradeSource));
+
+            // Health & move speed stay linear.
             sheet.Add(new StatModifier(StatType.Health,    steps * healthPerLevelPct,    StatModOp.PctAdd, UpgradeSource));
-            sheet.Add(new StatModifier(StatType.FireRate,  steps * fireRatePerLevelPct,  StatModOp.PctAdd, UpgradeSource));
             sheet.Add(new StatModifier(StatType.MoveSpeed, steps * moveSpeedPerLevelPct, StatModOp.PctAdd, UpgradeSource));
+        }
+
+        // Geometric damage with a +1/level floor, all integer. See design doc §3.2.
+        // target(L) = max(target(L-1) + 1, round(base * g^(L-1))).
+        private int ComputeUpgradedDamage(float baseDmg, int level)
+        {
+            int dmg = Mathf.Max(1, Mathf.RoundToInt(baseDmg));
+            for (int L = 2; L <= level; L++)
+            {
+                int geo = Mathf.RoundToInt(baseDmg * Mathf.Pow(damageGrowthPerLevel, L - 1));
+                dmg = Mathf.Max(dmg + 1, geo);
+            }
+            return dmg;
         }
 
         // ════════════════════════════════════════════════════════════════════

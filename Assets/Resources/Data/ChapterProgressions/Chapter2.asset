@@ -20,8 +20,8 @@ MonoBehaviour:
   pressureAvgCap: 9.9
   targetScoreMin: 120
   targetScoreMax: 1800
-  hpMultMin: 1.047375
-  hpMultMax: 1.094458
+  hpMultMin: 1.655
+  hpMultMax: 2.483
   spawnIntervalEarly: 4.386207
   spawnIntervalLate: 0.9862069
   spawnIntervalJitter: 0.25
@@ -35,6 +35,8 @@ MonoBehaviour:
   maxE3End: 0
   maxE2Start: 2
   maxE2End: 4
+  maxE1Start: 5
+  maxE1End: 5
   b1WeightStart: 0.55
   b1WeightEnd: 0.35
   b2WeightStart: 0.3

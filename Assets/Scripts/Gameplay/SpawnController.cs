@@ -70,7 +70,7 @@ namespace Gameplay
         float _spawnIntervalMin;
         float _spawnIntervalMax;
         float _hpMultiplier;
-        int _maxE4, _maxE3, _maxE2;
+        int _maxE4, _maxE3, _maxE2, _maxE1;
         bool _isBossLevel;
         BossBirdConfig _levelBossBirdConfig;
         float _bossSpawnDelay;
@@ -275,6 +275,7 @@ namespace Gameplay
             _maxE4 = Mathf.RoundToInt(Mathf.Lerp(cfg.maxE4Start, cfg.maxE4End, t));
             _maxE3 = Mathf.RoundToInt(Mathf.Lerp(cfg.maxE3Start, cfg.maxE3End, t));
             _maxE2 = Mathf.RoundToInt(Mathf.Lerp(cfg.maxE2Start, cfg.maxE2End, t));
+            _maxE1 = Mathf.RoundToInt(Mathf.Lerp(cfg.maxE1Start, cfg.maxE1End, t));
 
             // Boss appears at the chapter mid-point (L10) as a phase-1 mid-boss that retreats at 50% HP,
             // and again at the chapter's final level (L20) as a phase-2 rematch. Matches the bar logic
@@ -302,29 +303,19 @@ namespace Gameplay
             // Per-attempt seed so replays don't feel identical even with the same chapter/level.
             _pressureNoiseSeed = Random.Range(0f, 1000f) + _priorAttempts * 13.37f;
 
-            // ── Replay difficulty bump (boss levels get half the cap to avoid snowballing frustration) ──
-            int maxBumps = _isBossLevel
-                ? Mathf.Max(0, cfg.replayMaxBumps / 2)
-                : Mathf.Max(0, cfg.replayMaxBumps);
-            int bumps = Mathf.Min(_priorAttempts, maxBumps);
-            if (bumps > 0)
-            {
-                float hpJitter = Random.Range(1f - cfg.replayJitterPercent, 1f + cfg.replayJitterPercent);
-                float pJitter = Random.Range(1f - cfg.replayJitterPercent, 1f + cfg.replayJitterPercent);
-
-                float hpBump = 1f + (cfg.replayHpStep * bumps * hpJitter);
-                float pBump = 1f + (cfg.replayPressureStep * bumps * pJitter);
-
-                _hpMultiplier = SnapToStep(_hpMultiplier * hpBump, 0.05f);
-                _pressureMax = Mathf.Max(1, Mathf.RoundToInt(_pressureMax * pBump));
-            }
+            // ── Replay difficulty: intentionally NOT applied ──
+            // Retries play at IDENTICAL difficulty. A failed level gets clearable because the
+            // player UPGRADES their cannon between attempts (more DPS) — never because we
+            // handicap egg HP or pressure. Progression is earned, not handed out.
+            // See docs/Cannon_DPS_and_Egg_Workload_Design.md §5.4.
+            // (cfg.replay* fields are retained for now but deliberately ignored.)
 
             Debug.Log(
                 $"[SpawnController] Ch{_chapter} L{clampedIndex + 1} (G{_globalLevel}) resolved | " +
                 $"target={_targetScore} hp×{_hpMultiplier:F2} pMax={_pressureMax} " +
                 $"spawn={_spawnIntervalMin:F2}–{_spawnIntervalMax:F2}s " +
                 $"weights B1:{_w1:F2} B2:{_w2:F2} B3:{_w3:F2} B4:{_w4:F2} " +
-                $"caps E4:{_maxE4} E3:{_maxE3} E2:{_maxE2} boss={_isBossLevel} retry={_priorAttempts}");
+                $"caps E4:{_maxE4} E3:{_maxE3} E2:{_maxE2} E1:{_maxE1} boss={_isBossLevel} retry={_priorAttempts}");
         }
 
         void NormalizeWeights()
@@ -747,7 +738,16 @@ namespace Gameplay
 
         private IEnumerator BeginSelfClearAfter(float delay)
         {
-            if (delay > 0f) yield return new WaitForSeconds(delay);
+            // Wait out the remaining min-duration — but never strand the player on an empty
+            // screen. With strong cannons, hitting target score and clearing every egg often
+            // happens well before min-duration elapses; in that case finish immediately instead
+            // of staring at nothing. We only keep waiting while eggs are still on screen.
+            float waited = 0f;
+            while (waited < delay && _activeEggs.Count > 0)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
             BeginSelfClear();
         }
 
@@ -848,6 +848,7 @@ namespace Gameplay
                 "E4" => _maxE4,
                 "E3" => _maxE3,
                 "E2" => _maxE2,
+                "E1" => _maxE1 > 0 ? _maxE1 : int.MaxValue,
                 _ => int.MaxValue
             };
             return current < cap;

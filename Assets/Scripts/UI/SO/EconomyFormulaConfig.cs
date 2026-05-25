@@ -43,10 +43,13 @@ public class EconomyFormulaConfig : ScriptableObject
 
     float GetSingleShotUpgradeCost(int toLevel)
     {
-        // toLevel: 2..10
-        float baseUp = 400f;
-        float x = toLevel - 0.5f;
-        return baseUp * Mathf.Pow(x, 1.25f);
+        // toLevel: 2..100. Geometric so upgrade cost out-compounds the DPS curve
+        // (c = 1.11 > damage growth g = 1.06) → DPS-per-coin always shrinks, with no
+        // money-printer at high levels. Gentle early (frequent affordable upgrades),
+        // steep late. See docs/Cannon_DPS_and_Egg_Workload_Design.md §3.5.
+        const float baseUp = 600f; // cost at L2, before per-cannon multiplier
+        const float c = 1.11f;
+        return baseUp * Mathf.Pow(c, toLevel - 2);
     }
 
     public int GetUpgradeCostCoins(string cannonId, int toLevel)

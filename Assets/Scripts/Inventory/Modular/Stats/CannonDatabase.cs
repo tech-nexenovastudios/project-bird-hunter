@@ -11,6 +11,8 @@ namespace BirdHunter.Inventory
         public Sprite icon;
         public GameObject cannonPrefab;
         public GameObject bulletPrefab;
+        [Tooltip("Simultaneous bullets per shot (matches the prefab's gunTips count). Used by the inventory DPS readout: DPS = damage × fire rate × bulletCount.")]
+        public int bulletCount = 1;
     }
 
     [CreateAssetMenu(fileName = "CannonDatabase", menuName = "BirdHunter/Inventory/CannonDatabase")]

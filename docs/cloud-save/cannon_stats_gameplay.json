@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "version": "2.1",
+    "lastUpdated": "2026-05-25",
+    "description": "Full cannon DTOs for Unity Cloud Save 'cannon_stats' custom-id, anchored to the LIVE cloud values provided 2026-05-24. Redesign deltas applied: maxUpgradeLevel -> 100 for all cannons; baseDamage x10 (Single 1->10 ... BigBartha 8->80). Egg tier HP is ALSO x10 in Assets/Resources/Data/EggTierConfigs (balance-neutral rescale so the integer geometric curve produces clean values without changing TTK). All other fields are the player's real cloud data, preserved verbatim.",
+    "applyInstructions": "In the Cloud Save dashboard 'cannon_stats' custom-id, set each sub-key's value to the matching object below. These are complete DTOs (not a partial merge).",
+    "curveContext": {
+      "note": "Runtime applies the upgrade curve on top of these L1 base values — do NOT pre-bake upgraded values.",
+      "damageCurve": "damage(L) = max(damage(L-1)+1, round(baseDamage * 1.06^(L-1)))  // ceiling ≈ baseDamage * 320 at L100",
+      "fireRateCurve": "fireRate(L) = baseFireRate * (1 + 0.5 * (1 - 0.924^(L-1)))  // saturates to x1.5 by ~L30",
+      "dps": "DPS = damage(L) * fireRate(L) * bulletCount"
+    },
+    "verifiedBulletCounts": {
+      "note": "From prefab gunTips (CannonDatabase). NOTE: Lucky & Shotgun descriptions say RANDOM bullets (1-5 / 4-7) — gunTips gives a fixed count, so the menu DPS readout uses these as a fixed approximation. Decide whether to display avg instead.",
+      "SingleShotCannon": 1, "RapidFireCannon": 1, "LuckyCannon": 3,
+      "DoubleCannon": 2, "ShotgunCannon": 4, "BigBarthaCannon": 1, "TripleCannon": 3
+    },
+    "resolved_baseDamage": "Base damage scaled x10 from live cloud values (Single 1->10, Rapid 0.5->5, Lucky 2->20, Double 1.5->15, Shotgun 1.2->12, BigBartha 8->80, Triple 3->30). Egg tier HP also x10 (EggTierConfigs) so TTK/hit-counts/score are identical — only magnitudes grew, fixing fractional bases and letting the geometric curve compound cleanly from ~L20. L100 damage ≈ baseDamage * 320."
+  },
+
+  "SingleShotCannon": {
+    "cannonId": "CANNON_01",
+    "name": "Single Shot",
+    "description": "Reliable single shot. High damage, balanced fire rate.",
+    "unlockAtChapter": 1,
+    "baseCoinsRequired": 100,
+    "baseGemsRequired": 0,
+    "baseDamage": 10,
+    "baseFireRate": 5,
+    "baseHealth": 50,
+    "baseBulletSpeed": 5,
+    "baseCannonSpeed": 15,
+    "maxUpgradeLevel": 100
+  },
+  "RapidFireCannon": {
+    "cannonId": "CANNON_02",
+    "name": "Rapid Cannon",
+    "description": "Blistering fire rate. Low damage per bullet, massive DPS.",
+    "unlockAtChapter": 3,
+    "baseCoinsRequired": 1800,
+    "baseGemsRequired": 18,
+    "baseDamage": 5,
+    "baseFireRate": 6,
+    "baseHealth": 60,
+    "baseBulletSpeed": 6,
+    "baseCannonSpeed": 10,
+    "maxUpgradeLevel": 100
+  },
+  "LuckyCannon": {
+    "cannonId": "CANNON_03",
+    "name": "Lucky Cannon",
+    "description": "Random 1–5 bullets per shot. High risk, high reward.",
+    "unlockAtChapter": 5,
+    "baseCoinsRequired": 2600,
+    "baseGemsRequired": 26,
+    "baseDamage": 20,
+    "baseFireRate": 11,
+    "baseHealth": 105,
+    "baseBulletSpeed": 6,
+    "baseCannonSpeed": 14,
+    "maxUpgradeLevel": 100
+  },
+  "DoubleCannon": {
+    "cannonId": "CANNON_04",
+    "name": "Double Cannon",
+    "description": "Twin-barrel. Two bullets every shot for sustained damage.",
+    "unlockAtChapter": 8,
+    "baseCoinsRequired": 4100,
+    "baseGemsRequired": 38,
+    "baseDamage": 15,
+    "baseFireRate": 9,
+    "baseHealth": 110,
+    "baseBulletSpeed": 6,
+    "baseCannonSpeed": 13,
+    "maxUpgradeLevel": 100
+  },
+  "ShotgunCannon": {
+    "cannonId": "CANNON_05",
+    "name": "Shotgun",
+    "description": "Blasts 4–7 bullets in a spread. Devastating at close range.",
+    "unlockAtChapter": 12,
+    "baseCoinsRequired": 6200,
+    "baseGemsRequired": 57,
+    "baseDamage": 12,
+    "baseFireRate": 7,
+    "baseHealth": 120,
+    "baseBulletSpeed": 5,
+    "baseCannonSpeed": 11,
+    "maxUpgradeLevel": 100
+  },
+  "BigBarthaCannon": {
+    "cannonId": "CANNON_06",
+    "name": "Big Bartha",
+    "description": "Slow but devastating. Single massive impact shot.",
+    "unlockAtChapter": 18,
+    "baseCoinsRequired": 11700,
+    "baseGemsRequired": 107,
+    "baseDamage": 80,
+    "baseFireRate": 3,
+    "baseHealth": 150,
+    "baseBulletSpeed": 4,
+    "baseCannonSpeed": 10,
+    "maxUpgradeLevel": 100
+  },
+  "TripleCannon": {
+    "cannonId": "CANNON_07",
+    "name": "Triple Shot",
+    "description": "Three-barrel endgame cannon. Maximum coverage, heavy damage.",
+    "unlockAtChapter": 25,
+    "baseCoinsRequired": 22600,
+    "baseGemsRequired": 206,
+    "baseDamage": 30,
+    "baseFireRate": 8,
+    "baseHealth": 130,
+    "baseBulletSpeed": 6,
+    "baseCannonSpeed": 12,
+    "maxUpgradeLevel": 100
+  }
+}

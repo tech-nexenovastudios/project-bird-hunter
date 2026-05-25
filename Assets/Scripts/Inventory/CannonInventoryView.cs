@@ -32,6 +32,8 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
     [SerializeField] private TextMeshProUGUI previewDescriptionText;
     [SerializeField] private TextMeshProUGUI upgradeCoinRequiredText;
     [SerializeField] private GameObject upgradeCoinRequiredContainer;
+    [Tooltip("DPS readout: shows current DPS, or 'current → next' when an upgrade is available. DPS = damage × fire rate × bullet count.")]
+    [SerializeField] private TextMeshProUGUI dpsValueText;
 
     [Header("Cannon Level Badge Animation")]
     [Tooltip("The parent UI GameObject of the level badge (the green flag-like element).")]
@@ -584,6 +586,35 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
 
         bool showCost = unlocked && !service.IsMaxLevel(key);
         SetUpgradeCostText(key, showCost);
+
+        UpdateDpsReadout(key);
+    }
+
+    // DPS = damage × fire rate × bullet count. Shows "current → next" when an upgrade is
+    // available, or a single value at max level / for a locked cannon (previewed at L1).
+    private void UpdateDpsReadout(string key)
+    {
+        if (dpsValueText == null || service == null) return;
+
+        var dto = service.GetBaseData(key);
+        if (dto == null) { dpsValueText.text = ""; return; }
+
+        int bullets = Mathf.Max(1, database != null ? (database.GetEntry(key)?.bulletCount ?? 1) : 1);
+        int level = Mathf.Max(1, service.GetLevel(key));
+
+        int curDps = Mathf.RoundToInt(
+            service.GetDamageAtLevel(key, level) * service.GetFireRateAtLevel(key, level) * bullets);
+
+        if (service.IsUnlocked(key) && !service.IsMaxLevel(key))
+        {
+            int nextDps = Mathf.RoundToInt(
+                service.GetDamageAtLevel(key, level + 1) * service.GetFireRateAtLevel(key, level + 1) * bullets);
+            dpsValueText.text = $"{curDps} → {nextDps}";
+        }
+        else
+        {
+            dpsValueText.text = $"{curDps}";
+        }
     }
 
     // ════════════════════════════════════════════════════════════════════

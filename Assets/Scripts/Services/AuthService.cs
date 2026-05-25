@@ -168,7 +168,11 @@ public class AuthService
                 gpgsActivated = true;
             }
 #endif
-            var options = new InitializationOptions().SetEnvironmentName("production");
+            // Unity Services environment. This is the first InitializeAsync in the boot
+            // sequence (auth runs first), so it sets the environment for all services.
+            // Flip back to "production" for release builds.
+            const string environmentName = "development";
+            var options = new InitializationOptions().SetEnvironmentName(environmentName);
             await UnityServices.InitializeAsync(options).AsUniTask().AttachExternalCancellation(ct);
             return true;
         }

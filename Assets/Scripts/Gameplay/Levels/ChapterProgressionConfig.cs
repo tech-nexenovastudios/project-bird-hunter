@@ -46,6 +46,8 @@ namespace Gameplay.Levels
         public int maxE4Start, maxE4End;
         public int maxE3Start = 1, maxE3End = 2;
         public int maxE2Start = 2, maxE2End = 3;
+        [Tooltip("Concurrent E1 (smallest egg) cap — the main anti-clutter lever. Split children beyond this are skipped. 0 or negative = uncapped (legacy behaviour).")]
+        public int maxE1Start = 5, maxE1End = 5;
 
         [Header("Bird Mix Weights (lerped start→end across the chapter; auto-normalized)")]
         [Range(0f, 1f)] public float b1WeightStart = 0.55f;
@@ -65,13 +67,13 @@ namespace Gameplay.Levels
         [Tooltip("Frequency of the pressureMax oscillation in Hz.")]
         public float pressureNoiseFrequency = 0.18f;
 
-        [Header("Replay Difficulty (per session retry of the same level)")]
-        [Tooltip("HP multiplier added per retry (e.g. 0.02 = +2% HP).")]
-        [Range(0f, 0.25f)] public float replayHpStep = 0.02f;
-        [Tooltip("Pressure multiplier added per retry.")]
-        [Range(0f, 0.25f)] public float replayPressureStep = 0.03f;
-        [Tooltip("Cap on the number of stacked retry bumps.")]
-        public int replayMaxBumps = 3;
+        [Header("Replay Difficulty (DISABLED — retries are identical; you clear by UPGRADING)")]
+        [Tooltip("Inert by design. Retries play at identical difficulty — a level becomes clearable through cannon upgrades, not by handicapping egg HP. See design doc §5.4.")]
+        [Range(0f, 0.25f)] public float replayHpStep = 0f;
+        [Tooltip("Inert by design. See replayHpStep.")]
+        [Range(0f, 0.25f)] public float replayPressureStep = 0f;
+        [Tooltip("Inert by design. See replayHpStep.")]
+        public int replayMaxBumps = 0;
         [Tooltip("Random jitter applied per retry bump (± fraction of the step).")]
         [Range(0f, 1f)] public float replayJitterPercent = 0.5f;
 
@@ -116,6 +118,8 @@ namespace Gameplay.Levels
             maxE3End = Mathf.Max(0, maxE3End);
             maxE2Start = Mathf.Max(0, maxE2Start);
             maxE2End = Mathf.Max(0, maxE2End);
+            maxE1Start = Mathf.Max(0, maxE1Start);
+            maxE1End = Mathf.Max(0, maxE1End);
 
             bossSpawnDelay = Mathf.Max(0f, bossSpawnDelay);
             attackingBirdSpawnInterval = Mathf.Max(0f, attackingBirdSpawnInterval);

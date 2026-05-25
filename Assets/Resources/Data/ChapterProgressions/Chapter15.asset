@@ -20,8 +20,8 @@ MonoBehaviour:
   pressureAvgCap: 18.9
   targetScoreMin: 8228
   targetScoreMax: 9950
-  hpMultMin: 1.911747
-  hpMultMax: 1.997687
+  hpMultMin: 10.172
+  hpMultMax: 15.259
   spawnIntervalEarly: 2.9068966
   spawnIntervalLate: 0.8068966
   spawnIntervalJitter: 0.25
@@ -35,6 +35,8 @@ MonoBehaviour:
   maxE3End: 3
   maxE2Start: 2
   maxE2End: 3
+  maxE1Start: 5
+  maxE1End: 5
   bossBirdConfig: {fileID: 0}
   bossSpawnDelay: 12
   attackingBirdPool: []
