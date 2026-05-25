@@ -32,7 +32,7 @@ namespace UI
         private void UpdateScoreDisplay(int currentScore, int delta)
         {
             if (scoreText != null)
-                scoreText.text = "Score: " + currentScore.ToString("0");
+                scoreText.text = "Score: " + currentScore.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
 
             if (deltaText != null && delta > 0)
             {

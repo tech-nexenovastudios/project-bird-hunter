@@ -561,9 +561,13 @@ namespace Gameplay.Eggs
 
         private Vector2 GetRandomBounceDirection()
         {
-            float randomAngle = Random.Range(-bounceDirectionRandomness, bounceDirectionRandomness);
-            float horizontalVelocity = Random.Range(-_maxHorizontalLaunch, _maxHorizontalLaunch);
-            return new Vector2(horizontalVelocity * (1f + randomAngle), 0f);
+            float currentVx = _rb.linearVelocity.x;
+            float sign = Mathf.Abs(currentVx) > 0.05f
+                ? -Mathf.Sign(currentVx)
+                : (Random.value < 0.5f ? -1f : 1f);
+
+            float jitter = 2f + Random.Range(-bounceDirectionRandomness, bounceDirectionRandomness);
+            return new Vector2(sign * _maxHorizontalLaunch * jitter, 0f);
         }
 
         // ─── Player collision ───

@@ -109,7 +109,9 @@ namespace Gameplay.UI
             if (_scoreManager == null)
                 _scoreManager = FindObjectOfType<ScoreManager>();
 
-            _score = _scoreManager != null ? _scoreManager.LevelScore : 0;
+            // "This time" = the full run total (every level cleared this run, up to death),
+            // not just the level the player died on.
+            _score = _scoreManager != null ? _scoreManager.CurrentScore : 0;
 
             // Target score / chapter / level — chapter-progression authority is SpawnController.
             var spawn = SpawnController.Instance;
@@ -118,6 +120,9 @@ namespace Gameplay.UI
             var progress = GameProgressManager.Instance;
             _chapter = progress != null ? progress.CurrentChapter : 1;
             _level = progress != null ? progress.CurrentLevel : 1;
+            // Submit this run's total as the new all-time best (updates only if it beats the
+            // stored high score), then read it back for display.
+            progress?.SubmitRunScore(_score);
             _highScore = progress != null ? progress.HighScore : 0;
 
             // Run rewards — RewardManager accumulates across every level the player cleared
@@ -140,10 +145,11 @@ namespace Gameplay.UI
         {
             int multiplier = _adRewardClaimed ? 2 : 1;
 
-            if (scoreTMP) scoreTMP.text = _score.ToString();
-            if (targetScoreTMP) targetScoreTMP.text = _targetScore > 0 ? _targetScore.ToString("000,000") : "-";
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            if (scoreTMP) scoreTMP.text = _score.ToString("N0", inv);
+            if (targetScoreTMP) targetScoreTMP.text = _targetScore > 0 ? _targetScore.ToString("N0", inv) : "-";
             if (chapterLevelTMP) chapterLevelTMP.text = $"Chapter {_chapter}  •  Level {_level}";
-            if (highScoreTMP) highScoreTMP.text = _highScore.ToString("000,000");
+            if (highScoreTMP) highScoreTMP.text = _highScore.ToString("N0", inv);
 
             if (coinsTMP) coinsTMP.text = (multiplier * _baseCoins).ToString();
             if (gemsTMP) gemsTMP.text = (multiplier * _baseGems).ToString();

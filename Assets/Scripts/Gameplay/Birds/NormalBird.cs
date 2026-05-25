@@ -48,17 +48,20 @@ namespace Gameplay.Birds
             FlyNormal();
         }
 
+        // Normal birds can't be killed by the player and don't play a death animation —
+        // they simply despawn (lifetime/flee). See BaseBird.IsInvincible / PlaysDeathAnimation.
+        protected override bool IsInvincible => true;
+        protected override bool PlaysDeathAnimation => false;
+
         private void OnEnable()
         {
             OnLayEgg += LayEgg;
-            OnDeathStarted += Death;
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
             OnLayEgg -= LayEgg;
-            OnDeathStarted -= Death;
 
             // Guarantee the flap loop is torn down if the bird is disabled mid-flight
             // (pooling, scene unload) before any animation transition fires it for us.
@@ -85,11 +88,6 @@ namespace Gameplay.Birds
             // animationState.AddAnimation(0, FLY_NORMAL, true, 0f);
             
             currentAnimation = FLY_NORMAL;
-        }
-
-        public void Death(BaseBird bird)
-        {
-            PlayAnimation(DEATH, false);
         }
 
     }

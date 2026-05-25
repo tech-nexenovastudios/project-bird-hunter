@@ -71,7 +71,7 @@ namespace Gameplay.Health
 
             int actualDamage = Mathf.Min(damage, _currentHp);
             int oldHp = _currentHp;
-            _currentHp -= damage;
+            _currentHp -= actualDamage;
 
             GameEvents.FireEggHit(this, actualDamage, transform.position);
             OnHpChanged?.Invoke(oldHp, _currentHp);

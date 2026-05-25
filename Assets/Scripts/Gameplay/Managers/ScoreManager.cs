@@ -173,10 +173,14 @@ namespace Gameplay.Managers
 
         private void OnEggHit(IDamageable egg, int damage, Vector3 hitPoint)
         {
-            int award = (egg is EggHealth eh && eh.Config != null && eh.Config.scorePerHit > 0)
+            int perDamage = (egg is EggHealth eh && eh.Config != null && eh.Config.scorePerHit > 0)
                 ? eh.Config.scorePerHit
                 : scorePerEggHit;
-            AddScore(award);
+            // Score scales with damage DEALT, not bullet count — so an egg always yields
+            // scorePerHit × HP (+ scoreOnDestroy) regardless of cannon strength, matching
+            // SpawnController.CalculateEggMaxScore. `damage` is the clamped actual damage from
+            // EggHealth, so overkill on the killing hit doesn't inflate the score.
+            AddScore(perDamage * Mathf.Max(1, damage));
         }
 
         private void OnEggDestroyed(IDamageable egg, int scoreAwarded, Vector3 position)
@@ -188,7 +192,7 @@ namespace Gameplay.Managers
         private void UpdateDisplay()
         {
             if (scoreText != null)
-                scoreText.text = "Score: " + _levelScore.ToString("0");
+                scoreText.text = "Score: " + _levelScore.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 }

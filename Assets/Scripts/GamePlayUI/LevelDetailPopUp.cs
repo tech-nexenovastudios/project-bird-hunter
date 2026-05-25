@@ -30,6 +30,8 @@ namespace Gameplay.UI
         [Header("Timing")]
         [SerializeField] private int countdownFrom = 3;
         [SerializeField] private float titleHoldDuration = 0.5f;   // how long "Level N" stays before the countdown
+        [Tooltip("Pause between the 'Level Complete' popup and the next-level 'Starting in' countdown. Level-start only; doesn't delay the smoke/level-start VFX, which fires when this popup appears.")]
+        [SerializeField] private float nextLevelCountdownDelay = 1.5f;
         [SerializeField] private float fadeInDuration = 0.3f;
         [SerializeField] private float fadeOutDuration = 0.25f;
         public ParticleSystem levelStartSFX;
@@ -144,6 +146,12 @@ namespace Gameplay.UI
             // Hold the remainder so "Level N" is on screen for the full titleHoldDuration.
             float remainingHold = titleHoldDuration - fadeInDuration;
             if (remainingHold > 0f) yield return WaitPausableRealtime(remainingHold);
+
+            // 1.5s beat between the "Level Complete" popup and the next-level "Starting in"
+            // countdown. Level-start path only — the popup (and any smoke/level-start VFX fired
+            // when it appeared) is already on screen, so this delays only the countdown.
+            if (isLevelStart && nextLevelCountdownDelay > 0f)
+                yield return WaitPausableRealtime(nextLevelCountdownDelay);
 
             // ── Phase 2: countdown in the SAME text ("Starting in 3 / 2 / 1") ──
             int count = countdownFrom;

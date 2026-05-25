@@ -175,9 +175,15 @@ namespace Gameplay.Birds
             _remainingLifetime = Mathf.Min(_remainingLifetime, PostLayRemainingLifetime);
         }
 
+        // Normal birds override IsInvincible to ignore bullet damage — they're cleared via
+        // lifetime/flee, not by the player. Boss & attacking birds stay damageable.
+        protected virtual bool IsInvincible => false;
+        // When false, Die() skips the fall/spin/fade sequence and despawns instantly.
+        protected virtual bool PlaysDeathAnimation => true;
+
         public void TakeDamage(int damage)
         {
-            if (_isDead) return;
+            if (_isDead || IsInvincible) return;
             CurrentHp -= damage;
             Debug.Log($"[Gameplay] Bird took {damage} damage. Health now {CurrentHp}");
             if (CurrentHp <= 0) Die(true);
@@ -237,7 +243,10 @@ namespace Gameplay.Birds
             if (_collider != null) _collider.enabled = false;
 
             OnDeathStarted?.Invoke(this);
-            StartCoroutine(DeathSequenceRoutine());
+            if (PlaysDeathAnimation)
+                StartCoroutine(DeathSequenceRoutine());
+            else
+                OnDestroyed?.Invoke(this);
         }
 
         private IEnumerator DeathSequenceRoutine()

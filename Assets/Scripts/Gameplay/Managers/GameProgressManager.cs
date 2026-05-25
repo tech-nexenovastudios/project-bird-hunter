@@ -183,11 +183,22 @@ namespace Gameplay.Managers
         }
 
 
+        // All-time best is the best RUN total (sum of every level cleared in a run, up to death).
+        // Submitted on death with ScoreManager.CurrentScore; persists only when this run beats it.
+        public void SubmitRunScore(int runScore)
+        {
+            if (_progress == null) _progress = new GameProgress();
+            if (runScore <= _progress.highScore) return;
+            _progress.highScore = runScore;
+            SaveProgress();
+        }
+
         public void CompleteLevel(int scoreAchieved)
         {
             if (_progress == null) _progress = new GameProgress();
 
-            _progress.highScore = Mathf.Max(_progress.highScore, scoreAchieved);
+            // High score is the best RUN total (submitted on death via SubmitRunScore), NOT a
+            // single level's score. totalScore stays a lifetime tally.
             _progress.totalScore += scoreAchieved;
             _progress.MarkFirstTimeClear(_progress.currentChapter, _progress.currentLevel);
 
