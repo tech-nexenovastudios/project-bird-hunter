@@ -43,6 +43,7 @@ namespace Gameplay.Player
 
         [Header("Power-Up VFX")]
         [SerializeField] private GameObject healVFXPrefab;
+
         [SerializeField] private GameObject shieldAbsorbVFXPrefab;
         [SerializeField] private GameObject reviveVFXPrefab;
 
@@ -61,11 +62,18 @@ namespace Gameplay.Player
         private Sequence deathSequence;
         private ParticleSystem _currentFlash;
 
+        [SerializeField] private float vfxSpawnYOffset = -0.35f;
+        private Vector3 vfxSpawnPoint;
+
         protected override void Awake()
         {
             base.Awake();
             if (bodyRecoilTransform == null) bodyRecoilTransform = transform;
             bodyRecoilStartPosition = bodyRecoilTransform.localPosition;
+            //vfx offset
+            vfxSpawnPoint = transform.position;
+            vfxSpawnPoint.y += vfxSpawnYOffset;
+
             if (muzzleTransform != null)
             {
                 muzzleStartPosition = muzzleTransform.localPosition;
@@ -96,7 +104,7 @@ namespace Gameplay.Player
         protected override void Shoot()
         {
             if (!IsAlive) return;
-
+            
             muzzleSequence?.Kill();
 
             if (bodyRecoilTransform != null)
@@ -267,9 +275,11 @@ namespace Gameplay.Player
 
         protected override void OnHealVFX(int amount)
         {
+
             if (healVFXPrefab != null)
-                VFXPoolManager.Instance.Play(healVFXPrefab, transform.position);
+                VFXPoolManager.Instance.Play(healVFXPrefab, vfxSpawnPoint);
         }
+
 
         protected override void OnShieldAbsorbVFX()
         {

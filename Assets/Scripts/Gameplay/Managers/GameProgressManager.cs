@@ -86,6 +86,42 @@ namespace Gameplay.Managers
             DontDestroyOnLoad(gameObject);
         }
 
+        private void OnEnable()
+        {
+            GameEvents.OnPreBossRecoveryActivated += OnPreBossRecoveryActivated;
+        }
+
+        private void OnDisable()
+        {
+            GameEvents.OnPreBossRecoveryActivated -= OnPreBossRecoveryActivated;
+        }
+
+        // The deferred Pre-Boss Recovery heal just fired (boss entered a boss level). Consume the
+        // slot so it isn't re-equipped on later levels and can't heal again at the chapter's 2nd boss.
+        private void OnPreBossRecoveryActivated()
+        {
+            if (_progress?.chapterSlots == null) return;
+            bool changed = false;
+            for (int i = 0; i < _progress.chapterSlots.Length; i++)
+            {
+                var slot = _progress.chapterSlots[i];
+                if (slot == null || string.IsNullOrEmpty(slot.equippedPowerupId)) continue;
+                if (!IsPreBossPowerup(slot.equippedPowerupId) || slot.hasBeenApplied) continue;
+                slot.hasBeenApplied = true;
+                changed = true;
+            }
+            if (changed) SaveProgress();
+        }
+
+        private bool IsPreBossPowerup(string powerupId)
+        {
+            if (allPowerups == null || string.IsNullOrEmpty(powerupId)) return false;
+            for (int i = 0; i < allPowerups.Length; i++)
+                if (allPowerups[i] != null && allPowerups[i].id == powerupId)
+                    return allPowerups[i].effectType == PreBossHealModifier.ConfigEffectType;
+            return false;
+        }
+
 
         public LevelProfile GetCurrentLevelProfile()
             => LoadLevelProfile(CurrentChapter, CurrentLevel);
@@ -283,6 +319,11 @@ namespace Gameplay.Managers
                 }
                 bool hasCooldown = config != null && config.cooldown > 0f;
 
+                // Pre-Boss Recovery is deferred: it must stay equipped (pending) every level
+                // until the boss spawns, so it is never flagged hasBeenApplied on equip. The
+                // OnPreBossRecoveryActivated handler consumes the slot once the heal fires.
+                bool isPreBoss = config != null && config.effectType == PreBossHealModifier.ConfigEffectType;
+
                 var runtimePowerUp = CannonPowerUpCaster.Instance.FindByID(slot.equippedPowerupId);
 
                 if (runtimePowerUp == null)
@@ -312,7 +353,7 @@ namespace Gameplay.Managers
 
                 CannonPowerUpCaster.Instance.Equip(runtimePowerUp);
                 appliedCount++;
-                if (!isPersistent) slot.hasBeenApplied = true;
+                if (!isPersistent && !isPreBoss) slot.hasBeenApplied = true;
             }
 
         }

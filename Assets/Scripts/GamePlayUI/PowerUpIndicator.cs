@@ -23,12 +23,36 @@ public class PowerUpIndicator : MonoBehaviour, ICooldownIndicator
 
     private Tween _pulseTween;
     private Tween _cooldownTween;
+    private bool _isPending;
 
     public void Bind(NotificationRequest request)
     {
         if (powerUpIcon != null && request.icon != null) powerUpIcon.sprite = request.icon;
         if (cooldownFill != null && request.icon != null) cooldownFill.sprite = request.icon;
 
+        _isPending = false;
+        SpawnVfx(spawnVFXPrefab);
+        SetActiveVisual();
+        StartPulse();
+    }
+
+    // Deferred powerups (e.g. Pre-Boss Recovery) bind here: the icon is shown greyed and
+    // un-pulsed to signal "selected, but not active yet". ActivateFromPending() promotes it
+    // to the normal active look once the powerup actually triggers (boss spawns).
+    public void BindPending(NotificationRequest request)
+    {
+        if (powerUpIcon != null && request.icon != null) powerUpIcon.sprite = request.icon;
+        if (cooldownFill != null && request.icon != null) cooldownFill.sprite = request.icon;
+
+        _isPending = true;
+        StopPulse();
+        SetPendingVisual();
+    }
+
+    public void ActivateFromPending()
+    {
+        if (!_isPending) return;
+        _isPending = false;
         SpawnVfx(spawnVFXPrefab);
         SetActiveVisual();
         StartPulse();
@@ -62,6 +86,13 @@ public class PowerUpIndicator : MonoBehaviour, ICooldownIndicator
     {
         if (powerUpIcon != null) powerUpIcon.color = activeColor;
         if (cooldownFill != null) { cooldownFill.fillAmount = 1f; cooldownFill.color = activeColor; }
+    }
+
+    private void SetPendingVisual()
+    {
+        // Reuse the cooldown grey to read as "inactive / waiting".
+        if (powerUpIcon != null) powerUpIcon.color = cooldownColor;
+        if (cooldownFill != null) { cooldownFill.fillAmount = 1f; cooldownFill.color = cooldownColor; }
     }
 
     private void StartPulse()

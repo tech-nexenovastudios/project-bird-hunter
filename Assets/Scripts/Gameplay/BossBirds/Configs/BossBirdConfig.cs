@@ -10,9 +10,21 @@ public class BossBirdConfig : ScriptableObject
     public RuntimeAnimatorController animatorController;
 
     [Header("Stats")]
-    public float maxHealth = 500f;
+    [Tooltip("Max health is rolled randomly within this range (inclusive of both x and y) each time the boss spawns.")]
+    public Vector2Int maxHealthRange = new Vector2Int(500, 500);
     public float contactDamage = 20f;
     public float phase2HealthMultiplier = 1.5f;
+
+    /// <summary>
+    /// Rolls a random max health within <see cref="maxHealthRange"/> (inclusive of both ends).
+    /// Call once per spawn and cache the result so all phases share the same base value.
+    /// </summary>
+    public float RollMaxHealth()
+    {
+        int lo = Mathf.Min(maxHealthRange.x, maxHealthRange.y);
+        int hi = Mathf.Max(maxHealthRange.x, maxHealthRange.y);
+        return Random.Range(lo, hi + 1); // upper bound is exclusive for ints, so +1 to include hi
+    }
 
     [Header("Movement")]
     public BossMovementConfig phase1Movement;

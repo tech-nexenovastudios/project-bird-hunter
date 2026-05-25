@@ -1,3 +1,4 @@
+using Gameplay.Birds;
 using Gameplay.Events;
 using Gameplay.Interfaces;
 using Gameplay.Player;
@@ -1100,28 +1101,57 @@ namespace Gameplay.PowerUps
         }
     }
 
-    // ── #17 Pre-Boss Heal ────────────────────────────────────
-    // Unique: triggered by wave manager, not events or tick
-
+    // ── #17 Pre-Boss Recovery ─────────────────────────────────
+    // Deferred heal. Unlike every other powerup, this does NOT take effect on the level
+    // it is equipped on. It arms a one-shot listener for OnBossSpawned — which only fires
+    // on a boss level (L10/L20) — and heals the cannon the instant the boss enters, i.e.
+    // "recovery before the boss battle". Picked at L5/L6 it sits pending (the indicator is
+    // shown greyed) across every level until the boss appears at L10.
+    //
+    // Persistence + consumption live in GameProgressManager: the slot is re-equipped each
+    // level while pending, then consumed once OnPreBossRecoveryActivated fires so the heal
+    // can't repeat on the chapter's second boss (L20).
     [Serializable]
     public class PreBossHealModifier : ICannonModifier
     {
+        // PowerupConfig.effectType value that tags this powerup. Lets the UI / progress
+        // manager recognise it without a hard reference to this class.
+        public const string ConfigEffectType = "PreBossHealPercent";
+
         [Range(1f, 100f)] public float healPercent = 50f;
 
         private ICannon cannon;
+        private bool subscribed;
 
         public void Activate(ICannon cannon)
         {
             this.cannon = cannon;
-            TriggerHeal();
+            // Re-armed on every level transition while pending — subscribe only once.
+            if (subscribed) return;
+            GameEvents.OnBossSpawned += OnBossSpawned;
+            subscribed = true;
         }
-        public void Deactivate() => cannon = null;
 
-        
-        public void TriggerHeal()
+        public void Deactivate()
         {
+            if (subscribed) { GameEvents.OnBossSpawned -= OnBossSpawned; subscribed = false; }
+            cannon = null;
+        }
+
+        private void OnBossSpawned(BossBird boss)
+        {
+            // One-shot: stop listening before healing so a phase-2 re-spawn can't double-heal
+            // before GameProgressManager has consumed the slot.
+            if (subscribed) { GameEvents.OnBossSpawned -= OnBossSpawned; subscribed = false; }
+            TriggerHeal();
+            GameEvents.FirePreBossRecoveryActivated();
+        }
+
+        private void TriggerHeal()
+        {
+            // healPercent is 1..100 — heal that percentage of max HP.
             if (cannon != null && cannon.MaxHp > 0)
-                cannon.Heal(Mathf.CeilToInt(cannon.MaxHp * healPercent));
+                cannon.Heal(Mathf.CeilToInt(cannon.MaxHp * healPercent / 100f));
         }
     }
 }
