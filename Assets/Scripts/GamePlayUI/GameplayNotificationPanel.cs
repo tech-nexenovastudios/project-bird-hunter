@@ -13,7 +13,7 @@ namespace Gameplay.UI
     {
         //when open this panel will slide in from the left and stays there for 3 seconds then it will slide back out to the left
         //if notification is a power-up, it will show the icon and countdown if it has a countdown
-        //the bg color will change to the power-up rarity color and the text color will adjust to the power-up rarity color
+        //the bg color will change to the power-up rarity color (deep) and the text/icon color uses the rarity accent (bright)
         //when panel slides out, power-up icon will stays there.
 
         public static GameplayNotificationPanel Instance { get; private set; }
@@ -30,6 +30,11 @@ namespace Gameplay.UI
         private CanvasGroup _canvasGroup;
         private bool _isShowing;
 
+        // True while the persistent indicator is showing an equipped powerup. The indicator's
+        // icon is the SAME Image as `powerUpIcon`, so non-powerup toasts (e.g. "Gem Found") must
+        // not disable it while this is set, or the persistent powerup notification vanishes.
+        private bool _persistentActive;
+
         [Header("Power-Up Icons")]
         [SerializeField] private RectTransform powerUpIconContainer;
         [SerializeField] private RectTransform powerUpVFXContainer;
@@ -42,13 +47,25 @@ namespace Gameplay.UI
         [Tooltip("In-scene indicator re-skinned per selected powerup. Kept visible after the panel slides out. Receives OnPowerupCooldownStarted / OnPowerupUnequipped events.")]
         [SerializeField] private PowerUpIndicator persistentIndicator;
 
-        // Rarity colours mirror PowerupLockView so the same visual language carries
-        // from the slot-machine selection card to the in-game notification.
-        private static readonly Color ColCommon = Hex("98F3AF");
-        private static readonly Color ColRare = Hex("F8E64B");
-        private static readonly Color ColEpic = Hex("EAB3FF");
-        private static readonly Color ColLegendary = Hex("FF9B94");
-        private static readonly Color DefaultTint = Color.white;
+        // ── Rarity palette ──────────────────────────────────────────────────
+        // Two-tone system: deep background (matches card frame) + bright accent
+        // (matches card title text). White headline reads cleanly on every deep BG.
+
+        // Deep panel backgrounds
+        private static readonly Color BgCommon = Hex("2F6B3A");
+        private static readonly Color BgRare = Hex("A86A1C");
+        private static readonly Color BgEpic = Hex("5B2A8C");
+        private static readonly Color BgLegendary = Hex("8B1F1F");
+
+        // Bright accents for text, countdown ring, and countdown number
+        private static readonly Color FgCommon = Hex("A8F0B4");
+        private static readonly Color FgRare = Hex("FFD24A");
+        private static readonly Color FgEpic = Hex("E0A8FF");
+        private static readonly Color FgLegendary = Hex("FF6B5E");
+
+        // Neutral palette for non-powerup notifications (rewards, generic messages).
+        private static readonly Color DefaultBg = Hex("1A1A22");
+        private static readonly Color DefaultFg = Color.white;
 
         private readonly Queue<NotificationRequest> _queue = new();
 
@@ -86,6 +103,7 @@ namespace Gameplay.UI
             GameEvents.OnPowerupSelected += OnPowerupSelected;
             GameEvents.OnPowerupCooldownStarted += OnPowerupCooldownStarted;
             GameEvents.OnPowerupUnequipped += OnPowerupUnequipped;
+            GameEvents.OnPreBossRecoveryActivated += OnPreBossRecoveryActivated;
             GameEvents.OnRewardNotification += OnRewardNotification;
         }
 
@@ -94,6 +112,7 @@ namespace Gameplay.UI
             GameEvents.OnPowerupSelected -= OnPowerupSelected;
             GameEvents.OnPowerupCooldownStarted -= OnPowerupCooldownStarted;
             GameEvents.OnPowerupUnequipped -= OnPowerupUnequipped;
+            GameEvents.OnPreBossRecoveryActivated -= OnPreBossRecoveryActivated;
             GameEvents.OnRewardNotification -= OnRewardNotification;
         }
 
@@ -109,13 +128,15 @@ namespace Gameplay.UI
         private void OnPowerupSelected(PowerupConfig config)
         {
             if (config == null) return;
+            var (bg, fg) = RarityPalette(config.rarity);
             Enqueue(new NotificationRequest
             {
                 kind = NotificationKind.PowerupSelected,
                 headline = config.displayName,
                 description = config.description,
                 icon = config.icon,
-                tint = RarityColour(config.rarity),
+                bgTint = bg,
+                fgTint = fg,
                 hasTint = true,
                 payload = config,
             });
@@ -130,7 +151,9 @@ namespace Gameplay.UI
                 description = n.amount > 0 ? $"+{n.amount} {n.currency}" : string.Empty,
                 amount = n.amount,
                 currency = n.currency,
-                hasTint = false,
+                bgTint = DefaultBg,
+                fgTint = DefaultFg,
+                hasTint = true,
             });
         }
 
@@ -142,8 +165,17 @@ namespace Gameplay.UI
 
         private void OnPowerupUnequipped()
         {
+            _persistentActive = false;
             if (persistentIndicator != null && persistentIndicator.gameObject.activeInHierarchy)
                 persistentIndicator.Hide();
+        }
+
+        // Pre-Boss Recovery's deferred heal just fired (boss entered the level). Promote the
+        // greyed pending indicator to its normal active look.
+        private void OnPreBossRecoveryActivated()
+        {
+            if (persistentIndicator != null && persistentIndicator.gameObject.activeInHierarchy)
+                persistentIndicator.ActivateFromPending();
         }
 
         // ── Public API ──────────────────────────────────────────────────────
@@ -174,27 +206,41 @@ namespace Gameplay.UI
             if (notificationText != null) notificationText.text = req.headline ?? string.Empty;
             if (descriptionText != null) descriptionText.text = req.description ?? string.Empty;
 
-            Color tint = req.hasTint ? req.tint : DefaultTint;
-            if (_background != null) _background.color = tint;
-            if (notificationText != null) notificationText.color = tint;
-            if (descriptionText != null) descriptionText.color = tint;
+            Color bg = req.hasTint ? req.bgTint : DefaultBg;
+            Color fg = req.hasTint ? req.fgTint : DefaultFg;
+
+            if (_background != null) _background.color = bg;
+            if (notificationText != null) notificationText.color = fg;
+            if (descriptionText != null) descriptionText.color = fg;
 
             bool isPowerup = req.kind == NotificationKind.PowerupSelected;
             if (powerUpIcon != null)
             {
-                powerUpIcon.sprite = req.icon;
-                powerUpIcon.enabled = isPowerup && req.icon != null;
-                if (isPowerup) powerUpIcon.color = Color.white;
+                if (isPowerup)
+                {
+                    powerUpIcon.sprite = req.icon;
+                    powerUpIcon.enabled = req.icon != null;
+                    powerUpIcon.color = Color.white;
+                }
+                else if (!_persistentActive)
+                {
+                    // Non-powerup toast (e.g. "Gem Found") and no persistent powerup to preserve —
+                    // safe to clear the shared icon.
+                    powerUpIcon.sprite = req.icon;
+                    powerUpIcon.enabled = false;
+                }
+                // else: a persistent powerup indicator owns this shared Image — leave it visible
+                // so the powerup notification is restored once this reward toast slides out.
             }
 
             float countdownSeconds = 0f;
             if (isPowerup && req.payload is PowerupConfig cfg)
             {
                 countdownSeconds = cfg.duration;
-                ActivatePersistentIndicator(req, tint);
+                ActivatePersistentIndicator(req, bg, fg);
             }
 
-            ShowInPanelCountdown(countdownSeconds, tint);
+            ShowInPanelCountdown(countdownSeconds, fg);
 
             float hold = req.holdOverride > 0f
                 ? req.holdOverride
@@ -261,12 +307,12 @@ namespace Gameplay.UI
         // ── In-panel countdown (separate from the persistent indicator's
         //    radial cooldown fill). Shown only when the powerup has a duration. ─
 
-        private void ShowInPanelCountdown(float seconds, Color tint)
+        private void ShowInPanelCountdown(float seconds, Color accent)
         {
             _countdownTween?.Kill();
             bool active = seconds > 0f;
             if (countdownIconContainer != null) countdownIconContainer.gameObject.SetActive(active);
-            if (countdownIcon != null) countdownIcon.color = tint;
+            if (countdownIcon != null) countdownIcon.color = accent;
             if (!active)
             {
                 if (countdownText != null) countdownText.text = string.Empty;
@@ -274,7 +320,7 @@ namespace Gameplay.UI
             }
             if (countdownText != null)
             {
-                countdownText.color = tint;
+                countdownText.color = accent;
                 countdownText.text = Mathf.CeilToInt(seconds).ToString();
             }
             float remaining = seconds;
@@ -294,20 +340,31 @@ namespace Gameplay.UI
 
         // ── Persistent indicator (single in-scene instance, re-skinned per pick) ─
 
-        private void ActivatePersistentIndicator(NotificationRequest req, Color tint)
+        private void ActivatePersistentIndicator(NotificationRequest req, Color bg, Color fg)
         {
             if (persistentIndicator == null) return;
 
             // Re-show and re-bind. PowerUpIndicator.Bind handles sprite, pulse, and spawn VFX.
             persistentIndicator.gameObject.SetActive(true);
-            persistentIndicator.Bind(new NotificationRequest
+            var bound = new NotificationRequest
             {
                 kind = NotificationKind.PowerupSelected,
                 icon = req.icon,
-                tint = tint,
+                bgTint = bg,
+                fgTint = fg,
                 hasTint = true,
                 payload = req.payload,
-            });
+            };
+
+            // Pre-Boss Recovery is deferred: show it greyed/pending until the boss spawns
+            // (OnPreBossRecoveryActivated promotes it), instead of the usual active look.
+            if (req.payload is PowerupConfig cfg && cfg.effectType == PreBossHealModifier.ConfigEffectType)
+                persistentIndicator.BindPending(bound);
+            else
+                persistentIndicator.Bind(bound);
+
+            // A powerup now owns the shared icon — keep later reward toasts from hiding it.
+            _persistentActive = true;
         }
 
         // ── Utilities ───────────────────────────────────────────────────────
@@ -326,13 +383,13 @@ namespace Gameplay.UI
             _positionsCached = true;
         }
 
-        private static Color RarityColour(PowerupRarity r) => r switch
+        private static (Color bg, Color fg) RarityPalette(PowerupRarity r) => r switch
         {
-            PowerupRarity.Common => ColCommon,
-            PowerupRarity.Rare => ColRare,
-            PowerupRarity.Epic => ColEpic,
-            PowerupRarity.Legendary => ColLegendary,
-            _ => Color.white,
+            PowerupRarity.Common => (BgCommon, FgCommon),
+            PowerupRarity.Rare => (BgRare, FgRare),
+            PowerupRarity.Epic => (BgEpic, FgEpic),
+            PowerupRarity.Legendary => (BgLegendary, FgLegendary),
+            _ => (DefaultBg, DefaultFg),
         };
 
         private static Color Hex(string hex)

@@ -209,9 +209,9 @@ namespace Gameplay.PowerUps
             {
                 if (powerUp.castVfx != null)
                 {
-                    Vector3 pos = targetMb.transform.position;
-                    pos.y += castVfxHeightOffset;
-                    Instantiate(powerUp.castVfx, pos, Quaternion.identity);
+                    //Vector3 pos = targetMb.transform.position;
+                    //pos.y += castVfxHeightOffset;
+                    //Instantiate(powerUp.castVfx, pos, Quaternion.identity);
                 }
 
                 // Kill any lingering runningVfx from a previous selection so they don't stack on the cannon.

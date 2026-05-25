@@ -19,6 +19,10 @@ public class BossBirdController : MonoBehaviour
     private bool isInitialized;
     private bool hasEnraged;
 
+    // Base max health rolled from config.maxHealthRange once per spawn. Phase 1 and the
+    // phase-2 re-init share this value so the boss's HP is consistent across the fight.
+    private float _baseMaxHealth = -1f;
+
     // ── NEW: Invulnerability flag — set by SpawnController during enter/exit tweens ──
     private bool _invulnerable;
     public bool IsInvulnerable => _invulnerable;
@@ -67,6 +71,9 @@ public class BossBirdController : MonoBehaviour
         _hasRetreated = false;
         _isLevel20 = isLevel20;
 
+        // Roll the boss's max health once for this spawn; reused by the phase-2 re-init.
+        _baseMaxHealth = config.RollMaxHealth();
+
         // ---- Validate required components ----
         health = GetComponent<BossHealthHandler>();
         if (health == null)
@@ -107,8 +114,8 @@ public class BossBirdController : MonoBehaviour
         // Phase 1: full HP. Direct level-20 spawn (test mode): scaled max, starting at the
         // post-retreat 50% mark so the boss matches the "returning at 50%" form.
         float maxHp = isLevel20
-            ? config.maxHealth * config.phase2HealthMultiplier
-            : config.maxHealth;
+            ? _baseMaxHealth * config.phase2HealthMultiplier
+            : _baseMaxHealth;
         float startHp = isLevel20 ? maxHp * RetreatThreshold : maxHp;
         health.OnHealthChanged += OnHealthChanged;
         health.OnDeath += OnDeath;
@@ -161,7 +168,9 @@ public class BossBirdController : MonoBehaviour
         //              (default: 50% remaining), and uses phase2HealthMultiplier as
         //              the new max so phase 2 can be a tougher form. ----
         health = GetComponent<BossHealthHandler>();
-        float phase2MaxHp = config.maxHealth * config.phase2HealthMultiplier;
+        // Reuse the value rolled in phase-1 Initialize; roll now only if that never ran.
+        if (_baseMaxHealth < 0f) _baseMaxHealth = config.RollMaxHealth();
+        float phase2MaxHp = _baseMaxHealth * config.phase2HealthMultiplier;
         float startHp = phase2MaxHp * Mathf.Clamp01(remainingHpNormalized);
         health.OnHealthChanged += OnHealthChanged;
         health.OnDeath += OnDeath;

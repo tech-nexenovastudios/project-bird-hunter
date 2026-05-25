@@ -220,6 +220,14 @@ namespace Gameplay.Events
             => OnPowerupCooldownStarted?.Invoke(duration);
         public static event Action OnPowerupUnequipped;
         public static void FirePowerupUnequipped() => OnPowerupUnequipped?.Invoke();
+
+        // ── Pre-Boss Recovery (deferred powerup) ─────────────────────────────
+        // Fired by PreBossHealModifier the moment the boss enters a boss level (L10/L20)
+        // and its deferred heal is applied. The notification panel un-greys the pending
+        // indicator; GameProgressManager consumes the slot so it can't re-trigger on the
+        // chapter's second boss.
+        public static event Action OnPreBossRecoveryActivated;
+        public static void FirePreBossRecoveryActivated() => OnPreBossRecoveryActivated?.Invoke();
         public static event Action<int> OnChapterCompleted;  // int = new chapter number
         public static void FireChapterCompleted(int newChapter)
             => OnChapterCompleted?.Invoke(newChapter);

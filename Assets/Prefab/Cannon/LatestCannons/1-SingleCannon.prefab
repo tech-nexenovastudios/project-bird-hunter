@@ -137,7 +137,7 @@ FixedJoint2D:
   m_BreakAction: 3
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}
-  m_ConnectedAnchor: {x: -0.102000006, y: -3.41}
+  m_ConnectedAnchor: {x: -0.10200009, y: -3.4100008}
   m_DampingRatio: 0
   m_Frequency: 0
 --- !u!1 &853179535765345545
@@ -375,7 +375,7 @@ FixedJoint2D:
   m_BreakAction: 3
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}
-  m_ConnectedAnchor: {x: 0.102000006, y: 3.41}
+  m_ConnectedAnchor: {x: 0.10200009, y: 3.4100008}
   m_DampingRatio: 1
   m_Frequency: 0
 --- !u!1 &4028908218566391666
@@ -490,6 +490,7 @@ MonoBehaviour:
   healVFXPrefab: {fileID: 5314038177992974445}
   shieldAbsorbVFXPrefab: {fileID: 0}
   reviveVFXPrefab: {fileID: 0}
+  vfxSpawnYOffset: -0.5
 --- !u!61 &8310237474511157479
 BoxCollider2D:
   m_ObjectHideFlags: 0

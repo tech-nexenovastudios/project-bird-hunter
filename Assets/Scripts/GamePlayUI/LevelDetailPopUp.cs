@@ -23,14 +23,16 @@ namespace Gameplay.UI
         [SerializeField] private GameObject popupPanel;
 
         [Header("Texts")]
-        [SerializeField] private TextMeshProUGUI levelTitleText;   // "Level 3" / "Level 3 Complete!"
-        [SerializeField] private TextMeshProUGUI countdownText;    // "Starting in 3..." / "Next level in 3..."
+        // Single text: first shows "Level 3" for titleHoldDuration, then counts
+        // down "Starting in 3 / 2 / 1" (one per second) in the SAME text.
+        [SerializeField] private TextMeshProUGUI levelTitleText;
 
         [Header("Timing")]
         [SerializeField] private int countdownFrom = 3;
+        [SerializeField] private float titleHoldDuration = 0.5f;   // how long "Level N" stays before the countdown
         [SerializeField] private float fadeInDuration = 0.3f;
         [SerializeField] private float fadeOutDuration = 0.25f;
-
+        public ParticleSystem levelStartSFX;
         private Coroutine _activeRoutine;
         private int _currentLevel;
 
@@ -84,6 +86,10 @@ namespace Gameplay.UI
                 title: $"Level {_currentLevel}",
                 countdownPrefix: "Starting in"
             );
+            if (_currentLevel != 1)
+            {
+                levelStartSFX.Play();
+            }
         }
 
         private void OnLevelCompleted(int score)
@@ -97,6 +103,10 @@ namespace Gameplay.UI
                 title: $"Level {_currentLevel} Complete!",
                 countdownPrefix: "Next level in"
             );
+            if(_currentLevel !=1 )
+            {
+                levelStartSFX.Play();
+            }
         }
 
         // ───────── Core Display ─────────
@@ -111,47 +121,42 @@ namespace Gameplay.UI
 
         private IEnumerator PopupRoutine(string title, string countdownPrefix)
         {
-            // ── Setup ──
+            // Only the level-START path gets the 3-2-1-Go SFX; the post-level
+            // "Next level in N" popup uses no audio cue.
+            bool isLevelStart = !countdownPrefix.Contains("Next");
+
+            // ── Phase 1: show the title ("Level N") for titleHoldDuration ──
             levelTitleText.text = title;
-            countdownText.text = string.Empty;
 
             popupPanel.SetActive(true);
             popupCanvasGroup.alpha = 0f;
 
-            // ── Animate title in ──
             levelTitleText.transform.localScale = Vector3.one * 0.5f;
             levelTitleText.alpha = 0f;
 
             Sequence titleSeq = DOTween.Sequence();
             titleSeq.Append(popupCanvasGroup.DOFade(1f, fadeInDuration).SetEase(Ease.OutCubic));
-            titleSeq.Join(levelTitleText.transform.DOScale(1.1f, 0.3f).SetEase(Ease.OutBack));
-            titleSeq.Join(levelTitleText.DOFade(1f, 0.25f));
-            titleSeq.Append(levelTitleText.transform.DOScale(1f, 0.15f).SetEase(Ease.InOutSine));
+            titleSeq.Join(levelTitleText.transform.DOScale(1f, fadeInDuration).SetEase(Ease.OutBack));
+            titleSeq.Join(levelTitleText.DOFade(1f, fadeInDuration));
             titleSeq.SetUpdate(true);
-
             yield return titleSeq.WaitForCompletion();
 
-            // ── Countdown ──
-            // Only the level-START path gets the 3-2-1-Go SFX; the post-level "Next level in N"
-            // popup ends in "Loading..." and uses no audio cue.
-            bool isLevelStart = !countdownPrefix.Contains("Next");
+            // Hold the remainder so "Level N" is on screen for the full titleHoldDuration.
+            float remainingHold = titleHoldDuration - fadeInDuration;
+            if (remainingHold > 0f) yield return WaitPausableRealtime(remainingHold);
 
+            // ── Phase 2: countdown in the SAME text ("Starting in 3 / 2 / 1") ──
             int count = countdownFrom;
             while (count > 0)
             {
-                countdownText.text = $"{countdownPrefix} {count}...";
-                PulseCountdown();
+                levelTitleText.text = $"{countdownPrefix} {count}";
+                PulseTitle();
                 if (isLevelStart) GameEvents.FireLevelCountdownTick();
                 yield return WaitPausableRealtime(1f);
                 count--;
             }
 
-            // ── Final beat ──
-            string finalWord = isLevelStart ? "Go!" : "Loading...";
-            countdownText.text = finalWord;
-            PulseCountdown();
             if (isLevelStart) GameEvents.FireLevelCountdownGo();
-            yield return WaitPausableRealtime(0.6f);
 
             // ── Fade out ──
             Sequence fadeOut = DOTween.Sequence();
@@ -165,12 +170,12 @@ namespace Gameplay.UI
 
         // ───────── Helpers ─────────
 
-        private void PulseCountdown()
+        private void PulseTitle()
         {
-            if (countdownText == null) return;
-            countdownText.DOKill();
-            countdownText.transform.localScale = Vector3.one;
-            countdownText.transform
+            if (levelTitleText == null) return;
+            levelTitleText.transform.DOKill();
+            levelTitleText.transform.localScale = Vector3.one;
+            levelTitleText.transform
                 .DOPunchScale(Vector3.one * 0.25f, 0.3f, 5, 0.5f)
                 .SetEase(Ease.OutBack)
                 .SetUpdate(true);

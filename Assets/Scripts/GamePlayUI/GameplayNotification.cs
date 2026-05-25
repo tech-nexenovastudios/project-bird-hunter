@@ -16,7 +16,8 @@ public struct NotificationRequest
     public Sprite icon;
     public int amount;
     public string currency;
-    public Color tint;
+    public Color bgTint;
+    public Color fgTint;
     public bool hasTint;
     public float holdOverride;
     public PowerUpIndicator indicatorPrefabOverride;

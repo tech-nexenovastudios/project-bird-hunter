@@ -249,7 +249,9 @@ namespace Gameplay.Player
             if (amount <= 0) return;
             maxHpBonus += amount;
             CurrentHp += amount;
+            OnHealVFX(amount);
             OnHealthChanged(CurrentHp, MaxHp);
+
             GameEvents.FireCannonHealthChanged(CurrentHp, MaxHp);
             Debug.Log("Max HP increased by " + amount + ". New Max HP: " + MaxHp);
         }
