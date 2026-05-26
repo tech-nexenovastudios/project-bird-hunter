@@ -20,12 +20,14 @@ MonoBehaviour:
   vfxPrefab: {fileID: 0}
   dropParentName: HazardDropPosition
   eggPrefab: {fileID: 3115194600818010901, guid: 1bd1cedc146da12408dcde00e24b7d03, type: 3}
-  dropCount: 2
-  dropInterval: 1.5
-  dropGravityScale: 1
-  eggLifetime: 6
-  deathVfxPrefab: {fileID: 0}
-  rollSpeed: 2.5
+  dropCount: 1
+  dropInterval: 2.5
+  dropGravityScale: 0.6
+  eggMaxHealth: 100
+  eggLifetime: 5.5
+  deathVfxPrefab: {fileID: 2114415160723529283, guid: 66f105be2dfdf604db2212811b4b1493, type: 3}
+  deathVfxDuration: 1
+  rollSpeed: 2
   randomDirection: 1
-  maxRollDistance: 2
-  contactDamage: 5
+  maxRollDistance: 1.5
+  contactDamage: 15

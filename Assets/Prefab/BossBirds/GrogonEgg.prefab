@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7011275789209470235}
   - component: {fileID: 7418872393071726645}
   - component: {fileID: 6154612831396406647}
-  - component: {fileID: 4658072209136696639}
+  - component: {fileID: 6226903455623629881}
   m_Layer: 6
   m_Name: GrogonEgg
   m_TagString: Egg
@@ -32,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.39999998, y: 0.39999998, z: 0.39999998}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -82,8 +82,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -307901801
+  m_SortingLayer: 4
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6753627461792197403, guid: 4afd1dc164d834245a41c6a5dba335a4, type: 3}
@@ -172,6 +172,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazardGroundDetector
   slowMultiplier: 0.6
+  destroyDelayAfterStop: 1
 --- !u!114 &6154612831396406647
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -187,7 +188,7 @@ MonoBehaviour:
   trailVfxPrefab: {fileID: 2606019355522721787, guid: 0019af1f486577f48b74435941313503, type: 3}
   stampInterval: 0.4
   vfxLifetime: 3
---- !u!114 &4658072209136696639
+--- !u!114 &6226903455623629881
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -199,3 +200,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74ebc58bcddcd1944b952699a65d2fd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazardHealth
+  defaultMaxHealth: 50

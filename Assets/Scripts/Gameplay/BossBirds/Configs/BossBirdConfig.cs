@@ -13,7 +13,9 @@ public class BossBirdConfig : ScriptableObject
     [Tooltip("Max health is rolled randomly within this range (inclusive of both x and y) each time the boss spawns.")]
     public Vector2Int maxHealthRange = new Vector2Int(500, 500);
     public float contactDamage = 20f;
-    public float phase2HealthMultiplier = 1.5f;
+
+    [Tooltip("Fraction of max health the boss returns with at level 20 (phase 2), after retreating at 50% in phase 1.")]
+    [Range(0f, 1f)] public float returnHealthPercent = 0.75f;
 
     /// <summary>
     /// Rolls a random max health within <see cref="maxHealthRange"/> (inclusive of both ends).

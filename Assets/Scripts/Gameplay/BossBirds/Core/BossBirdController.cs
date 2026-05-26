@@ -111,12 +111,10 @@ public class BossBirdController : MonoBehaviour
             anim.runtimeAnimatorController = config.animatorController;
 
         // ---- Health ----
-        // Phase 1: full HP. Direct level-20 spawn (test mode): scaled max, starting at the
-        // post-retreat 50% mark so the boss matches the "returning at 50%" form.
-        float maxHp = isLevel20
-            ? _baseMaxHealth * config.phase2HealthMultiplier
-            : _baseMaxHealth;
-        float startHp = isLevel20 ? maxHp * RetreatThreshold : maxHp;
+        // Phase 1: full HP. Direct level-20 spawn (test mode): same max as phase 1, starting
+        // at the post-retreat return mark so the boss matches the "returns partially healed" form.
+        float maxHp = _baseMaxHealth;
+        float startHp = isLevel20 ? _baseMaxHealth * config.returnHealthPercent : maxHp;
         health.OnHealthChanged += OnHealthChanged;
         health.OnDeath += OnDeath;
         health.Initialize(maxHp, startHp, config.enrageThreshold);
@@ -164,14 +162,14 @@ public class BossBirdController : MonoBehaviour
         _hasRetreated = false;
         _isLevel20 = true;
 
-        // ---- Health: phase 2 keeps the same normalized HP that phase 1 ended on
-        //              (default: 50% remaining), and uses phase2HealthMultiplier as
-        //              the new max so phase 2 can be a tougher form. ----
+        // ---- Health: phase 2 reuses the SAME max health rolled in phase 1 (no re-roll), and
+        //              the boss returns partially healed at config.returnHealthPercent of that
+        //              max, regardless of the exact HP it had when it retreated. ----
         health = GetComponent<BossHealthHandler>();
-        // Reuse the value rolled in phase-1 Initialize; roll now only if that never ran.
+        // Reuse the value rolled in phase-1 Initialize; roll now only as a fallback if that never ran.
         if (_baseMaxHealth < 0f) _baseMaxHealth = config.RollMaxHealth();
-        float phase2MaxHp = _baseMaxHealth * config.phase2HealthMultiplier;
-        float startHp = phase2MaxHp * Mathf.Clamp01(remainingHpNormalized);
+        float phase2MaxHp = _baseMaxHealth;
+        float startHp = phase2MaxHp * config.returnHealthPercent;
         health.OnHealthChanged += OnHealthChanged;
         health.OnDeath += OnDeath;
         health.Initialize(phase2MaxHp, startHp, config.enrageThreshold);
@@ -201,7 +199,8 @@ public class BossBirdController : MonoBehaviour
         BossEventBus.RaiseBossSpawned(config.bossName);
 
         Debug.Log($"[BossBird] {config.bossName} RE-INITIALIZED for Phase 2 — " +
-                  $"HP:{startHp:F0} ({remainingHpNormalized:P0} remaining) | Attacks:{attacks.Count}", this);
+                  $"HP:{startHp:F0}/{phase2MaxHp:F0} (returned at {config.returnHealthPercent:P0}, " +
+                  $"parked at {remainingHpNormalized:P0}) | Attacks:{attacks.Count}", this);
     }
 
     private void SpawnAttack(BaseAttackConfig attackConfig, string phaseName)
@@ -265,6 +264,10 @@ public class BossBirdController : MonoBehaviour
             // Stop all attacks and movement
             StopAllBehaviours();
 
+            // Boss isn't dead yet (it returns at level 20) — play the looping fly animation
+            // so it flees alive during the exit tween, never the death animation.
+            animController?.FlyNormal();
+
             // Fire retreated event — SpawnController listens to this
             BossEventBus.RaiseBossRetreated(config.bossName, normalized);
             return;
@@ -299,6 +302,13 @@ public class BossBirdController : MonoBehaviour
     private void OnDeath()
     {
         if (isDead) return;
+
+        // A phase-1 mid-boss (L10) retreats at 50% and must never resolve as a kill.
+        // If a single overshooting hit drives currentHealth below 0, BossHealthHandler
+        // fires OnHealthChanged (→ retreat) and the currentHealth<=0 death check in the
+        // same TakeDamage call. Ignore the death so retreat and death can't both fire.
+        if (_hasRetreated && !_isLevel20) return;
+
         isDead = true;
 
         // ── Stop all attacks and clean up ──
