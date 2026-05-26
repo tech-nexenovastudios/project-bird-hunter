@@ -113,7 +113,6 @@ namespace Gameplay.UI
 
         public void OnClickReturnToMenu()
         {
-            Destroy(GameProgressManager.Instance.gameObject);
             Destroy(XPManager.Instance.gameObject);
             SceneManager.LoadScene("MainMenu");
         }

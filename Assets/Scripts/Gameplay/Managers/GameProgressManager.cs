@@ -83,7 +83,22 @@ namespace Gameplay.Managers
 
         protected override void Awake()
         {
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            instance = this;
             DontDestroyOnLoad(gameObject);
+            EnsurePowerupsLoaded();
+        }
+
+        private void EnsurePowerupsLoaded()
+        {
+            if (allPowerups != null && allPowerups.Length > 0) return;
+            var db = PowerupGate.Database;
+            if (db != null && db.allPowerups != null)
+                allPowerups = db.allPowerups.ToArray();
         }
 
         private void OnEnable()
@@ -183,13 +198,23 @@ namespace Gameplay.Managers
         }
 
 
-        // All-time best is the best RUN total (sum of every level cleared in a run, up to death).
-        // Submitted on death with ScoreManager.CurrentScore; persists only when this run beats it.
         public void SubmitRunScore(int runScore)
         {
             if (_progress == null) _progress = new GameProgress();
-            if (runScore <= _progress.highScore) return;
-            _progress.highScore = runScore;
+            var cp = _progress.GetOrCreateChapter(_progress.currentChapter);
+            bool changed = false;
+            if (runScore > cp.highScore)        { cp.highScore = runScore;        changed = true; }
+            if (runScore > _progress.highScore) { _progress.highScore = runScore; changed = true; }
+            if (changed) SaveProgress();
+        }
+
+        public ChapterProgress GetChapterProgress(int chapter)
+            => _progress?.GetOrCreateChapter(chapter);
+
+        public void RegisterChapterDeath()
+        {
+            if (_progress == null) _progress = new GameProgress();
+            _progress.GetOrCreateChapter(_progress.currentChapter).attempts++;
             SaveProgress();
         }
 
@@ -197,12 +222,14 @@ namespace Gameplay.Managers
         {
             if (_progress == null) _progress = new GameProgress();
 
-            // High score is the best RUN total (submitted on death via SubmitRunScore), NOT a
-            // single level's score. totalScore stays a lifetime tally.
             _progress.totalScore += scoreAchieved;
             _progress.MarkFirstTimeClear(_progress.currentChapter, _progress.currentLevel);
 
             int completedLevel = _progress.currentLevel;
+
+            var chap = _progress.GetOrCreateChapter(_progress.currentChapter);
+            chap.highestLevelReached = Mathf.Max(chap.highestLevelReached, completedLevel);
+            if (completedLevel >= 20) chap.cleared = true;
 
             if (IsSpinLevel(completedLevel))
             {
@@ -216,6 +243,10 @@ namespace Gameplay.Managers
             }
             else
             {
+                int chapScore = ScoreManager.Instance != null ? ScoreManager.Instance.ChapterScore : 0;
+                if (chapScore > chap.highScore) chap.highScore = chapScore;
+                if (chapScore > _progress.highScore) _progress.highScore = chapScore;
+
                 ResetAttemptsForChapter(_progress.currentChapter);
                 _progress.currentChapter++;
                 _progress.currentLevel = 1;
@@ -396,6 +427,7 @@ namespace Gameplay.Managers
             public int totalGems;
             public int totalPower;
             public List<string> firstTimeClearedLevels = new();
+            public List<ChapterProgress> chapters = new();
         }
 
         public async void SaveProgress()
@@ -418,7 +450,8 @@ namespace Gameplay.Managers
                     totalCoins = _progress.totalCoins,
                     totalGems = _progress.totalGems,
                     totalPower = _progress.totalPower,
-                    firstTimeClearedLevels = _progress.firstTimeClearedLevels ?? new()
+                    firstTimeClearedLevels = _progress.firstTimeClearedLevels ?? new(),
+                    chapters = _progress.chapters ?? new()
                 };
 
                 if (_progress.chapterSlots != null)
@@ -444,6 +477,7 @@ namespace Gameplay.Managers
                     { "total_power",               data.totalPower },
                     { "slot_powerup_ids",          JsonConvert.SerializeObject(data.slotPowerupIds) },
                     { "first_time_cleared_levels", JsonConvert.SerializeObject(data.firstTimeClearedLevels) },
+                    { "chapter_progress_data",     JsonConvert.SerializeObject(data.chapters) },
                 });
             }
             catch (Exception ex)
@@ -461,7 +495,7 @@ namespace Gameplay.Managers
                     "chapter_progress", "level_progress", "high_score", "total_score",
                     "global_unlocked", "player_xp", "player_level", "last_level_up_xp",
                     "player_spins", "total_coins", "total_gems", "total_power",
-                    "slot_powerup_ids", "first_time_cleared_levels"
+                    "slot_powerup_ids", "first_time_cleared_levels", "chapter_progress_data"
                 });
 
                 if (res.Count == 0)
@@ -498,6 +532,7 @@ namespace Gameplay.Managers
                     globalUnlocked = JsonConvert.DeserializeObject<List<string>>(Get("global_unlocked", "[]")) ?? new(),
                     slotPowerupIds = JsonConvert.DeserializeObject<string[]>(Get("slot_powerup_ids", "[\"\",\"\",\"\",\"\"]")) ?? new string[4],
                     firstTimeClearedLevels = JsonConvert.DeserializeObject<List<string>>(Get("first_time_cleared_levels", "[]")) ?? new(),
+                    chapters = JsonConvert.DeserializeObject<List<ChapterProgress>>(Get("chapter_progress_data", "[]")) ?? new(),
                 };
 
                 // Always resume the chapter at level 1 — level progress within a chapter
@@ -516,8 +551,11 @@ namespace Gameplay.Managers
                     totalCoins = data.totalCoins,
                     totalGems = data.totalGems,
                     totalPower = data.totalPower,
-                    firstTimeClearedLevels = data.firstTimeClearedLevels
+                    firstTimeClearedLevels = data.firstTimeClearedLevels,
+                    chapters = data.chapters ?? new()
                 };
+
+                MigrateLegacyChapterProgress();
 
                 if (data.slotPowerupIds != null && _progress.chapterSlots != null)
                 {
@@ -534,6 +572,34 @@ namespace Gameplay.Managers
             }
 
             OnProgressChanged?.Invoke(_progress);
+        }
+
+        private void MigrateLegacyChapterProgress()
+        {
+            if (_progress == null) return;
+            if (_progress.chapters != null && _progress.chapters.Count > 0) return;
+            _progress.chapters ??= new();
+
+            if (_progress.firstTimeClearedLevels != null)
+            {
+                foreach (var key in _progress.firstTimeClearedLevels)
+                {
+                    var m = System.Text.RegularExpressions.Regex.Match(key, @"Ch(\d+)_L(\d+)");
+                    if (!m.Success) continue;
+                    int c = int.Parse(m.Groups[1].Value);
+                    int l = int.Parse(m.Groups[2].Value);
+                    var cp = _progress.GetOrCreateChapter(c);
+                    if (!cp.firstClearedLevels.Contains(l)) cp.firstClearedLevels.Add(l);
+                    cp.highestLevelReached = Mathf.Max(cp.highestLevelReached, l);
+                    if (l >= 20) cp.cleared = true;
+                }
+            }
+
+            if (_progress.highScore > 0)
+            {
+                var cur = _progress.GetOrCreateChapter(_progress.currentChapter);
+                cur.highScore = Mathf.Max(cur.highScore, _progress.highScore);
+            }
         }
     }
 }

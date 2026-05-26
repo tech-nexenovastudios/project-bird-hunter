@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Gameplay.Managers;
 using Services;
 using TMPro;
 using UnityEngine;
@@ -281,6 +282,9 @@ public class BootController : MonoBehaviour
             await UniTask.Delay(2000, cancellationToken: ct);
             await CurrencyManager.Instance.LoadBalances(forceReload: true);
         }
+
+        SetStatus("Loading progress...");
+        await GameProgressManager.Instance.LoadProgress();
         return true;
     }
 

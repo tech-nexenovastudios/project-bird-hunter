@@ -364,23 +364,17 @@ namespace BirdHunter.Inventory.Services
 
             int steps = level - 1;
 
-            // Damage: geometric with a +1/level integer floor. Egg HP is integer, so damage must
-            // be too — applied as a Flat delta over base so GetInt(Damage) returns the exact target.
             float baseDmg = sheet.GetBase(StatType.Damage);
             int targetDmg = ComputeUpgradedDamage(baseDmg, level);
             sheet.Add(new StatModifier(StatType.Damage, targetDmg - baseDmg, StatModOp.Flat, UpgradeSource));
 
-            // Fire rate: front-loaded, saturating to (1 + fireRateCap)×. Plateaus ~L30.
             float frBonus = fireRateCap * (1f - Mathf.Pow(fireRateDecay, steps));
             sheet.Add(new StatModifier(StatType.FireRate, frBonus, StatModOp.PctAdd, UpgradeSource));
 
-            // Health & move speed stay linear.
             sheet.Add(new StatModifier(StatType.Health,    steps * healthPerLevelPct,    StatModOp.PctAdd, UpgradeSource));
             sheet.Add(new StatModifier(StatType.MoveSpeed, steps * moveSpeedPerLevelPct, StatModOp.PctAdd, UpgradeSource));
         }
 
-        // Geometric damage with a +1/level floor, all integer. See design doc §3.2.
-        // target(L) = max(target(L-1) + 1, round(base * g^(L-1))).
         private int ComputeUpgradedDamage(float baseDmg, int level)
         {
             int dmg = Mathf.Max(1, Mathf.RoundToInt(baseDmg));

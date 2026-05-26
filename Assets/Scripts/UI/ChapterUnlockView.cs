@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using Gameplay.Managers;
@@ -44,33 +43,6 @@ public class ChapterUnlockView : MonoBehaviour
         ApplyAllLevelImageStates();
         RefreshPlayButton(currentCarouselIndex);
         ApplyMainMenuBackground();
-
-        // ScrollCarouselEffect.Start snaps to index 0 first; defer one frame so our
-        // scroll runs AFTER, since script execution order between the two isn't fixed.
-        StartCoroutine(ScrollToTargetNextFrame());
-    }
-
-    private IEnumerator ScrollToTargetNextFrame()
-    {
-        yield return null;
-        ScrollToLastPlayed();
-    }
-
-    private int GetLastPlayedIndex()
-    {
-        int chapter = GameProgressManager.Instance != null
-            ? GameProgressManager.Instance.CurrentChapter
-            : 1;
-        int maxIndex = (chapterItems != null && chapterItems.Length > 0)
-            ? chapterItems.Length - 1
-            : 0;
-        return Mathf.Clamp(chapter - 1, 0, maxIndex);
-    }
-
-    private void ScrollToLastPlayed()
-    {
-        if (carousel == null) return;
-        carousel.GoToIndex(GetLastPlayedIndex());
     }
 
     private void ScrollToHighestUnlocked()

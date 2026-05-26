@@ -590,8 +590,6 @@ public class CannonInventoryView : MonoBehaviour, IMenuPage
         UpdateDpsReadout(key);
     }
 
-    // DPS = damage × fire rate × bullet count. Shows "current → next" when an upgrade is
-    // available, or a single value at max level / for a locked cannon (previewed at L1).
     private void UpdateDpsReadout(string key)
     {
         if (dpsValueText == null || service == null) return;

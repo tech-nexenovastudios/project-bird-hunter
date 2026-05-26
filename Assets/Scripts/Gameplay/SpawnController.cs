@@ -303,13 +303,6 @@ namespace Gameplay
             // Per-attempt seed so replays don't feel identical even with the same chapter/level.
             _pressureNoiseSeed = Random.Range(0f, 1000f) + _priorAttempts * 13.37f;
 
-            // ── Replay difficulty: intentionally NOT applied ──
-            // Retries play at IDENTICAL difficulty. A failed level gets clearable because the
-            // player UPGRADES their cannon between attempts (more DPS) — never because we
-            // handicap egg HP or pressure. Progression is earned, not handed out.
-            // See docs/Cannon_DPS_and_Egg_Workload_Design.md §5.4.
-            // (cfg.replay* fields are retained for now but deliberately ignored.)
-
             Debug.Log(
                 $"[SpawnController] Ch{_chapter} L{clampedIndex + 1} (G{_globalLevel}) resolved | " +
                 $"target={_targetScore} hp×{_hpMultiplier:F2} pMax={_pressureMax} " +
@@ -680,6 +673,8 @@ namespace Gameplay
             // triggers FireAllEggsCleared for the celebration.
             if (_activeEggs.Count > 0)
             {
+                for (int i = 0; i < _activeEggs.Count; i++)
+                    _activeEggs[i]?.MarkScoreSilent();
                 StartCoroutine(CascadePopEggs());
             }
 
@@ -738,10 +733,6 @@ namespace Gameplay
 
         private IEnumerator BeginSelfClearAfter(float delay)
         {
-            // Wait out the remaining min-duration — but never strand the player on an empty
-            // screen. With strong cannons, hitting target score and clearing every egg often
-            // happens well before min-duration elapses; in that case finish immediately instead
-            // of staring at nothing. We only keep waiting while eggs are still on screen.
             float waited = 0f;
             while (waited < delay && _activeEggs.Count > 0)
             {

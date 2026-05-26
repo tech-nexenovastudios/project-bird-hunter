@@ -114,10 +114,14 @@ namespace Gameplay.Managers
 
         private int _currentScore;
         private int _levelScore;
+        private int _chapterScore;
         private int _targetScore;
+        private bool _acceptingScore = true;
+        private int _lastChapter = -1;
 
         public int CurrentScore => _currentScore;
         public int LevelScore => _levelScore;
+        public int ChapterScore => _chapterScore;
         public int TargetScore => _targetScore;
 
         public event Action<int, int> OnScoreChanged;
@@ -134,6 +138,8 @@ namespace Gameplay.Managers
             GameEvents.OnEggDestroyed += OnEggDestroyed;
             GameEvents.OnBirdDestroyed += OnBirdDestroyed;
             GameEvents.OnLevelCompletedEarly += OnLevelCompletedEarly;
+            GameEvents.OnGameLevelUpdated += OnLevelStarted;
+            GameEvents.OnAllEggsCleared += OnLevelEnded;
         }
 
         private void OnLevelCompletedEarly(float remainingTime)
@@ -148,12 +154,33 @@ namespace Gameplay.Managers
             GameEvents.OnEggDestroyed -= OnEggDestroyed;
             GameEvents.OnBirdDestroyed -= OnBirdDestroyed;
             GameEvents.OnLevelCompletedEarly -= OnLevelCompletedEarly;
+            GameEvents.OnGameLevelUpdated -= OnLevelStarted;
+            GameEvents.OnAllEggsCleared -= OnLevelEnded;
         }
+
+        private void OnLevelStarted(int levelIndex)
+        {
+            _levelScore = 0;
+            _acceptingScore = true;
+
+            int chapter = GameProgressManager.Instance != null ? GameProgressManager.Instance.CurrentChapter : _lastChapter;
+            if (chapter != _lastChapter)
+            {
+                _chapterScore = 0;
+                _lastChapter = chapter;
+            }
+
+            UpdateDisplay();
+            GameEvents.FireLevelScoreUpdated(0, 0);
+        }
+
+        private void OnLevelEnded() => _acceptingScore = false;
 
         public void ResetLevel(int targetScore = 0)
         {
             _levelScore = 0;
             _targetScore = targetScore;
+            _acceptingScore = true;
             UpdateDisplay();
 
             // Broadcast so HUD bar resets to 0 immediately
@@ -162,8 +189,9 @@ namespace Gameplay.Managers
 
         public void AddScore(int amount)
         {
-            if (amount <= 0) return;
+            if (amount <= 0 || !_acceptingScore) return;
             _currentScore += amount;
+            _chapterScore += amount;
             _levelScore += amount;
 
             GameEvents.FireLevelScoreUpdated(_levelScore, amount);
@@ -176,10 +204,6 @@ namespace Gameplay.Managers
             int perDamage = (egg is EggHealth eh && eh.Config != null && eh.Config.scorePerHit > 0)
                 ? eh.Config.scorePerHit
                 : scorePerEggHit;
-            // Score scales with damage DEALT, not bullet count — so an egg always yields
-            // scorePerHit × HP (+ scoreOnDestroy) regardless of cannon strength, matching
-            // SpawnController.CalculateEggMaxScore. `damage` is the clamped actual damage from
-            // EggHealth, so overkill on the killing hit doesn't inflate the score.
             AddScore(perDamage * Mathf.Max(1, damage));
         }
 

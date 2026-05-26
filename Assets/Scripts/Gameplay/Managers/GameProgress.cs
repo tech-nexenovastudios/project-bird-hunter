@@ -7,12 +7,34 @@ using UnityEngine;
 namespace Gameplay
 {
     [Serializable]
+    public class ChapterProgress
+    {
+        public int  chapter;
+        public int  highScore;
+        public int  highestLevelReached = 1;
+        public bool cleared;
+        public List<int> firstClearedLevels = new();
+        public int  attempts;
+    }
+
+    [Serializable]
     public class GameProgress
     {
         public int currentChapter = 1;
         public int currentLevel   = 1;
         public int highScore      = 0;
         public int totalScore     = 0;
+
+        public List<ChapterProgress> chapters = new();
+
+        public ChapterProgress GetOrCreateChapter(int chapter)
+        {
+            for (int i = 0; i < chapters.Count; i++)
+                if (chapters[i].chapter == chapter) return chapters[i];
+            var cp = new ChapterProgress { chapter = chapter };
+            chapters.Add(cp);
+            return cp;
+        }
 
         // Meta XP progression
         public int playerXP      = 0;
@@ -25,20 +47,15 @@ namespace Gameplay
         public int totalPower = 0;
 
         public List<string> firstTimeClearedLevels = new();
-        
+
         public bool HasFirstTimeClear(int chapter, int level)
-        {
-            string key = $"Ch{chapter}_L{level}";
-            return firstTimeClearedLevels.Contains(key);
-        }
+            => GetOrCreateChapter(chapter).firstClearedLevels.Contains(level);
 
         public void MarkFirstTimeClear(int chapter, int level)
         {
-            string key = $"Ch{chapter}_L{level}";
-            if (!firstTimeClearedLevels.Contains(key))
-            {
-                firstTimeClearedLevels.Add(key);
-            }
+            var cp = GetOrCreateChapter(chapter);
+            if (!cp.firstClearedLevels.Contains(level))
+                cp.firstClearedLevels.Add(level);
         }
 
         // 4 slots per chapter, reset on new chapter

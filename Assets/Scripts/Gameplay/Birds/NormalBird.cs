@@ -48,8 +48,6 @@ namespace Gameplay.Birds
             FlyNormal();
         }
 
-        // Normal birds can't be killed by the player and don't play a death animation —
-        // they simply despawn (lifetime/flee). See BaseBird.IsInvincible / PlaysDeathAnimation.
         protected override bool IsInvincible => true;
         protected override bool PlaysDeathAnimation => false;
 

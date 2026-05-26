@@ -109,9 +109,7 @@ namespace Gameplay.UI
             if (_scoreManager == null)
                 _scoreManager = FindObjectOfType<ScoreManager>();
 
-            // "This time" = the full run total (every level cleared this run, up to death),
-            // not just the level the player died on.
-            _score = _scoreManager != null ? _scoreManager.CurrentScore : 0;
+            _score = _scoreManager != null ? _scoreManager.ChapterScore : 0;
 
             // Target score / chapter / level — chapter-progression authority is SpawnController.
             var spawn = SpawnController.Instance;
@@ -120,10 +118,10 @@ namespace Gameplay.UI
             var progress = GameProgressManager.Instance;
             _chapter = progress != null ? progress.CurrentChapter : 1;
             _level = progress != null ? progress.CurrentLevel : 1;
-            // Submit this run's total as the new all-time best (updates only if it beats the
-            // stored high score), then read it back for display.
             progress?.SubmitRunScore(_score);
-            _highScore = progress != null ? progress.HighScore : 0;
+            progress?.RegisterChapterDeath();
+            var cp = progress != null ? progress.GetChapterProgress(_chapter) : null;
+            _highScore = cp != null ? cp.highScore : 0;
 
             // Run rewards — RewardManager accumulates across every level the player cleared
             // this run, so the Game Over panel reflects the full run, not just the level

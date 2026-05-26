@@ -761,6 +761,8 @@ namespace Gameplay.Eggs
                 .OnComplete(_onHitTweenComplete);
         }
 
+        public void MarkScoreSilent() => _eggHealth?.MarkDeadSilent();
+
         public void PlayDeathSequence()
         {
             if (_isDying) return;

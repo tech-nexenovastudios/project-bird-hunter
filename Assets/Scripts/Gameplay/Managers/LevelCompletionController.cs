@@ -79,6 +79,7 @@ namespace Gameplay.Managers
             _levelCompleteTriggered = true;
 
             OnLevelCompleteConditionMet?.Invoke(finalScore);
+            GameEvents.FireLevelCompleted(finalScore);
             GameManager.Instance.CompleteCurrentLevel(finalScore);
         }
 

@@ -56,7 +56,14 @@ public class ScrollCarouselEffect : MonoBehaviour,
     {
         SetupDynamicPadding();
         CacheSnapPositions();
-        SnapToIndex(0, false); // Don't animate first snap and snap to current unlocked chapter
+        SnapToIndex(GetSavedChapterIndex(), false);
+    }
+
+    int GetSavedChapterIndex()
+    {
+        var pm = Gameplay.Managers.GameProgressManager.Instance;
+        int chapter = pm != null ? pm.CurrentChapter : 1;
+        return Mathf.Clamp(chapter - 1, 0, items.Count - 1);
     }
 
     void SetupDynamicPadding()
@@ -238,4 +245,6 @@ public class ScrollCarouselEffect : MonoBehaviour,
 
     /// <summary>Jump directly to a chapter index (e.g. from a button).</summary>
     public void GoToIndex(int index) => SnapToIndex(index, true);
+
+    public void GoToIndex(int index, bool animate) => SnapToIndex(index, animate);
 }
