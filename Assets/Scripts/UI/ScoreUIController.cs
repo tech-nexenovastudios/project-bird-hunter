@@ -15,8 +15,11 @@ namespace UI
         private void OnEnable()
         {
             GameEvents.OnLevelScoreUpdated += OnLevelScoreUpdated;
+            // Show the LEVEL score (resets each level), matching OnLevelScoreUpdated — not the
+            // run total (CurrentScore), which would surface the previous level's accumulated
+            // score when the HUD re-enables right after a level reset.
             if (Gameplay.Managers.ScoreManager.Instance != null)
-                UpdateScoreDisplay(Gameplay.Managers.ScoreManager.Instance.CurrentScore, 0);
+                UpdateScoreDisplay(Gameplay.Managers.ScoreManager.Instance.LevelScore, 0);
         }
 
         private void OnDisable()
@@ -24,15 +27,15 @@ namespace UI
             GameEvents.OnLevelScoreUpdated -= OnLevelScoreUpdated;
         }
 
-        private void OnLevelScoreUpdated(int currentScore, int delta)
+        private void OnLevelScoreUpdated(int levelScore, int delta)
         {
-            UpdateScoreDisplay(currentScore, delta);
+            UpdateScoreDisplay(levelScore, delta);
         }
 
-        private void UpdateScoreDisplay(int currentScore, int delta)
+        private void UpdateScoreDisplay(int levelScore, int delta)
         {
             if (scoreText != null)
-                scoreText.text = "Score: " + currentScore.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+                scoreText.text = "Score: " + levelScore.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
 
             if (deltaText != null && delta > 0)
             {
