@@ -17,6 +17,10 @@ public class HazardRollTrail : MonoBehaviour, IPoolable
     private float distanceSinceLastStamp;
     private Vector3 lastPosition;
 
+    // Per-second damage each spawned patch deals to the player while stood in it.
+    // Set from the attack config via SetPatchDamage(); 0 = patches are harmless visuals.
+    private int patchDamagePerSecond;
+
     // All stamps spawned during this roll — so we can force-return them on cleanup
     private readonly List<GameObject> activeStamps = new();
 
@@ -28,6 +32,9 @@ public class HazardRollTrail : MonoBehaviour, IPoolable
         stampInterval = interval;
         vfxLifetime = lifetime;
     }
+
+    /// <summary>Set the per-second damage each dropped patch deals to the player. 0 disables patch damage.</summary>
+    public void SetPatchDamage(int damagePerSecond) => patchDamagePerSecond = Mathf.Max(0, damagePerSecond);
 
     public void StartTrail()
     {
@@ -99,6 +106,10 @@ public class HazardRollTrail : MonoBehaviour, IPoolable
         // Let the stamp know how long to live and drive its own scale-up + auto-return
         if (stamp.TryGetComponent<HazardTrailStamp>(out var s))
             s.Activate(vfxLifetime, OnStampExpired);
+
+        // Arm the patch's damage-over-time (if this hazard is configured to hurt the player).
+        if (stamp.TryGetComponent<PoisonPatchDamage>(out var dmg))
+            dmg.Init(patchDamagePerSecond);
     }
 
     private Vector3 GetGroundPosition()

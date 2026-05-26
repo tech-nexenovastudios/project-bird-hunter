@@ -1,6 +1,7 @@
 // SerpentEggDropBehaviour.cs
 using System.Collections;
 using System.Collections.Generic;
+using Gameplay.Pooling;
 using UnityEngine;
 
 public class SerpentEggDropBehaviour : BaseAttackBehaviour
@@ -39,10 +40,21 @@ public class SerpentEggDropBehaviour : BaseAttackBehaviour
             var egg = PoolManager.Get(config.eggPrefab, pos);
             activeEggs.Add(egg);
 
-            // Setup ground detector for rolling + one-hit destruction
+            // Setup ground detector for rolling + destruction lifecycle
             if (!egg.TryGetComponent<HazardGroundDetector>(out var detector))
                 detector = egg.AddComponent<HazardGroundDetector>();
             detector.OnDestroyed += OnEggDestroyed;
+
+            // Real HP: player can destroy the egg early by dealing config.eggMaxHealth damage.
+            // HazardHealth routes its death back through detector.DestroyHazard() above.
+            if (!egg.TryGetComponent<HazardHealth>(out var eggHealth))
+                eggHealth = egg.AddComponent<HazardHealth>();
+            eggHealth.Init(config.eggMaxHealth);
+
+            // Poison trail: tell the roll-trail how much per-second damage its dropped patches
+            // deal to the player while stood in them (config.contactDamage). 0 = harmless visuals.
+            if (egg.TryGetComponent<HazardRollTrail>(out var rollTrail))
+                rollTrail.SetPatchDamage(config.contactDamage);
 
             if (egg.TryGetComponent<Rigidbody2D>(out var rb))
             {
@@ -71,10 +83,13 @@ public class SerpentEggDropBehaviour : BaseAttackBehaviour
         var go = detector.gameObject;
         detector.OnDestroyed -= OnEggDestroyed;
 
+        // Pooled death VFX (same approach as normal eggs in Egg.PlayDeathSequence): spawn at the
+        // egg's position and return it to the particle pool after deathVfxDuration. The VFX lives
+        // independently of the egg, so returning the egg to its pool below doesn't cut it short.
         if (config.deathVfxPrefab != null)
         {
-            var vfx = Instantiate(config.deathVfxPrefab, go.transform.position, Quaternion.identity);
-            Destroy(vfx, 3f);
+            var vfx = ParticlePoolManager.Spawn(config.deathVfxPrefab, go.transform.position);
+            ParticlePoolManager.Despawn(config.deathVfxPrefab, vfx, config.deathVfxDuration);
         }
 
         activeEggs.Remove(go);

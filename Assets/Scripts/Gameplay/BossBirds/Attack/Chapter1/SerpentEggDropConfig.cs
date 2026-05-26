@@ -13,8 +13,13 @@ public class SerpentEggDropConfig : BaseAttackConfig
     public float dropGravityScale = 1.2f;
 
     [Header("Egg Stats")]
+    [Tooltip("Egg HP. The player must deal this much damage to destroy the egg early; " +
+             "otherwise it self-destructs after rolling (eggLifetime / stop-delay).")]
+    public int eggMaxHealth = 30;
     public float eggLifetime = 10f;
     public GameObject deathVfxPrefab;
+    [Tooltip("Seconds the death VFX plays before it is returned to the particle pool.")]
+    public float deathVfxDuration = 1f;
 
     [Header("Rolling")]
     public float rollSpeed = 2.5f;

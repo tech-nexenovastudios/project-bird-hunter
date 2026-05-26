@@ -1,10 +1,12 @@
 // HazardGroundDetector.cs
 using System;
-using Gameplay.Interfaces;
 using Gameplay.Player;
 using UnityEngine;
 
-public class HazardGroundDetector : MonoBehaviour, IPoolable, IDamageable
+// Handles the egg hazard's falling/rolling/cannon-slow lifecycle. Damage/HP lives on the
+// separate HazardHealth component — this no longer implements IDamageable, so bullets route
+// to HazardHealth (which then calls DestroyHazard() on death) instead of one-shotting here.
+public class HazardGroundDetector : MonoBehaviour, IPoolable
 {
     [SerializeField] private float slowMultiplier = 0.5f;
     [SerializeField] private float destroyDelayAfterStop = 1f;
@@ -20,10 +22,6 @@ public class HazardGroundDetector : MonoBehaviour, IPoolable, IDamageable
     private bool isDestroyed;
     private BaseCannon slowedCannon;
     private int groundLayer = -1;
-
-    public int CurrentHp => isDestroyed ? 0 : 1;
-    public int MaxHp => 1;
-    public bool IsAlive => !isDestroyed;
 
     public event Action<HazardGroundDetector> OnDestroyed;
 
@@ -43,12 +41,6 @@ public class HazardGroundDetector : MonoBehaviour, IPoolable, IDamageable
         isDestroyed = false;
         if (col == null) col = GetComponent<Collider2D>();
         if (mainCam == null) mainCam = Camera.main;
-    }
-
-    public void TakeDamage(int damage)
-    {
-        if (isDestroyed) return;
-        DestroyHazard();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -155,7 +147,9 @@ public class HazardGroundDetector : MonoBehaviour, IPoolable, IDamageable
         Invoke(nameof(DestroyHazard), Mathf.Max(0f, destroyDelayAfterStop));
     }
 
-    private void DestroyHazard()
+    // Public so HazardHealth can trigger destruction when the egg's HP runs out.
+    // Guarded against double-fire (HP death + the self-destruct-after-stop Invoke).
+    public void DestroyHazard()
     {
         if (isDestroyed) return;
         isDestroyed = true;

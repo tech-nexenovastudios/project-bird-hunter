@@ -137,8 +137,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 2100000, guid: e338dba859eca4f08b05ed6e839a9b7d, type: 2}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.084905684, g: 0.07569422, b: 0.07569422, a: 0.6745098}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -887,7 +887,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 937c455a70d0944a2a332409f6aba4d2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8c4b7a9f3c099f848886a75a06b51900, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1594,6 +1594,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &2170941425636881828
 GameObject:
   m_ObjectHideFlags: 0
@@ -1901,7 +1904,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 83595555a7450496d8eb50f4528f7e26, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 85400663a264fc14599b69135ee6712d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2084,10 +2087,10 @@ RectTransform:
   - {fileID: 354035121507444406}
   m_Father: {fileID: 7280886032708087159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 325.9767, y: -100}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &442641002655140775
 CanvasRenderer:
@@ -2185,6 +2188,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &2636487332893179028
 GameObject:
   m_ObjectHideFlags: 0
@@ -2799,10 +2805,10 @@ RectTransform:
   - {fileID: 4876589184907059618}
   m_Father: {fileID: 7280886032708087159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 550.9767, y: -340}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5563348346722130591
 CanvasRenderer:
@@ -2900,6 +2906,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &3569347383849043394
 GameObject:
   m_ObjectHideFlags: 0
@@ -3634,10 +3643,10 @@ RectTransform:
   - {fileID: 580788821529663662}
   m_Father: {fileID: 7280886032708087159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 775.9767, y: -340}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4760632856086530461
 CanvasRenderer:
@@ -3735,6 +3744,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &4421564490956231787
 GameObject:
   m_ObjectHideFlags: 0
@@ -3953,7 +3965,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 8c5430264a2d36e448d1a6a7af721d58, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 22daf79b0f3faf14a9750b235832d1b6, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -4236,7 +4248,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 94c1c27714b9b468db40aedb870f891a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d683c77ba47884541b724c49c933b8ff, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4672,10 +4684,10 @@ RectTransform:
   - {fileID: 8049499528767506554}
   m_Father: {fileID: 7280886032708087159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 325.9767, y: -340}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4040891119818711850
 CanvasRenderer:
@@ -4773,6 +4785,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &5125683638659803567
 GameObject:
   m_ObjectHideFlags: 0
@@ -5131,7 +5146,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: b5139f58dd4ac5143bc40cf51c194e34, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 28f85f8d50f00bc448577eaf905e1c5a, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5223,6 +5238,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &5643487236008566707
 GameObject:
   m_ObjectHideFlags: 0
@@ -5963,10 +5981,10 @@ RectTransform:
   - {fileID: 7807476294361168329}
   m_Father: {fileID: 7280886032708087159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 100.976715, y: -100}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6717558371521772411
 CanvasRenderer:
@@ -6064,6 +6082,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &6576476728264716357
 GameObject:
   m_ObjectHideFlags: 0
@@ -6254,7 +6275,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.46444464, g: 0.6698113, b: 0.47787985, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6353,6 +6374,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &6796278673214906231
 GameObject:
   m_ObjectHideFlags: 0
@@ -6524,6 +6548,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &7151313017174532730
 GameObject:
   m_ObjectHideFlags: 0
@@ -6684,6 +6711,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &7292745705469336650
 GameObject:
   m_ObjectHideFlags: 0
@@ -8381,10 +8411,10 @@ RectTransform:
   - {fileID: 6373068163801465655}
   m_Father: {fileID: 7280886032708087159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 550.9767, y: -100}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &111050986209276746
 CanvasRenderer:
@@ -8482,6 +8512,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &8747677235306847442
 GameObject:
   m_ObjectHideFlags: 0
@@ -8627,7 +8660,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 26bd0d7bfb6614c50a41716559cbd311, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ca93005eb2853974fbb1fa0785893d6d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8695,6 +8728,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &8925847655483231199
 GameObject:
   m_ObjectHideFlags: 0
@@ -8763,7 +8799,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 94c1c27714b9b468db40aedb870f891a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d683c77ba47884541b724c49c933b8ff, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9191,10 +9227,10 @@ RectTransform:
   - {fileID: 6845253353159937830}
   m_Father: {fileID: 7280886032708087159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 100.976715, y: -340}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7940383516050247728
 CanvasRenderer:
@@ -9292,6 +9328,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14
 --- !u!1 &9213501492712566771
 GameObject:
   m_ObjectHideFlags: 0
@@ -9328,10 +9367,10 @@ RectTransform:
   - {fileID: 4176981512429348612}
   m_Father: {fileID: 7280886032708087159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 775.9767, y: -100}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1874465131438588639
 CanvasRenderer:
@@ -9429,3 +9468,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSoundHelper
   clickSound: 0
   hoverSound: 1
+  scalePunchOnClick: 1
+  punchScale: 0.92
+  punchDuration: 0.14

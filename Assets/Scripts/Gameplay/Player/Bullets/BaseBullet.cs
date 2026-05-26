@@ -173,20 +173,14 @@ namespace Gameplay.Player
 
             if (collision.TryGetComponent<IDamageablee>(out var bossHealth))
             {
-                bool instantKilled = false;
-                float dealDamage = damage;
-
-                if (instantKillChance > 0f && UnityEngine.Random.value <= instantKillChance)
-                {
-                    // IDamageablee doesn't expose CurrentHp, so just deal massive damage
-                    dealDamage = float.MaxValue;
-                    instantKilled = true;
-                }
-
-                bossHealth.TakeDamage(dealDamage);
+                // Bosses are immune to the Pierce instant-kill proc. A float.MaxValue hit
+                // would blow the L10 mid-boss past its 50% retreat threshold in a single
+                // shot — snapping the HP bar to zero and firing retreat AND death together.
+                // Pierce still lands for normal damage; it just can't one-shot a boss.
+                bossHealth.TakeDamage(damage);
 
                 Vector3 hitPoint = collision.ClosestPoint(transform.position);
-                ShowDamageText(hitPoint, instantKilled ? damage : dealDamage);
+                ShowDamageText(hitPoint, damage);
 
                 // Apply on-hit effects (burn, freeze, chain lightning, etc.)
                 if (onHitEffects.Count > 0 && collision.TryGetComponent<IEntity>(out var entity))
