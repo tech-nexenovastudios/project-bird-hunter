@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 
 namespace Gameplay.Pooling
 {
@@ -17,6 +18,24 @@ namespace Gameplay.Pooling
 
         private static readonly Dictionary<GameObject, ObjectPool<GameObject>> Pools = new();
         private static CoroutineHost _host;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Pools.Clear();
+            _host = null;
+            SceneManager.sceneUnloaded -= OnSceneUnloaded;
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
+        }
+
+        private static void OnSceneUnloaded(Scene scene) => Clear();
+
+        public static void Clear()
+        {
+            foreach (var pool in Pools.Values)
+                pool.Clear();
+            Pools.Clear();
+        }
 
         public static GameObject Spawn(GameObject prefab, Vector3 position, Transform parent = null)
         {
