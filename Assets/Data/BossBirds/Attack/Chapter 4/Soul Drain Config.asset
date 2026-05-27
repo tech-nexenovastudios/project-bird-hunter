@@ -21,8 +21,14 @@ MonoBehaviour:
   telegraphPrefab: {fileID: 0}
   telegraphDuration: 0.8
   tetherLinePrefab: {fileID: 6327922917905974541, guid: 923dea07b7b753049bd7c518ecf14b44, type: 3}
-  tetherWidth: 1.2
+  tetherWidth: 0.7
   tetherActiveDuration: 3
+  beamLength: 20
+  firePointName: FirePoint
+  warmupDuration: 0.5
+  rotateBeforeShoot: 1
+  rotationSpeed: 180
+  trackingRotationSpeed: 30
   coreColor: {r: 0.6, g: 0.2, b: 1, a: 1}
   glowColor: {r: 0.5, g: 0.1, b: 0.9, a: 0.5}
   haloColor: {r: 0.4, g: 0.1, b: 0.8, a: 0.1}

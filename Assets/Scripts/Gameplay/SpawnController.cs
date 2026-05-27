@@ -150,11 +150,13 @@ namespace Gameplay
         void OnEnable()
         {
             GameEvents.OnLevelCompleted += HandleLevelCompleted;
+            GameEvents.OnPlayerDeath += HandlePlayerDeath;
         }
 
         void OnDisable()
         {
             GameEvents.OnLevelCompleted -= HandleLevelCompleted;
+            GameEvents.OnPlayerDeath -= HandlePlayerDeath;
             if (BossEventBus.Instance != null)
             {
                 BossEventBus.Instance.OnBossDefeated -= HandleBossDefeated;
@@ -597,8 +599,11 @@ namespace Gameplay
 
             AnimateBossExit(bossGO, () =>
             {
+                // Park the boss inactive *inside the gameplay scene*. The scene is never
+                // reloaded between L10 and L20 (StartGameplay resets in place), so it survives
+                // until the L20 rematch. It must NOT be DontDestroyOnLoad — that leaked the boss
+                // into MainMenu on death/return-to-menu, where it kept flying and attacking.
                 bossGO.SetActive(false);
-                DontDestroyOnLoad(bossGO);
 
                 _parkedBossGO = bossGO;
                 _parkedBossHpNormalized = hpNormalized;
@@ -650,6 +655,39 @@ namespace Gameplay
 
             _hasBossWaitingForLevel20 = false;
             _parkedBossGO = null;
+        }
+
+        // On player death, tear down every boss immediately. Without this the on-screen boss
+        // keeps flying and its attacks keep hitting the cannon on the game-over screen, and a
+        // boss parked between L10 and L20 would linger into the next run / MainMenu.
+        private void HandlePlayerDeath()
+        {
+            TearDownBoss(_activeBossGO);
+            _activeBossGO = null;
+            _activeBossController = null;
+
+            TearDownBoss(_parkedBossGO);
+            _parkedBossGO = null;
+            _hasBossWaitingForLevel20 = false;
+
+            _bossSpawned = false;
+            _bossTimerRunning = false;
+
+            if (BossEventBus.Instance != null)
+            {
+                BossEventBus.Instance.OnBossDefeated -= HandleBossDefeated;
+                BossEventBus.Instance.OnBossRetreated -= HandleBossRetreated;
+            }
+        }
+
+        // Kills any in-flight enter/exit tweens (so DOTween can't drive a destroyed transform)
+        // and destroys the boss GameObject. Destroy fires BossBirdController.OnDisable, which
+        // unsubscribes its health handlers.
+        private static void TearDownBoss(GameObject bossGO)
+        {
+            if (bossGO == null) return;
+            bossGO.transform.DOKill();
+            Destroy(bossGO);
         }
 
         // ═══════════════════════════════════════════════════════════════

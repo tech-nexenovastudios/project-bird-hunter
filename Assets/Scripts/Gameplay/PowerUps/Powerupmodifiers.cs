@@ -1128,21 +1128,37 @@ namespace Gameplay.PowerUps
             this.cannon = cannon;
             // Re-armed on every level transition while pending — subscribe only once.
             if (subscribed) return;
-            GameEvents.OnBossSpawned += OnBossSpawned;
+
+            // The live chapter bosses are BossBirdController, which raises BossEventBus.OnBossSpawned
+            // (NOT the legacy GameEvents.OnBossSpawned that the old BossBird class fired). Listening to
+            // the wrong bus is why this heal never triggered at L10.
+            var bus = BossEventBus.Instance;
+            if (bus == null) return; // can't arm yet; Activate runs again next level while pending
+            bus.OnBossSpawned += OnBossSpawned;
             subscribed = true;
         }
 
         public void Deactivate()
         {
-            if (subscribed) { GameEvents.OnBossSpawned -= OnBossSpawned; subscribed = false; }
+            if (subscribed)
+            {
+                var bus = BossEventBus.Instance;
+                if (bus != null) bus.OnBossSpawned -= OnBossSpawned;
+                subscribed = false;
+            }
             cannon = null;
         }
 
-        private void OnBossSpawned(BossBird boss)
+        private void OnBossSpawned(string bossName)
         {
             // One-shot: stop listening before healing so a phase-2 re-spawn can't double-heal
             // before GameProgressManager has consumed the slot.
-            if (subscribed) { GameEvents.OnBossSpawned -= OnBossSpawned; subscribed = false; }
+            if (subscribed)
+            {
+                var bus = BossEventBus.Instance;
+                if (bus != null) bus.OnBossSpawned -= OnBossSpawned;
+                subscribed = false;
+            }
             TriggerHeal();
             GameEvents.FirePreBossRecoveryActivated();
         }

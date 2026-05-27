@@ -12,15 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6db09947d9fd374c8020d29e468e25d, type: 3}
   m_Name: Aura Of Damnation Config
   m_EditorClassIdentifier: Assembly-CSharp::AuraOfDamnationConfig
-  cooldown: 2
+  cooldown: 1
   duration: 3
-  damage: 5
+  damage: 9
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
   fireRingPrefab: {fileID: 7256485218259313424, guid: 5bd563da47b499f4e816b7ceb4272da2, type: 3}
-  ringSpawnInterval: 2.5
-  ringMaxRadius: 0.5
-  ringLifetime: 4
+  ringSpawnInterval: 2
+  ringSpeed: 4
+  ringScale: 4
+  destroyVfxPrefab: {fileID: 3696026850653203111, guid: d4e86c6ff5dc85a4ea8a177bbe525ef8, type: 3}
+  destroyVfxLifetime: 1.5
+  ringMaxRadius: 0.7
+  ringLifetime: 5
   collisionRadiusStart: 0.5
   collisionRadiusEnd: 1
+  rotateBeforeShoot: 1
+  rotationSpeed: 180
+  aimMaxDuration: 1

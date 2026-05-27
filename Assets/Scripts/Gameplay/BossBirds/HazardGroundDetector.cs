@@ -13,6 +13,7 @@ public class HazardGroundDetector : MonoBehaviour, IPoolable
 
     private Rigidbody2D rb;
     private Collider2D col;
+    private HazardHealth health;
     private Camera mainCam;
     private float rollSpeed;
     private float maxRollDistance;
@@ -28,6 +29,7 @@ public class HazardGroundDetector : MonoBehaviour, IPoolable
     private void Awake()
     {
         if (col == null) col = GetComponent<Collider2D>();
+        if (health == null) health = GetComponent<HazardHealth>();
         if (groundLayer < 0) groundLayer = LayerMask.NameToLayer("Ground");
     }
 
@@ -67,8 +69,14 @@ public class HazardGroundDetector : MonoBehaviour, IPoolable
         if (!other.CompareTag("Player")) return;
         if (!other.TryGetComponent<BaseCannon>(out var cannon)) return;
 
-        slowedCannon = cannon;
-        cannon.ApplySpeedMultiplier(slowMultiplier);
+        // On contact with the player, the egg deals damage equal to its own current HP,
+        // then self-destructs. Read HP before destroying — DestroyHazard() drives the
+        // existing VFX + pool-return wiring via OnDestroyed.
+        if (health == null) health = GetComponent<HazardHealth>();
+        int damage = health != null ? health.CurrentHp : 0;
+        if (damage > 0) cannon.TakeDamage(damage);
+
+        DestroyHazard();
     }
 
     private void OnTriggerExit2D(Collider2D other)
