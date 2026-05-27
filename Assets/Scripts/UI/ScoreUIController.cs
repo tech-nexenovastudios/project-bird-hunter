@@ -35,7 +35,11 @@ namespace UI
         private void UpdateScoreDisplay(int levelScore, int delta)
         {
             if (scoreText != null)
-                scoreText.text = "Score: " + levelScore.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+            {
+                var ci = System.Globalization.CultureInfo.InvariantCulture;
+                int targetScore = ScoreManager.Instance != null ? ScoreManager.Instance.TargetScore : 0;
+                scoreText.text = $"{levelScore.ToString("N0", ci)}/{targetScore.ToString("N0", ci)}";
+            }
 
             if (deltaText != null && delta > 0)
             {

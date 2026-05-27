@@ -190,7 +190,14 @@ namespace Gameplay.Managers
             GameEvents.FireRewardNotification(new RewardNotification(
                 RewardKind.LevelComplete, "Level Complete!", completionCoins, "coins"));
 
-            if (!_firstClearBonusAwardedThisLevel)
+            // First-clear gems pay out only the FIRST time this level is ever cleared — not on
+            // replays. HandleLevelCompleted runs on OnLevelCompleted, which fires before
+            // GameProgressManager.CompleteLevel calls MarkFirstTimeClear, so HasFirstTimeClear is
+            // still false here on a genuine first clear and true on a repeat. The session flag
+            // still guards against a double-award within the same completion.
+            bool alreadyClearedBefore = progressMgr.Data.HasFirstTimeClear(chapter, progressMgr.CurrentLevel);
+
+            if (!_firstClearBonusAwardedThisLevel && !alreadyClearedBefore)
             {
                 int firstClearGems = rewardConfig.GetFirstTimeClearGems();
                 AwardGems(firstClearGems, "first_time_clear");

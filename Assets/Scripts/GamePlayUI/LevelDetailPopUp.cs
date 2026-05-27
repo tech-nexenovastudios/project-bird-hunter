@@ -42,6 +42,10 @@ namespace Gameplay.UI
         // Prevents "Level X Complete!" showing again if the player restarts mid-session.
         private bool _levelCompleted = false;
 
+        // True while the "Level X Complete!" popup is on screen. The slot machine checks this
+        // so it waits for the completion popup to finish before opening, instead of overlapping it.
+        public static bool IsCompletePopupPlaying { get; private set; }
+
         // ───────── Lifecycle ─────────
 
         private void OnEnable()
@@ -62,6 +66,11 @@ namespace Gameplay.UI
         // over so it doesn't overlap the chapter-end animation.
         private void OnChapterCompletedHandler(int newChapterNumber)
         {
+            // The completion popup is being cut short for the chapter-end animation; clear the
+            // flag (without firing the finished event) so the chapter-start spin — which is gated
+            // on OnChapterTransitionFinished instead — isn't blocked waiting on this popup.
+            IsCompletePopupPlaying = false;
+
             if (_activeRoutine != null)
             {
                 StopCoroutine(_activeRoutine);
@@ -84,6 +93,11 @@ namespace Gameplay.UI
         {
             _levelCompleted = false;  // reset — this is a fresh level start or restart
             _currentLevel = GameProgressManager.Instance.CurrentLevel;
+
+            // Resuming straight from the slot: the player just confirmed a powerup, so skip the
+            // "Level N / Starting in" intro popup instead of replaying it on top of the slot exit.
+            if (GameManager.SuppressLevelIntroPopup) return;
+
             ShowPopup(
                 title: $"Level {_currentLevel}",
                 countdownPrefix: "Starting in"
@@ -100,6 +114,7 @@ namespace Gameplay.UI
             // Prevents firing again when a restart triggers OnGameLevelUpdated.
             if (_levelCompleted) return;
             _levelCompleted = true;
+            IsCompletePopupPlaying = true;
 
             ShowPopup(
                 title: $"Level {_currentLevel} Complete!",
@@ -174,6 +189,11 @@ namespace Gameplay.UI
             fadeOut.OnComplete(HideInstant);
 
             yield return fadeOut.WaitForCompletion();
+
+            // Completion popup is fully done. The slot machine opens on its own timed buffer
+            // (GameplayUIHandler), so we only clear the flag here.
+            if (!isLevelStart)
+                IsCompletePopupPlaying = false;
         }
 
         // ───────── Helpers ─────────
