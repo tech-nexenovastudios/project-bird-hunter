@@ -603,7 +603,7 @@ namespace Gameplay
                 _parkedBossGO = bossGO;
                 _parkedBossHpNormalized = hpNormalized;
                 _hasBossWaitingForLevel20 = true;
-                GameProgressManager.Instance.CompleteLevel(100);
+                GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f - hpNormalized, 0));
 
                 Debug.Log($"[SpawnController] Boss '{bossName}' parked at {hpNormalized:P0} HP for Level 20.");
             });
@@ -632,7 +632,7 @@ namespace Gameplay
                     if (isChapterEndBossLevel && !_levelCompleted)
                     {
                         _levelCompleted = true;
-                        GameProgressManager.Instance.CompleteLevel(score);
+                        GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f, score));
                     }
                 });
             }
@@ -644,12 +644,20 @@ namespace Gameplay
                 if (isChapterEndBossLevel && !_levelCompleted)
                 {
                     _levelCompleted = true;
-                    GameProgressManager.Instance.CompleteLevel(score);
+                    GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f, score));
                 }
             }
 
             _hasBossWaitingForLevel20 = false;
             _parkedBossGO = null;
+        }
+
+        private int AwardBossLevelScore(float damageFraction, int bossBaseScore)
+        {
+            int bossWorth = Mathf.Max(bossBaseScore, _targetScore);
+            int bossPortion = Mathf.RoundToInt(bossWorth * Mathf.Clamp01(damageFraction));
+            ScoreManager.Instance?.AddScore(bossPortion);
+            return ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : bossPortion;
         }
 
         // ═══════════════════════════════════════════════════════════════
