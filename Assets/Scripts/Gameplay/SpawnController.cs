@@ -938,6 +938,12 @@ namespace Gameplay
 
         void TrySpawnBird()
         {
+            // Score-budget gate: stop spawning once the cumulative worth of eggs already laid
+            // this level meets the target. Spawning is otherwise driven only by pressure/time and
+            // halts (via StartDrain) only when *destroyed* score crosses the target — by then extra
+            // eggs are on screen, and clearing them overshoots the target (e.g. 2700+ vs a 2200 goal).
+            if (HasReachedScoreBudget()) return;
+
             // TTK soft-gate: if existing screen workload exceeds what the cannon can clear
             // within ttkCeilingSeconds, skip this tick. Lets the screen drain before
             // piling on more eggs when the player's loadout is outclassed by the chapter HP curve.
@@ -1196,6 +1202,10 @@ namespace Gameplay
         {
             if (_draining || IsBossAlive) return;
 
+            // Budget already filled by earlier lays — a bird still in flight shouldn't add more
+            // worth past the target (see TrySpawnBird). It simply flies off without laying.
+            if (HasReachedScoreBudget()) return;
+
             EggTierConfig tier = bird.config.eggTier;
             if (tier == null || tier.eggPrefab == null) return;
 
@@ -1204,6 +1214,18 @@ namespace Gameplay
             while (tier != null && (!IsEggTierAllowed(tier) || tier.eggPrefab == null))
                 tier = tier.splitInto;
             if (tier == null) return;
+
+            // Budget-aware down-tiering: if this tier's full worth (including its split cascade)
+            // would push the level past its target, lay the cheapest allowed tier in its split
+            // chain instead. The crossing lay then overshoots by at most one small egg's worth
+            // rather than a whole high-tier cascade — the level keeps topping up with small eggs.
+            if (_targetScore > 0 && _totalTrackedScore + CalculateEggMaxScore(tier) > _targetScore)
+            {
+                var cheapest = tier;
+                for (var t = tier.splitInto; t != null; t = t.splitInto)
+                    if (t.eggPrefab != null && IsEggTierAllowed(t)) cheapest = t;
+                tier = cheapest;
+            }
 
             var egg = _eggFactory.Acquire(tier, bird.transform.position, Quaternion.identity);
             if (egg == null) return;
@@ -1305,11 +1327,19 @@ namespace Gameplay
             _eggFactory.Release(egg);
         }
 
+        // True once the cumulative worth of eggs laid this level meets the target score, so further
+        // spawning would only push the achievable total past the goal.
+        bool HasReachedScoreBudget() => _targetScore > 0 && _totalTrackedScore >= _targetScore;
+
         private int CalculateEggMaxScore(EggTierConfig tier)
         {
             if (tier == null) return 0;
+            // HP is scaled by _hpMultiplier at spawn (see HandleBirdLayEgg/Split), and scorePerHit is
+            // awarded per point of damage — so the score must scale the same way to match what the
+            // player actually earns, otherwise the budget under-counts on levels with hpMultiplier > 1.
             int avgHp = (tier.baseHpMin + tier.baseHpMax) / 2;
-            int score = (tier.scorePerHit * avgHp) + tier.scoreOnDestroy;
+            int scaledHp = Mathf.Max(1, Mathf.RoundToInt(avgHp * _hpMultiplier));
+            int score = (tier.scorePerHit * scaledHp) + tier.scoreOnDestroy;
             if (tier.splitInto != null)
                 score += tier.splitCount * CalculateEggMaxScore(tier.splitInto);
             return score;

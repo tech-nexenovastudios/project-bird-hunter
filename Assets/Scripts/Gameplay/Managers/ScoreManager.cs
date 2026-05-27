@@ -140,6 +140,7 @@ namespace Gameplay.Managers
             GameEvents.OnLevelCompletedEarly += OnLevelCompletedEarly;
             GameEvents.OnGameLevelUpdated += OnLevelStarted;
             GameEvents.OnAllEggsCleared += OnLevelEnded;
+            GameEvents.OnLevelCompleted += OnLevelCompleted;
         }
 
         private void OnLevelCompletedEarly(float remainingTime)
@@ -156,6 +157,20 @@ namespace Gameplay.Managers
             GameEvents.OnLevelCompletedEarly -= OnLevelCompletedEarly;
             GameEvents.OnGameLevelUpdated -= OnLevelStarted;
             GameEvents.OnAllEggsCleared -= OnLevelEnded;
+            GameEvents.OnLevelCompleted -= OnLevelCompleted;
+        }
+
+        // Level finished: snap the score number and the progress slider back to 0 right away
+        // (instead of letting the final value linger through the completion popup / transition).
+        // Runs on OnLevelCompleted, which fires AFTER LevelCompletionController has captured the
+        // final score for rewards, so zeroing here is safe. FireLevelScoreUpdated(0,0) drives both
+        // the score text and the LevelProgressBar fill to 0.
+        private void OnLevelCompleted(int finalScore)
+        {
+            _levelScore = 0;
+            _acceptingScore = false;
+            UpdateDisplay();
+            GameEvents.FireLevelScoreUpdated(0, 0);
         }
 
         private void OnLevelStarted(int levelIndex)
@@ -215,8 +230,10 @@ namespace Gameplay.Managers
 
         private void UpdateDisplay()
         {
-            if (scoreText != null)
-                scoreText.text = "Score: " + _levelScore.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+            if (scoreText == null) return;
+
+            var ci = System.Globalization.CultureInfo.InvariantCulture;
+            scoreText.text = $"{_levelScore.ToString("N0", ci)}/{_targetScore.ToString("N0", ci)}";
         }
     }
 }
