@@ -21,6 +21,11 @@ namespace Gameplay.Managers
     {
         public static GameManager Instance;
 
+        // True only for the FireGameLevelUpdated that immediately follows a slot powerup
+        // selection, so the "Level N / Starting in" intro popup can skip itself instead of
+        // reappearing right after the player confirms. Set and cleared in the same frame.
+        public static bool SuppressLevelIntroPopup { get; private set; }
+
         public Slot.SlotMachineController slotMachine;
         public SpawnController spawnController;
         public CannonSpawner cannonSpawner;
@@ -161,7 +166,7 @@ namespace Gameplay.Managers
         }
 
         // ───────── Start gameplay ─────────
-        public async void StartGameplay()
+        public async void StartGameplay(bool fromSlot = false)
         {
             _pendingLevelStart = false;
 
@@ -201,7 +206,11 @@ namespace Gameplay.Managers
 
             GameProgressManager.Instance.ApplyPowerUpsToCurrentCannon(currentCannon);
 
+            // Slot-resume skips the level-intro popup (see SuppressLevelIntroPopup); normal
+            // level-to-level transitions (fromSlot == false) still show it.
+            SuppressLevelIntroPopup = fromSlot;
             GameEvents.FireGameLevelUpdated(GameProgressManager.Instance.CurrentLevel);
+            SuppressLevelIntroPopup = false;
         }
 
         // ───────── Level complete ─────────
@@ -227,7 +236,7 @@ namespace Gameplay.Managers
         // ───────── Spin complete ─────────
         public void OnSpinComplete()
         {
-            StartGameplay();
+            StartGameplay(fromSlot: true);
         }
 
         // ───────── Pause / Resume ─────────

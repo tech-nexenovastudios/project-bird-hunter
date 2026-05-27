@@ -21,6 +21,10 @@ namespace Gameplay.UI
         [Header("Slot")]
         [SerializeField] private SlotMachineScreen slotMachineScreen;
         [SerializeField] private GameObject gameoverUI;
+        [Tooltip("On spin levels (5/10/15) the spin fires the same frame as the 'Level X Complete!' " +
+                 "popup + smoke VFX. Wait this long before opening the slot so they don't overlap. " +
+                 "Initial and chapter-start spins ignore this and open immediately.")]
+        [SerializeField] private float slotOpenDelayAfterComplete = 5f;
 
         [Header("All-Eggs-Cleared Celebration")]
         [SerializeField] private GameObject clearCelebrationVfxPrefab;
@@ -82,7 +86,7 @@ namespace Gameplay.UI
 
         private void OnEnable()
         {
-            GameEvents.OnSpinTriggered += slotMachineScreen.ShowSlot;
+            GameEvents.OnSpinTriggered += OnSpinTriggered;
             GameEvents.OnPowerupSelected += OnPowerupSelected;
             GameEvents.OnPlayerDeath += OnPlayerDeath;
             GameEvents.OnAllEggsCleared += OnAllEggsCleared;
@@ -91,19 +95,51 @@ namespace Gameplay.UI
 
         private void OnDisable()
         {
-            GameEvents.OnSpinTriggered -= slotMachineScreen.ShowSlot;
+            GameEvents.OnSpinTriggered -= OnSpinTriggered;
             GameEvents.OnPowerupSelected -= OnPowerupSelected;
             GameEvents.OnPlayerDeath -= OnPlayerDeath;
             GameEvents.OnAllEggsCleared -= OnAllEggsCleared;
             GameEvents.OnPlayerFinishedLevel -= OnPlayerFinishedLevel;
+
+            if (_pendingSlotRoutine != null)
+            {
+                StopCoroutine(_pendingSlotRoutine);
+                _pendingSlotRoutine = null;
+            }
         }
 
         // ───────── Spin / Powerup ─────────
 
+        // For spin levels (5/10/15) the spin fires the same frame as the "Level X Complete!" popup
+        // and smoke VFX, which would otherwise show the slot on top of them. If that popup is
+        // playing, hold the slot for slotOpenDelayAfterComplete seconds so the completion beat
+        // plays out first; otherwise (initial spin, chapter-start spin) open immediately.
+        private Coroutine _pendingSlotRoutine;
+
+        private void OnSpinTriggered(PowerupConfig[] options)
+        {
+            if (LevelDetailPopUp.IsCompletePopupPlaying)
+            {
+                if (_pendingSlotRoutine != null) StopCoroutine(_pendingSlotRoutine);
+                _pendingSlotRoutine = StartCoroutine(ShowSlotAfterDelay(options));
+            }
+            else
+            {
+                slotMachineScreen.ShowSlot(options);
+            }
+        }
+
+        private IEnumerator ShowSlotAfterDelay(PowerupConfig[] options)
+        {
+            yield return new WaitForSecondsRealtime(slotOpenDelayAfterComplete);
+            slotMachineScreen.ShowSlot(options);
+            _pendingSlotRoutine = null;
+        }
+
         private void OnPowerupSelected(PowerupConfig config)
         {
             slotMachineScreen.HideSlot();
-            GameManager.Instance.StartGameplay();
+            GameManager.Instance.StartGameplay(fromSlot: true);
         }
 
         private void OnPlayerDeath()
