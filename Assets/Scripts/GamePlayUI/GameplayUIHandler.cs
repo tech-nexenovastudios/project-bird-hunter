@@ -41,6 +41,9 @@ namespace Gameplay.UI
         [SerializeField] private float finishNowCoinTallyDuration = 0.9f;
         [SerializeField] private float finishNowOverlayAlpha = 0.6f;
 
+        [Header("Coming Soon...")]
+        [SerializeField] private GameObject comingSoonUI;
+
         private Coroutine _finishNowRoutine;
 
         private static readonly string[] FinishNowToastPhrases =

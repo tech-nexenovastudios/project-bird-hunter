@@ -122,7 +122,7 @@ MonoBehaviour:
     castVfx: {fileID: 6247126491472812468, guid: 5ed085b2839f23641b6deb8cb4e9e511, type: 3}
     runningVfx: {fileID: 0}
     effects:
-    - rid: 1861421009558307206
+    - rid: 6394089565514104832
   - config: {fileID: 11400000, guid: 4d1711643d353254d91e412f6ca522d7, type: 2}
     castSfx: {fileID: 0}
     castVfx: {fileID: 6247126491472812468, guid: 5ed085b2839f23641b6deb8cb4e9e511, type: 3}
@@ -229,7 +229,7 @@ MonoBehaviour:
       type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
         mode: 2
-        value: 12
+        value: 14
         rocketPrefab: {fileID: 0}
         rocketSpeeed: 10
         rocketInterval: 4
@@ -274,8 +274,8 @@ MonoBehaviour:
     - rid: 1861421009558307206
       type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
       data:
-        mode: 1
-        value: 0.2
+        mode: 3
+        value: 5
         rocketPrefab: {fileID: 6354247109572606826, guid: c4d0e1374de823f45a2c373f06d0f863, type: 3}
         rocketSpeeed: 10
         rocketInterval: 3
@@ -354,3 +354,12 @@ MonoBehaviour:
         maxEggWait: 30
         invincibleVfxPrefab: {fileID: 0}
         invincibleVfxOffset: {x: 0, y: -0.5, z: 0}
+    - rid: 6394089565514104832
+      type: {class: BulletModifier, ns: Gameplay.PowerUps, asm: Assembly-CSharp}
+      data:
+        mode: 1
+        value: 0.2
+        rocketPrefab: {fileID: 0}
+        rocketSpeeed: 10
+        rocketInterval: 4
+        intervalVariance: 1

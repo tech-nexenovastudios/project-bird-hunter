@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc9a9e8591e2016498337a4dd9048bf2, type: 3}
+  m_Name: Radioactive Egg Drop Config
+  m_EditorClassIdentifier: Assembly-CSharp::RadioactiveEggDropConfig
+  cooldown: 3
+  duration: 2
+  damage: 11
+  warningPrefab: {fileID: 0}
+  warningDuration: 0.5
+  vfxPrefab: {fileID: 0}
+  dropPointName: EggDropPoint
+  eggPrefab: {fileID: 1251663967950569254, guid: 1792cc1c983264b4aba4839374589e45, type: 3}
+  eggHpMin: 70
+  eggHpMax: 100
+  eggSortingIndex: 5
+  eggLifetime: 15
+  stopDuration: 0.1
