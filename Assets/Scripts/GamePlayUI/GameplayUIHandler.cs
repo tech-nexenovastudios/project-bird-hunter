@@ -156,6 +156,15 @@ namespace Gameplay.UI
             SceneManager.LoadScene("MainMenu");
         }
 
+        // Soft progression cap: opens the "Coming Soon" panel (with its home button wired to
+        // OnClickReturnToMenu via the inspector) when the player finishes the last shipped chapter.
+        // Called from SpawnController.HandleBossDefeated on the chapter-5 boss kill instead of
+        // CompleteCurrentLevel, so no chapter rollover, no chapter-6 progression.
+        public void ShowComingSoon()
+        {
+            if (comingSoonUI != null) comingSoonUI.SetActive(true);
+        }
+
         // ───────── Clear Celebration (task #32 hook) ─────────
 
         private void OnAllEggsCleared() => PlayClearCelebration();

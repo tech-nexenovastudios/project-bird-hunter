@@ -637,7 +637,7 @@ namespace Gameplay
                     if (isChapterEndBossLevel && !_levelCompleted)
                     {
                         _levelCompleted = true;
-                        GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f, score));
+                        CompleteChapterEndOrCap(score);
                     }
                 });
             }
@@ -649,12 +649,28 @@ namespace Gameplay
                 if (isChapterEndBossLevel && !_levelCompleted)
                 {
                     _levelCompleted = true;
-                    GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f, score));
+                    CompleteChapterEndOrCap(score);
                 }
             }
 
             _hasBossWaitingForLevel20 = false;
             _parkedBossGO = null;
+        }
+
+        // Soft progression cap: only 5 chapters are shipped. When the player kills the chapter-5
+        // chapter-end boss, surface the "Coming Soon" panel (with its home button) instead of
+        // rolling progress over into chapter 6 — there's no chapter 6 content yet.
+        private const int ShippedChapterCount = 5;
+
+        private void CompleteChapterEndOrCap(int score)
+        {
+            if (_chapter >= ShippedChapterCount)
+            {
+                Gameplay.UI.GameplayUIHandler.Instance?.ShowComingSoon();
+                return;
+            }
+
+            GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f, score));
         }
 
         private void HandlePlayerDeath()

@@ -114,6 +114,13 @@ namespace Gameplay.UI
             // Prevents firing again when a restart triggers OnGameLevelUpdated.
             if (_levelCompleted) return;
             _levelCompleted = true;
+
+            // Only show the "Level X Complete!" popup when the next beat is a slot machine
+            // (5/10/15 trigger a spin, 20 triggers chapter-end → chapter-start spin). On
+            // regular levels the next-level intro popup ("Level N+1 / Starting in 3,2,1")
+            // serves as the transition; showing two back-to-back 3-2-1 countdowns is noise.
+            if (!IsSpinOrChapterEndLevel(_currentLevel)) return;
+
             IsCompletePopupPlaying = true;
 
             ShowPopup(
@@ -125,6 +132,9 @@ namespace Gameplay.UI
                 levelStartSFX.Play();
             }
         }
+
+        private static bool IsSpinOrChapterEndLevel(int level)
+            => level == 5 || level == 10 || level == 15 || level == 20;
 
         // ───────── Core Display ─────────
 

@@ -34,6 +34,8 @@ namespace Gameplay.UI
             GameEvents.OnSelfClearStarted += OnSelfClearStarted;
             GameEvents.OnSelfClearEnded += OnSelfClearEnded;
             GameEvents.OnFinishButtonReady += OnFinishButtonReady;
+            GameEvents.OnGameLevelUpdated += OnGameLevelUpdated;
+            GameEvents.OnLevelCountdownGo += OnLevelCountdownGo;
         }
 
         private void OnDisable()
@@ -46,6 +48,23 @@ namespace Gameplay.UI
             GameEvents.OnSelfClearStarted -= OnSelfClearStarted;
             GameEvents.OnSelfClearEnded -= OnSelfClearEnded;
             GameEvents.OnFinishButtonReady -= OnFinishButtonReady;
+            GameEvents.OnGameLevelUpdated -= OnGameLevelUpdated;
+            GameEvents.OnLevelCountdownGo -= OnLevelCountdownGo;
+        }
+
+        // Block pause while the "Starting in 3, 2, 1, Go!" intro plays — pausing the countdown
+        // would freeze the level-intro timer. Re-enabled when the countdown finishes (Go!).
+        // Skip when the intro popup is suppressed (initial spin / post-slot resume); otherwise
+        // the button would stay disabled forever since no countdown runs to flip it back on.
+        private void OnGameLevelUpdated(int levelIndex)
+        {
+            if (pauseButton == null) return;
+            pauseButton.interactable = Gameplay.Managers.GameManager.SuppressLevelIntroPopup;
+        }
+
+        private void OnLevelCountdownGo()
+        {
+            if (pauseButton != null) pauseButton.interactable = true;
         }
 
         // ───────── Self-Clear Finish ─────────
