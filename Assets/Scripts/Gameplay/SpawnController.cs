@@ -1215,16 +1215,25 @@ namespace Gameplay
                 tier = tier.splitInto;
             if (tier == null) return;
 
-            // Budget-aware down-tiering: if this tier's full worth (including its split cascade)
-            // would push the level past its target, lay the cheapest allowed tier in its split
-            // chain instead. The crossing lay then overshoots by at most one small egg's worth
-            // rather than a whole high-tier cascade — the level keeps topping up with small eggs.
+            // Budget-aware down-tiering: pick the LARGEST tier in the split chain whose full
+            // cascade still fits the remaining budget — so eggs keep splitting through the chain
+            // late in the level instead of degenerating into E1 spam. Falls back to the cheapest
+            // allowed tier only when nothing fits (overshoots by at most one small egg's worth).
             if (_targetScore > 0 && _totalTrackedScore + CalculateEggMaxScore(tier) > _targetScore)
             {
-                var cheapest = tier;
+                EggTierConfig fitting = null;
+                var smallest = tier;
                 for (var t = tier.splitInto; t != null; t = t.splitInto)
-                    if (t.eggPrefab != null && IsEggTierAllowed(t)) cheapest = t;
-                tier = cheapest;
+                {
+                    if (t.eggPrefab == null || !IsEggTierAllowed(t)) continue;
+                    smallest = t;
+                    if (_totalTrackedScore + CalculateEggMaxScore(t) <= _targetScore)
+                    {
+                        fitting = t;
+                        break;
+                    }
+                }
+                tier = fitting ?? smallest;
             }
 
             var egg = _eggFactory.Acquire(tier, bird.transform.position, Quaternion.identity);

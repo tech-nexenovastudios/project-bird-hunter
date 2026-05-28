@@ -94,7 +94,6 @@
 
 using System;
 using UnityEngine;
-using TMPro;
 using Gameplay.Events;
 using Gameplay.Health;
 using Gameplay.Interfaces;
@@ -104,8 +103,6 @@ namespace Gameplay.Managers
     public class ScoreManager : MonoBehaviour
     {
         public static ScoreManager Instance { get; private set; }
-
-        [SerializeField] private TMP_Text scoreText;
 
         [Header("Fallback Score Values (used when config/payload missing)")]
         [SerializeField] private int scorePerEggHit = 5;
@@ -169,7 +166,6 @@ namespace Gameplay.Managers
         {
             _levelScore = 0;
             _acceptingScore = false;
-            UpdateDisplay();
             GameEvents.FireLevelScoreUpdated(0, 0);
         }
 
@@ -185,7 +181,6 @@ namespace Gameplay.Managers
                 _lastChapter = chapter;
             }
 
-            UpdateDisplay();
             GameEvents.FireLevelScoreUpdated(0, 0);
         }
 
@@ -196,7 +191,6 @@ namespace Gameplay.Managers
             _levelScore = 0;
             _targetScore = targetScore;
             _acceptingScore = true;
-            UpdateDisplay();
 
             // Broadcast so HUD bar resets to 0 immediately
             GameEvents.FireLevelScoreUpdated(0, 0);
@@ -211,7 +205,6 @@ namespace Gameplay.Managers
 
             GameEvents.FireLevelScoreUpdated(_levelScore, amount);
             OnScoreChanged?.Invoke(_currentScore, amount);
-            UpdateDisplay();
         }
 
         private void OnEggHit(IDamageable egg, int damage, Vector3 hitPoint)
@@ -227,13 +220,5 @@ namespace Gameplay.Managers
 
         private void OnBirdDestroyed(IDamageable bird, int scoreAwarded, Vector3 position)
             => AddScore(scoreAwarded > 0 ? scoreAwarded : scorePerBirdDestroy);
-
-        private void UpdateDisplay()
-        {
-            if (scoreText == null) return;
-
-            var ci = System.Globalization.CultureInfo.InvariantCulture;
-            scoreText.text = $"{_levelScore.ToString("N0", ci)}/{_targetScore.ToString("N0", ci)}";
-        }
     }
 }
