@@ -10,20 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dd6dc95a03221a644a436c6e744d40cd, type: 3}
-  m_Name: Hellfire Dive Config
-  m_EditorClassIdentifier: Assembly-CSharp::HellfireDiveConfig
-  cooldown: 3
-  duration: 2
+  m_Name: Fire Column Strike Config
+  m_EditorClassIdentifier: Assembly-CSharp::FireColumnStrikeConfig
+  cooldown: 2
+  duration: 4
   damage: 10
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
-  diveSpeed: 6
-  diveTargetY: -1
-  hoverDurationAtBottom: 0.5
-  returnSpeed: 3
   fireColumnPrefab: {fileID: 652019301415996210, guid: 1a52472de14ea8544aa5f286876cd46c, type: 3}
   columnLifetime: 3
-  columnWidth: 2
-  columnDamagePerTick: 5
-  columnTicksPerSecond: 2
+  respawnDelay: 5
+  columnWidth: 4
+  columnDamagePerTick: 4
+  columnTicksPerSecond: 1

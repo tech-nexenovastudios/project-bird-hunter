@@ -1,4 +1,7 @@
-﻿// SoulDrainBehaviour.cs
+// SoulDrainBehaviour.cs
+// Beam attack copied from StoneGazeSweepBehaviour (Ch1 boss): a laser fired from the boss that
+// locks onto the cannon, then tracks it at a capped rotation speed (the dodgeable delay).
+// Soul Drain keeps its speed-debuff: while the beam is on the cannon, the cannon is slowed.
 using System.Collections;
 using Gameplay.Interfaces;
 using Gameplay.Player;
@@ -7,81 +10,123 @@ using UnityEngine;
 public class SoulDrainBehaviour : BaseAttackBehaviour
 {
     private SoulDrainConfig config;
-
-    private GameObject activeTelegraph;
-    private GameObject activeGroundVfx;
-    private LaserBeamVisual tetherLine;
-    private GameObject tetherLineObj;
-
+    private Transform firePoint;
+    private bool ownsFirePoint;
+    private LaserBeamVisual laserVisual;
     private Transform cannonTarget;
-    private float tetherX;
-    private bool cannonIsInside;
-    private bool debuffApplied;
-
+    private BaseCannon cannonComponent;
+    private Vector3 lockedDirection;
+    private float currentBeamLength;
     private float damageTickInterval;
     private float damageTickTimer;
+    private bool isHittingTarget;
+    private bool debuffApplied;
 
-    private static readonly Collider2D[] overlap = new Collider2D[8];
-    private static int playerMask;
-    private static bool maskInit;
+    private static readonly RaycastHit2D[] hits = new RaycastHit2D[16];
+    private static int hitMask;
+    private static bool maskInitialized;
 
     public void SetConfig(SoulDrainConfig cfg) => config = cfg;
 
+    private void Awake()
+    {
+        if (!maskInitialized)
+        {
+            hitMask = LayerMask.GetMask("Player", "Cannon");
+            maskInitialized = true;
+        }
+    }
+
     private void Start()
     {
-        if (!maskInit)
+        ResolveFirePoint();
+
+        // Setup laser visual — parented to the fire point so it rotates with the beam.
+        if (config.tetherLinePrefab != null)
         {
-            playerMask = LayerMask.GetMask("Player", "Cannon");
-            maskInit = true;
+            var obj = Instantiate(config.tetherLinePrefab, firePoint);
+            obj.transform.localPosition = Vector3.zero;
+            obj.transform.localRotation = Quaternion.identity;
+            laserVisual = obj.GetComponent<LaserBeamVisual>();
+            if (laserVisual != null)
+            {
+                laserVisual.SetColors(config.coreColor, config.glowColor, config.haloColor);
+                laserVisual.Deactivate();
+            }
+            obj.SetActive(false);
         }
+
         damageTickInterval = 1f / Mathf.Max(config.ticksPerSecond, 0.1f);
+    }
+
+    // Rotate a fire point, never the boss. Use the named child if present; otherwise spawn a
+    // dedicated pivot at the boss origin so RotateFirePoint/TrackPlayer can't spin the boss art.
+    private void ResolveFirePoint()
+    {
+        if (!string.IsNullOrEmpty(config.firePointName))
+            firePoint = boss.transform.Find(config.firePointName);
+
+        if (firePoint == null)
+        {
+            var go = new GameObject("SoulDrainFirePoint");
+            go.transform.SetParent(boss.transform, false);
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            firePoint = go.transform;
+            ownsFirePoint = true;
+        }
     }
 
     protected override void OnExecute()
     {
         NotifyAttackStarted();
-        StartCoroutine(SoulDrainSequence());
+        StartCoroutine(SweepSequence());
     }
 
-    private IEnumerator SoulDrainSequence()
+    private IEnumerator SweepSequence()
     {
-        cannonTarget = FindCannon();
-        if (cannonTarget == null)
+        if (firePoint == null) ResolveFirePoint();
+
+        cannonTarget = GameObject.FindWithTag("Player")?.transform;
+        cannonComponent = cannonTarget != null ? cannonTarget.GetComponent<BaseCannon>() : null;
+
+        Vector3 origin = firePoint.position;
+        lockedDirection = GetDirection(origin);
+
+        // Rotate fire point toward the cannon before firing.
+        if (config.rotateBeforeShoot && cannonTarget != null)
         {
-            isRunning = false;
-            NotifyAttackComplete();
-            yield break;
+            yield return StartCoroutine(RotateFirePoint());
+            lockedDirection = firePoint.right;
         }
 
-        // Lock cannon X position
-        tetherX = cannonTarget.position.x;
-
-        // Telegraph
-        if (config.telegraphPrefab != null)
+        // Activate
+        if (laserVisual != null)
         {
-            Vector3 telegraphPos = new Vector3(tetherX, config.groundY, 0f);
-            activeTelegraph = PoolManager.Get(config.telegraphPrefab, telegraphPos);
-            PlayParticles(activeTelegraph);
+            laserVisual.gameObject.SetActive(true);
+            laserVisual.SetLinesEnabled(true);
+        }
+        damageTickTimer = 0f;
 
-            yield return new WaitForSeconds(config.telegraphDuration);
-
-            StopParticles(activeTelegraph);
-            PoolManager.Return(activeTelegraph);
-            activeTelegraph = null;
+        // Warm-up
+        float warmup = 0f;
+        while (warmup < config.warmupDuration)
+        {
+            float t = EaseOut(warmup / config.warmupDuration);
+            laserVisual?.SetWidthNormalized(t, config.widthMultiplier);
+            UpdateBeam();
+            warmup += Time.deltaTime;
+            yield return null;
         }
 
-        // Activate tether line
-        ActivateTether();
+        laserVisual?.SetWidth(config.widthMultiplier);
 
-        // Main loop
+        // Main beam
         float elapsed = 0f;
-        damageTickTimer = damageTickInterval; // First tick is immediate on entry
-        cannonIsInside = false;
-        debuffApplied = false;
-
-        while (elapsed < config.tetherActiveDuration)
+        float mainDur = Mathf.Max(0f, config.duration - config.warmupDuration);
+        while (elapsed < mainDur)
         {
-            UpdateTether();
+            UpdateBeam();
             elapsed += Time.deltaTime;
             yield return null;
         }
@@ -89,158 +134,130 @@ public class SoulDrainBehaviour : BaseAttackBehaviour
         Shutdown();
     }
 
-    private void ActivateTether()
+    private void UpdateBeam()
     {
-        Vector3 top = new Vector3(tetherX, boss.transform.position.y, 0f);
-        Vector3 bottom = new Vector3(tetherX, config.groundY, 0f);
+        TrackPlayer();
 
-        // Spawn LaserBeamVisual
-        if (config.tetherLinePrefab != null)
+        Vector3 origin = firePoint.position;
+        currentBeamLength = CalculateLength(origin, lockedDirection);
+        Vector3 end = origin + lockedDirection * currentBeamLength;
+
+        laserVisual?.SetPositions(origin, end);
+
+        // Damage ticks
+        damageTickTimer += Time.deltaTime;
+        if (damageTickTimer >= damageTickInterval)
         {
-            tetherLineObj = Instantiate(config.tetherLinePrefab);
-            tetherLine = tetherLineObj.GetComponent<LaserBeamVisual>();
-
-            if (tetherLine != null)
-            {
-                tetherLine.SetColors(config.coreColor, config.glowColor, config.haloColor);
-                tetherLine.SetPositions(top, bottom);
-                tetherLine.SetLinesEnabled(true);
-                tetherLine.SetWidth(config.widthMultiplier);
-            }
+            damageTickTimer -= damageTickInterval;
+            DamagePlayer(origin, lockedDirection);
         }
 
-        // Ground impact VFX
-        if (config.groundImpactVfxPrefab != null)
+        // Soul Drain: slow the cannon while the beam is on it, restore when it slips out.
+        ApplyDebuff(isHittingTarget);
+
+        // Impact FX
+        if (laserVisual != null)
         {
-            activeGroundVfx = PoolManager.Get(config.groundImpactVfxPrefab, bottom);
-            PlayParticles(activeGroundVfx);
+            if (isHittingTarget)
+                laserVisual.ShowImpact(end, lockedDirection);
+            else
+                laserVisual.HideImpact();
         }
     }
 
-    private void UpdateTether()
+    private void TrackPlayer()
     {
-        // Update line — top follows boss Y, X stays locked
-        Vector3 top = new Vector3(tetherX, boss.transform.position.y, 0f);
-        Vector3 bottom = new Vector3(tetherX, config.groundY, 0f);
-
-        if (tetherLine != null)
-            tetherLine.SetPositions(top, bottom);
-
-        // Check if cannon is inside
-        if (cannonTarget != null)
-        {
-            float halfWidth = config.tetherWidth * 0.5f;
-            cannonIsInside = Mathf.Abs(cannonTarget.position.x - tetherX) <= halfWidth;
-        }
-        else
-        {
-            cannonIsInside = false;
-        }
-
-        // Debuff
-        if (cannonIsInside && !debuffApplied)
-        {
-            debuffApplied = true;
-            SetCannonSpeed(config.speedDebuffMultiplier);
-        }
-        else if (!cannonIsInside && debuffApplied)
-        {
-            debuffApplied = false;
-            SetCannonSpeed(1f);
-        }
-
-        // Damage
-        if (cannonIsInside)
-        {
-            damageTickTimer += Time.deltaTime;
-            if (damageTickTimer >= damageTickInterval)
-            {
-                damageTickTimer -= damageTickInterval;
-                DamageCannon(top, bottom);
-            }
-        }
-        else
-        {
-            // Reset so re-entry gets immediate tick
-            damageTickTimer = damageTickInterval;
-        }
+        if (cannonTarget == null) return;
+        Vector3 toTarget = cannonTarget.position - firePoint.position;
+        if (toTarget.sqrMagnitude < 0.0001f) return;
+        float targetAngle = Mathf.Atan2(toTarget.y, toTarget.x) * Mathf.Rad2Deg;
+        float current = firePoint.eulerAngles.z;
+        float next = Mathf.MoveTowardsAngle(current, targetAngle, config.trackingRotationSpeed * Time.deltaTime);
+        firePoint.rotation = Quaternion.Euler(0f, 0f, next);
+        lockedDirection = firePoint.right;
     }
 
-    private void DamageCannon(Vector3 top, Vector3 bottom)
+    private void DamagePlayer(Vector2 origin, Vector2 dir)
     {
-        Vector2 center = new Vector2(tetherX, (top.y + bottom.y) * 0.5f);
-        float height = Mathf.Abs(top.y - bottom.y);
-        Vector2 size = new Vector2(config.tetherWidth, height);
-
-        int count = Physics2D.OverlapBoxNonAlloc(center, size, 0f, overlap, playerMask);
+        int count = Physics2D.RaycastNonAlloc(origin, dir, hits, currentBeamLength, hitMask);
+        isHittingTarget = false;
         for (int i = 0; i < count; i++)
         {
-            var col = overlap[i];
-            if (col != null && col.CompareTag("Player") && col.TryGetComponent<IDamageable>(out var target))
+            var col = hits[i].collider;
+            if (col == null) continue;
+            isHittingTarget = true;
+            if (col.CompareTag("Player") && col.TryGetComponent<IDamageable>(out var target))
                 target.TakeDamage(config.damagePerTick);
         }
     }
 
-    private void SetCannonSpeed(float multiplier)
+    private void ApplyDebuff(bool active)
     {
-        if (cannonTarget != null && cannonTarget.TryGetComponent<BaseCannon>(out var cannon))
-            cannon.ApplySpeedMultiplier(multiplier);
-    }
-
-    private Transform FindCannon()
-    {
-        var obj = GameObject.FindWithTag("Player");
-        return obj != null ? obj.transform : null;
-    }
-
-    private static void PlayParticles(GameObject obj)
-    {
-        if (obj == null) return;
-        foreach (var ps in obj.GetComponentsInChildren<ParticleSystem>(true))
+        if (cannonComponent == null) return;
+        if (active && !debuffApplied)
         {
-            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            ps.Play(true);
+            debuffApplied = true;
+            cannonComponent.ApplySpeedMultiplier(config.speedDebuffMultiplier);
+        }
+        else if (!active && debuffApplied)
+        {
+            debuffApplied = false;
+            cannonComponent.ApplySpeedMultiplier(1f);
         }
     }
 
-    private static void StopParticles(GameObject obj)
+    private float CalculateLength(Vector3 origin, Vector3 dir)
     {
-        if (obj == null) return;
-        foreach (var ps in obj.GetComponentsInChildren<ParticleSystem>(true))
-            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (cannonTarget == null) return config.beamLength;
+        float dist = Vector3.Dot(cannonTarget.position - origin, dir);
+        if (dist <= 0f) return config.beamLength;
+        Vector3 closest = origin + dir * dist;
+        if (Vector3.Distance(cannonTarget.position, closest) <= config.tetherWidth * 2f)
+            return Mathf.Min(dist + 0.3f, config.beamLength);
+        return config.beamLength;
+    }
+
+    private Vector3 GetDirection(Vector3 origin)
+    {
+        if (cannonTarget != null)
+            return (cannonTarget.position - origin).x >= 0f ? Vector3.right : Vector3.left;
+        return boss.transform.localScale.x >= 0f ? Vector3.right : Vector3.left;
+    }
+
+    private IEnumerator RotateFirePoint()
+    {
+        float elapsed = 0f;
+        while (elapsed < 1f)
+        {
+            if (cannonTarget == null) break;
+            Vector3 toTarget = cannonTarget.position - firePoint.position;
+            float target = Mathf.Atan2(toTarget.y, toTarget.x) * Mathf.Rad2Deg;
+            float current = firePoint.eulerAngles.z;
+            float next = Mathf.MoveTowardsAngle(current, target, config.rotationSpeed * Time.deltaTime);
+            firePoint.rotation = Quaternion.Euler(0f, 0f, next);
+            if (Mathf.Abs(Mathf.DeltaAngle(next, target)) < 1f)
+            {
+                firePoint.rotation = Quaternion.Euler(0f, 0f, target);
+                break;
+            }
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
     }
 
     private void Shutdown()
     {
-        if (debuffApplied)
-        {
-            debuffApplied = false;
-            SetCannonSpeed(1f);
-        }
+        ApplyDebuff(false);
 
-        if (activeTelegraph != null)
+        if (laserVisual != null)
         {
-            StopParticles(activeTelegraph);
-            PoolManager.Return(activeTelegraph);
-            activeTelegraph = null;
+            laserVisual.Deactivate();
+            laserVisual.gameObject.SetActive(false);
         }
+        if (firePoint != null)
+            firePoint.localRotation = Quaternion.identity;
 
-        if (tetherLineObj != null)
-        {
-            if (tetherLine != null) tetherLine.Deactivate();
-            Destroy(tetherLineObj);
-            tetherLineObj = null;
-            tetherLine = null;
-        }
-
-        if (activeGroundVfx != null)
-        {
-            StopParticles(activeGroundVfx);
-            PoolManager.Return(activeGroundVfx);
-            activeGroundVfx = null;
-        }
-
-        cannonIsInside = false;
+        isHittingTarget = false;
         isRunning = false;
         NotifyAttackComplete();
     }
@@ -251,5 +268,12 @@ public class SoulDrainBehaviour : BaseAttackBehaviour
         Shutdown();
     }
 
-    public override void OnCleanup() => OnStop();
+    public override void OnCleanup()
+    {
+        OnStop();
+        if (laserVisual != null) Destroy(laserVisual.gameObject);
+        if (ownsFirePoint && firePoint != null) Destroy(firePoint.gameObject);
+    }
+
+    private static float EaseOut(float t) => 1f - (1f - t) * (1f - t);
 }

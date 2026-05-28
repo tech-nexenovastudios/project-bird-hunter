@@ -157,16 +157,13 @@ namespace Gameplay.Managers
             GameEvents.OnLevelCompleted -= OnLevelCompleted;
         }
 
-        // Level finished: snap the score number and the progress slider back to 0 right away
-        // (instead of letting the final value linger through the completion popup / transition).
-        // Runs on OnLevelCompleted, which fires AFTER LevelCompletionController has captured the
-        // final score for rewards, so zeroing here is safe. FireLevelScoreUpdated(0,0) drives both
-        // the score text and the LevelProgressBar fill to 0.
+        // Level finished: stop accepting score, but keep the level UI showing the final value
+        // through the completion popup / slot screen. Reset happens later in ResetLevel, called
+        // by GameManager.StartGameplay — which is deferred until the popup countdown ends
+        // (non-spin levels) or the player picks a slot powerup (spin levels).
         private void OnLevelCompleted(int finalScore)
         {
-            _levelScore = 0;
             _acceptingScore = false;
-            GameEvents.FireLevelScoreUpdated(0, 0);
         }
 
         private void OnLevelStarted(int levelIndex)

@@ -39,10 +39,18 @@ public class BossBirdController : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log($"[BossBird][DBG] Start() — directTestConfig={(directTestConfig != null ? directTestConfig.bossName : "NULL")}, " +
+                  $"testAsLevel20={testAsLevel20}, isInitialized={isInitialized}", this);
+
         if (directTestConfig != null && !isInitialized)
         {
-            Debug.Log($"[BossBird] AUTO-INIT from Inspector: {directTestConfig.bossName}", this);
+            Debug.Log($"[BossBird] AUTO-INIT from Inspector: {directTestConfig.bossName} (testAsLevel20={testAsLevel20})", this);
             Initialize(directTestConfig, testAsLevel20);
+        }
+        else
+        {
+            Debug.Log("[BossBird][DBG] Start() did NOT auto-init — boss will be initialized by SpawnController " +
+                      "(testAsLevel20 is IGNORED on that path; isLevel20 comes from the level number).", this);
         }
     }
 
@@ -131,6 +139,10 @@ public class BossBirdController : MonoBehaviour
 
         // ---- Attacks ----
         var existingAttacks = GetComponents<BaseAttackBehaviour>();
+        Debug.Log($"[BossBird][DBG] Initialize — isLevel20={isLevel20} | " +
+                  $"phase1Attack={(config.phase1Attack != null ? config.phase1Attack.name : "NULL")} | " +
+                  $"phase2Attack={(config.phase2Attack != null ? config.phase2Attack.name : "NULL")} | " +
+                  $"destroying {existingAttacks.Length} pre-existing attack component(s).", this);
         for (int i = 0; i < existingAttacks.Length; i++)
             Destroy(existingAttacks[i]);
         attacks.Clear();
@@ -138,6 +150,10 @@ public class BossBirdController : MonoBehaviour
         SpawnAttack(config.phase1Attack, "Phase1");
         if (isLevel20)
             SpawnAttack(config.phase2Attack, "Phase2");
+        else
+            Debug.LogWarning($"[BossBird][DBG] isLevel20=false → phase2Attack " +
+                             $"({(config.phase2Attack != null ? config.phase2Attack.name : "NULL")}) NOT spawned. " +
+                             "This is why a phase-2 attack like Hellfire Dive won't appear.", this);
 
         if (attacks.Count == 0)
             Debug.LogWarning($"[BossBird] {cfg.bossName}: No attacks spawned — boss is passive", this);
@@ -224,6 +240,8 @@ public class BossBirdController : MonoBehaviour
         behaviour.OnAttackComplete += OnAttackComplete;
 
         attacks.Add(behaviour);
+        Debug.Log($"[BossBird][DBG] Spawned {phaseName} attack '{attackConfig.name}' → {behaviour.GetType().Name} " +
+                  $"(cooldown={attackConfig.cooldown}s, first fire after {attackConfig.cooldown}s). Total attacks now {attacks.Count}.", this);
     }
 
     // ── Animation callbacks ───────────────────────────────────────────

@@ -181,6 +181,9 @@ namespace Gameplay.Managers
 
             state = GameState.Gameplay;
 
+            if (currentLevelText != null)
+                currentLevelText.text = $"Level {GameProgressManager.Instance.CurrentLevel}";
+
             int levelIdx = GameProgressManager.Instance.CurrentLevel - 1;
             int priorAttempts = GameProgressManager.Instance.RegisterLevelAttempt(
                 GameProgressManager.Instance.CurrentChapter,
@@ -223,13 +226,30 @@ namespace Gameplay.Managers
         private void OnProgressChanged(GameProgress progress)
         {
             Debug.Log($"Progress → Ch{progress.currentChapter} L{progress.currentLevel}");
-            if (currentLevelText != null) currentLevelText.text = $"Level {progress.currentLevel}";
 
-            if (!_pendingLevelStart) return;
+            if (!_pendingLevelStart)
+            {
+                if (currentLevelText != null) currentLevelText.text = $"Level {progress.currentLevel}";
+                return;
+            }
             _pendingLevelStart = false;
 
+            // Spin / chapter-end path: powerup selection drives the next StartGameplay later.
+            // Leave the level UI showing the just-finished level's data so the player sees their
+            // score/target while picking a powerup — StartGameplay(fromSlot:true) clears it then.
             if (state == GameState.Slot) return;
 
+            // Non-spin transition: wait for the "Level N Complete!" countdown popup to finish
+            // before kicking off the next level. Keeps the level UI (score, target, level text)
+            // showing the just-finished level's values through the countdown instead of snapping
+            // to the next level the instant completion fires.
+            StartCoroutine(StartGameplayAfterCompletePopup());
+        }
+
+        private IEnumerator StartGameplayAfterCompletePopup()
+        {
+            while (Gameplay.UI.LevelDetailPopUp.IsCompletePopupPlaying)
+                yield return null;
             StartGameplay();
         }
 

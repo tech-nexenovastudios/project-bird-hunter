@@ -1521,11 +1521,11 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
-  m_Antialiasing: 0
+  m_RenderPostProcessing: 1
+  m_Antialiasing: 1
   m_AntialiasingQuality: 2
-  m_StopNaN: 0
-  m_Dithering: 0
+  m_StopNaN: 1
+  m_Dithering: 1
   m_ClearDepth: 1
   m_AllowXRRendering: 1
   m_AllowHDROutput: 1
@@ -2980,6 +2980,7 @@ MonoBehaviour:
   swayAmountRange: {x: 30, y: 80}
   swayFrequencyRange: {x: 0.5, y: 2}
   rotationSpeedRange: {x: -90, y: 90}
+  prewarmCount: 8
 --- !u!1 &2028887011
 GameObject:
   m_ObjectHideFlags: 0
