@@ -653,8 +653,7 @@ namespace Gameplay.Eggs
         private void TickBulletImpulseDecay()
         {
             if (_bulletImpulseAccumulator <= 0f || config == null) return;
-            _bulletImpulseAccumulator = Mathf.Max(0f,
-                _bulletImpulseAccumulator - config.bulletImpulseDecay * Time.fixedDeltaTime);
+            _bulletImpulseAccumulator = Mathf.Max(0f, _bulletImpulseAccumulator - config.bulletImpulseDecay * Time.fixedDeltaTime);
         }
 
         public static void InvalidateCannonReference() => _cannonTransform = null;

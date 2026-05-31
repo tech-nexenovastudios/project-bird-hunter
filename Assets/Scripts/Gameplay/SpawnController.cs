@@ -89,7 +89,16 @@ namespace Gameplay
         float _spawnTimer;
         float _emptyScreenTimer;
         bool _levelCompleted;
-        bool _draining;
+
+        // Level lifecycle phase — the spawn/clear axis. Replaces the old _draining + _inSelfClear
+        // booleans with one ordered state, so impossible combos (self-clear without draining) can't
+        // occur. Completion is a SEPARATE latch (_levelCompleted): it overlaps SelfClear on the
+        // player-Finish path, so it isn't part of this axis.
+        enum LevelPhase { Active, Draining, SelfClear }
+        LevelPhase _phase = LevelPhase.Active;
+        bool IsDraining => _phase != LevelPhase.Active;     // was _draining: wind-down has begun
+        bool InSelfClear => _phase == LevelPhase.SelfClear; // was _inSelfClear: frozen-egg mop-up
+
         int _totalTrackedScore;
 
         // After target score + min duration, spawning stops and remaining eggs freeze at apex.
@@ -98,7 +107,6 @@ namespace Gameplay
         const float FinishButtonDelayMin = 3f;
         const float FinishButtonDelayMax = 8f;
         const float FinishButtonRushFactor = 0.6f;
-        bool _inSelfClear;
         float _selfClearTimer;
         bool _finishButtonShown;
         float _finishButtonDelay;
@@ -193,8 +201,7 @@ namespace Gameplay
         {
             elapsedTime = 0f;
             _levelCompleted = false;
-            _draining = false;
-            _inSelfClear = false;
+            _phase = LevelPhase.Active;
             _selfClearTimer = 0f;
             _finishButtonShown = false;
             _totalTrackedScore = 0;
@@ -352,7 +359,7 @@ namespace Gameplay
             _spawnTimer += Time.deltaTime;
             float interval = GetCurrentSpawnInterval();
 
-            bool canSpawnRegular = !_isBossLevel && !_levelCompleted && !_draining;
+            bool canSpawnRegular = !_isBossLevel && !_levelCompleted && !IsDraining;
 
             if (canSpawnRegular && _spawnTimer >= interval)
             {
@@ -378,7 +385,7 @@ namespace Gameplay
                 _emptyScreenTimer = 0f;
             }
 
-            if (_bossTimerRunning && !_bossSpawned && !_draining && !_levelCompleted)
+            if (_bossTimerRunning && !_bossSpawned && !IsDraining && !_levelCompleted)
             {
                 _bossSpawnTimer -= Time.deltaTime;
                 if (_bossSpawnTimer <= 0f)
@@ -391,7 +398,7 @@ namespace Gameplay
             if (_attackingBirdPool != null
                 && _attackingBirdPool.Length > 0
                 && _attackingBirdSpawnInterval > 0f
-                && !_levelCompleted && !_draining && !_isBossLevel && !IsBossAlive)
+                && !_levelCompleted && !IsDraining && !_isBossLevel && !IsBossAlive)
             {
                 _attackingBirdTimer -= Time.deltaTime;
                 if (_attackingBirdTimer <= 0f)
@@ -401,7 +408,7 @@ namespace Gameplay
                 }
             }
 
-            if (_inSelfClear && !_finishButtonShown)
+            if (InSelfClear && !_finishButtonShown)
             {
                 _selfClearTimer += Time.deltaTime;
                 if (_selfClearTimer >= _finishButtonDelay && _activeEggs.Count > 0)
@@ -751,8 +758,8 @@ namespace Gameplay
 
         public void StartDrain(int scoreAtTrigger)
         {
-            if (_draining) return;
-            _draining = true;
+            if (IsDraining) return;
+            _phase = LevelPhase.Draining;
 
             float remaining = _minDuration - elapsedTime;
 
@@ -806,7 +813,7 @@ namespace Gameplay
                 return;
             }
 
-            _inSelfClear = true;
+            _phase = LevelPhase.SelfClear;
             _selfClearTimer = 0f;
             _finishButtonShown = false;
             _finishButtonDelay = ComputeFinishButtonDelay();
@@ -835,7 +842,7 @@ namespace Gameplay
         // Player tapped Finish: any remaining frozen eggs forfeit their coins.
         public void RequestPlayerFinish()
         {
-            if (!_inSelfClear || _levelCompleted) return;
+            if (!InSelfClear || _levelCompleted) return;
             _levelCompleted = true;
             GameEvents.FirePlayerFinishedLevel();
             ExecuteDrain();
@@ -934,7 +941,7 @@ namespace Gameplay
         bool IsTtkGateOpen()
         {
             if (ttkCeilingSeconds <= 0f) return true;
-            if (_isBossLevel || IsBossAlive || _inSelfClear || _draining) return true;
+            if (_isBossLevel || IsBossAlive || InSelfClear || IsDraining) return true;
 
             var cannon = GetCannon();
             if (cannon == null) return true;
@@ -1243,7 +1250,7 @@ namespace Gameplay
 
         void HandleBirdLayEgg(BaseBird bird)
         {
-            if (_draining || IsBossAlive) return;
+            if (IsDraining || IsBossAlive) return;
 
             // Budget already filled by earlier lays — a bird still in flight shouldn't add more
             // worth past the target (see TrySpawnBird). It simply flies off without laying.
@@ -1333,7 +1340,7 @@ namespace Gameplay
 
                         // Self-clear: split children inherit the frozen state immediately so the
                         // suspended-eggs aesthetic stays intact instead of new eggs bouncing in.
-                        if (_inSelfClear) newEgg.FreezeNow();
+                        if (InSelfClear) newEgg.FreezeNow();
                     }
                 }
             }
@@ -1368,9 +1375,9 @@ namespace Gameplay
         // Only the former fires OnAllEggsCleared.
         private void EvaluateLevelClear()
         {
-            if (_inSelfClear)
+            if (InSelfClear)
             {
-                _inSelfClear = false;
+                _phase = LevelPhase.Draining; // self-clear done; stays "draining" (not Active) like before
                 GameEvents.FireSelfClearEnded();
                 GameEvents.FireAllEggsCleared();
             }
