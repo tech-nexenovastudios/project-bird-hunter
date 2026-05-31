@@ -18,17 +18,18 @@ public class LaserBarrageBehaviour : BaseAttackBehaviour
 
     protected override void OnExecute()
     {
+        NotifyAttackStarted();
         CacheSpawnData();
         StartCoroutine(BarrageSequence());
     }
 
     private void CacheSpawnData()
     {
-        // Find() runs once — we hold the Transform, not a snapshot of its position
+        // Find() runs once ï¿½ we hold the Transform, not a snapshot of its position
         leftSpawnTransform = boss.transform.Find(config.leftLaserDropPosition);
         rightSpawnTransform = boss.transform.Find(config.rightLaserDropPosition);
 
-        // Angles and directions are fixed — still safe to cache
+        // Angles and directions are fixed ï¿½ still safe to cache
         leftRot = Quaternion.Euler(0, 0, -config.spreadAngle);
         rightRot = Quaternion.Euler(0, 0, config.spreadAngle);
         leftDir = leftRot * Vector2.down;
@@ -56,11 +57,12 @@ public class LaserBarrageBehaviour : BaseAttackBehaviour
         }
 
         isRunning = false;
+        NotifyAttackComplete();
     }
 
     private void FireShots()
     {
-        // .position is read fresh each shot — always tracks the moving boss
+        // .position is read fresh each shot ï¿½ always tracks the moving boss
         var leftShot = PoolManager.Get(config.laserShotPrefab, leftSpawnTransform.position, leftRot);
         var rightShot = PoolManager.Get(config.laserShotPrefab, rightSpawnTransform.position, rightRot);
 

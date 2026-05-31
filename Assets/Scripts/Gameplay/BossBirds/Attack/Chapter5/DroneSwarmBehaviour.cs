@@ -159,33 +159,16 @@ public class DroneSwarmBehaviour : BaseAttackBehaviour
         PlayParticles(obj);
     }
 
+    private const float FallbackBossMaxHealth = 100f;
+
+    // Read the boss's live max HP at fire time so drones scale with the current phase's
+    // HP pool. BossHealthHandler.MaxHealth is set during boss init, before attacks tick.
+    // (A prior `new Initialize` override tried to cache this but was hidden, not overridden,
+    // so it was bypassed when called through the BaseAttackBehaviour reference.)
     private float GetBossMaxHealth()
     {
-        // Read from boss's health handler — we need max health exposed
-        // Since BossHealthHandler doesn't expose it, we calculate from config
-        // The boss controller has the config — but it's private
-        // Simplest safe approach: deal damage of 0 and check the normalized value
-        // OR just read from our BaseAttackConfig's damage field as a proxy
-        // 
-        // Best approach: just make boss max health accessible
-        // For now, use reflection-free method — store it during Initialize
-        return bossMaxHealthCached;
-    }
-
-    private float bossMaxHealthCached = 100f;
-
-    // Override to cache boss max health when behaviour is initialized
-    public new void Initialize(BossBirdController owner, float attackCooldown, float attackDuration)
-    {
-        base.Initialize(owner, attackCooldown, attackDuration);
-
-        // Get boss max HP — we need to read it somehow
-        // Easiest: add a public getter to BossHealthHandler
-        // For now: estimate from the config
-        var bossHealthHandler = owner.GetComponent<BossHealthHandler>();
-        // We'll add a public MaxHealth property to BossHealthHandler
-        if (bossHealthHandler != null)
-            bossMaxHealthCached = bossHealthHandler.MaxHealth;
+        var bossHealthHandler = boss != null ? boss.GetComponent<BossHealthHandler>() : null;
+        return bossHealthHandler != null ? bossHealthHandler.MaxHealth : FallbackBossMaxHealth;
     }
 
     private void UpdateDrones()

@@ -39,6 +39,10 @@ public abstract class BaseAttackBehaviour : MonoBehaviour
 
     public void ApplyCooldownMultiplier(float mult) => cooldownMultiplier = mult;
 
+    // Called once when the boss enrages (HP <= enrageThreshold). Override to escalate an
+    // attack (e.g. spawn more projectiles). Base cooldown is already shortened by the controller.
+    public virtual void OnEnrage() { }
+
     protected abstract void OnExecute();
     public abstract void OnStop();
     public abstract void OnCleanup();

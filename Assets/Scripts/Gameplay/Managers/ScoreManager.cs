@@ -114,7 +114,6 @@ namespace Gameplay.Managers
         private int _chapterScore;
         private int _targetScore;
         private bool _acceptingScore = true;
-        private int _lastChapter = -1;
 
         public int CurrentScore => _currentScore;
         public int LevelScore => _levelScore;
@@ -168,16 +167,8 @@ namespace Gameplay.Managers
 
         private void OnLevelStarted(int levelIndex)
         {
-            _levelScore = 0;
+            ResetAllScores();
             _acceptingScore = true;
-
-            int chapter = GameProgressManager.Instance != null ? GameProgressManager.Instance.CurrentChapter : _lastChapter;
-            if (chapter != _lastChapter)
-            {
-                _chapterScore = 0;
-                _lastChapter = chapter;
-            }
-
             GameEvents.FireLevelScoreUpdated(0, 0);
         }
 
@@ -185,12 +176,19 @@ namespace Gameplay.Managers
 
         public void ResetLevel(int targetScore = 0)
         {
-            _levelScore = 0;
+            ResetAllScores();
             _targetScore = targetScore;
             _acceptingScore = true;
 
             // Broadcast so HUD bar resets to 0 immediately
             GameEvents.FireLevelScoreUpdated(0, 0);
+        }
+
+        private void ResetAllScores()
+        {
+            _currentScore = 0;
+            _chapterScore = 0;
+            _levelScore = 0;
         }
 
         public void AddScore(int amount)

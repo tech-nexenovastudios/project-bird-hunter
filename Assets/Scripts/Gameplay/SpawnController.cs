@@ -1315,10 +1315,11 @@ namespace Gameplay
                 EggTierConfig splitTier = egg.config.splitInto;
                 if (splitTier.eggPrefab != null)
                 {
+                    // Splits always spawn their full child count. Per-tier caps throttle bird
+                    // *laying* (HandleBirdLayEgg cascades down when a tier is full); gating splits
+                    // on the cap silently swallowed E2→E1 children once maxE1 (3–5) was reached.
                     for (int i = 0; i < egg.config.splitCount; i++)
                     {
-                        if (!IsEggTierAllowed(splitTier)) continue;
-
                         var offset = i == 0 ? new Vector3(-.5f, 0.5f, 0f) : new Vector3(.5f, 0.5f, 0f);
                         var newEgg = _eggFactory.Acquire(splitTier, egg.transform.position, Quaternion.identity);
                         if (newEgg == null) continue;

@@ -15,7 +15,7 @@ public class SpectralFeathersConfig : BaseAttackConfig
     public float spawnYOffset = 2f;
 
     [Header("Fall")]
-    [Tooltip("Gravity strength — higher = faster fall")]
+    [Tooltip("Gravity strength ï¿½ higher = faster fall")]
     public float fallSpeed = 1f;
 
     [Header("Air Resistance")]
@@ -34,7 +34,7 @@ public class SpectralFeathersConfig : BaseAttackConfig
     public float tumbleRateMax = 3f;
 
     [Header("Speed Limits")]
-    [Tooltip("Max horizontal drift speed — prevents feathers from flying off screen")]
+    [Tooltip("Max horizontal drift speed ï¿½ prevents feathers from flying off screen")]
     public float maxHorizontalSpeed = 4f;
 
     [Header("Damage")]
@@ -43,6 +43,12 @@ public class SpectralFeathersConfig : BaseAttackConfig
 
     [Header("Lifetime")]
     public float destroyBelowY = -6f;
+
+    [Header("Enrage (Feather Storm)")]
+    [Tooltip("Extra feathers added per volley once the boss enrages.")]
+    public int enrageFeatherBonus = 4;
+    [Tooltip("Spawn interval is multiplied by this on enrage (smaller = faster, denser storm).")]
+    [Range(0.1f, 1f)] public float enrageSpawnIntervalMultiplier = 0.5f;
 
     public override BaseAttackBehaviour CreateAttack(GameObject parent)
     {

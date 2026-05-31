@@ -36,6 +36,10 @@ public class BossBirdConfig : ScriptableObject
     public BaseAttackConfig phase1Attack;
     public BaseAttackConfig phase2Attack;
 
+    [Tooltip("Extra attacks active in EVERY phase (spawned alongside the phase attack in both " +
+             "the level-10 mid-boss and the level-20 final encounter).")]
+    public List<BaseAttackConfig> extraAttacks = new();
+
     [Header("Enrage")]
     [Range(0f, 1f)] public float enrageThreshold = 0.3f;
     public float enrageSpeedMultiplier = 1.3f;

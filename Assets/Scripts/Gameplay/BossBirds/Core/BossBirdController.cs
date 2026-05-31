@@ -155,6 +155,8 @@ public class BossBirdController : MonoBehaviour
                              $"({(config.phase2Attack != null ? config.phase2Attack.name : "NULL")}) NOT spawned. " +
                              "This is why a phase-2 attack like Hellfire Dive won't appear.", this);
 
+        SpawnExtraAttacks();
+
         if (attacks.Count == 0)
             Debug.LogWarning($"[BossBird] {cfg.bossName}: No attacks spawned — boss is passive", this);
 
@@ -210,6 +212,7 @@ public class BossBirdController : MonoBehaviour
 
         SpawnAttack(config.phase1Attack, "Phase1");
         SpawnAttack(config.phase2Attack, "Phase2");
+        SpawnExtraAttacks();
 
         isInitialized = true;
         BossEventBus.RaiseBossSpawned(config.bossName);
@@ -217,6 +220,15 @@ public class BossBirdController : MonoBehaviour
         Debug.Log($"[BossBird] {config.bossName} RE-INITIALIZED for Phase 2 — " +
                   $"HP:{startHp:F0}/{phase2MaxHp:F0} (returned at {config.returnHealthPercent:P0}, " +
                   $"parked at {remainingHpNormalized:P0}) | Attacks:{attacks.Count}", this);
+    }
+
+    // Spawns the config's phase-agnostic extra attacks (e.g. Haunting Wisps, Sonic Screech),
+    // active in both the level-10 and level-20 encounters.
+    private void SpawnExtraAttacks()
+    {
+        if (config.extraAttacks == null) return;
+        for (int i = 0; i < config.extraAttacks.Count; i++)
+            SpawnAttack(config.extraAttacks[i], $"Extra{i + 1}");
     }
 
     private void SpawnAttack(BaseAttackConfig attackConfig, string phaseName)
@@ -296,7 +308,10 @@ public class BossBirdController : MonoBehaviour
             hasEnraged = true;
             movement.ApplySpeedMultiplier(config.enrageSpeedMultiplier);
             for (int i = 0; i < attacks.Count; i++)
+            {
                 attacks[i].ApplyCooldownMultiplier(0.7f);
+                attacks[i].OnEnrage();
+            }
             BossEventBus.RaiseEnraged();
 
             Debug.Log($"[BossBird] {config.bossName} ENRAGED at {normalized:P0} HP", this);

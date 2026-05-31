@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cee6fad26b46744e0ac21f17f105fd4f, type: 3}
+  m_Name: Haunting Wisps Config
+  m_EditorClassIdentifier: Assembly-CSharp::HauntingWispsConfig
+  cooldown: 6
+  duration: 8
+  damage: 10
+  warningPrefab: {fileID: 0}
+  warningDuration: 0.5
+  vfxPrefab: {fileID: 0}
+  wispPrefab: {fileID: 5845217310399160703, guid: d31e28b4833784b55a4560be3fe26a90, type: 3}
+  minCount: 2
+  maxCount: 3
+  spawnRadius: 1
+  wispHP: 30
+  contactDamage: 10
+  moveSpeed: 2.5
+  wispLifetime: 8
+  enrageExtraCount: 2
