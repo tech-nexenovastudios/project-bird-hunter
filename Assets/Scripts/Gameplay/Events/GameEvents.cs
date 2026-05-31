@@ -54,6 +54,12 @@ namespace Gameplay.Events
 
         // ───────── Level Flow ─────────
         public static event Action<int> OnLevelCompleted;
+        // Raw fact: the play area just emptied of eggs (fires on EVERY zero-crossing, including
+        // harmless mid-level ones between bird lays). For systems that care about the literal
+        // "screen is empty" moment, not level completion.
+        public static event Action OnPlayAreaCleared;
+        // Decision: the level was genuinely cleared (target reached + drained, or self-clear done).
+        // NOT fired for mid-level zero-crossings. This is the "level over" signal listeners want.
         public static event Action OnAllEggsCleared;
         // Level-start "3-2-1-Go!" countdown beats (UI shown in LevelDetailPopup). Tick fires
         // 3 times (at 3, 2, 1); Go fires once on the final "Go!" beat. Neither fires for the
@@ -124,6 +130,9 @@ namespace Gameplay.Events
 
         public static void FireLevelCompleted(int score)
             => OnLevelCompleted?.Invoke(score);
+
+        public static void FirePlayAreaCleared()
+            => OnPlayAreaCleared?.Invoke();
 
         public static void FireAllEggsCleared()
             => OnAllEggsCleared?.Invoke();

@@ -80,7 +80,7 @@ namespace Gameplay.Managers
 
             OnLevelCompleteConditionMet?.Invoke(finalScore);
             GameEvents.FireLevelCompleted(finalScore);
-            GameManager.Instance.CompleteCurrentLevel(finalScore);
+            GameManager.Instance.CompleteCurrentLevel(LevelResult.FromScore(finalScore, LevelCompletionReason.TargetReached));
         }
 
         private int GetTargetScore()

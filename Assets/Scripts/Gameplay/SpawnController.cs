@@ -608,7 +608,8 @@ namespace Gameplay
                 _parkedBossGO = bossGO;
                 _parkedBossHpNormalized = hpNormalized;
                 _hasBossWaitingForLevel20 = true;
-                GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f - hpNormalized, 0));
+                GameManager.Instance.CompleteCurrentLevel(
+                    LevelResult.FromBoss(1f - hpNormalized, 0, LevelCompletionReason.BossRetreated));
 
                 Debug.Log($"[SpawnController] Boss '{bossName}' parked at {hpNormalized:P0} HP for Level 20.");
             });
@@ -670,7 +671,8 @@ namespace Gameplay
                 return;
             }
 
-            GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f, score));
+            GameManager.Instance.CompleteCurrentLevel(
+                LevelResult.FromBoss(1f, score, LevelCompletionReason.BossDefeated));
         }
 
         private void HandlePlayerDeath()
@@ -701,14 +703,6 @@ namespace Gameplay
             bossGO.transform.DOKill();
             Destroy(bossGO);
         }
-        private int AwardBossLevelScore(float damageFraction, int bossBaseScore)
-        {
-            int bossWorth = Mathf.Max(bossBaseScore, _targetScore);
-            int bossPortion = Mathf.RoundToInt(bossWorth * Mathf.Clamp01(damageFraction));
-            ScoreManager.Instance?.AddScore(bossPortion);
-            return ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : bossPortion;
-        }
-
         // ═══════════════════════════════════════════════════════════════
         //  CLEAR / DRAIN
         // ═══════════════════════════════════════════════════════════════
@@ -1364,18 +1358,27 @@ namespace Gameplay
 
             if (_activeEggs.Count == 0)
             {
-                if (_inSelfClear)
-                {
-                    _inSelfClear = false;
-                    GameEvents.FireSelfClearEnded();
-                    GameEvents.FireAllEggsCleared();
-                }
-                else if (_levelCompleted)
-                {
-                    GameEvents.FireAllEggsCleared();
-                }
-                // else: mid-level zero-crossing between bird lays — not a level clear.
+                GameEvents.FirePlayAreaCleared();   // raw fact: the screen just emptied
+                EvaluateLevelClear();               // decision: is this a genuine level clear?
             }
+        }
+
+        // The play area emptied. Distinguish a genuine level clear (self-clear finished, or the
+        // post-target drain completed) from a harmless mid-level zero-crossing between bird lays.
+        // Only the former fires OnAllEggsCleared.
+        private void EvaluateLevelClear()
+        {
+            if (_inSelfClear)
+            {
+                _inSelfClear = false;
+                GameEvents.FireSelfClearEnded();
+                GameEvents.FireAllEggsCleared();
+            }
+            else if (_levelCompleted)
+            {
+                GameEvents.FireAllEggsCleared();
+            }
+            // else: mid-level zero-crossing — raw fact already fired; not a level clear.
         }
 
         // Fires after the death animation finishes — safe to return the egg to the pool now without

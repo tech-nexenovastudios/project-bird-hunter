@@ -217,10 +217,31 @@ namespace Gameplay.Managers
         }
 
         // ───────── Level complete ─────────
-        public void CompleteCurrentLevel(int scoreAchieved)
+        // Single entry point for "this level is over". Every detector (score target, boss
+        // retreat/defeat, debug auto-completer) routes here with a typed LevelResult so the
+        // reason is explicit and there's one place to evolve the completion sequence.
+        public void CompleteCurrentLevel(LevelResult result)
         {
             _pendingLevelStart = true;
-            GameProgressManager.Instance.CompleteLevel(scoreAchieved);
+            GameProgressManager.Instance.CompleteLevel(ResolveFinalScore(result));
+        }
+
+        [System.Obsolete("Use CompleteCurrentLevel(LevelResult) so the completion reason is explicit.")]
+        public void CompleteCurrentLevel(int scoreAchieved)
+            => CompleteCurrentLevel(LevelResult.FromScore(scoreAchieved, LevelCompletionReason.Unspecified));
+
+        // All level-completion scoring lives here. Normal/debug completions carry their final score;
+        // boss completions award the boss's share (damageFraction × max(baseScore, level target))
+        // live, then read back the resulting level score — matching the old AwardBossLevelScore.
+        private int ResolveFinalScore(LevelResult result)
+        {
+            if (!result.BossScored) return result.ExplicitScore;
+
+            int target = spawnController != null ? spawnController.TargetScore : 0;
+            int bossWorth = Mathf.Max(result.BossBaseScore, target);
+            int bossPortion = Mathf.RoundToInt(bossWorth * Mathf.Clamp01(result.BossDamageFraction));
+            ScoreManager.Instance?.AddScore(bossPortion);
+            return ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : bossPortion;
         }
 
         private void OnProgressChanged(GameProgress progress)
@@ -243,14 +264,18 @@ namespace Gameplay.Managers
             // before kicking off the next level. Keeps the level UI (score, target, level text)
             // showing the just-finished level's values through the countdown instead of snapping
             // to the next level the instant completion fires.
-            StartCoroutine(StartGameplayAfterCompletePopup());
+            StartGameplayAfterCompletePopup().Forget();
         }
 
-        private IEnumerator StartGameplayAfterCompletePopup()
+        // Await the "Level N Complete!" popup (if any) instead of polling its flag each frame.
+        // Cancels cleanly if the boss/scene tears this manager down mid-wait, matching the old
+        // coroutine's auto-stop-on-destroy.
+        private async UniTaskVoid StartGameplayAfterCompletePopup()
         {
-            while (Gameplay.UI.LevelDetailPopUp.IsCompletePopupPlaying)
-                yield return null;
-            StartGameplay();
+            bool canceled = await Gameplay.UI.LevelDetailPopUp.WaitForCompletePopupAsync()
+                .AttachExternalCancellation(this.GetCancellationTokenOnDestroy())
+                .SuppressCancellationThrow();
+            if (!canceled) StartGameplay();
         }
 
         // ───────── Spin complete ─────────

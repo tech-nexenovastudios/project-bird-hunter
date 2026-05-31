@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Gameplay.Events;
 using Gameplay.Levels;
@@ -46,6 +47,34 @@ namespace Gameplay.UI
         // so it waits for the completion popup to finish before opening, instead of overlapping it.
         public static bool IsCompletePopupPlaying { get; private set; }
 
+        // Signalled when the completion popup finishes, so waiters can await instead of polling
+        // the flag every frame. Null when no completion popup is in flight.
+        private static UniTaskCompletionSource _completePopupTcs;
+
+        /// <summary>
+        /// Completes when the active "Level X Complete!" popup finishes — or immediately if none
+        /// is playing. Replaces the old per-frame poll of <see cref="IsCompletePopupPlaying"/>.
+        /// </summary>
+        public static UniTask WaitForCompletePopupAsync()
+            => IsCompletePopupPlaying && _completePopupTcs != null
+                ? _completePopupTcs.Task
+                : UniTask.CompletedTask;
+
+        private static void BeginCompletePopup()
+        {
+            IsCompletePopupPlaying = true;
+            _completePopupTcs = new UniTaskCompletionSource();
+        }
+
+        // Idempotent: clears the flag and releases any waiter. Safe to call when nothing's playing.
+        private static void EndCompletePopup()
+        {
+            if (!IsCompletePopupPlaying) return;
+            IsCompletePopupPlaying = false;
+            _completePopupTcs?.TrySetResult();
+            _completePopupTcs = null;
+        }
+
         // ───────── Lifecycle ─────────
 
         private void OnEnable()
@@ -66,10 +95,10 @@ namespace Gameplay.UI
         // over so it doesn't overlap the chapter-end animation.
         private void OnChapterCompletedHandler(int newChapterNumber)
         {
-            // The completion popup is being cut short for the chapter-end animation; clear the
-            // flag (without firing the finished event) so the chapter-start spin — which is gated
-            // on OnChapterTransitionFinished instead — isn't blocked waiting on this popup.
-            IsCompletePopupPlaying = false;
+            // The completion popup is being cut short for the chapter-end animation; release any
+            // waiter so the chapter-start spin — gated on OnChapterTransitionFinished instead —
+            // isn't blocked waiting on this popup.
+            EndCompletePopup();
 
             if (_activeRoutine != null)
             {
@@ -121,7 +150,7 @@ namespace Gameplay.UI
             // serves as the transition; showing two back-to-back 3-2-1 countdowns is noise.
             if (!IsSpinOrChapterEndLevel(_currentLevel)) return;
 
-            IsCompletePopupPlaying = true;
+            BeginCompletePopup();
 
             ShowPopup(
                 title: $"Level {_currentLevel} Complete!",
@@ -201,9 +230,9 @@ namespace Gameplay.UI
             yield return fadeOut.WaitForCompletion();
 
             // Completion popup is fully done. The slot machine opens on its own timed buffer
-            // (GameplayUIHandler), so we only clear the flag here.
+            // (GameplayUIHandler), so we only release the waiter here.
             if (!isLevelStart)
-                IsCompletePopupPlaying = false;
+                EndCompletePopup();
         }
 
         // ───────── Helpers ─────────
