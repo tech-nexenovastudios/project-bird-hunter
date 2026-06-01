@@ -121,39 +121,40 @@ public class CurrencyManager
 
     // Returns true if the credit landed on the server, false otherwise. Callers that need
     // to keep mirrored counters in sync with the balance should await this.
-    public async UniTask<bool> AddGold(long amount)
+    // `reason` is a short snake_case token recorded in the economy log (see EconomyLog).
+    public async UniTask<bool> AddGold(long amount, string reason = null)
     {
-        return await IncrementCurrency(CurrencyType.Gold, GOLD_ID, amount);
+        return await IncrementCurrency(CurrencyType.Gold, GOLD_ID, amount, reason);
     }
 
-    public async UniTask<bool> AddGems(long amount)
+    public async UniTask<bool> AddGems(long amount, string reason = null)
     {
-        return await IncrementCurrency(CurrencyType.Gems, GEM_ID, amount);
+        return await IncrementCurrency(CurrencyType.Gems, GEM_ID, amount, reason);
     }
 
-    public async UniTask<bool> AddPower(long amount)
+    public async UniTask<bool> AddPower(long amount, string reason = null)
     {
-        return await IncrementCurrency(CurrencyType.Power, POWER_ID, amount);
+        return await IncrementCurrency(CurrencyType.Power, POWER_ID, amount, reason);
     }
 
     // ==================== Spend (Decrement) ====================
 
     /// <summary>Returns true if spend was successful, false if insufficient funds.</summary>
-    public async UniTask<bool> SpendGold(long amount)
+    public async UniTask<bool> SpendGold(long amount, string reason = null)
     {
-        return await DecrementCurrency(CurrencyType.Gold, GOLD_ID, amount);
+        return await DecrementCurrency(CurrencyType.Gold, GOLD_ID, amount, reason);
     }
 
     /// <summary>Returns true if spend was successful, false if insufficient funds.</summary>
-    public async UniTask<bool> SpendGems(long amount)
+    public async UniTask<bool> SpendGems(long amount, string reason = null)
     {
-        return await DecrementCurrency(CurrencyType.Gems, GEM_ID, amount);
+        return await DecrementCurrency(CurrencyType.Gems, GEM_ID, amount, reason);
     }
 
     /// <summary>Returns true if spend was successful, false if insufficient funds.</summary>
-    public async UniTask<bool> SpendPower(long amount)
+    public async UniTask<bool> SpendPower(long amount, string reason = null)
     {
-        return await DecrementCurrency(CurrencyType.Power, POWER_ID, amount);
+        return await DecrementCurrency(CurrencyType.Power, POWER_ID, amount, reason);
     }
 
     // ==================== Check Affordability ====================
@@ -204,13 +205,14 @@ public class CurrencyManager
     /// Checks all costs locally first. If all affordable, spends one by one on the server.
     /// NOT truly atomic on server — but prevents unnecessary calls if locally insufficient.
     /// </summary>
-    public async UniTask<bool> SpendMultiple(params (CurrencyType type, long amount)[] costs)
+    public async UniTask<bool> SpendMultiple(string reason, params (CurrencyType type, long amount)[] costs)
     {
         // Local validation first
         foreach (var (type, amount) in costs)
         {
             if (!CanAfford(type, amount))
             {
+                EconomyLog.Insufficient(type, amount, GetCurrency(type), reason);
                 OnInsufficientFunds?.Invoke(type, amount);
                 return false;
             }
@@ -220,7 +222,7 @@ public class CurrencyManager
         foreach (var (type, amount) in costs)
         {
             string currencyId = GetCurrencyId(type);
-            bool success = await DecrementCurrency(type, currencyId, amount);
+            bool success = await DecrementCurrency(type, currencyId, amount, reason);
 
             if (!success)
             {
@@ -261,7 +263,7 @@ public class CurrencyManager
 
     // ==================== Internal ====================
 
-    private async UniTask<bool> IncrementCurrency(CurrencyType type, string currencyId, long amount)
+    private async UniTask<bool> IncrementCurrency(CurrencyType type, string currencyId, long amount, string reason = null)
     {
         if (amount <= 0)
         {
@@ -275,11 +277,13 @@ public class CurrencyManager
             var result = await EconomyService.Instance.PlayerBalances.IncrementBalanceAsync(currencyId, (int)amount);
             UpdateLocalBalance(type, result.Balance);
             Debug.Log($"[Currency] Added {amount} {type}. New balance: {result.Balance}");
+            EconomyLog.Earn(type, amount, result.Balance, reason ?? "unspecified");
             return true;
         }
         catch (Exception ex)
         {
             Debug.LogError($"[Currency] Failed to add {type}: {ex.Message}");
+            EconomyLog.Failed("EARN", type, amount, "error", reason ?? "unspecified");
             return false;
         }
         finally
@@ -288,7 +292,7 @@ public class CurrencyManager
         }
     }
 
-    private async UniTask<bool> DecrementCurrency(CurrencyType type, string currencyId, long amount)
+    private async UniTask<bool> DecrementCurrency(CurrencyType type, string currencyId, long amount, string reason = null)
     {
         if (amount <= 0)
         {
@@ -298,6 +302,7 @@ public class CurrencyManager
 
         if (!CanAfford(type, amount))
         {
+            EconomyLog.Insufficient(type, amount, GetCurrency(type), reason ?? "unspecified");
             OnInsufficientFunds?.Invoke(type, amount);
             return false;
         }
@@ -308,17 +313,20 @@ public class CurrencyManager
             var result = await EconomyService.Instance.PlayerBalances.DecrementBalanceAsync(currencyId, (int)amount);
             UpdateLocalBalance(type, result.Balance);
             Debug.Log($"[Currency] Spent {amount} {type}. New balance: {result.Balance}");
+            EconomyLog.Spend(type, amount, result.Balance, reason ?? "unspecified");
             return true;
         }
         catch (EconomyException ex)
         {
             Debug.LogError($"[Currency] Economy error spending {type}: {ex.Message}");
+            EconomyLog.Failed("SPEND", type, amount, "economy_error", reason ?? "unspecified");
             await LoadBalances(true);
             return false;
         }
         catch (Exception ex)
         {
             Debug.LogError($"[Currency] Failed to spend {type}: {ex.Message}");
+            EconomyLog.Failed("SPEND", type, amount, "error", reason ?? "unspecified");
             return false;
         }
         finally

@@ -1,6 +1,6 @@
 using System.Collections;
-using DG.Tweening;
 using Gameplay.Player;
+using Gameplay.VFX;
 using UnityEngine;
 
 /// <summary>
@@ -31,8 +31,7 @@ public class SonicScreechBehaviour : BaseAttackBehaviour
 
         GameObject ring = config.ringPrefab != null ? PoolManager.Get(config.ringPrefab, origin) : null;
 
-        if (Camera.main != null)
-            Camera.main.transform.DOShakePosition(config.shakeDuration, config.shakeStrength);
+        CameraShakeController.Shake(config.shakeDuration, config.shakeStrength);
 
         bool hasDamaged = false;
         float elapsed = 0f;

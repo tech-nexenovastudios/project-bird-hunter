@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ChapterEnvironmentApplier : MonoBehaviour
+public class ChapterVisualHandler : MonoBehaviour
 {
     // ── Inspector ────────────────────────────────────────────────────────────
 
@@ -18,14 +18,17 @@ public class ChapterEnvironmentApplier : MonoBehaviour
     [SerializeField] private RectTransform backgroundRect;
     [SerializeField] private Transform platformTransform;
     [SerializeField] private GameObject chapterUnlockPanel;
-    [SerializeField] private TextMeshProUGUI chapterUnlockText;
+    [Tooltip("Curved chapter name shown on the unlock gate (needs a CurvedTextEffect).")]
+    [SerializeField] private TextMeshProUGUI chapterNameText;
+    [Tooltip("Large number that ticks 5 → 1 on the unlock gate.")]
+    [SerializeField] private TextMeshProUGUI countdownText;
 
     [Header("Chapter Transition — Timing")]
+    [SerializeField] private float unlockGateCountdown = 5f;
     [SerializeField] private float platformDropDuration = 0.4f;
     [SerializeField] private float backgroundSlideDuration = 1.2f;
     [SerializeField] private float platformRiseDuration = 0.6f;
     [SerializeField] private float cannonDropDuration = 0.7f;
-    [SerializeField] private float panelHoldDuration = 1.5f;
 
     [Tooltip("How far below start position the platform drops before coming back.")]
     [SerializeField] private float platformDropDistance = 5f;
@@ -103,7 +106,44 @@ public class ChapterEnvironmentApplier : MonoBehaviour
             return;
         }
 
-        StartCoroutine(TransitionRoutine(newData, newChapterNumber));
+        StartCoroutine(ChapterUnlockSequence(newData, newChapterNumber));
+    }
+
+    private IEnumerator ChapterUnlockSequence(ChapterData newData, int chapterNum)
+    {
+        yield return StartCoroutine(UnlockGateRoutine(newData, chapterNum));
+        yield return StartCoroutine(TransitionRoutine(newData, chapterNum));
+    }
+
+    // Standalone gate: chapter name + 5 → 1 countdown, then hands off to the transition.
+    private IEnumerator UnlockGateRoutine(ChapterData newData, int chapterNum)
+    {
+        if (chapterUnlockPanel == null)
+            yield break;
+
+        chapterUnlockPanel.SetActive(true);
+
+        if (chapterNameText != null)
+        {
+            string worldName = string.IsNullOrEmpty(newData.worldName) ? $"Chapter {chapterNum}" : newData.worldName;
+            chapterNameText.text = worldName;
+        }
+
+        int remaining = Mathf.CeilToInt(unlockGateCountdown);
+        while (remaining > 0)
+        {
+            if (countdownText != null)
+            {
+                countdownText.text = remaining.ToString();
+                countdownText.transform.localScale = Vector3.one * 1.3f;
+                countdownText.transform.DOScale(1f, 0.4f).SetEase(Ease.OutBack);
+            }
+
+            yield return new WaitForSeconds(1f);
+            remaining--;
+        }
+
+        chapterUnlockPanel.SetActive(false);
     }
 
     private IEnumerator TransitionRoutine(ChapterData newData, int chapterNum)
@@ -142,15 +182,7 @@ public class ChapterEnvironmentApplier : MonoBehaviour
         if (cannonGO != null)
             cannonGO.transform.position = cannonAbovePos;
 
-        // ── STEP 2: Show unlock panel ───────────────────────────────────
-        if (chapterUnlockPanel != null)
-        {
-            chapterUnlockPanel.SetActive(true);
-            if (chapterUnlockText != null)
-                chapterUnlockText.text = $"Chapter : {chapterNum} Unlocked";
-        }
-
-        // ── STEP 3: Cross-slide backgrounds ─────────────────────────────
+        // ── STEP 2: Cross-slide backgrounds ─────────────────────────────
         float screenWidth = backgroundRect.rect.width;
 
         GameObject newBgGO = Instantiate(backgroundImage.gameObject, backgroundImage.transform.parent);
@@ -167,36 +199,30 @@ public class ChapterEnvironmentApplier : MonoBehaviour
 
         yield return new WaitForSeconds(backgroundSlideDuration);
 
-        // ── STEP 4: Swap BG back to original Image ──────────────────────
+        // ── STEP 3: Swap BG back to original Image ──────────────────────
         backgroundImage.sprite = newData.ChapterBackground;
         backgroundRect.anchoredPosition = bgStartPos;
         Destroy(newBgGO);
 
         _pendingChapterData = newData;
 
-        // ── STEP 5: Swap platform sprite while off-screen ──────────────
+        // ── STEP 4: Swap platform sprite while off-screen ──────────────
         if (platformRenderer != null)
             platformRenderer.sprite = newData.Platform;
 
-        // ── STEP 6: Slide platform back to EXACT original Y ─────────────
+        // ── STEP 5: Slide platform back to EXACT original Y ─────────────
         // Ease.OutQuad — smooth settle, NO overshoot (was Ease.OutBack which overshot)
         platformTransform.DOMoveY(platformStartPos.y, platformRiseDuration)
                          .SetEase(Ease.OutQuad);
         yield return new WaitForSeconds(platformRiseDuration);
 
-        // ── STEP 7: Drop cannon from top to its spawn Y ─────────────────
+        // ── STEP 6: Drop cannon from top to its spawn Y ─────────────────
         if (cannonGO != null)
         {
             cannonGO.transform.DOMoveY(cannonStartPos.y, cannonDropDuration)
                               .SetEase(Ease.OutBounce);  // bouncy landing
             yield return new WaitForSeconds(cannonDropDuration);
         }
-
-        // ── STEP 8: Hold panel, then hide ───────────────────────────────
-        yield return new WaitForSeconds(panelHoldDuration);
-
-        if (chapterUnlockPanel != null)
-            chapterUnlockPanel.SetActive(false);
 
         Debug.Log($"[ChapterEnv] ✅ Transition to Chapter {chapterNum} complete.");
         GameEvents.FireChapterTransitionFinished();

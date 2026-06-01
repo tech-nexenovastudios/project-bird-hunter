@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Gameplay.Birds;
 using Gameplay.Events;
 using Gameplay.Interfaces;
@@ -30,6 +31,7 @@ namespace Audio
         [SerializeField] private SfxClip cannonDestroyedSound = SfxClip.Default;
         [SerializeField] private SfxClip gameOverSound = SfxClip.Default;
         [SerializeField] private SfxClip slotSpinStarted = SfxClip.Default;
+        [SerializeField] private SfxClip slotSpinCommited = SfxClip.Default;
         [SerializeField] private SfxClip slotSpinCompleted = SfxClip.Default;
         [SerializeField] private SfxClip slotPowerSelected = SfxClip.Default;
         [SerializeField] private SfxClip allEggsClearedSound = SfxClip.Default;
@@ -101,7 +103,6 @@ namespace Audio
             GameEvents.OnPlayerDeath += OnGameOver;
             GameEvents.OnSpinStarted += OnSpinStarted;
             GameEvents.OnSpinAnimationCompleted += OnSpinAnimationCompleted;
-            GameEvents.OnPowerupCommitted += OnSpinCompleted;
             GameEvents.OnPowerupSelected += OnPowerupSelected;
             GameEvents.OnAllEggsCleared += OnAllEggsCleared;
             GameEvents.OnSelfClearStarted += OnSelfClearStarted;
@@ -136,7 +137,7 @@ namespace Audio
             GameEvents.OnPlayerDeath -= OnGameOver;
             GameEvents.OnSpinStarted -= OnSpinStarted;
             GameEvents.OnSpinAnimationCompleted -= OnSpinAnimationCompleted;
-            GameEvents.OnPowerupCommitted -= OnSpinCompleted;
+            GameEvents.OnPowerupCommitted -= OnSpinPowerUpCommited;
             GameEvents.OnPowerupSelected -= OnPowerupSelected;
             GameEvents.OnAllEggsCleared -= OnAllEggsCleared;
             GameEvents.OnSelfClearStarted -= OnSelfClearStarted;
@@ -179,7 +180,7 @@ namespace Audio
         private void OnGameOver() => PlaySound(gameOverSound);
         private void OnSpinStarted(List<PowerupConfig> options) => StartSpinLoop();
         private void OnSpinAnimationCompleted() => StopSpinLoop();
-        private void OnSpinCompleted(PowerupConfig config) => PlaySound(slotSpinCompleted);
+        private void OnSpinPowerUpCommited(PowerupConfig config) => PlaySound(slotSpinCompleted);
         private void OnPowerupSelected(PowerupConfig config) => PlaySound(slotPowerSelected);
 
         private void OnEggBounced(Vector3 _)
@@ -312,10 +313,13 @@ namespace Audio
             spinLoopSource.Play();
         }
 
-        private void StopSpinLoop()
+        private async UniTaskVoid StopSpinLoop()
         {
             if (spinLoopSource != null && spinLoopSource.isPlaying)
                 spinLoopSource.Stop();
+            
+            await UniTask.Delay(500);
+            PlaySound(slotSpinCompleted);
         }
     }
 }

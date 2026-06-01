@@ -12,7 +12,7 @@ public class PlayBtnController : MonoBehaviour
     {
         if (CurrencyManager.Instance.CanAffordPower(powerRequired))
         {
-            CurrencyManager.Instance.SpendPower(powerRequired);
+            CurrencyManager.Instance.SpendPower(powerRequired, "level_entry");
             chapterSelector.LoadCurrentWorld();
         }
         else

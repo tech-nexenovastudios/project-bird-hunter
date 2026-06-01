@@ -298,6 +298,7 @@ namespace BirdHunter.Inventory.Services
             if (coinCost > 0 || gemCost > 0)
             {
                 bool spent = await CurrencyManager.Instance.SpendMultiple(
+                    $"cannon_unlock:{key}",
                     (CurrencyType.Gold, coinCost),
                     (CurrencyType.Gems, gemCost));
                 if (!spent) return false;
@@ -316,7 +317,7 @@ namespace BirdHunter.Inventory.Services
             int cost = GetUpgradeCoinCost(key);
             if (cost > 0)
             {
-                bool spent = await CurrencyManager.Instance.SpendGold(cost);
+                bool spent = await CurrencyManager.Instance.SpendGold(cost, $"cannon_upgrade:{key}->lvl{GetLevel(key) + 1}");
                 if (!spent) return false;
             }
 

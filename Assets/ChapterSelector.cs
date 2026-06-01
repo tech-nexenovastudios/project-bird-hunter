@@ -31,7 +31,7 @@ public class ChapterSelector : MonoBehaviour
         GameProgressManager.Instance?.SelectChapter(currentIndex + 1);
 
         ChapterData data = worlds.GetWorldData(currentIndex);
-        if (data != null) ChapterEnvironmentApplier.SetChapterData(data);
+        if (data != null) ChapterVisualHandler.SetChapterData(data);
 
         SceneManager.LoadScene("GamePlayScene");
     }

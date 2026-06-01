@@ -232,7 +232,7 @@ namespace Gameplay.Managers
         {
             if (amount <= 0) return;
 
-            bool credited = await CurrencyManager.Instance.AddGold(amount);
+            bool credited = await CurrencyManager.Instance.AddGold(amount, reason);
             if (!credited)
             {
                 Debug.LogWarning($"[RewardManager] AddGold failed for {amount} ({reason}); counters not bumped");
@@ -252,7 +252,7 @@ namespace Gameplay.Managers
         {
             if (amount <= 0) return;
 
-            bool credited = await CurrencyManager.Instance.AddGems(amount);
+            bool credited = await CurrencyManager.Instance.AddGems(amount, reason);
             if (!credited)
             {
                 Debug.LogWarning($"[RewardManager] AddGems failed for {amount} ({reason}); counters not bumped");
@@ -272,7 +272,7 @@ namespace Gameplay.Managers
         {
             if (amount <= 0) return;
 
-            bool credited = await CurrencyManager.Instance.AddPower(amount);
+            bool credited = await CurrencyManager.Instance.AddPower(amount, reason);
             if (!credited)
             {
                 Debug.LogWarning($"[RewardManager] AddPower failed for {amount} ({reason}); counters not bumped");
@@ -319,17 +319,17 @@ namespace Gameplay.Managers
 
         public void DebugAwardCoins(int amount)
         {
-            AwardCoins(amount, "DEBUG");
+            AwardCoins(amount, "DEBUG").Forget();
         }
 
         public void DebugAwardGems(int amount)
         {
-            AwardGems(amount, "DEBUG");
+            AwardGems(amount, "DEBUG").Forget();
         }
 
         public void DebugAwardPower(int amount)
         {
-            AwardPower(amount, "DEBUG");
+            AwardPower(amount, "DEBUG").Forget();
         }
     }
 }
