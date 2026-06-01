@@ -51,4 +51,11 @@ public class DroneSwarmConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (dronePrefab != null) into.Add(dronePrefab);
+        if (deathVfxPrefab != null) into.Add(deathVfxPrefab);
+    }
 }

@@ -36,4 +36,11 @@ public class SerpentEggDropConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (eggPrefab != null) into.Add(eggPrefab);
+        if (deathVfxPrefab != null) into.Add(deathVfxPrefab);
+    }
 }

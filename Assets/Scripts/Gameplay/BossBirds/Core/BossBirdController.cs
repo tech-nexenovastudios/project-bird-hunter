@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 public class BossBirdController : MonoBehaviour
@@ -359,7 +359,14 @@ public class BossBirdController : MonoBehaviour
         animController?.Death();
 
         if (config.deathVFX != null)
-            PoolManager.Get(config.deathVFX, transform.position);
+        {
+            var vfxObj = PoolManager.Get(config.deathVFX, transform.position);
+            if (vfxObj.TryGetComponent<Gameplay.VFX.VFXGraphAutoReturn>(out var autoReturn))
+            {
+                var mf = GetComponentInChildren<MeshFilter>();
+                if (mf != null) autoReturn.SetMesh(mf.sharedMesh);
+            }
+        }
 
         // ── Notify the rest of the game ──
         BossEventBus.RaiseBossDefeated(config.bossName, config.scoreValue);

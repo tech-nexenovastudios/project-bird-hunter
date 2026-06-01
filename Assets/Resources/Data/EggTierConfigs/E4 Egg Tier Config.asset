@@ -19,7 +19,6 @@ MonoBehaviour:
   scorePerHit: 1
   scoreOnDestroy: 50
   eggPrefab: {fileID: 1251663967950569254, guid: 824d1d42665e6e6418e2e4767823682a, type: 3}
-  bounceIncrease: 0.4
   horizontalIncrease: 0.9
   maxSpeed: 1
   gravityScale: 0.35
@@ -41,7 +40,7 @@ MonoBehaviour:
   maxLeanDegrees: 12
   leanSmoothing: 6
   enableBulletUpwardPush: 0
-  bulletImpulsePerHit: 1
+  bulletImpulsePerHit: 0.65
   bulletImpulseDecay: 1.5
   evasiveLaunchThreshold: 6
   cannonDangerRadius: 6

@@ -42,4 +42,11 @@ public class AuraOfDamnationConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (fireRingPrefab != null) into.Add(fireRingPrefab);
+        if (destroyVfxPrefab != null) into.Add(destroyVfxPrefab);
+    }
 }

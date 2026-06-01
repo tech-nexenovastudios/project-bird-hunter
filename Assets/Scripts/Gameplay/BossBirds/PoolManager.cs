@@ -104,6 +104,18 @@ public class PoolManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Like <see cref="Prewarm"/>, but uses Unity 6's InstantiateAsync so the deserialization runs
+    /// on worker threads and the main-thread integration is time-sliced across frames — avoids the
+    /// single-frame spike a synchronous instantiate of a heavy prefab would cause. The instances are
+    /// adopted into the pool (inactive) when the async op completes.
+    /// </summary>
+    public static void PrewarmAsync(GameObject prefab, int count)
+    {
+        if (prefab == null || count <= 0) return;
+        Instance.PrewarmAsyncInternal(prefab, count);
+    }
+
+    /// <summary>
     /// Destroy all pooled objects for a specific prefab. 
     /// Use when transitioning chapters or unloading content.
     /// </summary>
@@ -171,6 +183,28 @@ public class PoolManager : MonoBehaviour
         }
 
         pool.Prewarm(count);
+    }
+
+    private void PrewarmAsyncInternal(GameObject prefab, int count)
+    {
+        int key = prefab.GetInstanceID();
+
+        if (!pools.TryGetValue(key, out var pool))
+        {
+            pool = new Pool(prefab, transform);
+            pools[key] = pool;
+        }
+
+        // Spawn far off-screen so the brief active window before AdoptPrewarmed deactivates them
+        // can't flash anything on camera.
+        var op = InstantiateAsync(prefab, count, new Vector3(0f, 10000f, 0f), Quaternion.identity);
+        op.completed += _ =>
+        {
+            var results = op.Result;
+            if (results == null) return;
+            for (int i = 0; i < results.Length; i++)
+                pool.AdoptPrewarmed(results[i]);
+        };
     }
 
     private void ClearPoolInternal(GameObject prefab)
@@ -294,6 +328,23 @@ public class PoolManager : MonoBehaviour
             tracker.PrefabID = prefabID;
 
             return obj;
+        }
+
+        // Takes ownership of an instance created externally (e.g. by InstantiateAsync), attaching the
+        // tracker and parking it inactive in the pool exactly as a synchronous prewarm would.
+        public void AdoptPrewarmed(GameObject obj)
+        {
+            if (obj == null) return;
+
+            obj.name = prefab.name;
+
+            if (!obj.TryGetComponent<PoolTracker>(out var tracker))
+                tracker = obj.AddComponent<PoolTracker>();
+            tracker.PrefabID = prefabID;
+
+            obj.transform.SetParent(parent);
+            obj.SetActive(false);
+            inactive.Enqueue(obj);
         }
 
         private static void NotifySpawned(GameObject obj)

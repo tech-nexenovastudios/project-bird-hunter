@@ -56,4 +56,10 @@ public class SpectralFeathersConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (featherPrefab != null) into.Add(featherPrefab);
+    }
 }

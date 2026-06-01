@@ -35,4 +35,10 @@ public class RadioactiveEggDropConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (eggPrefab != null) into.Add(eggPrefab);
+    }
 }

@@ -29,6 +29,11 @@ namespace Gameplay
         [Header("Boss Prefabs (index = chapter - 1)")]
         public GameObject[] bossPrefabs;
 
+        [Tooltip("Boss + VFX shader variants warmed once at level start so the first boss render " +
+                 "doesn't compile them mid-fight. Build via Tools ▸ Bird Hunter ▸ Build Boss Shader " +
+                 "Variant Collection; falls back to Resources/BossShaderVariants if left empty.")]
+        [SerializeField] ShaderVariantCollection bossShaderVariants;
+
         [Header("TTK Soft-Gate")]
         [Tooltip("Max seconds of egg HP allowed on screen relative to cannon DPS. Above this, new bird spawns are skipped until the screen drains. Set 0 to disable.")]
         [SerializeField] float ttkCeilingSeconds = 8f;
@@ -135,6 +140,13 @@ namespace Gameplay
         float _parkedBossHpNormalized;
         bool _hasBossWaitingForLevel20;
 
+        // Boss prefab instantiated inactive during the spawn countdown so the visible spawn frame
+        // doesn't pay the Instantiate cost. Its attack/VFX pools are prewarmed in the same window.
+        GameObject _preloadedBossGO;
+        Coroutine _bossPrewarmRoutine;
+        static readonly List<GameObject> _prewarmScratch = new();
+        const int BossVfxPrewarmCount = 2;
+
         public bool IsBossLevel => _isBossLevel;
         public int TotalTrackedScore => _totalTrackedScore;
         public int ActiveEggCount => _activeEggs.Count;
@@ -199,6 +211,10 @@ namespace Gameplay
 
         public void ResetLevel()
         {
+            // Compile boss/VFX shader variants once, here at level start — gameplay spawning is held
+            // until the 3-2-1 countdown ends, so this one-time synchronous WarmUp is masked.
+            ShaderWarmup.WarmBossVariants(bossShaderVariants);
+
             elapsedTime = 0f;
             _levelCompleted = false;
             _phase = LevelPhase.Active;
@@ -235,6 +251,10 @@ namespace Gameplay
             _bossTimerRunning = false;
             _bossSpawnTimer = 0f;
 
+            // Drop any preloaded-but-never-spawned boss from a prior level before reconfiguring.
+            if (_bossPrewarmRoutine != null) { StopCoroutine(_bossPrewarmRoutine); _bossPrewarmRoutine = null; }
+            if (_preloadedBossGO != null) { Destroy(_preloadedBossGO); _preloadedBossGO = null; }
+
             ResolveChapterLevel();
 
             _attackingBirdTimer = _attackingBirdSpawnInterval > 0f ? _attackingBirdSpawnInterval : 20f;
@@ -245,10 +265,15 @@ namespace Gameplay
                 _bossTimerRunning = true;
 
                 bool isLevel20 = _globalLevel % 20 == 0;
-                if (isLevel20 && _hasBossWaitingForLevel20)
+                bool usingParked = isLevel20 && _hasBossWaitingForLevel20 && _parkedBossGO != null;
+                if (usingParked)
                     Debug.Log($"[SpawnController] Level 20 boss level — re-spawning parked boss in {_bossSpawnTimer:F1}s.");
                 else
                     Debug.Log($"[SpawnController] Boss level — spawning boss in {_bossSpawnTimer:F1}s.");
+
+                // Pay the boss + attack-VFX instantiation/shader-compile cost during the countdown
+                // instead of on the spawn frame (and on each attack's first use mid-fight).
+                StartBossPrewarm(isLevel20, usingParked);
             }
         }
 
@@ -423,6 +448,46 @@ namespace Gameplay
         //  BOSS SPAWN / ENTER / EXIT / RETREAT
         // ═══════════════════════════════════════════════════════════════
 
+        private void StartBossPrewarm(bool isLevel20, bool usingParked)
+        {
+            if (_bossPrewarmRoutine != null) StopCoroutine(_bossPrewarmRoutine);
+            _bossPrewarmRoutine = StartCoroutine(BossPrewarmRoutine(isLevel20, usingParked));
+        }
+
+        // Spread the heavy instantiation across the countdown frames: preload the boss prefab
+        // inactive, then prewarm one attack/VFX prefab pool per frame. By the time TrySpawnBoss
+        // fires, the GameObjects exist and their shaders/textures are already resident.
+        private IEnumerator BossPrewarmRoutine(bool isLevel20, bool usingParked)
+        {
+            if (!usingParked && _preloadedBossGO == null)
+            {
+                int prefabIdx = _chapter - 1;
+                if (bossPrefabs != null && prefabIdx >= 0 && prefabIdx < bossPrefabs.Length
+                    && bossPrefabs[prefabIdx] != null)
+                {
+                    var go = Instantiate(bossPrefabs[prefabIdx]);
+                    go.SetActive(false);
+                    _preloadedBossGO = go;
+                }
+                yield return null;
+            }
+
+            if (_levelBossBirdConfig != null)
+            {
+                _prewarmScratch.Clear();
+                _levelBossBirdConfig.CollectPrewarmPrefabs(_prewarmScratch, isLevel20);
+                for (int i = 0; i < _prewarmScratch.Count; i++)
+                {
+                    if (_prewarmScratch[i] != null)
+                        PoolManager.PrewarmAsync(_prewarmScratch[i], BossVfxPrewarmCount);
+                    yield return null;
+                }
+                _prewarmScratch.Clear();
+            }
+
+            _bossPrewarmRoutine = null;
+        }
+
         private void TrySpawnBoss()
         {
             if (_bossSpawned) return;
@@ -491,7 +556,20 @@ namespace Gameplay
             Vector3 topRight = Camera.main.ViewportToWorldPoint(new Vector3(1.2f, 1.2f, 0f));
             topRight.z = 0f;
 
-            var go = Instantiate(bossPrefabs[prefabIdx], topRight, Quaternion.identity);
+            // Use the boss preloaded during the countdown if it's ready; otherwise instantiate now
+            // (e.g. the countdown was too short to finish preloading).
+            GameObject go;
+            if (_preloadedBossGO != null)
+            {
+                go = _preloadedBossGO;
+                _preloadedBossGO = null;
+                go.transform.SetPositionAndRotation(topRight, Quaternion.identity);
+                go.SetActive(true);
+            }
+            else
+            {
+                go = Instantiate(bossPrefabs[prefabIdx], topRight, Quaternion.identity);
+            }
             var controller = go.GetComponent<BossBirdController>();
 
             controller.Initialize(cfg, isLevel20);
@@ -691,6 +769,9 @@ namespace Gameplay
             TearDownBoss(_parkedBossGO);
             _parkedBossGO = null;
             _hasBossWaitingForLevel20 = false;
+
+            if (_bossPrewarmRoutine != null) { StopCoroutine(_bossPrewarmRoutine); _bossPrewarmRoutine = null; }
+            if (_preloadedBossGO != null) { Destroy(_preloadedBossGO); _preloadedBossGO = null; }
 
             _bossSpawned = false;
             _bossTimerRunning = false;

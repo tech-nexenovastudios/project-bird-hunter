@@ -34,4 +34,10 @@ public class HauntingWispsConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (wispPrefab != null) into.Add(wispPrefab);
+    }
 }

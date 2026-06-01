@@ -29,4 +29,10 @@ public class SonicScreechConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (ringPrefab != null) into.Add(ringPrefab);
+    }
 }

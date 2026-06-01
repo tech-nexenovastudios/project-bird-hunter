@@ -178,9 +178,10 @@ namespace Audio
 
                 _androidReady = _vibrator != null;
             }
-            catch
+            catch (System.Exception e)
             {
                 _androidReady = false;
+                Debug.LogWarning($"[Haptics] Android init failed: {e.Message}");
             }
 #endif
         }
@@ -211,7 +212,7 @@ namespace Audio
                     _vibrator.Call("vibrate", (long)duration);
                 }
             }
-            catch { /* device denied or no vibrator */ }
+            catch (System.Exception e) { Debug.LogWarning($"[Haptics] vibrate failed: {e.Message}"); }
         }
 #endif
     }

@@ -47,4 +47,17 @@ public class BossBirdConfig : ScriptableObject
     [Header("Rewards")]
     public int scoreValue = 1000;
     public GameObject deathVFX;
+
+    // Every prefab this boss may instantiate during the fight (death VFX + per-attack pooled
+    // prefabs for the phases that will actually run). SpawnController prewarms these during the
+    // spawn countdown so the first use doesn't hitch.
+    public void CollectPrewarmPrefabs(List<GameObject> into, bool isLevel20)
+    {
+        if (deathVFX != null) into.Add(deathVFX);
+        if (phase1Attack != null) phase1Attack.CollectPrewarmPrefabs(into);
+        if (isLevel20 && phase2Attack != null) phase2Attack.CollectPrewarmPrefabs(into);
+        if (extraAttacks != null)
+            for (int i = 0; i < extraAttacks.Count; i++)
+                if (extraAttacks[i] != null) extraAttacks[i].CollectPrewarmPrefabs(into);
+    }
 }

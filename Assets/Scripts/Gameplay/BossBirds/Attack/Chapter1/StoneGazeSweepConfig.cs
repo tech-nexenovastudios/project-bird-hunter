@@ -38,4 +38,11 @@ public class StoneGazeSweepConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (petrifyVfxPrefab != null) into.Add(petrifyVfxPrefab);
+        if (laserVisualPrefab != null) into.Add(laserVisualPrefab);
+    }
 }
