@@ -799,9 +799,17 @@ PrefabInstance:
       value: CoinFlowManager
       objectReference: {fileID: 0}
     - target: {fileID: 5786300951124384677, guid: 5fa1b495b8675574d983724ede224f71, type: 3}
+      propertyPath: coinSfxPitch
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5786300951124384677, guid: 5fa1b495b8675574d983724ede224f71, type: 3}
       propertyPath: parentCanvas
       value: 
       objectReference: {fileID: 7707570810923785998}
+    - target: {fileID: 5786300951124384677, guid: 5fa1b495b8675574d983724ede224f71, type: 3}
+      propertyPath: coinSfxVolume
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 5786300951124384677, guid: 5fa1b495b8675574d983724ede224f71, type: 3}
       propertyPath: currencyEntries.Array.data[0].targetUI
       value: 
@@ -1568,6 +1576,9 @@ MonoBehaviour:
   eggBounceSound:
     clip: {fileID: 8300000, guid: 43fa441e47f104714b4e31484654122e, type: 3}
     pitch: 2.29
+  birdHitSound:
+    clip: {fileID: 8300000, guid: 8639b7478e6065949bffe086a30f2df3, type: 3}
+    pitch: 0.25
   birdDestroySound:
     clip: {fileID: 8300000, guid: 51d654d7f74819c4f9a58cab94808972, type: 3}
     pitch: 1.2
@@ -2369,6 +2380,10 @@ PrefabInstance:
       propertyPath: levelProfile
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 3865765487029352904, guid: 37371aa48e76f844cbaf013a61b5e2ec, type: 3}
+      propertyPath: bossShaderVariants
+      value: 
+      objectReference: {fileID: 20000000, guid: 447a93343b00a4ab69ff6fdf169eeb5e, type: 2}
     - target: {fileID: 3865765487029352904, guid: 37371aa48e76f844cbaf013a61b5e2ec, type: 3}
       propertyPath: bossPrefabs.Array.size
       value: 5
@@ -3232,19 +3247,19 @@ PrefabInstance:
       objectReference: {fileID: 645884586}
     - target: {fileID: 3221544949214557536, guid: 619b6f4df45114f31991d2100fe51ade, type: 3}
       propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3544088657548334583, guid: 619b6f4df45114f31991d2100fe51ade, type: 3}
+      propertyPath: m_AnchorMax.x
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3544088657548334583, guid: 619b6f4df45114f31991d2100fe51ade, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3544088657548334583, guid: 619b6f4df45114f31991d2100fe51ade, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3544088657548334583, guid: 619b6f4df45114f31991d2100fe51ade, type: 3}
       propertyPath: m_AnchorMin.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3576389094268590808, guid: 619b6f4df45114f31991d2100fe51ade, type: 3}
       propertyPath: m_AnchorMax.x
@@ -3260,11 +3275,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3665534947590782280, guid: 619b6f4df45114f31991d2100fe51ade, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3665534947590782280, guid: 619b6f4df45114f31991d2100fe51ade, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3999057914900480536, guid: 619b6f4df45114f31991d2100fe51ade, type: 3}
       propertyPath: m_AnchorMax.y

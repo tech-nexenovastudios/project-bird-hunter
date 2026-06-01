@@ -157,9 +157,8 @@ namespace Gameplay.Managers
         }
 
         // Level finished: stop accepting score, but keep the level UI showing the final value
-        // through the completion popup / slot screen. Reset happens later in ResetLevel, called
-        // by GameManager.StartGameplay — which is deferred until the popup countdown ends
-        // (non-spin levels) or the player picks a slot powerup (spin levels).
+        // through the completion popup. Reset happens in ResetLevel — at the popup countdown's
+        // end for non-spin levels, and at completion (before the slot opens) for spin levels.
         private void OnLevelCompleted(int finalScore)
         {
             _acceptingScore = false;

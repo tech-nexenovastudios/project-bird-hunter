@@ -23,6 +23,7 @@ namespace Audio
         [SerializeField] private SfxClip eggHitSound = SfxClip.Default;
         [SerializeField] private SfxClip eggDestroySound = SfxClip.Default;
         [SerializeField] private SfxClip eggBounceSound = SfxClip.Default;
+        [SerializeField] private SfxClip birdHitSound = SfxClip.Default;
         [SerializeField] private SfxClip birdDestroySound = SfxClip.Default;
         [SerializeField] private SfxClip cannonHitSound = SfxClip.Default;
         [SerializeField] private SfxClip cannonShootSound = SfxClip.Default;
@@ -170,7 +171,7 @@ namespace Audio
 
         private void OnEggHit(IDamageable e, int d, Vector3 p) => PlaySound(eggHitSound);
         private void OnEggDestroyed(IDamageable e, int s, Vector3 p) => PlaySound(eggDestroySound);
-        private void OnBirdHit(IDamageable b, int d, Vector3 p) => PlaySound(eggHitSound);
+        private void OnBirdHit(IDamageable b, int d, Vector3 p) => PlaySound(birdHitSound);
         private void OnBirdDestroyed(IDamageable b, int s, Vector3 p) => PlaySound(birdDestroySound);
         private void OnCannonHit(int damage) => PlaySound(cannonHitSound);
         private void OnCannonShoot() => PlaySound(cannonShootSound);
