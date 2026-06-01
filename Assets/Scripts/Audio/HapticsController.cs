@@ -15,6 +15,9 @@ namespace Audio
         [SerializeField] private Intensity eggHitIntensity        = Intensity.Light;
         [SerializeField] private Intensity eggDestroyIntensity    = Intensity.Medium;
         [SerializeField] private Intensity birdDestroyIntensity   = Intensity.Light;
+        [SerializeField] private Intensity cannonShootIntensity   = Intensity.Light;
+        [Tooltip("Minimum seconds between shoot haptics so rapid fire doesn't buzz continuously.")]
+        [SerializeField] private float      cannonShootMinInterval = 0.1f;
         [SerializeField] private Intensity cannonHitIntensity     = Intensity.Heavy;
         [SerializeField] private Intensity playerDeathIntensity   = Intensity.Heavy;
         [SerializeField] private Intensity bossPhase2Intensity    = Intensity.Heavy;
@@ -44,6 +47,7 @@ namespace Audio
 
         private const string PrefKey = "VibrationEnabled";
         private static bool _enabled = true;
+        private float _lastShootHapticTime = -999f;
 
 #if UNITY_IOS && !UNITY_EDITOR
         [DllImport("__Internal")] private static extern void _HapticImpact(int style);
@@ -91,6 +95,7 @@ namespace Audio
             GameEvents.OnEggHit                 += OnEggHit;
             GameEvents.OnEggDestroyed           += OnEggDestroyed;
             GameEvents.OnBirdDestroyed          += OnBirdDestroyed;
+            GameEvents.OnCannonShoot            += OnCannonShoot;
             GameEvents.OnCannonHit              += OnCannonHit;
             GameEvents.OnPlayerDeath            += OnPlayerDeath;
             GameEvents.OnBossPhase2             += OnBossPhase2;
@@ -111,6 +116,7 @@ namespace Audio
             GameEvents.OnEggHit                 -= OnEggHit;
             GameEvents.OnEggDestroyed           -= OnEggDestroyed;
             GameEvents.OnBirdDestroyed          -= OnBirdDestroyed;
+            GameEvents.OnCannonShoot            -= OnCannonShoot;
             GameEvents.OnCannonHit              -= OnCannonHit;
             GameEvents.OnPlayerDeath            -= OnPlayerDeath;
             GameEvents.OnBossPhase2             -= OnBossPhase2;
@@ -130,6 +136,14 @@ namespace Audio
         private void OnEggHit(IDamageable _, int __, Vector3 ___)        => Play(eggHitIntensity);
         private void OnEggDestroyed(IDamageable _, int __, Vector3 ___)  => Play(eggDestroyIntensity);
         private void OnBirdDestroyed(IDamageable _, int __, Vector3 ___) => Play(birdDestroyIntensity);
+
+        private void OnCannonShoot()
+        {
+            if (Time.unscaledTime - _lastShootHapticTime < cannonShootMinInterval) return;
+            _lastShootHapticTime = Time.unscaledTime;
+            Play(cannonShootIntensity);
+        }
+
         private void OnCannonHit(int _)                                  => Play(cannonHitIntensity);
         private void OnPlayerDeath()                                     => Play(playerDeathIntensity);
         private void OnBossPhase2(BossBird _)                            => Play(bossPhase2Intensity);
