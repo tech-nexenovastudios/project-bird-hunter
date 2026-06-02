@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.Services.RemoteConfig;
 using Cysharp.Threading.Tasks;
@@ -112,6 +113,7 @@ public class RemoteConfigManager : MonoBehaviour
         };
 
         Debug.Log($"[RemoteConfig] Config loaded from {origin}");
+        _release = null;
         IsReady = true;
         OnConfigReady?.Invoke();
     }
@@ -305,79 +307,103 @@ public class RemoteConfigManager : MonoBehaviour
     // Want to A/B test "Buy Now" vs "Get it Now"? Change it live.
 
     public string WelcomeMessage => GetString("welcomeMsg", "Welcome back!");
-    public string MaintenanceMessage => GetString("maintenanceMsg", "We're updating the game. Back soon!");
-    public string UpdatePromptMessage => GetString("updatePromptMsg", "A new version is available. Please update!");
 
     // ========================================================================
-    //  CATEGORY 7: APP LIFECYCLE
+    //  CATEGORY 7: APP LIFECYCLE  (driven by the "release-config" JSON key)
     // ========================================================================
-    //
-    // MAINTENANCE MODE:
-    //   Set maintenanceMode = true → every player sees a "maintenance" screen.
-    //   Your servers are down for database migration? No one can play and
-    //   get errors — they see a friendly message instead.
-    //
-    // FORCE UPDATE:
-    //   Set minRequiredVersion = "2.0.0". Players on 1.x see "Please update".
-    //   Critical for when you push a breaking server change.
-    //
-    // SERVER ENDPOINT:
-    //   Your game talks to your backend server. If you need to migrate
-    //   to a new server URL, change it here — no app update needed.
-    //
-    // Usage in your app startup:
-    //   if (GameRemoteConfig.Instance.MaintenanceMode)
-    //   { ShowMaintenanceScreen(); return; }
-    //   if (GameRemoteConfig.Instance.NeedsForceUpdate())
-    //   { ShowUpdateScreen(); return; }
 
-    public bool MaintenanceMode => GetBool("maintenanceMode", false);
-    public string MinRequiredVersion => GetString("minRequiredVersion", "1.0.0");
-    public string LatestVersion => GetString("latestVersion", "");
-    public bool ForceUpdate => GetBool("forceUpdate", false);
-    public string UpdateURL => GetString("updateURL", "");
-    public string UpdateURLAndroid => GetString("updateURL_android", "");
-    public string UpdateURLiOS => GetString("updateURL_ios", "");
-    public string ServerEndpointURL => GetString("serverURL", "");
-
-    /// <summary>
-    /// Should the update panel be shown?
-    /// True if a newer version exists (current &lt; latestVersion) OR the version
-    /// is below the hard minimum. Either is enough to surface the prompt.
-    /// </summary>
-    public bool IsUpdateAvailable()
+    [Serializable]
+    public class ReleaseConfig
     {
-        return IsBelow(LatestVersion) || IsBelow(MinRequiredVersion);
+        public int configVersion;
+        public PlatformReleaseConfig android;
+        public PlatformReleaseConfig ios;
+        public MaintenanceConfig maintenance;
     }
 
-    /// <summary>
-    /// Is the update mandatory (Not Now button hidden)?
-    /// Mandatory when the explicit forceUpdate flag is set, OR when the version
-    /// is below the hard minimum (safety net for very old builds).
-    /// </summary>
-    public bool IsForceUpdate()
+    [Serializable]
+    public class PlatformReleaseConfig
     {
-        return ForceUpdate || IsBelow(MinRequiredVersion);
+        public string latestVersion;
+        public string minimumSupportedVersion;
+        public string updateTitle;
+        public string updateMessage;
+        public string forceUpdateTitle;
+        public string forceUpdateMessage;
+        public string storeUrl;
+        public string updateThumbnail;
+        public List<string> updateFeatures;
     }
 
-    /// <summary>
-    /// Returns the store URL appropriate for the current platform.
-    /// Falls back to the generic UpdateURL if the platform-specific one is empty.
-    /// </summary>
-    public string GetPlatformUpdateURL()
+    [Serializable]
+    public class MaintenanceConfig
+    {
+        public bool enabled;
+        public string title;
+        public string message;
+    }
+
+    private const string ReleaseConfigKey = "release-config";
+    private ReleaseConfig _release;
+
+    private ReleaseConfig Release =>
+        _release ??= GetJson<ReleaseConfig>(ReleaseConfigKey, new ReleaseConfig());
+
+    private PlatformReleaseConfig CurrentPlatform
     {
 #if UNITY_IOS
-        string url = UpdateURLiOS;
-#elif UNITY_ANDROID
-        string url = UpdateURLAndroid;
+        get => Release?.ios;
 #else
-        string url = "";
+        get => Release?.android;
 #endif
-        return string.IsNullOrEmpty(url) ? UpdateURL : url;
     }
 
-    /// <summary>Legacy: kept for backward compatibility. Prefer IsForceUpdate().</summary>
-    public bool NeedsForceUpdate() => IsBelow(MinRequiredVersion);
+    public bool MaintenanceMode => Release?.maintenance?.enabled ?? false;
+    public string MaintenanceMessage =>
+        Release?.maintenance?.message ?? "We're updating the game. Back soon!";
+    public string MaintenanceTitle => Release?.maintenance?.title ?? "Maintenance";
+
+    public string ServerEndpointURL => GetString("serverURL", "");
+
+    public bool IsUpdateAvailable()
+    {
+        var p = CurrentPlatform;
+        if (p == null) return false;
+        return IsBelow(p.latestVersion) || IsBelow(p.minimumSupportedVersion);
+    }
+
+    public bool IsForceUpdate()
+    {
+        var p = CurrentPlatform;
+        if (p == null) return false;
+        return IsBelow(p.minimumSupportedVersion);
+    }
+
+    public string GetPlatformUpdateURL() => CurrentPlatform?.storeUrl ?? "";
+
+    public string GetPlatformUpdateThumbnailURL() => CurrentPlatform?.updateThumbnail ?? "";
+
+    public string GetPlatformLatestVersion() => CurrentPlatform?.latestVersion ?? "";
+
+    public string UpdatePromptMessage
+    {
+        get
+        {
+            var p = CurrentPlatform;
+            if (p == null) return "A new version is available. Please update!";
+            return IsForceUpdate() ? p.forceUpdateMessage : p.updateMessage;
+        }
+    }
+
+    public string UpdatePromptTitle
+    {
+        get
+        {
+            var p = CurrentPlatform;
+            if (p == null) return "Update Available";
+            return IsForceUpdate() ? p.forceUpdateTitle : p.updateTitle;
+        }
+    }
 
     private static bool IsBelow(string targetVersion)
     {
@@ -432,6 +458,9 @@ public class RemoteConfigManager : MonoBehaviour
         try { RemoteConfigService.Instance.FetchCompleted -= HandleFetchCompleted; }
         catch { /* RemoteConfigService may not exist during app quit */ }
     }
+
+    public List<string> GetPlatformUpdateFeaturesList()
+        => CurrentPlatform?.updateFeatures ?? new List<string>();
 }
 
 

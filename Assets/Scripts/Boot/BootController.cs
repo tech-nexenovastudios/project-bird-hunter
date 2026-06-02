@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Gameplay.Managers;
@@ -13,7 +14,7 @@ public class BootController : MonoBehaviour
 
     [Header("UI Feedback")]
     [SerializeField] private TextMeshProUGUI statusText;
-    [SerializeField] private UpdatePanelController updatePanel;
+    [SerializeField] private UI.Popups.UpdatePopupController updatePanel;
 
     [Header("Auth Buttons")]
     [Tooltip("All start non-interactable; enabled only after auto sign-in fails.")]
@@ -297,14 +298,18 @@ public class BootController : MonoBehaviour
 
     private async UniTask<bool> HandleUpdatePromptAsync(CancellationToken ct)
     {
-        var rc       = RemoteConfigManager.Instance;
-        bool isForce = rc.IsForceUpdate();
-        string url   = rc.GetPlatformUpdateURL();
-        string msg   = rc.UpdatePromptMessage;
+        var rc        = RemoteConfigManager.Instance;
+        bool isForce  = rc.IsForceUpdate();
+        string url    = rc.GetPlatformUpdateURL();
+        string msg    = rc.UpdatePromptMessage;
+        string title  = rc.UpdatePromptTitle;
+        string ver    = rc.GetPlatformLatestVersion();
+        string thumb  = rc.GetPlatformUpdateThumbnailURL();
+        List<string> features = rc.GetPlatformUpdateFeaturesList();
 
         if (updatePanel == null) { SetStatus(msg); return !isForce; }
 
-        updatePanel.Configure(isForce, url, msg);
+        updatePanel.Setup(isForce, ver, title, msg, features, url, thumb, ct);
         if (isForce) return false;
 
         await updatePanel.AwaitDismissAsync(ct);
