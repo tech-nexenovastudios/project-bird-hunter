@@ -78,6 +78,8 @@ namespace Gameplay.UI
 
         private void OnGameLevelUpdated(int levelIndex)
         {
+            if (GameManager.SuppressLevelIntroPopup) return;
+
             _currentLevel = GameProgressManager.Instance.CurrentLevel;
             ShowPopup(
                 title: $"Level {_currentLevel}",

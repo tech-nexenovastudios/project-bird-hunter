@@ -144,6 +144,7 @@ namespace Gameplay
         // doesn't pay the Instantiate cost. Its attack/VFX pools are prewarmed in the same window.
         GameObject _preloadedBossGO;
         Coroutine _bossPrewarmRoutine;
+        bool _bossPrewarmComplete;
         static readonly List<GameObject> _prewarmScratch = new();
         const int BossVfxPrewarmCount = 2;
 
@@ -413,7 +414,7 @@ namespace Gameplay
             if (_bossTimerRunning && !_bossSpawned && !IsDraining && !_levelCompleted)
             {
                 _bossSpawnTimer -= Time.deltaTime;
-                if (_bossSpawnTimer <= 0f)
+                if (_bossSpawnTimer <= 0f && (_bossPrewarmComplete || _bossSpawnTimer <= -2f))
                 {
                     _bossTimerRunning = false;
                     TrySpawnBoss();
@@ -451,6 +452,7 @@ namespace Gameplay
         private void StartBossPrewarm(bool isLevel20, bool usingParked)
         {
             if (_bossPrewarmRoutine != null) StopCoroutine(_bossPrewarmRoutine);
+            _bossPrewarmComplete = false;
             _bossPrewarmRoutine = StartCoroutine(BossPrewarmRoutine(isLevel20, usingParked));
         }
 
@@ -465,9 +467,14 @@ namespace Gameplay
                 if (bossPrefabs != null && prefabIdx >= 0 && prefabIdx < bossPrefabs.Length
                     && bossPrefabs[prefabIdx] != null)
                 {
-                    var go = Instantiate(bossPrefabs[prefabIdx]);
-                    go.SetActive(false);
-                    _preloadedBossGO = go;
+                    var op = InstantiateAsync(bossPrefabs[prefabIdx]);
+                    yield return op;
+                    var go = op.Result != null && op.Result.Length > 0 ? op.Result[0] : null;
+                    if (go != null)
+                    {
+                        go.SetActive(false);
+                        _preloadedBossGO = go;
+                    }
                 }
                 yield return null;
             }
@@ -485,6 +492,7 @@ namespace Gameplay
                 _prewarmScratch.Clear();
             }
 
+            _bossPrewarmComplete = true;
             _bossPrewarmRoutine = null;
         }
 

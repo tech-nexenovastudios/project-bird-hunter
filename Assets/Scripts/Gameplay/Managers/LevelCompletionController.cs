@@ -52,6 +52,7 @@ namespace Gameplay.Managers
             if (GameManager.Instance?.state != GameState.Gameplay) return;
             if (_targetScoreReached) return;
             if (ScoreManager.Instance == null) return;
+            if (SpawnController.Instance != null && SpawnController.Instance.IsBossLevel) return;
 
             int levelScore  = ScoreManager.Instance.LevelScore;
             int targetScore = GetTargetScore();
@@ -67,6 +68,7 @@ namespace Gameplay.Managers
         private void OnAllEggsCleared()
         {
             if (GameManager.Instance?.state != GameState.Gameplay) return;
+            if (SpawnController.Instance != null && SpawnController.Instance.IsBossLevel) return;
             if (!_targetScoreReached) return;
 
             int finalScore = ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : 0;

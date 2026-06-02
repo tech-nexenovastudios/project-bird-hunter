@@ -229,8 +229,12 @@ namespace Gameplay.Managers
         private void ResetAllScores()
         {
             _currentScore = 0;
-            _chapterScore = 0;
             _levelScore = 0;
+        }
+
+        public void ResetChapterScore()
+        {
+            _chapterScore = 0;
         }
 
         public void AddScore(int amount)

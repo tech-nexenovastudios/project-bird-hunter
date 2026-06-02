@@ -97,6 +97,7 @@ namespace Gameplay.Managers
             // New Gameplay scene = new run. RewardManager is DontDestroyOnLoad so its
             // run counters survive scene loads; we explicitly clear them here.
             RewardManager.Instance?.ResetForNewRun();
+            ScoreManager.Instance?.ResetChapterScore();
 
             var progress = GameProgressManager.Instance.Data;
 
@@ -308,6 +309,7 @@ namespace Gameplay.Managers
         {
             GameProgressManager.Instance.ResetProgress();
             RewardManager.Instance?.ResetForNewRun();
+            ScoreManager.Instance?.ResetChapterScore();
             StartGameplay();
         }
 

@@ -28,17 +28,24 @@ namespace Gameplay.UI
         private void OnEnable()
         {
             GameEvents.OnGameLevelUpdated += OnLevelUpdated;
+            GameEvents.OnChapterCompleted += OnChapterCompleted;
         }
 
         private void OnDisable()
         {
             GameEvents.OnGameLevelUpdated -= OnLevelUpdated;
+            GameEvents.OnChapterCompleted -= OnChapterCompleted;
         }
 
         private void OnLevelUpdated(int globalLevelIndex)
         {
             var pm = GameProgressManager.Instance;
             Refresh(pm.CurrentLevel, pm.CurrentChapter);
+        }
+
+        private void OnChapterCompleted(int newChapterNumber)
+        {
+            Refresh(1, newChapterNumber);
         }
 
         private void Refresh(int currentLevel, int currentChapter)

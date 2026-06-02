@@ -180,20 +180,17 @@ namespace Gameplay.Managers
             return profile;
         }
 
-        // Persist the player's chapter choice from the main-menu carousel. Switching
-        // to a different chapter resets level to 1 and clears the per-chapter powerup
-        // slots so the chapter-start spin fires. Same chapter keeps current level (resume).
+        // Persist the player's chapter choice from the main-menu carousel. A menu-selected
+        // chapter always starts at level 1 with cleared powerup slots so the chapter-start
+        // spin fires — level progress within a chapter is never resumed across selection.
         public void SelectChapter(int chapter)
         {
             if (_progress == null) _progress = new GameProgress();
             chapter = Mathf.Max(1, chapter);
 
-            if (_progress.currentChapter != chapter)
-            {
-                _progress.currentChapter = chapter;
-                _progress.currentLevel = 1;
-                _progress.ResetSlotsForNewChapter();
-            }
+            _progress.currentChapter = chapter;
+            _progress.currentLevel = 1;
+            _progress.ResetSlotsForNewChapter();
             SaveProgress();
         }
 
@@ -246,6 +243,7 @@ namespace Gameplay.Managers
                 int chapScore = ScoreManager.Instance != null ? ScoreManager.Instance.ChapterScore : 0;
                 if (chapScore > chap.highScore) chap.highScore = chapScore;
                 if (chapScore > _progress.highScore) _progress.highScore = chapScore;
+                ScoreManager.Instance?.ResetChapterScore();
 
                 ResetAttemptsForChapter(_progress.currentChapter);
                 _progress.currentChapter++;

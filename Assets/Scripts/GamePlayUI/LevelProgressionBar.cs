@@ -25,6 +25,7 @@ namespace Gameplay.UI
         {
             GameEvents.OnGameLevelUpdated += OnGameLevelUpdated;
             GameEvents.OnLevelScoreUpdated += OnLevelScoreUpdated;
+            GameEvents.OnChapterCompleted += OnChapterCompleted;
 
             if (BossEventBus.Instance != null)
                 BossEventBus.Instance.OnHealthChanged += OnBossHealthChanged;
@@ -34,9 +35,26 @@ namespace Gameplay.UI
         {
             GameEvents.OnGameLevelUpdated -= OnGameLevelUpdated;
             GameEvents.OnLevelScoreUpdated -= OnLevelScoreUpdated;
+            GameEvents.OnChapterCompleted -= OnChapterCompleted;
 
             if (BossEventBus.Instance != null)
                 BossEventBus.Instance.OnHealthChanged -= OnBossHealthChanged;
+        }
+
+        private void OnChapterCompleted(int newChapterNumber)
+        {
+            _isBossLevel = false;
+            _isLevel20 = false;
+            _targetScore = 0;
+
+            if (progressBarFill != null)
+            {
+                progressBarFill.DOKill();
+                progressBarFill.fillAmount = 0f;
+            }
+
+            if (EggImage != null) EggImage.gameObject.SetActive(true);
+            if (BirdImage != null) BirdImage.gameObject.SetActive(false);
         }
 
         // ───────── Level Started ─────────

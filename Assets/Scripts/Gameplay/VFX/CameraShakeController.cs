@@ -123,15 +123,11 @@ namespace Gameplay.VFX
             if (duration <= 0f || strength <= 0f) return;
             if (!ResolveCamera()) return;
 
-            // Snap any in-progress shake back to base before starting a new one so overlapping
-            // shakes don't accumulate a drift offset, then re-capture base in case the camera
-            // legitimately moved while idle.
             if (_currentShake != null && _currentShake.IsActive())
             {
                 _currentShake.Kill();
                 _camTransform.localPosition = _baseLocalPos;
             }
-            _baseLocalPos = _camTransform.localPosition;
 
             _currentShake = _camTransform
                 .DOShakePosition(duration, strength * intensityScale, vibrato)
