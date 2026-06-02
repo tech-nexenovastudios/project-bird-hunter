@@ -6,6 +6,8 @@
 
 This doc maps the *runtime* hooks (events, managers, configs) so a designer or new engineer can see why a coin shows up on screen and how that same coin ends up funding a cannon upgrade weeks later. It calls out where the system holds together and where it doesn't.
 
+> ⚠️ **Telemetry finding (2026-06-02).** Live `GameLogs/economy.log` (143 level clears) shows the **`level_completion` bonus is a flat 340 gold for every level, every chapter** — it does not scale with progression. Only per-egg `egg_destroyed` drops scale (they rise as eggs get tankier). This means the completion bonus's share of income *shrinks* over time, weakening the §-cannon-economy assumption that completion rewards keep pace with rising upgrade costs (`Cannon_DPS_and_Egg_Workload_Design.md §5.3` expects income to rise with progression). **Decide:** scale the completion bonus by chapter/level, or accept that per-egg drops carry all the scaling. (Also observed: gem `first_time_clear` = flat +4; single cannon used the whole run — see the cannon docs.)
+
 ---
 
 ## 1. The five surfaces

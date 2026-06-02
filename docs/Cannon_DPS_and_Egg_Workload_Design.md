@@ -1,7 +1,7 @@
 # Bird Hunter — Cannon DPS Upgrade & Egg Workload Design
 
-**Version:** 0.3 — project-side changes implemented; cloud cannon data staged for push
-**Last Updated:** 2026-05-23
+**Version:** 0.4 — project-side changes implemented; first live-telemetry read added (§6.5)
+**Last Updated:** 2026-06-02
 
 > **Implementation status (updated 2026-05-25):**
 > - ✅ Cannon damage/fire-rate curve (`CannonInventoryService`): geometric integer damage (g=1.06, +1 floor) + ×1.5 saturating fire rate.
@@ -213,6 +213,18 @@ On death/retry the level plays at **identical difficulty** — no HP or pressure
 Critical pairing to validate: **damage curve (per cannon level) × egg-HP/difficulty curve (per chapter) × coin income** — every (level, chapter) cell should keep the death cadence at ~2–3 levels and each upgrade impactful.
 
 ---
+
+## 6.5 Telemetry findings (2026-06-02) — first live-log read
+
+First analysis of `GameLogs/combat.log` + `economy.log` from a real playthrough (143 level clears, 9 sessions). What it validates and what it flags against this design:
+
+- **Single-cannon dominance — the headline gap.** The player cleared **all 5 shipped chapters, reaching ~level 35, on `SingleShotCannon` alone** — 34 upgrades (lvl2→lvl35), **zero** other cannons unlocked or equipped, despite Rapid Fire (Ch3), Lucky (Ch6) etc. being available (`Cannon_Powerup_Unlock_Plan.md §1.2`). The §5 death-loop successfully forces *upgrading*, but nothing forces **cannon variety** — single-shot's curve brute-forces every wall. This is a roster/niche problem; **resolution direction in `Cannon_Powerup_Unlock_Plan.md §1.7`** (per-cannon niches: single-shot = precision/weak-point with no AoE). **This design owes that plan new enemy archetypes** — dense E1/E2 **swarm waves** (punish single-target → Shotgun), **shielded/armored** enemies (→ Double), and **weak-point-gated bosses** (→ Single Shot/Bartha). Without those, niches are flavor and dominance returns. Fold these into the §5.2 difficulty curve.
+- **DPS scaled hard, as intended.** avgDps climbed ~**68 → 800+**; peakDps bursts to **7,628** (powerup-driven). The DPS-raising half of the thesis works.
+- **Death cadence UNVALIDATED.** combat.log logs **no death / retry / game-over events** — the §5 "die every 2–3 levels" forcing function cannot be confirmed from telemetry. **Action: add death/retry logging** before claiming the §5.2 lockstep holds.
+- **`level_completion` reward is a flat 340 gold** across all 143 clears (does not scale by chapter/level). The §5.3 loop assumes coin income rises with progression; today only per-egg drops scale, the completion bonus does not. Reconcile with `Progression_Reward_Economy.md` (see its telemetry note).
+- **Score is upgrade-dominated** (2,306 → median 8,663 → 31,073 per level) — noted here because it kills absolute-score thresholds for the star system (`Chapter_Unlock_Panel_Design.md §3.5`); if §3.3's expected-workload math is built, it can normalize both star par-times and score.
+
+> These are from one player/device — directional, not statistically settled. The single-cannon and flat-completion-reward findings are the two that most clearly contradict design intent.
 
 ## 7. Open anchors — needed to lock final numbers
 

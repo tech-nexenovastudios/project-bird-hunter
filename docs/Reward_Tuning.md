@@ -5,7 +5,7 @@
 **Scope:** Why the reward system was over-paying coins and gems, and how the live `GameplayRewardConfig` was re-tuned to extend playtime.
 
 This doc pairs with:
-- `Shop_Pricing.md` — the cost side (cannons, upgrades, IAP).
+- `Store_and_Inventory_Pricing.md` — the cost side (cannons, upgrades, IAP), telemetry-calibrated.
 - `Progression_Reward_Economy.md` — the source-of-truth model.
 - `Cannon_Powerup_Unlock_Plan.md` — unlock chapters and prices.
 
@@ -148,7 +148,7 @@ The spend-to-earn ratio is healthy throughout — players always have enough to 
 
 ### 4.2 Gem-pack pull
 
-Lifetime gem income drops from ~7k to ~2.8k. Combined with the **gem-pack rebalance** in `Shop_Pricing.md` §1 (packs cut to 100 / 600 / 1,300 / 2,800 / 7,500 gems), any player who wants to skip the grind on a cannon (gem alt-path) has to either grind further or buy a gem pack. The new $0.99 starter pack (100 gems) is exactly **one Ch3 cannon unlock** — the cleanest possible "buy this and the next thing happens" funnel.
+Lifetime gem income drops from ~7k to ~2.8k. Combined with the **gem-pack rebalance** in `Store_and_Inventory_Pricing.md` §4.1 (packs cut to 100 / 600 / 1,300 / 2,800 / 7,500 gems), any player who wants to skip the grind on a cannon (gem alt-path) has to either grind further or buy a gem pack. The new $0.99 starter pack (100 gems) is exactly **one Ch3 cannon unlock** — the cleanest possible "buy this and the next thing happens" funnel.
 
 ---
 
