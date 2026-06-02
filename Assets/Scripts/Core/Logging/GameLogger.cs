@@ -26,7 +26,7 @@ public static class GameLogger
     // ==================== Configuration ====================
 
     /// <summary>Categories enabled by default. Add a flag here to trace that feature out of the box.</summary>
-    private const LogCategory DefaultEnabled = LogCategory.Economy;
+    private const LogCategory DefaultEnabled = LogCategory.Economy | LogCategory.Combat;
 
     /// <summary>Mirror every enabled log to the Unity console.</summary>
     public static bool ConsoleEnabled { get; set; } = true;
@@ -238,6 +238,7 @@ public enum LogCategory
     Ads = 1 << 5,
     Network = 1 << 6,
     Powerup = 1 << 7,
+    Combat = 1 << 8,
 
     All = ~0
 }

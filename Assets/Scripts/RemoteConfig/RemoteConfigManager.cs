@@ -150,7 +150,10 @@ public class RemoteConfigManager : MonoBehaviour
     {
         try
         {
-            string json = GetString(key, null);
+            // Read via GetJson, not GetString: JSON-typed Remote Config keys
+            // (e.g. "release-config") return their default from GetString.
+            string json = RemoteConfigService.Instance.appConfig.GetJson(key, null);
+            if (string.IsNullOrEmpty(json)) json = GetString(key, null);
             if (string.IsNullOrEmpty(json)) return defaultValue;
             return JsonUtility.FromJson<T>(json);
         }
@@ -346,8 +349,17 @@ public class RemoteConfigManager : MonoBehaviour
     private const string ReleaseConfigKey = "release-config";
     private ReleaseConfig _release;
 
-    private ReleaseConfig Release =>
-        _release ??= GetJson<ReleaseConfig>(ReleaseConfigKey, new ReleaseConfig());
+    private ReleaseConfig Release
+    {
+        get
+        {
+            // Re-parse while the cache holds no platform data: an early read
+            // (before the fetch completes) can otherwise cache an empty config.
+            if (_release == null || (_release.android == null && _release.ios == null))
+                _release = GetJson<ReleaseConfig>(ReleaseConfigKey, new ReleaseConfig());
+            return _release;
+        }
+    }
 
     private PlatformReleaseConfig CurrentPlatform
     {

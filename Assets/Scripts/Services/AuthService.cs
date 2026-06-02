@@ -170,8 +170,8 @@ public class AuthService
 #endif
             // Unity Services environment. This is the first InitializeAsync in the boot
             // sequence (auth runs first), so it sets the environment for all services.
-            // Flip back to "production" for release builds.
-            const string environmentName = "production";
+            // Selected at build time via BuildEnvironmentPrompt; defaults to "production".
+            string environmentName = UnityEnvironment.Name;
             var options = new InitializationOptions().SetEnvironmentName(environmentName);
             await UnityServices.InitializeAsync(options).AsUniTask().AttachExternalCancellation(ct);
             return true;
