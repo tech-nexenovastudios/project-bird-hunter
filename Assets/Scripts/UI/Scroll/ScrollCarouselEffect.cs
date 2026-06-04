@@ -62,7 +62,7 @@ public class ScrollCarouselEffect : MonoBehaviour,
     int GetSavedChapterIndex()
     {
         var pm = Gameplay.Managers.GameProgressManager.Instance;
-        int chapter = pm != null ? pm.CurrentChapter : 1;
+        int chapter = pm != null ? pm.FurthestChapter : 1;
         return Mathf.Clamp(chapter - 1, 0, items.Count - 1);
     }
 

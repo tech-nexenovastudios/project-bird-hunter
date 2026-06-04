@@ -760,6 +760,7 @@ namespace Gameplay
         {
             if (_chapter >= ShippedChapterCount)
             {
+                GameProgressManager.Instance?.CompleteFinalChapterLevel(score);
                 Gameplay.UI.GameplayUIHandler.Instance?.ShowComingSoon();
                 return;
             }
@@ -1451,6 +1452,12 @@ namespace Gameplay
             egg.OnDestroyed -= HandleEggDestroyed;
             _activeEggs.Remove(egg);
             TrackEggRemoved(egg.config);
+
+            if (egg.UnscoredHpOnDeath > 0 && egg.config != null)
+            {
+                int unearned = egg.config.scorePerHit * egg.UnscoredHpOnDeath + egg.config.scoreOnDestroy;
+                _totalTrackedScore = Mathf.Max(0, _totalTrackedScore - unearned);
+            }
 
             if (_activeEggs.Count == 0)
             {

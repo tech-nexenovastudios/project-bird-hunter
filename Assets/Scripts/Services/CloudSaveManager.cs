@@ -72,6 +72,8 @@ public class CloudSaveManager : ICloudSaveManager
         });
     }
 
+    public bool LastLoadFailed { get; private set; }
+
     public async UniTask<Dictionary<string, Item>> LoadAsync(HashSet<string> keys)
     {
         await EnsureInitialized();
@@ -84,11 +86,13 @@ public class CloudSaveManager : ICloudSaveManager
             foreach (var kvp in result)
                 _cache[kvp.Key] = kvp.Value.Value;
 
+            LastLoadFailed = false;
             return result;
         }
         catch (Exception ex)
         {
             Debug.LogError($"[CloudSave] Load failed: {ex.Message}");
+            LastLoadFailed = true;
             return new Dictionary<string, Item>();
         }
     }

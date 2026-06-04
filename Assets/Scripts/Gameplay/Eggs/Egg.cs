@@ -40,6 +40,8 @@ namespace Gameplay.Eggs
         public Action<Egg> OnReleaseReady;     // fires after death animation — safe to return to pool
         public Action<Egg> OnTrySplit;
 
+        public int UnscoredHpOnDeath { get; private set; }
+
         private const float BounceCooldown = 0.08f;
         private const float ApexClampSlack = 1.0f;
         private const float MinBounceHeight = 0.5f;
@@ -145,6 +147,7 @@ namespace Gameplay.Eggs
             if (_sortingGroup != null) _sortingGroup.sortingOrder = sortingIndex;
 
             _isDying = false;
+            UnscoredHpOnDeath = 0;
             _maxHeightReachedSinceLastBounce = _t.position.y;
             _lastBouncePosition = _t.position;
             _isFrozen = false;
@@ -577,6 +580,8 @@ namespace Gameplay.Eggs
             if (_isDying) return;
             if (!collision.CompareTag("Player")) return;
             if (!collision.TryGetComponent(out IDamageable damageable)) return;
+
+            UnscoredHpOnDeath = _eggHealth != null ? _eggHealth.CurrentHp : 0;
 
             damageable.TakeDamage(config.cannonDamage);
             _eggHealth?.MarkDeadSilent();

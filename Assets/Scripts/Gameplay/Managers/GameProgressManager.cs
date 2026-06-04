@@ -22,6 +22,7 @@ namespace Gameplay.Managers
         public string chapterConfigResourcesPath = "Data/ChapterProgressions";
 
         private GameProgress _progress;
+        private bool _progressLoaded;
 
         public static event Action<int, PowerupConfig[]> OnSpinTriggered;
         public static event Action<GameProgress> OnProgressChanged;
@@ -33,6 +34,20 @@ namespace Gameplay.Managers
         public int GlobalLevel => (CurrentChapter - 1) * 20 + CurrentLevel;
         public int HighScore => _progress?.highScore ?? 0;
         public int TotalScore => _progress?.totalScore ?? 0;
+
+        public int FurthestChapter
+        {
+            get
+            {
+                int furthest = CurrentChapter;
+                var chapters = _progress?.chapters;
+                if (chapters == null) return furthest;
+                foreach (var cp in chapters)
+                    if (cp != null && cp.cleared && cp.chapter + 1 > furthest)
+                        furthest = cp.chapter + 1;
+                return furthest;
+            }
+        }
         public PowerUpSlot[] CurrentSlots => _progress?.chapterSlots ?? new PowerUpSlot[0];
 
         public PowerupConfig LastSelectedPowerup { get; private set; }
@@ -273,6 +288,28 @@ namespace Gameplay.Managers
             OnProgressChanged?.Invoke(_progress);
         }
 
+        public void CompleteFinalChapterLevel(int scoreAchieved)
+        {
+            if (_progress == null) _progress = new GameProgress();
+
+            _progress.totalScore += scoreAchieved;
+            _progress.MarkFirstTimeClear(_progress.currentChapter, _progress.currentLevel);
+
+            int completedLevel = _progress.currentLevel;
+
+            var chap = _progress.GetOrCreateChapter(_progress.currentChapter);
+            chap.highestLevelReached = Mathf.Max(chap.highestLevelReached, completedLevel);
+            if (completedLevel >= 20) chap.cleared = true;
+
+            int chapScore = ScoreManager.Instance != null ? ScoreManager.Instance.ChapterScore : 0;
+            if (chapScore > chap.highScore) chap.highScore = chapScore;
+            if (chapScore > _progress.highScore) _progress.highScore = chapScore;
+            ScoreManager.Instance?.ResetChapterScore();
+
+            SaveProgress();
+            OnProgressChanged?.Invoke(_progress);
+        }
+
         public void TriggerSpin(int slotIndex)
         {
             _currentSpinSlotIndex = slotIndex;
@@ -402,6 +439,7 @@ namespace Gameplay.Managers
         public void ResetProgress()
         {
             _progress = new GameProgress();
+            _progressLoaded = true;
             LastSelectedPowerup = null;
             SaveProgress();
             OnProgressChanged?.Invoke(_progress);
@@ -431,6 +469,11 @@ namespace Gameplay.Managers
         public async void SaveProgress()
         {
             if (_progress == null) return;
+            if (!_progressLoaded)
+            {
+                Debug.LogWarning("[ProgressManager] Save skipped — progress was never successfully loaded this session; refusing to overwrite cloud data.");
+                return;
+            }
 
             try
             {
@@ -496,9 +539,18 @@ namespace Gameplay.Managers
                     "slot_powerup_ids", "first_time_cleared_levels", "chapter_progress_data"
                 });
 
+                if (CloudSaveManager.Instance.LastLoadFailed)
+                {
+                    Debug.LogError("[ProgressManager] Cloud load failed — keeping in-memory progress; saving stays disabled until a successful load.");
+                    if (_progress == null) _progress = new GameProgress();
+                    OnProgressChanged?.Invoke(_progress);
+                    return;
+                }
+
                 if (res.Count == 0)
                 {
                     _progress = new GameProgress();
+                    _progressLoaded = true;
                     OnProgressChanged?.Invoke(_progress);
                     return;
                 }
@@ -562,11 +614,13 @@ namespace Gameplay.Managers
                         if (!string.IsNullOrEmpty(data.slotPowerupIds[i]) && _progress.chapterSlots[i] != null)
                             _progress.chapterSlots[i].equippedPowerupId = data.slotPowerupIds[i];
                 }
+
+                _progressLoaded = true;
             }
             catch (Exception ex)
             {
                 Debug.LogError("[ProgressManager] Load error: " + ex.Message);
-                _progress = new GameProgress();
+                if (_progress == null) _progress = new GameProgress();
             }
 
             OnProgressChanged?.Invoke(_progress);
