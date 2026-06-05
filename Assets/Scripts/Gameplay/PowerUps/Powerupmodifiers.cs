@@ -357,9 +357,12 @@ namespace Gameplay.PowerUps
                     cachedAngles[1] = value;
                     return cachedAngles;
                 case BulletModType.ExtraShot:
-                    cachedAngles = new float[2];
+                    // Dual Shot — two bullets symmetric around the gun's aim.
+                    // The primary bullet is redirected to -value in ModifyBullet,
+                    // and we hand out only +value here so the extra spawn flies
+                    // on the other side. Total: 2 bullets, no straight shot.
+                    cachedAngles ??= new float[1];
                     cachedAngles[0] = value;
-                    cachedAngles[1] = -value;
                     return cachedAngles;
                 default:
                     return System.Array.Empty<float>();
@@ -375,6 +378,18 @@ namespace Gameplay.PowerUps
                     break;
                 case BulletModType.AddPierce:
                     bullet.instantKillChance = value;
+                    break;
+                case BulletModType.ExtraShot:
+                    // Re-aim the primary bullet to -value so the dual-shot pair fans
+                    // symmetrically. CreateBullet has already set transform.rotation
+                    // and the rigidbody's velocity from the gun's firing direction —
+                    // we rotate on top of that and recompute linearVelocity so both
+                    // physics-based bullets and Update-driven SimpleBullets fly the
+                    // new heading.
+                    bullet.transform.rotation *= Quaternion.Euler(0f, 0f, -value);
+                    var rb = bullet.GetComponent<Rigidbody2D>();
+                    if (rb != null)
+                        rb.linearVelocity = bullet.transform.up * bullet.bulletSpeed;
                     break;
             }
         }

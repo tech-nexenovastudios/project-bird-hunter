@@ -38,6 +38,14 @@ namespace Gameplay.Managers
         public PowerupConfig LastSelectedPowerup { get; private set; }
         private int _currentSpinSlotIndex = 0;
 
+        // Power Surge (PowerupConfig.id = "8") buffs the cannon's attack and must
+        // remain equipped across every remaining chapter level — i.e. all 5 levels
+        // after the spin that unlocked it — rather than being consumed after the
+        // first apply. Re-equip flows through CannonPowerUpCaster.Equip, which
+        // calls UnequipAll first, so the buff is rebound (not stacked) each level.
+        // The slot is cleared naturally on chapter rollover via ResetSlotsForNewChapter.
+        private const string PowerSurgeId = "8";
+
         // Session-only retry counters (not persisted). Resets on app restart and on chapter rollover.
         private readonly Dictionary<string, int> _sessionLevelAttempts = new();
 
@@ -366,6 +374,12 @@ namespace Gameplay.Managers
                 // OnPreBossRecoveryActivated handler consumes the slot once the heal fires.
                 bool isPreBoss = config != null && config.effectType == PreBossHealModifier.ConfigEffectType;
 
+                // Power Surge persists across all 5 chapter levels after its spin. Same
+                // treatment as Pre-Boss: never flag hasBeenApplied so ApplyEquippedSlots
+                // re-equips it every level. ResetSlotsForNewChapter clears it on chapter
+                // rollover, which is the natural "expires when player gets a new spin".
+                bool isPowerSurge = config != null && config.id == PowerSurgeId;
+
                 var runtimePowerUp = CannonPowerUpCaster.Instance.FindByID(slot.equippedPowerupId);
 
                 if (runtimePowerUp == null)
@@ -395,7 +409,7 @@ namespace Gameplay.Managers
 
                 CannonPowerUpCaster.Instance.Equip(runtimePowerUp);
                 appliedCount++;
-                if (!isPersistent && !isPreBoss) slot.hasBeenApplied = true;
+                if (!isPersistent && !isPreBoss && !isPowerSurge) slot.hasBeenApplied = true;
             }
 
         }
