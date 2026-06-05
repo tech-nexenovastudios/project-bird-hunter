@@ -13,6 +13,7 @@ public class FireColumnStrikeBehaviour : BaseAttackBehaviour
     private BossMovementHandler movement;
     private Transform spawnPoint;
     private GameObject activeColumn;
+    private ParticleSystemRenderer beamRenderer;
     private Vector2 columnHitCenter;
     private Vector2 columnHitSize;
     private bool columnBoundsValid;
@@ -128,7 +129,8 @@ public class FireColumnStrikeBehaviour : BaseAttackBehaviour
 
         // World-space damage region (the prefab's localScale.y is a VFX tuning value, not the
         // hit height, so we trust the geometry). Pad vertically so a cannon sitting just below
-        // the locked Y is still inside the box.
+        // the locked Y is still inside the box. Width is resolved per tick from the live beam
+        // visuals so damage requires actual contact with the column.
         float verticalPad = 1.5f;
         columnHitCenter = new Vector2(
             origin.x,
@@ -137,6 +139,10 @@ public class FireColumnStrikeBehaviour : BaseAttackBehaviour
             config.columnWidth,
             columnHeight + verticalPad);
         columnBoundsValid = true;
+
+        // The root ParticleSystem is the core beam (children are embers/sparks that drift
+        // wider than the flame itself) — its rendered bounds define the contact width.
+        beamRenderer = activeColumn.GetComponent<ParticleSystemRenderer>();
 
         // Pooled objects keep stale particle state and won't auto-replay on SetActive —
         // explicitly stop-clear-play every ParticleSystem.
@@ -153,16 +159,50 @@ public class FireColumnStrikeBehaviour : BaseAttackBehaviour
     private void TryDamageCannonInColumn()
     {
         if (activeColumn == null || !columnBoundsValid) return;
+        if (!TryGetBeamContactBox(out Vector2 hitCenter, out Vector2 hitSize)) return;
 
         // Fresh physics overlap so the check is robust against the column having no Collider2D
         // (it's a VFX) and against the cannon prefab being swapped mid-run.
-        var hit = Physics2D.OverlapBox(columnHitCenter, columnHitSize, 0f, playerLayerMask);
+        var hit = Physics2D.OverlapBox(hitCenter, hitSize, 0f, playerLayerMask);
         if (hit == null) return;
 
         var cannon = hit.GetComponentInParent<BaseCannon>();
         if (cannon == null) return;
 
         cannon.TakeDamage(config.columnDamagePerTick);
+    }
+
+    // The damage region this frame: the analytic column box (spawn X → cannon Y span)
+    // intersected with the beam's actual rendered world bounds, so damage requires genuine
+    // visual contact — before the particles reach the cannon, after they fade, or if the
+    // beam drifts off the locked X, no damage is dealt. Returns false when the beam isn't
+    // rendering (no visible column = no contact).
+    private bool TryGetBeamContactBox(out Vector2 center, out Vector2 size)
+    {
+        center = columnHitCenter;
+        size = columnHitSize;
+        if (beamRenderer == null)
+        {
+            // No renderer to track — fall back to the analytic box capped at columnWidth.
+            size.x = Mathf.Min(size.x, config.columnWidth);
+            return true;
+        }
+
+        Bounds rendered = beamRenderer.bounds;
+        if (rendered.size.x < 0.01f || rendered.size.y < 0.01f)
+            return false; // nothing rendered yet (or already cleared)
+
+        // Intersect analytic box with rendered bounds on both axes.
+        float xMin = Mathf.Max(columnHitCenter.x - columnHitSize.x * 0.5f, rendered.min.x);
+        float xMax = Mathf.Min(columnHitCenter.x + columnHitSize.x * 0.5f, rendered.max.x);
+        float yMin = Mathf.Max(columnHitCenter.y - columnHitSize.y * 0.5f, rendered.min.y);
+        float yMax = Mathf.Min(columnHitCenter.y + columnHitSize.y * 0.5f, rendered.max.y);
+        if (xMax <= xMin || yMax <= yMin)
+            return false; // beam visuals don't overlap the column region at all
+
+        center = new Vector2((xMin + xMax) * 0.5f, (yMin + yMax) * 0.5f);
+        size = new Vector2(Mathf.Min(xMax - xMin, config.columnWidth), yMax - yMin);
+        return true;
     }
 
     private void ReturnColumn()
@@ -175,6 +215,7 @@ public class FireColumnStrikeBehaviour : BaseAttackBehaviour
 
         PoolManager.Return(activeColumn);
         activeColumn = null;
+        beamRenderer = null;
         columnBoundsValid = false;
     }
 
@@ -190,4 +231,23 @@ public class FireColumnStrikeBehaviour : BaseAttackBehaviour
     }
 
     public override void OnCleanup() => OnStop();
+
+#if UNITY_EDITOR
+    // Scene-view debug: yellow = full analytic column region, red = live contact box that
+    // actually deals damage this frame (beam visuals ∩ column region). Select the boss in
+    // the Hierarchy with Gizmos enabled to see them while a column is active.
+    private void OnDrawGizmosSelected()
+    {
+        if (!Application.isPlaying || activeColumn == null || !columnBoundsValid) return;
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireCube(columnHitCenter, columnHitSize);
+
+        if (TryGetBeamContactBox(out Vector2 center, out Vector2 size))
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireCube(center, size);
+        }
+    }
+#endif
 }

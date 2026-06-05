@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SerpentEggDropConfig
   cooldown: 1.5
   duration: 1.5
-  damage: 5
+  damage: 20
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
@@ -30,4 +30,4 @@ MonoBehaviour:
   rollSpeed: 2
   randomDirection: 1
   maxRollDistance: 1.5
-  contactDamage: 15
+  contactDamage: 20

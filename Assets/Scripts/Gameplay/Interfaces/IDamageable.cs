@@ -31,6 +31,7 @@ namespace Gameplay.Interfaces
         void AddFireRateModifier(float percentBonus);
         void RemoveFireRateModifier(float percentBonus);
         void IncreaseMaxHp(int amount);
+        void IncreaseMaxHpByPercent(float percent);
         bool IsInvincible { get; set; }
         float HitboxScale { get; set; }
         int ShieldHits { get; set; }

@@ -52,15 +52,6 @@ namespace Gameplay.PowerUps
             [Min(0f)] public float healCooldown = 20f;
 
             [Header("Invincible Settings")]
-            [Tooltip("Cooldown between invincibility activations")]
-            [Min(0f)] public float invincibleCooldown = 30f;
-
-            [Tooltip("How often to poll for an Egg in the scene before starting the invincibility duration countdown.")]
-            [Min(0.05f)] public float eggCheckInterval = 0.2f;
-
-            [Tooltip("Safety cap: if no Egg appears within this many seconds, start the duration countdown anyway.")]
-            [Min(0.1f)] public float maxEggWait = 30f;
-
             [Tooltip("VFX prefab spawned at the cannon while invincibility is active. Destroyed when the duration ends.")]
             public GameObject invincibleVfxPrefab;
 
@@ -69,12 +60,14 @@ namespace Gameplay.PowerUps
 
             private ICannon cannon;
             private IntervalTimer timer;
-            private bool awaitingEgg;
+            private FrequencyTimer eggWaitTimer;
             private GameObject activeInvincibleVfx;
             private float previousScale;
 
+            // How often the armed shield scans the scene for the first egg.
+            private const int EggPollTicksPerSecond = 10;
+
             private float lastHealTime = -999f;       // ensures first heal works
-            private float lastInvincibleTime = -999f; // ensures first invincibility works
 
             public void Activate(ICannon cannon)
             {
@@ -91,7 +84,8 @@ namespace Gameplay.PowerUps
                         break;
 
                     case CannonStat.MaxHp:
-                        cannon.IncreaseMaxHp(Mathf.RoundToInt(value));
+                        // value is a percent of the cannon's base max HP, not a flat amount.
+                        cannon.IncreaseMaxHpByPercent(value);
                         break;
 
                     case CannonStat.AttackPercent:
@@ -100,10 +94,11 @@ namespace Gameplay.PowerUps
 
                     case CannonStat.FireRatePercent:
                         cannon.AddFireRateModifier(value);
+                        GameLogger.Log(LogCategory.Powerup, $"[RapidFire] Activated — +{value}% fire rate for this level");
                         break;
 
                     case CannonStat.Invincible:
-                        TryActivateInvincible();
+                        ActivateInvincible();
                         break;
 
                     case CannonStat.HitboxScale:
@@ -134,66 +129,44 @@ namespace Gameplay.PowerUps
                     GameEvents.FirePowerupCooldownStarted(healCooldown);
             }
 
-            private void TryActivateInvincible()
+            // Activate still runs at the level-intro countdown's "Go!" beat (GameManager defers
+            // ApplyPowerUpsToCurrentCannon to OnLevelCountdownGo), but the shield no longer turns
+            // on there — it only ARMS a poll that waits for the first object tagged "Egg" to enter
+            // the playfield. Tag scan (not GameEvents.OnEggSpawned) so boss egg drops and splits
+            // count too, and the shield window isn't wasted on the egg-free opening seconds of a
+            // level. Once an egg exists, shield + VFX run for the flat duration window, then
+            // Deactivate strips them. The slot is persistent (see GameProgressManager), so this
+            // re-arms at the start of every level until the player picks a different powerup.
+            private void ActivateInvincible()
             {
-                // Block activation if we are still on cooldown
-                if (Time.time < lastInvincibleTime + invincibleCooldown)
-                    return;
+                GameLogger.Log(LogCategory.Powerup,
+                    "[PhaseShield] Armed — waiting for the first egg to enter the playfield");
+
+                eggWaitTimer = new FrequencyTimer(EggPollTicksPerSecond);
+                eggWaitTimer.OnTick = CheckForFirstEgg;
+                eggWaitTimer.Start();
+            }
+
+            private void CheckForFirstEgg()
+            {
+                if (GameObject.FindGameObjectWithTag(TagManager.EggTag) == null) return;
+
+                StopEggWaitTimer();
+                StartInvincibleWindow();
+            }
+
+            private void StartInvincibleWindow()
+            {
+                if (cannon == null) return;
 
                 cannon.IsInvincible = true;
-                lastInvincibleTime = Time.time;
-
-                // Spawn VFX immediately on pick so the player sees feedback the moment they
-                // select. The duration countdown is still deferred until an Egg appears (below).
                 SpawnInvincibleVfx();
 
-                if (invincibleCooldown > 0f)
-                    GameEvents.FirePowerupCooldownStarted(invincibleCooldown);
+                float window = duration > 0f ? duration : 5f;
+                GameLogger.Log(LogCategory.Powerup,
+                    $"[PhaseShield] First egg in scene — shield ON, invincible for {window:F0}s");
 
-                if (duration <= 0f) return;
-
-                // Defer the duration countdown until an Egg is actually present in the scene —
-                // eggs take a moment to fall after power-up selection, and we don't want the
-                // invincibility window to burn down before the player is in danger.
-                if (IsEggPresent()) StartDurationTimer();
-                else StartEggWaitTimer();
-            }
-
-            private static bool IsEggPresent()
-            {
-                return GameObject.FindGameObjectWithTag("Egg") != null;
-            }
-
-            private void StartEggWaitTimer()
-            {
-                awaitingEgg = true;
-                timer = new IntervalTimer(maxEggWait, eggCheckInterval);
-                timer.OnInterval = OnEggCheckTick;
-                timer.OnTimerStop = OnEggWaitExpired;
-                timer.Start();
-            }
-
-            private void OnEggCheckTick()
-            {
-                if (!IsEggPresent()) return;
-                awaitingEgg = false;     // clear before Stop so OnEggWaitExpired no-ops if it still fires
-                StopActiveTimer();
-                StartDurationTimer();
-            }
-
-            private void OnEggWaitExpired()
-            {
-                // Safety net: no Egg appeared within maxEggWait — start the duration anyway
-                // so the cannon doesn't stay invincible forever.
-                if (!awaitingEgg) return;
-                awaitingEgg = false;
-                StartDurationTimer();
-            }
-
-            private void StartDurationTimer()
-            {
-                // VFX is spawned at pick time in TryActivateInvincible — only run the countdown here.
-                timer = new IntervalTimer(duration, duration);
+                timer = new IntervalTimer(window, window);
                 timer.OnTimerStop = Deactivate;
                 timer.Start();
             }
@@ -228,10 +201,19 @@ namespace Gameplay.PowerUps
                 timer = null;
             }
 
+            private void StopEggWaitTimer()
+            {
+                if (eggWaitTimer == null) return;
+                eggWaitTimer.OnTick = delegate { };
+                eggWaitTimer.OnTimerStop = delegate { };
+                eggWaitTimer.Stop();
+                eggWaitTimer = null;
+            }
+
             public void Deactivate()
             {
                 StopActiveTimer();
-                awaitingEgg = false;
+                StopEggWaitTimer();
                 DespawnInvincibleVfx();
 
                 if (cannon == null) return;
@@ -248,10 +230,13 @@ namespace Gameplay.PowerUps
 
                     case CannonStat.FireRatePercent:
                         cannon.RemoveFireRateModifier(value);
+                        GameLogger.Log(LogCategory.Powerup, $"[RapidFire] Deactivated — -{value}% fire rate (level transition / displaced)");
                         break;
 
                     case CannonStat.Invincible:
                         cannon.IsInvincible = false;
+                        GameLogger.Log(LogCategory.Powerup,
+                            "[PhaseShield] Shield OFF (5s window ended / level transition / displaced)");
                         break;
 
                     case CannonStat.HitboxScale:
@@ -314,7 +299,8 @@ namespace Gameplay.PowerUps
         };
 
         // Progressive DPS uplift derived from this mod's serialized `value`.
-        // Spread/Extra return 1f — their extra bullets are already counted via ExtraProjectiles.
+        // Spread/Extra return 1f — the volley's damage is split equally across all
+        // bullets (BaseCannon.SpawnBullet), so extra bullets don't add total DPS.
         public float DpsMultiplier => mode switch
         {
             // Each bounce ~40% effective rehit on a fresh target. Scales linearly with bounce count.
@@ -1066,7 +1052,10 @@ namespace Gameplay.PowerUps
     // ═════════════════════════════════════════════════════════
 
     // ── #9 Low HP ATK Boost ──────────────────────────────────
-    // Unique: conditional re-evaluation on every HP change
+    // HP is checked ONCE at level start (Activate runs each level via
+    // ApplyPowerUpsToCurrentCannon). The boost state is frozen for the whole
+    // level — mid-level HP changes do NOT toggle it. Deactivate on the next
+    // level transition removes the boost before the fresh evaluation.
 
     [Serializable]
     public class LowHpAttackBoostModifier : ICannonModifier
@@ -1080,12 +1069,8 @@ namespace Gameplay.PowerUps
         public void Activate(ICannon cannon)
         {
             this.cannon = cannon;
-            GameEvents.OnCannonHealthChanged += OnHealthChanged;
-            EvaluateBoost();
-        }
-
-        private void OnHealthChanged(int currentHp, int maxHp)
-        {
+            GameLogger.Log(LogCategory.Powerup,
+                $"[DesperationFury] Level-start HP check: {cannon.CurrentHp}/{cannon.MaxHp} (threshold ≤{hpThreshold * 100f:F0}%)");
             EvaluateBoost();
         }
 
@@ -1098,19 +1083,29 @@ namespace Gameplay.PowerUps
             {
                 cannon.AddFireRateModifier(percentBonus);
                 isBoosted = true;
+                GameLogger.Log(LogCategory.Powerup,
+                    $"[DesperationFury] HP low → boost ON: +{percentBonus}% fire rate, frozen for the whole level");
             }
             else if (!should && isBoosted)
             {
                 cannon.RemoveFireRateModifier(percentBonus);
                 isBoosted = false;
+                GameLogger.Log(LogCategory.Powerup, $"[DesperationFury] Boost OFF: -{percentBonus}% fire rate");
+            }
+            else if (!should)
+            {
+                GameLogger.Log(LogCategory.Powerup, "[DesperationFury] HP above threshold → no boost this level");
             }
         }
 
         public void Deactivate()
         {
-            GameEvents.OnCannonHealthChanged -= OnHealthChanged;
             if (isBoosted && cannon != null)
+            {
                 cannon.RemoveFireRateModifier(percentBonus);
+                GameLogger.Log(LogCategory.Powerup,
+                    $"[DesperationFury] Deactivated — -{percentBonus}% fire rate (level transition / displaced)");
+            }
             isBoosted = false;
             cannon = null;
         }

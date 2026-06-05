@@ -56,29 +56,36 @@ public class RadioactiveEggDropBehaviour : BaseAttackBehaviour
         if (config.eggPrefab == null) return;
 
         Vector3 pos = dropPoint != null ? dropPoint.position : boss.transform.position;
+        int hp = Random.Range(config.eggHpMin, config.eggHpMax + 1);
+        SpawnEggAt(pos, hp, GetSizeMultiplier());
+    }
+
+    // Shared spawn plumbing — used for the primary drop and for split children
+    // (SuperEggDropBehaviour). Returns null when the pool object isn't an egg.
+    protected Egg SpawnEggAt(Vector3 pos, int hp, float sizeMultiplier)
+    {
         var obj = PoolManager.Get(config.eggPrefab, pos);
-        if (obj == null) return;
+        if (obj == null) return null;
 
         var egg = obj.GetComponent<Egg>();
         if (egg == null || egg.config == null)
         {
             // Not a real egg prefab — bail and return to pool to avoid leaking.
             PoolManager.Return(obj);
-            return;
+            return null;
         }
 
         // BossEggLifetime must Init BEFORE Egg.Init so its size override on the
         // cloned tier is in place when ApplyPersonality reads sizeRange.
         var lifetimeCtl = obj.GetComponent<BossEggLifetime>()
                           ?? obj.AddComponent<BossEggLifetime>();
-        lifetimeCtl.Init(config.eggLifetime, GetSizeMultiplier());
+        lifetimeCtl.Init(config.eggLifetime, sizeMultiplier);
 
         egg.OnReleaseReady = OnEggReleaseReady;
-
-        int hp = Random.Range(config.eggHpMin, config.eggHpMax + 1);
         egg.Init(egg.config, hp, config.eggSortingIndex);
 
         activeEggs.Add(egg);
+        return egg;
     }
 
     private void OnEggReleaseReady(Egg egg)

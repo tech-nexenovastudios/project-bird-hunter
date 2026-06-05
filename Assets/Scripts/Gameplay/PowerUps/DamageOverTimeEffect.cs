@@ -42,9 +42,10 @@ namespace Gameplay.PowerUps
 
         // DPS uplift this mod contributes when active. The TTK spawn-gate multiplies
         // this across all active mods to estimate true player DPS. Default 1f means
-        // "no DPS effect" (e.g. multi-shot mods, since extra bullets are already
-        // counted via ExtraProjectiles). Mods with real damage uplift (bounce, pierce,
-        // rocket, DoT) override this with a value-derived formula.
+        // "no DPS effect" (e.g. multi-shot mods — the volley's damage is split equally
+        // across all bullets, so extra projectiles don't change total damage per shot).
+        // Mods with real damage uplift (bounce, pierce, rocket, DoT) override this
+        // with a value-derived formula.
         float DpsMultiplier => 1f;
     }
 

@@ -423,27 +423,41 @@ namespace Gameplay.Managers
                 }
 
                 bool hasProjectileModifier = false;
+                // Rapid Fire (CannonStat.FireRatePercent), Desperation Fury
+                // (LowHpAttackBoostModifier) and Phase Shield (CannonStat.Invincible) stay
+                // active across all 5 levels after their spin — same treatment as Power
+                // Surge. Equip → UnequipAll rebinds (not stacks) each level, and selecting
+                // a different power at the next spin displaces the slot
+                // (GameProgress.EquipPowerup), which removes the effect naturally.
+                bool isPersistentCannonMod = false;
                 if (runtimePowerUp.effects != null)
                 {
                     for (int e = 0; e < runtimePowerUp.effects.Count; e++)
                     {
-                        if (runtimePowerUp.effects[e] is IProjectileModifier)
-                        {
+                        var fx = runtimePowerUp.effects[e];
+                        if (fx is IProjectileModifier)
                             hasProjectileModifier = true;
-                            break;
-                        }
+                        if (fx is LowHpAttackBoostModifier ||
+                            (fx is CannonStatModifier csm &&
+                             (csm.stat == CannonStat.FireRatePercent || csm.stat == CannonStat.Invincible)))
+                            isPersistentCannonMod = true;
                     }
                 }
 
-                bool isPersistent = hasCooldown || hasProjectileModifier;
+                bool isPersistent = hasCooldown || hasProjectileModifier || isPersistentCannonMod;
 
                 if (!isPersistent && slot.hasBeenApplied)
                 {
+                    GameLogger.Log(LogCategory.Powerup,
+                        $"[Slots] Ch{CurrentChapter} L{CurrentLevel} slot[{i}] '{slot.equippedPowerupId}' SKIPPED — one-shot already applied");
                     continue;
                 }
 
                 CannonPowerUpCaster.Instance.Equip(runtimePowerUp);
                 appliedCount++;
+                GameLogger.Log(LogCategory.Powerup,
+                    $"[Slots] Ch{CurrentChapter} L{CurrentLevel} slot[{i}] '{slot.equippedPowerupId}' EQUIPPED — persistent={isPersistent} " +
+                    $"(cooldown={hasCooldown}, projectile={hasProjectileModifier}, cannonMod={isPersistentCannonMod}, preBoss={isPreBoss}, powerSurge={isPowerSurge})");
                 if (!isPersistent && !isPreBoss && !isPowerSurge) slot.hasBeenApplied = true;
             }
 

@@ -12,7 +12,9 @@ public class FireColumnStrikeConfig : BaseAttackConfig
     public float columnLifetime = 3f;
     [Tooltip("Delay after a column is destroyed before the next one spawns (seconds).")]
     public float respawnDelay = 2f;
-    [Tooltip("How wide the fire column's damage region is.")]
+    [Tooltip("Upper cap on the fire column's contact width. The actual damage width follows " +
+             "the beam's rendered visuals each tick; this only caps it (and is the fallback " +
+             "before particles appear).")]
     public float columnWidth = 1.5f;
 
     [Header("Damage")]

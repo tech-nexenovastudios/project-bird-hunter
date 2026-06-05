@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FireColumnStrikeConfig
   cooldown: 2
   duration: 4
-  damage: 10
+  damage: 19
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
   fireColumnPrefab: {fileID: 652019301415996210, guid: 1a52472de14ea8544aa5f286876cd46c, type: 3}
   columnLifetime: 3
   respawnDelay: 5
-  columnWidth: 4
-  columnDamagePerTick: 4
+  columnWidth: 0.5
+  columnDamagePerTick: 19
   columnTicksPerSecond: 1

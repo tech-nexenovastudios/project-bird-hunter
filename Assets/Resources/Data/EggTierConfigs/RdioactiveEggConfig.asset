@@ -25,9 +25,10 @@ MonoBehaviour:
   bounceHeightPercent: 0.5
   apexHangDuration: 0.25
   splitForce: 4
-  splitInto: {fileID: 0}
+  splitInto: {fileID: 11400000}
   splitCount: 0
-  cannonDamage: 20
+  cannonDamage: 35
+  maxCannonHpFractionPerHit: 0.506
   sizeRange: {x: 0.95, y: 1.05}
   bounceFrequencyRange: {x: 3, y: 5}
   bounceAmplitudeRange: {x: 0.06, y: 0.1}

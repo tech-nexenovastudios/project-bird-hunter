@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RadioactiveEggDropConfig
   cooldown: 3
   duration: 2
-  damage: 11
+  damage: 30
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
   dropPointName: EggDropPoint
   eggPrefab: {fileID: 1251663967950569254, guid: 1792cc1c983264b4aba4839374589e45, type: 3}
-  eggHpMin: 70
-  eggHpMax: 100
+  eggHpMin: 700
+  eggHpMax: 1200
   eggSortingIndex: 5
-  eggLifetime: 15
+  eggLifetime: 0
   stopDuration: 0.1

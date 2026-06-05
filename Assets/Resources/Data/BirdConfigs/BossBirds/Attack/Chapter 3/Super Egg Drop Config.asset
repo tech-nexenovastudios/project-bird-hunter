@@ -12,19 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8b9c0d1e2f30415263748596a7b8c9d, type: 3}
   m_Name: Super Egg Drop Config
   m_EditorClassIdentifier: Assembly-CSharp::SuperEggDropConfig
-  cooldown: 5
+  cooldown: 12
   duration: 2
-  damage: 11
+  damage: 30
   warningPrefab: {fileID: 0}
   warningDuration: 0.5
   vfxPrefab: {fileID: 0}
   dropPointName: EggDropPoint
   eggPrefab: {fileID: 1251663967950569254, guid: 1792cc1c983264b4aba4839374589e45, type: 3}
-  eggHpMin: 140
-  eggHpMax: 200
+  eggHpMin: 1500
+  eggHpMax: 2500
   eggSortingIndex: 5
-  eggLifetime: 15
+  eggLifetime: 0
   stopDuration: 0.1
   sizeMultiplier: 2
-  intervalMin: 5
-  intervalMax: 10
+  intervalMin: 12
+  intervalMax: 18
+  splitCount: 2
+  splitEggHpMin: 700
+  splitEggHpMax: 1200

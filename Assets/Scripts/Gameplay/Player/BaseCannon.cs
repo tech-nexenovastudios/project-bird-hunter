@@ -66,13 +66,15 @@ namespace Gameplay.Player
                 float fireRate = Stats.Get(StatType.FireRate) * (1f + percentFireRateBonus);
                 if (fireRate <= 0f) return 0f;
 
+                // ExtraProjectiles are NOT counted here: SpawnBullet splits the
+                // attack equally across the volley, so extra bullets add coverage
+                // without changing total damage per shot.
                 int bulletCount = gunTips != null && gunTips.Length > 0 ? gunTips.Length : 1;
                 float modMult = 1f;
                 for (int i = 0; i < activeProjectileMods.Count; i++)
                 {
                     var mod = activeProjectileMods[i];
                     if (mod == null || !mod.IsActive) continue;
-                    bulletCount += mod.ExtraProjectiles;
                     modMult *= Mathf.Max(0f, mod.DpsMultiplier);
                 }
 
@@ -236,12 +238,26 @@ namespace Gameplay.Player
         public void AddFireRateModifier(float percentBonus)
         {
             percentFireRateBonus += percentBonus / 100f;
-            Debug.Log($"Fire rate increased by {percentBonus}% (total bonus {percentFireRateBonus * 100f}%)");
+            // Total bonus is the compounding tripwire: it must read the same value every
+            // level (e.g. always 20%), never 40%/60% — that would mean a missing Remove.
+            GameLogger.Log(LogCategory.Powerup,
+                $"[FireRate] +{percentBonus}% → total bonus {percentFireRateBonus * 100f:F0}% (effective rate {Stats.Get(StatType.FireRate) * (1f + percentFireRateBonus):F2}/s)");
         }
 
         public void RemoveFireRateModifier(float percentBonus)
         {
             percentFireRateBonus -= percentBonus / 100f;
+            GameLogger.Log(LogCategory.Powerup,
+                $"[FireRate] -{percentBonus}% → total bonus {percentFireRateBonus * 100f:F0}% (effective rate {Stats.Get(StatType.FireRate) * (1f + percentFireRateBonus):F2}/s)");
+        }
+
+        // Percent of the cannon's BASE max HP (stat sheet, excluding earlier bonuses), so a
+        // stackable powerup adds the same amount per stack instead of compounding.
+        public void IncreaseMaxHpByPercent(float percent)
+        {
+            if (percent <= 0f) return;
+            int baseMax = Stats != null ? Stats.GetInt(StatType.Health) : 100;
+            IncreaseMaxHp(Mathf.Max(1, Mathf.RoundToInt(baseMax * percent / 100f)));
         }
 
         public void IncreaseMaxHp(int amount)
@@ -480,6 +496,24 @@ namespace Gameplay.Player
             BaseBullet bullet = CreateBullet(position, rotation);
             if (bullet == null) return;
 
+            // ExtraShot/SpreadShot add bullets for coverage, not free damage —
+            // split the attack across the whole volley in integer shares with no
+            // rounding loss: every bullet gets attack/count, and the remainder is
+            // handed out one point at a time starting with the primary bullet.
+            // E.g. attack 10 spread 3 ways → middle 4, sides 3 + 3 (total 10).
+            int totalBullets = 1;
+            for (int i = 0; i < activeProjectileMods.Count; i++)
+            {
+                IProjectileModifier m = activeProjectileMods[i];
+                if (m != null && m.IsActive)
+                    totalBullets += m.ExtraProjectiles;
+            }
+            int baseShare = CurrentAttack / totalBullets;
+            int remainder = CurrentAttack % totalBullets;
+
+            int bulletIndex = 0;
+            bullet.damage = baseShare + (bulletIndex++ < remainder ? 1 : 0);
+
             for (int i = 0; i < activeProjectileMods.Count; i++)
             {
                 IProjectileModifier mod = activeProjectileMods[i];
@@ -494,7 +528,9 @@ namespace Gameplay.Player
                 for (int e = 0; e < extras && e < angles.Length; e++)
                 {
                     Quaternion extraRot = rotation * Quaternion.Euler(0, 0, angles[e]);
-                    CreateBullet(position, extraRot);
+                    BaseBullet extra = CreateBullet(position, extraRot);
+                    if (extra != null)
+                        extra.damage = baseShare + (bulletIndex++ < remainder ? 1 : 0);
                 }
             }
         }

@@ -43,11 +43,17 @@ public class BossEggLifetime : MonoBehaviour, IPoolable
     private Vector2 originalSizeRange;
     private bool capturedOriginal;
 
+    // True when the egg died from its lifetime timer (silent cleanup) rather
+    // than bullets/cannon contact. Spawners check this so timeout cleanup
+    // doesn't trigger on-death effects like the SuperEgg split.
+    public bool ExpiredByLifetime { get; private set; }
+
     public void Init(float lifetimeSeconds, float sizeMultiplier = 1f)
     {
         lifetime = Mathf.Max(0f, lifetimeSeconds);
         spawnTime = Time.time;
         ticking = lifetime > 0f;
+        ExpiredByLifetime = false;
 
         if (egg == null) egg = GetComponent<Egg>();
         if (eggHealth == null) eggHealth = GetComponent<EggHealth>();
@@ -86,6 +92,7 @@ public class BossEggLifetime : MonoBehaviour, IPoolable
         if (!ticking) return;
         if (Time.time - spawnTime < lifetime) return;
         ticking = false;
+        ExpiredByLifetime = true;
         SilentKill();
     }
 
@@ -119,7 +126,7 @@ public class BossEggLifetime : MonoBehaviour, IPoolable
             egg.PlayDeathSequence();
     }
 
-    public void OnPoolSpawned() { ticking = false; spawnTime = 0f; }
+    public void OnPoolSpawned() { ticking = false; spawnTime = 0f; ExpiredByLifetime = false; }
 
     public void OnPoolDespawned()
     {

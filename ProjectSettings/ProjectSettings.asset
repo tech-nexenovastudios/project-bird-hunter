@@ -276,7 +276,7 @@ PlayerSettings:
   AndroidAllowedArchitectures: -1
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
-  AndroidKeystoreName: '{dedicated}: birdhunter.keystore'
+  AndroidKeystoreName: '{inproject}: birdhunter.keystore'
   AndroidKeyaliasName: birdhunter
   AndroidEnableArmv9SecurityFeatures: 0
   AndroidEnableArm64MTE: 0
@@ -834,7 +834,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: LEVELPLAY_DEPENDENCIES_INSTALLED;DOTWEEN;DOTWEEN_NOAUDIO;DOTWEEN_NOPHYSICS;DOTWEEN_NOPHYSICS2D;APP_UI_EDITOR_ONLY
+    Android: LEVELPLAY_DEPENDENCIES_INSTALLED;DOTWEEN;DOTWEEN_NOAUDIO;DOTWEEN_NOPHYSICS;DOTWEEN_NOPHYSICS2D;APP_UI_EDITOR_ONLY;SENTIS_ANALYTICS_ENABLED
     EmbeddedLinux: DOTWEEN;DOTWEEN_NOAUDIO;DOTWEEN_NOPHYSICS;DOTWEEN_NOPHYSICS2D
     GameCoreScarlett: DOTWEEN;DOTWEEN_NOAUDIO;DOTWEEN_NOPHYSICS;DOTWEEN_NOPHYSICS2D
     GameCoreXboxOne: DOTWEEN;DOTWEEN_NOAUDIO;DOTWEEN_NOPHYSICS;DOTWEEN_NOPHYSICS2D
