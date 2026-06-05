@@ -38,6 +38,14 @@ namespace Gameplay.Managers
 
         private bool _pendingLevelStart = false;
 
+        // Holds the cannon reference between StartGameplay and the level-intro
+        // countdown's Go! beat. Powerups are applied against this cannon only
+        // when GameEvents.OnLevelCountdownGo fires, so they activate AT "Go!"
+        // — never during the "Level N starting in 3, 2, 1…" telegraph. On the
+        // slot-resume path (popup suppressed) this stays null and powerups
+        // are applied inline instead.
+        private GameObject _pendingPowerupCannon;
+
         // ───────── Unity ─────────
         private void Awake()
         {
@@ -60,6 +68,7 @@ namespace Gameplay.Managers
             GameEvents.OnPlayerDeath += OnPlayerDeath;
             GameEvents.OnPauseToggled += OnPauseToggled;
             GameEvents.OnChapterCompleted += OnChapterCompletedHandler;
+            GameEvents.OnLevelCountdownGo += OnLevelCountdownGo;
         }
 
         private void OnDisable()
@@ -69,6 +78,17 @@ namespace Gameplay.Managers
             GameEvents.OnPlayerDeath -= OnPlayerDeath;
             GameEvents.OnPauseToggled -= OnPauseToggled;
             GameEvents.OnChapterCompleted -= OnChapterCompletedHandler;
+            GameEvents.OnLevelCountdownGo -= OnLevelCountdownGo;
+        }
+
+        // Fires the instant the level-intro countdown reaches "Go!". This is the
+        // single bind moment for every equipped powerup, so buffs / bullet mods /
+        // summons never apply during the 3-2-1 telegraph.
+        private void OnLevelCountdownGo()
+        {
+            if (_pendingPowerupCannon == null) return;
+            GameProgressManager.Instance.ApplyPowerUpsToCurrentCannon(_pendingPowerupCannon);
+            _pendingPowerupCannon = null;
         }
 
         // Pause gameplay during the chapter-end animation. The spin still
@@ -203,7 +223,14 @@ namespace Gameplay.Managers
             else
                 Debug.LogWarning("⚠️ StartGameplay: BaseCannon not found on currentCannon.");
 
-            GameProgressManager.Instance.ApplyPowerUpsToCurrentCannon(currentCannon);
+            // Defer powerup application until the level-intro countdown's Go! beat
+            // (see OnLevelCountdownGo). On the slot-resume path the popup is
+            // suppressed and no countdown will fire — apply inline so powerups
+            // still bind for that level.
+            if (fromSlot)
+                GameProgressManager.Instance.ApplyPowerUpsToCurrentCannon(currentCannon);
+            else
+                _pendingPowerupCannon = currentCannon;
 
             // Slot-resume skips the level-intro popup (see SuppressLevelIntroPopup); normal
             // level-to-level transitions (fromSlot == false) still show it.

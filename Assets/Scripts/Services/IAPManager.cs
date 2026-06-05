@@ -33,9 +33,11 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
         ("2800_gems", ProductType.Consumable),
         ("7500_gems", ProductType.Consumable),
         ("remove_ads", ProductType.NonConsumable),
+        ("noads_pack", ProductType.NonConsumable),
     };
 
     public const string ProductRemoveAds = "remove_ads";
+    public const string ProductNoAdsPack = "noads_pack";
 
     // ─── Singleton ───
     private static IAPManager _instance;

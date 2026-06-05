@@ -5188,7 +5188,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5041468412623873191, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_Name
-      value: Premium Banner
+      value: NoAdsBanner
       objectReference: {fileID: 0}
     - target: {fileID: 7068531462958463837, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       propertyPath: m_Pivot.x
@@ -5270,6 +5270,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9050484756382486098, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 2100dd49c6713a04e994bf8b1d6078d7, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5280,6 +5284,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5041468412623873191, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5331846278158103195}
+    - targetCorrespondingSourceObject: {fileID: 5041468412623873191, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4766959467960912887}
   m_SourcePrefab: {fileID: 100100000, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
 --- !u!1 &6648924350695935971 stripped
 GameObject:
@@ -5323,7 +5330,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -5344,6 +5351,23 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4766959467960912887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6648924350695935971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 021ac5f9782a0ff449faa93ec10d451a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NoAdsPackBuyManager
+  purchaseButton: {fileID: 5331846278158103195}
+  priceText: {fileID: 0}
+  ownedBadge: {fileID: 0}
+  restoreButton: {fileID: 0}
+  loadingPanel: {fileID: 291250323957024679}
 --- !u!114 &7217751057175504150 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9050484756382486098, guid: c9479b0cde65d0342ab37c90e63082e3, type: 3}
