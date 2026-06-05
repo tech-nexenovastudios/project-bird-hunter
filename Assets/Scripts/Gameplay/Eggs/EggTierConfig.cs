@@ -36,6 +36,9 @@ namespace Gameplay.Eggs
         public int splitCount = 2;
         public int cannonDamage = 10;
 
+        [Tooltip("Per-hit cap on scaled contact damage, as a fraction of the cannon's max HP. Contact damage scales with the egg's HP multiplier, so without this cap a late-chapter egg would one-shot the cannon; 0.35 guarantees at least ~3 hits to die.")]
+        [Range(0f, 1f)] public float maxCannonHpFractionPerHit = 0.35f;
+
         [Header("Personality (HP-modulated)")]
         public Vector2 sizeRange = new Vector2(0.95f, 1.05f);
         public Vector2 bounceFrequencyRange = new Vector2(2.0f, 4.5f);

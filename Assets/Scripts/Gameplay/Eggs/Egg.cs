@@ -583,9 +583,19 @@ namespace Gameplay.Eggs
 
             UnscoredHpOnDeath = _eggHealth != null ? _eggHealth.CurrentHp : 0;
 
-            damageable.TakeDamage(config.cannonDamage);
+            damageable.TakeDamage(ComputeCannonDamage(damageable));
             _eggHealth?.MarkDeadSilent();
             PlayDeathSequence();
+        }
+
+        private int ComputeCannonDamage(IDamageable cannon)
+        {
+            int damage = config.cannonDamage;
+            float avgBaseHp = (config.baseHpMin + config.baseHpMax) * 0.5f;
+            if (_eggHealth != null && avgBaseHp > 0f)
+                damage = Mathf.Max(damage, Mathf.RoundToInt(config.cannonDamage * _eggHealth.MaxHp / avgBaseHp));
+            int cap = Mathf.RoundToInt(cannon.MaxHp * config.maxCannonHpFractionPerHit);
+            return Mathf.Clamp(damage, 1, Mathf.Max(1, cap));
         }
 
         // ─── Bullet impulse ───
