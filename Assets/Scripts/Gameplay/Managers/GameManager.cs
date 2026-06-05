@@ -117,6 +117,7 @@ namespace Gameplay.Managers
             // New Gameplay scene = new run. RewardManager is DontDestroyOnLoad so its
             // run counters survive scene loads; we explicitly clear them here.
             RewardManager.Instance?.ResetForNewRun();
+            ScoreManager.Instance?.ResetChapterScore();
 
             var progress = GameProgressManager.Instance.Data;
 
@@ -210,12 +211,7 @@ namespace Gameplay.Managers
                 GameProgressManager.Instance.CurrentLevel);
 
             spawnController.Configure(chapterCfg, levelIdx, priorAttempts);
-            spawnController.ResetLevel();
-
-            ScoreManager.Instance?.ResetLevel(spawnController.TargetScore);
-            LevelCompletionController.Instance?.ResetForNewLevel();
-
-            RewardManager.Instance?.ResetForNewLevel();
+            ResetLevelState();
 
             if (currentCannon == null)
                 currentCannon = await cannonSpawner.CannonSpawn();
@@ -243,11 +239,43 @@ namespace Gameplay.Managers
             SuppressLevelIntroPopup = false;
         }
 
+        // Resets the just-finished level's gameplay state + HUD. Runs at the start of each new
+        // level (StartGameplay, after Configure sets the new target) and, for spin levels, early
+        // at completion so the slot machine doesn't open over the finished level's stale UI.
+        private void ResetLevelState()
+        {
+            spawnController.ResetLevel();
+            ScoreManager.Instance?.ResetLevel(spawnController.TargetScore);
+            LevelCompletionController.Instance?.ResetForNewLevel();
+            RewardManager.Instance?.ResetForNewLevel();
+        }
+
         // ───────── Level complete ─────────
-        public void CompleteCurrentLevel(int scoreAchieved)
+        // Single entry point for "this level is over". Every detector (score target, boss
+        // retreat/defeat, debug auto-completer) routes here with a typed LevelResult so the
+        // reason is explicit and there's one place to evolve the completion sequence.
+        public void CompleteCurrentLevel(LevelResult result)
         {
             _pendingLevelStart = true;
-            GameProgressManager.Instance.CompleteLevel(scoreAchieved);
+            GameProgressManager.Instance.CompleteLevel(ResolveFinalScore(result));
+        }
+
+        [System.Obsolete("Use CompleteCurrentLevel(LevelResult) so the completion reason is explicit.")]
+        public void CompleteCurrentLevel(int scoreAchieved)
+            => CompleteCurrentLevel(LevelResult.FromScore(scoreAchieved, LevelCompletionReason.Unspecified));
+
+        // All level-completion scoring lives here. Normal/debug completions carry their final score;
+        // boss completions award the boss's share (damageFraction × max(baseScore, level target))
+        // live, then read back the resulting level score — matching the old AwardBossLevelScore.
+        private int ResolveFinalScore(LevelResult result)
+        {
+            if (!result.BossScored) return result.ExplicitScore;
+
+            int target = spawnController != null ? spawnController.TargetScore : 0;
+            int bossWorth = Mathf.Max(result.BossBaseScore, target);
+            int bossPortion = Mathf.RoundToInt(bossWorth * Mathf.Clamp01(result.BossDamageFraction));
+            ScoreManager.Instance?.AddScore(bossPortion);
+            return ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : bossPortion;
         }
 
         private void OnProgressChanged(GameProgress progress)
@@ -262,22 +290,32 @@ namespace Gameplay.Managers
             _pendingLevelStart = false;
 
             // Spin / chapter-end path: powerup selection drives the next StartGameplay later.
-            // Leave the level UI showing the just-finished level's data so the player sees their
-            // score/target while picking a powerup — StartGameplay(fromSlot:true) clears it then.
-            if (state == GameState.Slot) return;
+            // Reset the finished level's state + HUD and advance the level indicator now so the
+            // slot machine doesn't open over stale level data. StartGameplay(fromSlot:true)
+            // re-runs after the powerup pick to configure and launch the next level.
+            if (state == GameState.Slot)
+            {
+                if (currentLevelText != null) currentLevelText.text = $"Level {progress.currentLevel}";
+                ResetLevelState();
+                return;
+            }
 
             // Non-spin transition: wait for the "Level N Complete!" countdown popup to finish
             // before kicking off the next level. Keeps the level UI (score, target, level text)
             // showing the just-finished level's values through the countdown instead of snapping
             // to the next level the instant completion fires.
-            StartCoroutine(StartGameplayAfterCompletePopup());
+            StartGameplayAfterCompletePopup().Forget();
         }
 
-        private IEnumerator StartGameplayAfterCompletePopup()
+        // Await the "Level N Complete!" popup (if any) instead of polling its flag each frame.
+        // Cancels cleanly if the boss/scene tears this manager down mid-wait, matching the old
+        // coroutine's auto-stop-on-destroy.
+        private async UniTaskVoid StartGameplayAfterCompletePopup()
         {
-            while (Gameplay.UI.LevelDetailPopUp.IsCompletePopupPlaying)
-                yield return null;
-            StartGameplay();
+            bool canceled = await Gameplay.UI.LevelDetailPopUp.WaitForCompletePopupAsync()
+                .AttachExternalCancellation(this.GetCancellationTokenOnDestroy())
+                .SuppressCancellationThrow();
+            if (!canceled) StartGameplay();
         }
 
         // ───────── Spin complete ─────────
@@ -298,6 +336,7 @@ namespace Gameplay.Managers
         {
             GameProgressManager.Instance.ResetProgress();
             RewardManager.Instance?.ResetForNewRun();
+            ScoreManager.Instance?.ResetChapterScore();
             StartGameplay();
         }
 

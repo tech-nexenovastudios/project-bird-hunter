@@ -69,6 +69,8 @@ Approximate coins available at unlock time (cumulative, perfect runs, **post-cut
 
 > Pricing was raised (base 1500 → 5000) and runtime was switched from formula to cloud-save `baseCoinsRequired`, in tandem with the reward-tuning cuts (`Reward_Tuning.md`). Unlocks now sit in a **7.8–13.6% spend band** at the time the player first sees them — meaningful purchases, never gating progress.
 
+> ⚠️ **Telemetry finding (2026-06-02) — nobody buys the other cannons.** A real playthrough (`GameLogs/`) cleared **all 5 shipped chapters to ~level 35 on `SingleShotCannon` alone** — 34 upgrades into it, **zero** other cannons unlocked, even though Rapid Fire/Lucky/Double were all affordable and available. The unlock *pricing* is fine; the problem is **there is no reason to switch.** Single-shot's upgrade DPS brute-forces every wall (`Cannon_DPS_and_Egg_Workload_Design.md §6.5`), so the 7-cannon ladder is currently decorative. **Design gap to close → see §1.7 (Cannon niches):** each cannon gets a job single-shot is deliberately bad at, plus content that demands it. Single-shot becomes the precision/weak-point sharpshooter with **no AoE**, so swarms force Shotgun, shields force Double, etc. Until a cannon answers "what can this do that my upgraded single-shot can't?", unlocks won't convert. Reconcile with the §6.5 single-cannon-dominance note in `Cannon_DPS_and_Egg_Workload_Design.md`.
+
 ### 1.4 Upgrade cost (Levels 2 → 10)
 
 Formula: `cost(toLevel) = round(400 × (toLevel - 0.5)^1.25 × coinMultiplier)`.  
@@ -130,6 +132,38 @@ Given a player who progresses linearly with no skips:
 
 4. **No "early unlock with gems" path.** *(Open.)*  
    The formula calculates a gem alternative (`coinCost / 110`) but `RewardManager` and `UnlockUI` don't currently expose it. Either ship the gem path (give the soft sink for hoarders) or remove `GetCannonUnlockGems`.
+
+### 1.7 Cannon niches — the anti-dominance identity (design direction, 2026-06-02)
+
+**Problem (from telemetry, §1.3):** the player cleared all 5 chapters on `SingleShotCannon` alone — the 7-cannon ladder is decorative because nothing else does anything single-shot can't brute-force. **Fix:** give each cannon a distinct **niche** that single-shot is *deliberately bad at*, and add content that demands those niches. The goal isn't "single-shot is worse" — it's "single-shot is the precision tool; other cannons own situations precision can't solve."
+
+**Single Shot — the sharpshooter (its new identity):**
+- Perfect accuracy + fastest projectile speed (bullets land first, reward trust-the-aim play).
+- **+100% weak-point damage** — huge on bird/boss weak points.
+- Small **consecutive-hit ramp** — rewards sustained precision on a single target.
+- **Fantasy:** "The sharpshooter cannon." Single-target king.
+- **Deliberate weakness:** *no spread / no AoE* — it is poor against dense swarms, which is the lever that stops it dominating (it can no longer efficiently clear E1 floods).
+
+**The roster — one job each:**
+
+| Cannon | Niche / job | What single-shot *can't* do here |
+|---|---|---|
+| **Single Shot** | Precision single-target; weak-point burst; trust-your-aim | — (this is its home) |
+| **Shotgun** | **Swarms** — spread clears dense E1/E2 floods | single-target can't keep up with many simultaneous eggs |
+| **Double** | **Shields** — two barrels break shielded/armored enemies faster | single barrel stalls on shield layers |
+| **Lucky** | **Farming** — coin/crit bonus, economy runs | no coin uplift on single-shot |
+| **Big Bartha** | **Raw boss damage** — heavy per-hit siege | precision ≠ raw bulk DPS on big HP pools |
+| **Triple** | **Versatility** — three barrels, jack-of-all-trades | covers mixed waves single-shot must pick through |
+
+**Design dependency (critical):** these niches only matter if **content punishes the wrong tool.** The egg-workload design must include situations each niche answers — esp. **dense E1/E2 swarm waves** (so single-target falls behind → Shotgun), **shielded/armored enemies** (→ Double), and **weak-point-gated bosses** (→ Single Shot / Bartha split: precision vs. raw). Without that content, niches are flavor text and dominance returns. Reconcile with `Cannon_DPS_and_Egg_Workload_Design.md` (add swarm + shield + weak-point enemy archetypes to the difficulty curve).
+
+**New mechanics this implies (net-new, scope before building):**
+- **Weak points** on birds/bosses (hit-zone with damage multiplier) — needed for single-shot's +100% and any precision skill expression.
+- **Accuracy / consecutive-hit tracking** on the cannon — single-shot's ramp.
+- **Shield/armor layers** on enemies — Double's niche.
+- **Swarm-density waves** — Shotgun's niche (likely already expressible via the E1 cap / spawn config).
+
+> Ties back to the star system: a **weak-point / accuracy** mechanic also gives a clean, *upgrade-independent* skill signal that could feed ★ ratings (`Chapter_Unlock_Panel_Design.md §3.5` excluded score precisely because it isn't skill — accuracy would be).
 
 ---
 

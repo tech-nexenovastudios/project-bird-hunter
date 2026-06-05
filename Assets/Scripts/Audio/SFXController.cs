@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Gameplay.Birds;
 using Gameplay.Events;
 using Gameplay.Interfaces;
@@ -23,12 +24,14 @@ namespace Audio
         [SerializeField] private SfxClip eggHitSound = SfxClip.Default;
         [SerializeField] private SfxClip eggDestroySound = SfxClip.Default;
         [SerializeField] private SfxClip eggBounceSound = SfxClip.Default;
+        [SerializeField] private SfxClip birdHitSound = SfxClip.Default;
         [SerializeField] private SfxClip birdDestroySound = SfxClip.Default;
         [SerializeField] private SfxClip cannonHitSound = SfxClip.Default;
         [SerializeField] private SfxClip cannonShootSound = SfxClip.Default;
         [SerializeField] private SfxClip cannonDestroyedSound = SfxClip.Default;
         [SerializeField] private SfxClip gameOverSound = SfxClip.Default;
         [SerializeField] private SfxClip slotSpinStarted = SfxClip.Default;
+        [SerializeField] private SfxClip slotSpinCommited = SfxClip.Default;
         [SerializeField] private SfxClip slotSpinCompleted = SfxClip.Default;
         [SerializeField] private SfxClip slotPowerSelected = SfxClip.Default;
         [SerializeField] private SfxClip allEggsClearedSound = SfxClip.Default;
@@ -100,7 +103,6 @@ namespace Audio
             GameEvents.OnPlayerDeath += OnGameOver;
             GameEvents.OnSpinStarted += OnSpinStarted;
             GameEvents.OnSpinAnimationCompleted += OnSpinAnimationCompleted;
-            GameEvents.OnPowerupCommitted += OnSpinCompleted;
             GameEvents.OnPowerupSelected += OnPowerupSelected;
             GameEvents.OnAllEggsCleared += OnAllEggsCleared;
             GameEvents.OnSelfClearStarted += OnSelfClearStarted;
@@ -135,7 +137,7 @@ namespace Audio
             GameEvents.OnPlayerDeath -= OnGameOver;
             GameEvents.OnSpinStarted -= OnSpinStarted;
             GameEvents.OnSpinAnimationCompleted -= OnSpinAnimationCompleted;
-            GameEvents.OnPowerupCommitted -= OnSpinCompleted;
+            GameEvents.OnPowerupCommitted -= OnSpinPowerUpCommited;
             GameEvents.OnPowerupSelected -= OnPowerupSelected;
             GameEvents.OnAllEggsCleared -= OnAllEggsCleared;
             GameEvents.OnSelfClearStarted -= OnSelfClearStarted;
@@ -170,7 +172,7 @@ namespace Audio
 
         private void OnEggHit(IDamageable e, int d, Vector3 p) => PlaySound(eggHitSound);
         private void OnEggDestroyed(IDamageable e, int s, Vector3 p) => PlaySound(eggDestroySound);
-        private void OnBirdHit(IDamageable b, int d, Vector3 p) => PlaySound(eggHitSound);
+        private void OnBirdHit(IDamageable b, int d, Vector3 p) => PlaySound(birdHitSound);
         private void OnBirdDestroyed(IDamageable b, int s, Vector3 p) => PlaySound(birdDestroySound);
         private void OnCannonHit(int damage) => PlaySound(cannonHitSound);
         private void OnCannonShoot() => PlaySound(cannonShootSound);
@@ -178,7 +180,7 @@ namespace Audio
         private void OnGameOver() => PlaySound(gameOverSound);
         private void OnSpinStarted(List<PowerupConfig> options) => StartSpinLoop();
         private void OnSpinAnimationCompleted() => StopSpinLoop();
-        private void OnSpinCompleted(PowerupConfig config) => PlaySound(slotSpinCompleted);
+        private void OnSpinPowerUpCommited(PowerupConfig config) => PlaySound(slotSpinCompleted);
         private void OnPowerupSelected(PowerupConfig config) => PlaySound(slotPowerSelected);
 
         private void OnEggBounced(Vector3 _)
@@ -311,10 +313,13 @@ namespace Audio
             spinLoopSource.Play();
         }
 
-        private void StopSpinLoop()
+        private async UniTaskVoid StopSpinLoop()
         {
             if (spinLoopSource != null && spinLoopSource.isPlaying)
                 spinLoopSource.Stop();
+            
+            await UniTask.Delay(500);
+            PlaySound(slotSpinCompleted);
         }
     }
 }

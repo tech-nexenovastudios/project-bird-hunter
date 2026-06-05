@@ -20,4 +20,10 @@ public class LaserBarrageConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (laserShotPrefab != null) into.Add(laserShotPrefab);
+    }
 }

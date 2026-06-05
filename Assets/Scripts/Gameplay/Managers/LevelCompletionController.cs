@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Gameplay.Events;
 using Gameplay.Managers;
@@ -51,6 +52,7 @@ namespace Gameplay.Managers
             if (GameManager.Instance?.state != GameState.Gameplay) return;
             if (_targetScoreReached) return;
             if (ScoreManager.Instance == null) return;
+            if (SpawnController.Instance != null && SpawnController.Instance.IsBossLevel) return;
 
             int levelScore  = ScoreManager.Instance.LevelScore;
             int targetScore = GetTargetScore();
@@ -66,21 +68,25 @@ namespace Gameplay.Managers
         private void OnAllEggsCleared()
         {
             if (GameManager.Instance?.state != GameState.Gameplay) return;
+            if (SpawnController.Instance != null && SpawnController.Instance.IsBossLevel) return;
             if (!_targetScoreReached) return;
 
             int finalScore = ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : 0;
             Debug.Log("[LevelCompletion] All eggs cleared — completing level.");
-            TryCompleteLevel(finalScore);
+            
+            TryCompleteLevel(finalScore).Forget();
         }
 
-        private void TryCompleteLevel(int finalScore)
+        private async UniTaskVoid TryCompleteLevel(int finalScore)
         {
             if (_levelCompleteTriggered) return;
             _levelCompleteTriggered = true;
 
+            await UniTask.Delay(1000);
+            
             OnLevelCompleteConditionMet?.Invoke(finalScore);
             GameEvents.FireLevelCompleted(finalScore);
-            GameManager.Instance.CompleteCurrentLevel(finalScore);
+            GameManager.Instance.CompleteCurrentLevel(LevelResult.FromScore(finalScore, LevelCompletionReason.TargetReached));
         }
 
         private int GetTargetScore()

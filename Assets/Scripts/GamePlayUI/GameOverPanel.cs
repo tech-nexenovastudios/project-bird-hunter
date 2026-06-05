@@ -118,10 +118,14 @@ namespace Gameplay.UI
             var progress = GameProgressManager.Instance;
             _chapter = progress != null ? progress.CurrentChapter : 1;
             _level = progress != null ? progress.CurrentLevel : 1;
-            progress?.SubmitRunScore(_score);
-            progress?.RegisterChapterDeath();
+
+            // Read the previous best BEFORE submitting this run, otherwise SubmitRunScore
+            // overwrites cp.highScore with _score on a record run and both fields show the same value.
             var cp = progress != null ? progress.GetChapterProgress(_chapter) : null;
             _highScore = cp != null ? cp.highScore : 0;
+
+            progress?.SubmitRunScore(_score);
+            progress?.RegisterChapterDeath();
 
             // Run rewards — RewardManager accumulates across every level the player cleared
             // this run, so the Game Over panel reflects the full run, not just the level

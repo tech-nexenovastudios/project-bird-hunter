@@ -9,6 +9,10 @@ public class SpectralFeathersBehaviour : BaseAttackBehaviour
     private SpectralFeathersConfig config;
     private readonly List<FeatherData> activeFeathers = new();
 
+    // Local copies so enrage can escalate without mutating the shared config asset.
+    private int featherCount;
+    private float spawnInterval;
+
     private static readonly Collider2D[] overlap = new Collider2D[4];
     private static int playerMask;
     private static bool maskInit;
@@ -34,7 +38,19 @@ public class SpectralFeathersBehaviour : BaseAttackBehaviour
         public float lastDamageTime;
     }
 
-    public void SetConfig(SpectralFeathersConfig cfg) => config = cfg;
+    public void SetConfig(SpectralFeathersConfig cfg)
+    {
+        config = cfg;
+        featherCount = cfg.featherCount;
+        spawnInterval = cfg.spawnInterval;
+    }
+
+    // Feather Storm: denser, faster volleys once the boss enrages.
+    public override void OnEnrage()
+    {
+        featherCount += config.enrageFeatherBonus;
+        spawnInterval *= config.enrageSpawnIntervalMultiplier;
+    }
 
     private void Start()
     {
@@ -53,11 +69,11 @@ public class SpectralFeathersBehaviour : BaseAttackBehaviour
 
     private IEnumerator FeatherSequence()
     {
-        for (int i = 0; i < config.featherCount; i++)
+        for (int i = 0; i < featherCount; i++)
         {
             SpawnFeather();
-            if (i < config.featherCount - 1)
-                yield return new WaitForSeconds(config.spawnInterval);
+            if (i < featherCount - 1)
+                yield return new WaitForSeconds(spawnInterval);
         }
 
         float elapsed = 0f;

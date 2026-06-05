@@ -29,6 +29,11 @@ namespace Gameplay
         [Header("Boss Prefabs (index = chapter - 1)")]
         public GameObject[] bossPrefabs;
 
+        [Tooltip("Boss + VFX shader variants warmed once at level start so the first boss render " +
+                 "doesn't compile them mid-fight. Build via Tools ▸ Bird Hunter ▸ Build Boss Shader " +
+                 "Variant Collection; falls back to Resources/BossShaderVariants if left empty.")]
+        [SerializeField] ShaderVariantCollection bossShaderVariants;
+
         [Header("TTK Soft-Gate")]
         [Tooltip("Max seconds of egg HP allowed on screen relative to cannon DPS. Above this, new bird spawns are skipped until the screen drains. Set 0 to disable.")]
         [SerializeField] float ttkCeilingSeconds = 8f;
@@ -89,7 +94,16 @@ namespace Gameplay
         float _spawnTimer;
         float _emptyScreenTimer;
         bool _levelCompleted;
-        bool _draining;
+
+        // Level lifecycle phase — the spawn/clear axis. Replaces the old _draining + _inSelfClear
+        // booleans with one ordered state, so impossible combos (self-clear without draining) can't
+        // occur. Completion is a SEPARATE latch (_levelCompleted): it overlaps SelfClear on the
+        // player-Finish path, so it isn't part of this axis.
+        enum LevelPhase { Active, Draining, SelfClear }
+        LevelPhase _phase = LevelPhase.Active;
+        bool IsDraining => _phase != LevelPhase.Active;     // was _draining: wind-down has begun
+        bool InSelfClear => _phase == LevelPhase.SelfClear; // was _inSelfClear: frozen-egg mop-up
+
         int _totalTrackedScore;
 
         // After target score + min duration, spawning stops and remaining eggs freeze at apex.
@@ -98,7 +112,6 @@ namespace Gameplay
         const float FinishButtonDelayMin = 3f;
         const float FinishButtonDelayMax = 8f;
         const float FinishButtonRushFactor = 0.6f;
-        bool _inSelfClear;
         float _selfClearTimer;
         bool _finishButtonShown;
         float _finishButtonDelay;
@@ -126,6 +139,14 @@ namespace Gameplay
         GameObject _parkedBossGO;
         float _parkedBossHpNormalized;
         bool _hasBossWaitingForLevel20;
+
+        // Boss prefab instantiated inactive during the spawn countdown so the visible spawn frame
+        // doesn't pay the Instantiate cost. Its attack/VFX pools are prewarmed in the same window.
+        GameObject _preloadedBossGO;
+        Coroutine _bossPrewarmRoutine;
+        bool _bossPrewarmComplete;
+        static readonly List<GameObject> _prewarmScratch = new();
+        const int BossVfxPrewarmCount = 2;
 
         public bool IsBossLevel => _isBossLevel;
         public int TotalTrackedScore => _totalTrackedScore;
@@ -191,10 +212,13 @@ namespace Gameplay
 
         public void ResetLevel()
         {
+            // Compile boss/VFX shader variants once, here at level start — gameplay spawning is held
+            // until the 3-2-1 countdown ends, so this one-time synchronous WarmUp is masked.
+            ShaderWarmup.WarmBossVariants(bossShaderVariants);
+
             elapsedTime = 0f;
             _levelCompleted = false;
-            _draining = false;
-            _inSelfClear = false;
+            _phase = LevelPhase.Active;
             _selfClearTimer = 0f;
             _finishButtonShown = false;
             _totalTrackedScore = 0;
@@ -228,6 +252,10 @@ namespace Gameplay
             _bossTimerRunning = false;
             _bossSpawnTimer = 0f;
 
+            // Drop any preloaded-but-never-spawned boss from a prior level before reconfiguring.
+            if (_bossPrewarmRoutine != null) { StopCoroutine(_bossPrewarmRoutine); _bossPrewarmRoutine = null; }
+            if (_preloadedBossGO != null) { Destroy(_preloadedBossGO); _preloadedBossGO = null; }
+
             ResolveChapterLevel();
 
             _attackingBirdTimer = _attackingBirdSpawnInterval > 0f ? _attackingBirdSpawnInterval : 20f;
@@ -238,10 +266,15 @@ namespace Gameplay
                 _bossTimerRunning = true;
 
                 bool isLevel20 = _globalLevel % 20 == 0;
-                if (isLevel20 && _hasBossWaitingForLevel20)
+                bool usingParked = isLevel20 && _hasBossWaitingForLevel20 && _parkedBossGO != null;
+                if (usingParked)
                     Debug.Log($"[SpawnController] Level 20 boss level — re-spawning parked boss in {_bossSpawnTimer:F1}s.");
                 else
                     Debug.Log($"[SpawnController] Boss level — spawning boss in {_bossSpawnTimer:F1}s.");
+
+                // Pay the boss + attack-VFX instantiation/shader-compile cost during the countdown
+                // instead of on the spawn frame (and on each attack's first use mid-fight).
+                StartBossPrewarm(isLevel20, usingParked);
             }
         }
 
@@ -352,7 +385,7 @@ namespace Gameplay
             _spawnTimer += Time.deltaTime;
             float interval = GetCurrentSpawnInterval();
 
-            bool canSpawnRegular = !_isBossLevel && !_levelCompleted && !_draining;
+            bool canSpawnRegular = !_isBossLevel && !_levelCompleted && !IsDraining;
 
             if (canSpawnRegular && _spawnTimer >= interval)
             {
@@ -378,10 +411,10 @@ namespace Gameplay
                 _emptyScreenTimer = 0f;
             }
 
-            if (_bossTimerRunning && !_bossSpawned && !_draining && !_levelCompleted)
+            if (_bossTimerRunning && !_bossSpawned && !IsDraining && !_levelCompleted)
             {
                 _bossSpawnTimer -= Time.deltaTime;
-                if (_bossSpawnTimer <= 0f)
+                if (_bossSpawnTimer <= 0f && (_bossPrewarmComplete || _bossSpawnTimer <= -2f))
                 {
                     _bossTimerRunning = false;
                     TrySpawnBoss();
@@ -391,7 +424,7 @@ namespace Gameplay
             if (_attackingBirdPool != null
                 && _attackingBirdPool.Length > 0
                 && _attackingBirdSpawnInterval > 0f
-                && !_levelCompleted && !_draining && !_isBossLevel && !IsBossAlive)
+                && !_levelCompleted && !IsDraining && !_isBossLevel && !IsBossAlive)
             {
                 _attackingBirdTimer -= Time.deltaTime;
                 if (_attackingBirdTimer <= 0f)
@@ -401,7 +434,7 @@ namespace Gameplay
                 }
             }
 
-            if (_inSelfClear && !_finishButtonShown)
+            if (InSelfClear && !_finishButtonShown)
             {
                 _selfClearTimer += Time.deltaTime;
                 if (_selfClearTimer >= _finishButtonDelay && _activeEggs.Count > 0)
@@ -415,6 +448,53 @@ namespace Gameplay
         // ═══════════════════════════════════════════════════════════════
         //  BOSS SPAWN / ENTER / EXIT / RETREAT
         // ═══════════════════════════════════════════════════════════════
+
+        private void StartBossPrewarm(bool isLevel20, bool usingParked)
+        {
+            if (_bossPrewarmRoutine != null) StopCoroutine(_bossPrewarmRoutine);
+            _bossPrewarmComplete = false;
+            _bossPrewarmRoutine = StartCoroutine(BossPrewarmRoutine(isLevel20, usingParked));
+        }
+
+        // Spread the heavy instantiation across the countdown frames: preload the boss prefab
+        // inactive, then prewarm one attack/VFX prefab pool per frame. By the time TrySpawnBoss
+        // fires, the GameObjects exist and their shaders/textures are already resident.
+        private IEnumerator BossPrewarmRoutine(bool isLevel20, bool usingParked)
+        {
+            if (!usingParked && _preloadedBossGO == null)
+            {
+                int prefabIdx = _chapter - 1;
+                if (bossPrefabs != null && prefabIdx >= 0 && prefabIdx < bossPrefabs.Length
+                    && bossPrefabs[prefabIdx] != null)
+                {
+                    var op = InstantiateAsync(bossPrefabs[prefabIdx]);
+                    yield return op;
+                    var go = op.Result != null && op.Result.Length > 0 ? op.Result[0] : null;
+                    if (go != null)
+                    {
+                        go.SetActive(false);
+                        _preloadedBossGO = go;
+                    }
+                }
+                yield return null;
+            }
+
+            if (_levelBossBirdConfig != null)
+            {
+                _prewarmScratch.Clear();
+                _levelBossBirdConfig.CollectPrewarmPrefabs(_prewarmScratch, isLevel20);
+                for (int i = 0; i < _prewarmScratch.Count; i++)
+                {
+                    if (_prewarmScratch[i] != null)
+                        PoolManager.PrewarmAsync(_prewarmScratch[i], BossVfxPrewarmCount);
+                    yield return null;
+                }
+                _prewarmScratch.Clear();
+            }
+
+            _bossPrewarmComplete = true;
+            _bossPrewarmRoutine = null;
+        }
 
         private void TrySpawnBoss()
         {
@@ -484,7 +564,20 @@ namespace Gameplay
             Vector3 topRight = Camera.main.ViewportToWorldPoint(new Vector3(1.2f, 1.2f, 0f));
             topRight.z = 0f;
 
-            var go = Instantiate(bossPrefabs[prefabIdx], topRight, Quaternion.identity);
+            // Use the boss preloaded during the countdown if it's ready; otherwise instantiate now
+            // (e.g. the countdown was too short to finish preloading).
+            GameObject go;
+            if (_preloadedBossGO != null)
+            {
+                go = _preloadedBossGO;
+                _preloadedBossGO = null;
+                go.transform.SetPositionAndRotation(topRight, Quaternion.identity);
+                go.SetActive(true);
+            }
+            else
+            {
+                go = Instantiate(bossPrefabs[prefabIdx], topRight, Quaternion.identity);
+            }
             var controller = go.GetComponent<BossBirdController>();
 
             controller.Initialize(cfg, isLevel20);
@@ -608,7 +701,8 @@ namespace Gameplay
                 _parkedBossGO = bossGO;
                 _parkedBossHpNormalized = hpNormalized;
                 _hasBossWaitingForLevel20 = true;
-                GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f - hpNormalized, 0));
+                GameManager.Instance.CompleteCurrentLevel(
+                    LevelResult.FromBoss(1f - hpNormalized, 0, LevelCompletionReason.BossRetreated));
 
                 Debug.Log($"[SpawnController] Boss '{bossName}' parked at {hpNormalized:P0} HP for Level 20.");
             });
@@ -670,7 +764,8 @@ namespace Gameplay
                 return;
             }
 
-            GameManager.Instance.CompleteCurrentLevel(AwardBossLevelScore(1f, score));
+            GameManager.Instance.CompleteCurrentLevel(
+                LevelResult.FromBoss(1f, score, LevelCompletionReason.BossDefeated));
         }
 
         private void HandlePlayerDeath()
@@ -682,6 +777,9 @@ namespace Gameplay
             TearDownBoss(_parkedBossGO);
             _parkedBossGO = null;
             _hasBossWaitingForLevel20 = false;
+
+            if (_bossPrewarmRoutine != null) { StopCoroutine(_bossPrewarmRoutine); _bossPrewarmRoutine = null; }
+            if (_preloadedBossGO != null) { Destroy(_preloadedBossGO); _preloadedBossGO = null; }
 
             _bossSpawned = false;
             _bossTimerRunning = false;
@@ -701,14 +799,6 @@ namespace Gameplay
             bossGO.transform.DOKill();
             Destroy(bossGO);
         }
-        private int AwardBossLevelScore(float damageFraction, int bossBaseScore)
-        {
-            int bossWorth = Mathf.Max(bossBaseScore, _targetScore);
-            int bossPortion = Mathf.RoundToInt(bossWorth * Mathf.Clamp01(damageFraction));
-            ScoreManager.Instance?.AddScore(bossPortion);
-            return ScoreManager.Instance != null ? ScoreManager.Instance.LevelScore : bossPortion;
-        }
-
         // ═══════════════════════════════════════════════════════════════
         //  CLEAR / DRAIN
         // ═══════════════════════════════════════════════════════════════
@@ -757,8 +847,8 @@ namespace Gameplay
 
         public void StartDrain(int scoreAtTrigger)
         {
-            if (_draining) return;
-            _draining = true;
+            if (IsDraining) return;
+            _phase = LevelPhase.Draining;
 
             float remaining = _minDuration - elapsedTime;
 
@@ -812,7 +902,7 @@ namespace Gameplay
                 return;
             }
 
-            _inSelfClear = true;
+            _phase = LevelPhase.SelfClear;
             _selfClearTimer = 0f;
             _finishButtonShown = false;
             _finishButtonDelay = ComputeFinishButtonDelay();
@@ -841,7 +931,7 @@ namespace Gameplay
         // Player tapped Finish: any remaining frozen eggs forfeit their coins.
         public void RequestPlayerFinish()
         {
-            if (!_inSelfClear || _levelCompleted) return;
+            if (!InSelfClear || _levelCompleted) return;
             _levelCompleted = true;
             GameEvents.FirePlayerFinishedLevel();
             ExecuteDrain();
@@ -940,7 +1030,7 @@ namespace Gameplay
         bool IsTtkGateOpen()
         {
             if (ttkCeilingSeconds <= 0f) return true;
-            if (_isBossLevel || IsBossAlive || _inSelfClear || _draining) return true;
+            if (_isBossLevel || IsBossAlive || InSelfClear || IsDraining) return true;
 
             var cannon = GetCannon();
             if (cannon == null) return true;
@@ -1249,7 +1339,7 @@ namespace Gameplay
 
         void HandleBirdLayEgg(BaseBird bird)
         {
-            if (_draining || IsBossAlive) return;
+            if (IsDraining || IsBossAlive) return;
 
             // Budget already filled by earlier lays — a bird still in flight shouldn't add more
             // worth past the target (see TrySpawnBird). It simply flies off without laying.
@@ -1315,10 +1405,11 @@ namespace Gameplay
                 EggTierConfig splitTier = egg.config.splitInto;
                 if (splitTier.eggPrefab != null)
                 {
+                    // Splits always spawn their full child count. Per-tier caps throttle bird
+                    // *laying* (HandleBirdLayEgg cascades down when a tier is full); gating splits
+                    // on the cap silently swallowed E2→E1 children once maxE1 (3–5) was reached.
                     for (int i = 0; i < egg.config.splitCount; i++)
                     {
-                        if (!IsEggTierAllowed(splitTier)) continue;
-
                         var offset = i == 0 ? new Vector3(-.5f, 0.5f, 0f) : new Vector3(.5f, 0.5f, 0f);
                         var newEgg = _eggFactory.Acquire(splitTier, egg.transform.position, Quaternion.identity);
                         if (newEgg == null) continue;
@@ -1338,7 +1429,7 @@ namespace Gameplay
 
                         // Self-clear: split children inherit the frozen state immediately so the
                         // suspended-eggs aesthetic stays intact instead of new eggs bouncing in.
-                        if (_inSelfClear) newEgg.FreezeNow();
+                        if (InSelfClear) newEgg.FreezeNow();
                     }
                 }
             }
@@ -1363,18 +1454,27 @@ namespace Gameplay
 
             if (_activeEggs.Count == 0)
             {
-                if (_inSelfClear)
-                {
-                    _inSelfClear = false;
-                    GameEvents.FireSelfClearEnded();
-                    GameEvents.FireAllEggsCleared();
-                }
-                else if (_levelCompleted)
-                {
-                    GameEvents.FireAllEggsCleared();
-                }
-                // else: mid-level zero-crossing between bird lays — not a level clear.
+                GameEvents.FirePlayAreaCleared();   // raw fact: the screen just emptied
+                EvaluateLevelClear();               // decision: is this a genuine level clear?
             }
+        }
+
+        // The play area emptied. Distinguish a genuine level clear (self-clear finished, or the
+        // post-target drain completed) from a harmless mid-level zero-crossing between bird lays.
+        // Only the former fires OnAllEggsCleared.
+        private void EvaluateLevelClear()
+        {
+            if (InSelfClear)
+            {
+                _phase = LevelPhase.Draining; // self-clear done; stays "draining" (not Active) like before
+                GameEvents.FireSelfClearEnded();
+                GameEvents.FireAllEggsCleared();
+            }
+            else if (_levelCompleted)
+            {
+                GameEvents.FireAllEggsCleared();
+            }
+            // else: mid-level zero-crossing — raw fact already fired; not a level clear.
         }
 
         // Fires after the death animation finishes — safe to return the egg to the pool now without

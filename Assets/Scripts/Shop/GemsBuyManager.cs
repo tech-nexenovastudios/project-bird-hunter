@@ -164,7 +164,7 @@ public class GemsBuyManager : MonoBehaviour
 
         try
         {
-            await CurrencyManager.Instance.AddGems(gem.gemAmount);
+            await CurrencyManager.Instance.AddGems(gem.gemAmount, $"iap_gems:{gem.productId}");
             await CurrencyManager.Instance.Refresh();
             GameEvent.CurrencyCollected(CurrencyType.Gems, origin, (int)gem.gemAmount);
             return true;

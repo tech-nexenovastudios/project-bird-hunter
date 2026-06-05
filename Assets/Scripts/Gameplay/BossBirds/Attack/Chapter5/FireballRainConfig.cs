@@ -30,4 +30,11 @@ public class FireballRainConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (fireballPrefab != null) into.Add(fireballPrefab);
+        if (impactVfxPrefab != null) into.Add(impactVfxPrefab);
+    }
 }

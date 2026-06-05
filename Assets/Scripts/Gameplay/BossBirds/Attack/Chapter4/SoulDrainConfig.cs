@@ -54,4 +54,12 @@ public class SoulDrainConfig : BaseAttackConfig
         b.SetConfig(this);
         return b;
     }
+
+    public override void CollectPrewarmPrefabs(System.Collections.Generic.List<GameObject> into)
+    {
+        base.CollectPrewarmPrefabs(into);
+        if (telegraphPrefab != null) into.Add(telegraphPrefab);
+        if (tetherLinePrefab != null) into.Add(tetherLinePrefab);
+        if (groundImpactVfxPrefab != null) into.Add(groundImpactVfxPrefab);
+    }
 }

@@ -114,7 +114,21 @@ namespace Gameplay.Managers
         private int _chapterScore;
         private int _targetScore;
         private bool _acceptingScore = true;
-        private int _lastChapter = -1;
+
+        // ── DPS sampling ──
+        private const float DpsWindow = 1f;
+        private int _damageThisWindow;   // damage dealt in the current sampling window
+        private float _windowTimer;
+        private int _levelDamageTotal;   // total damage this level (for avg dps)
+        private float _levelElapsed;     // seconds of active combat this level
+        private float _peakDps;
+        private int _currentLevelIndex;
+
+        // ── Cannon defense (for star rating) ──
+        private int _cannonCurrentHp;    // latest cannon HP (tracked continuously, not reset per level)
+        private int _cannonMaxHp;
+        private int _hitsTakenThisLevel; // cannon hits taken this level
+        private int _damageTakenThisLevel;
 
         public int CurrentScore => _currentScore;
         public int LevelScore => _levelScore;
@@ -132,12 +146,15 @@ namespace Gameplay.Managers
         private void OnEnable()
         {
             GameEvents.OnEggHit += OnEggHit;
+            GameEvents.OnBirdHit += OnBirdHit;
             GameEvents.OnEggDestroyed += OnEggDestroyed;
             GameEvents.OnBirdDestroyed += OnBirdDestroyed;
             GameEvents.OnLevelCompletedEarly += OnLevelCompletedEarly;
             GameEvents.OnGameLevelUpdated += OnLevelStarted;
             GameEvents.OnAllEggsCleared += OnLevelEnded;
             GameEvents.OnLevelCompleted += OnLevelCompleted;
+            GameEvents.OnCannonHealthChanged += OnCannonHealthChanged;
+            GameEvents.OnCannonHit += OnCannonHit;
         }
 
         private void OnLevelCompletedEarly(float remainingTime)
@@ -149,35 +166,51 @@ namespace Gameplay.Managers
         private void OnDisable()
         {
             GameEvents.OnEggHit -= OnEggHit;
+            GameEvents.OnBirdHit -= OnBirdHit;
             GameEvents.OnEggDestroyed -= OnEggDestroyed;
             GameEvents.OnBirdDestroyed -= OnBirdDestroyed;
             GameEvents.OnLevelCompletedEarly -= OnLevelCompletedEarly;
             GameEvents.OnGameLevelUpdated -= OnLevelStarted;
             GameEvents.OnAllEggsCleared -= OnLevelEnded;
             GameEvents.OnLevelCompleted -= OnLevelCompleted;
+            GameEvents.OnCannonHealthChanged -= OnCannonHealthChanged;
+            GameEvents.OnCannonHit -= OnCannonHit;
+        }
+
+        private void OnCannonHealthChanged(int currentHp, int maxHp)
+        {
+            _cannonCurrentHp = currentHp;
+            _cannonMaxHp = maxHp;
+        }
+
+        private void OnCannonHit(int damage)
+        {
+            if (!_acceptingScore) return;
+            _hitsTakenThisLevel++;
+            _damageTakenThisLevel += Mathf.Max(0, damage);
         }
 
         // Level finished: stop accepting score, but keep the level UI showing the final value
-        // through the completion popup / slot screen. Reset happens later in ResetLevel, called
-        // by GameManager.StartGameplay — which is deferred until the popup countdown ends
-        // (non-spin levels) or the player picks a slot powerup (spin levels).
+        // through the completion popup. Reset happens in ResetLevel — at the popup countdown's
+        // end for non-spin levels, and at completion (before the slot opens) for spin levels.
         private void OnLevelCompleted(int finalScore)
         {
             _acceptingScore = false;
+            FlushDpsWindow();
+            float avgDps = _levelElapsed > 0f ? _levelDamageTotal / _levelElapsed : 0f;
+            int endHpPct = _cannonMaxHp > 0
+                ? Mathf.RoundToInt(100f * _cannonCurrentHp / _cannonMaxHp)
+                : -1; // -1 = health never reported (no cannon health event seen)
+            CombatLog.Summary(_currentLevelIndex, finalScore, _levelDamageTotal, _peakDps, avgDps,
+                _levelElapsed, endHpPct, _hitsTakenThisLevel, _damageTakenThisLevel);
         }
 
         private void OnLevelStarted(int levelIndex)
         {
-            _levelScore = 0;
+            ResetAllScores();
+            ResetCombatStats();
+            _currentLevelIndex = levelIndex;
             _acceptingScore = true;
-
-            int chapter = GameProgressManager.Instance != null ? GameProgressManager.Instance.CurrentChapter : _lastChapter;
-            if (chapter != _lastChapter)
-            {
-                _chapterScore = 0;
-                _lastChapter = chapter;
-            }
-
             GameEvents.FireLevelScoreUpdated(0, 0);
         }
 
@@ -185,12 +218,23 @@ namespace Gameplay.Managers
 
         public void ResetLevel(int targetScore = 0)
         {
-            _levelScore = 0;
+            ResetAllScores();
             _targetScore = targetScore;
             _acceptingScore = true;
 
             // Broadcast so HUD bar resets to 0 immediately
             GameEvents.FireLevelScoreUpdated(0, 0);
+        }
+
+        private void ResetAllScores()
+        {
+            _currentScore = 0;
+            _levelScore = 0;
+        }
+
+        public void ResetChapterScore()
+        {
+            _chapterScore = 0;
         }
 
         public void AddScore(int amount)
@@ -202,20 +246,68 @@ namespace Gameplay.Managers
 
             GameEvents.FireLevelScoreUpdated(_levelScore, amount);
             OnScoreChanged?.Invoke(_currentScore, amount);
+            CombatLog.Score(_levelScore, amount, "score_gain");
         }
 
         private void OnEggHit(IDamageable egg, int damage, Vector3 hitPoint)
         {
+            AccumulateDamage(damage);
             int perDamage = (egg is EggHealth eh && eh.Config != null && eh.Config.scorePerHit > 0)
                 ? eh.Config.scorePerHit
                 : scorePerEggHit;
             AddScore(perDamage * Mathf.Max(1, damage));
         }
 
+        private void OnBirdHit(IDamageable bird, int damage, Vector3 hitPoint)
+            => AccumulateDamage(damage);
+
         private void OnEggDestroyed(IDamageable egg, int scoreAwarded, Vector3 position)
             => AddScore(scoreAwarded > 0 ? scoreAwarded : scorePerEggDestroy);
 
         private void OnBirdDestroyed(IDamageable bird, int scoreAwarded, Vector3 position)
             => AddScore(scoreAwarded > 0 ? scoreAwarded : scorePerBirdDestroy);
+
+        private void Update()
+        {
+            if (!_acceptingScore) return;
+
+            _levelElapsed += Time.deltaTime;
+            _windowTimer += Time.deltaTime;
+            if (_windowTimer >= DpsWindow)
+                FlushDpsWindow();
+        }
+
+        private void AccumulateDamage(int damage)
+        {
+            if (!_acceptingScore || damage <= 0) return;
+            _damageThisWindow += damage;
+            _levelDamageTotal += damage;
+        }
+
+        // Emit a DPS sample for the elapsed window and start a fresh one. Only logs when damage landed.
+        private void FlushDpsWindow()
+        {
+            if (_windowTimer > 0f && _damageThisWindow > 0)
+            {
+                float dps = _damageThisWindow / _windowTimer;
+                if (dps > _peakDps) _peakDps = dps;
+                if (GameLogger.IsEnabled(LogCategory.Combat))
+                    CombatLog.Dps(dps, _damageThisWindow, _windowTimer, _peakDps);
+            }
+            _damageThisWindow = 0;
+            _windowTimer = 0f;
+        }
+
+        private void ResetCombatStats()
+        {
+            _damageThisWindow = 0;
+            _windowTimer = 0f;
+            _levelDamageTotal = 0;
+            _levelElapsed = 0f;
+            _peakDps = 0f;
+            _hitsTakenThisLevel = 0;
+            _damageTakenThisLevel = 0;
+            // _cannonCurrentHp / _cannonMaxHp are NOT reset: cannon HP carries across levels in a run.
+        }
     }
 }

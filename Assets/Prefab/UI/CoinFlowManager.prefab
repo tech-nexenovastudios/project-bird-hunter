@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7556380872698579741}
   - component: {fileID: 5786300951124384677}
+  - component: {fileID: 645785789439428307}
   m_Layer: 5
   m_Name: CoinFlowManager
   m_TagString: Untagged
@@ -50,14 +51,121 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoinFlowManager
   currencyEntries:
   - currencyType: 0
-    iconPrefab: {fileID: 5446290551695521601, guid: ff749105b4d0f43819771e1412d0bdde, type: 3}
+    iconPrefab: {fileID: 9037917543946237723, guid: 25e7de9611a18664780406fc69c8bde7, type: 3}
     targetUI: {fileID: 0}
     config: {fileID: 11400000, guid: 3158b3bd9e2a142ef9668a00cb3ef6cd, type: 2}
   - currencyType: 1
-    iconPrefab: {fileID: 1127026721586314980, guid: 255783c652d2b4d7eb87cbdc400d1f92, type: 3}
+    iconPrefab: {fileID: 2712844720004895897, guid: 739cd19fd7bfd4045a3f5825543e9829, type: 3}
     targetUI: {fileID: 0}
     config: {fileID: 11400000, guid: b8efa18ae71124087b9cf7a7515ebc5d, type: 2}
   - currencyType: 2
-    iconPrefab: {fileID: 3235281561163307837, guid: 82092726ee6c74bbc830412f9162e85c, type: 3}
+    iconPrefab: {fileID: 5211875847141588228, guid: 0e131bb9061d3ff4383e8f2f216e7c9d, type: 3}
     targetUI: {fileID: 0}
     config: {fileID: 11400000, guid: 11c014c1e394047fa8626e63687b7327, type: 2}
+  parentCanvas: {fileID: 0}
+  coinScaleOverride: 0.4
+  spawnRadius: 75
+  bounceScale: 1.1
+  bounceInDuration: 0.18
+  bounceOutDuration: 0.28
+  coinSfxSource: {fileID: 645785789439428307}
+  coinFlowSfx: {fileID: 8300000, guid: 80bb008381a0cb74cba9a41cc892e0c8, type: 3}
+  coinSfxVolume: 0.213
+  coinSfxPitch: 0.1
+--- !u!82 &645785789439428307
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3023670512738227129}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

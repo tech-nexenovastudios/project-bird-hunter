@@ -8,9 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Ball Blast alignment, ideation backlog, and per-module status are documented in `docs/GDD_Event-Driven_Architecture.md`. Other design docs live alongside it in `docs/`:
 
-- `EndlessMode_Design.md`, `Progression_Reward_Economy.md`, `Reward_Tuning.md`, `Shop_Pricing.md`, `Cannon_Powerup_Unlock_Plan.md`, `Soft_Launch_Verification.md`, `Timeline_Production_Ready.md`, `GDD_Artist_QA_Pitch.md`.
+- **Economy & pricing:** `Store_and_Inventory_Pricing.md` (authoritative, telemetry-calibrated — supersedes the older `Shop_Pricing.md`), `Progression_Reward_Economy.md`, `Reward_Tuning.md`.
+- **Cannons & powerups:** `Cannon_DPS_and_Egg_Workload_Design.md`, `Cannon_Powerup_Unlock_Plan.md`, `Powerup_Chest_Collection_Design.md`.
+- **Chapter progression (stars/chests/panel):** `Chapter_Unlock_Panel_Design.md` (design intent), `Chapter_Progression_Architecture.md` (target architecture), `Sprint_01_Chapter_Stars.md` (the build plan).
+- **Modes & launch:** `EndlessMode_Design.md`, `Soft_Launch_Verification.md`, `Timeline_Production_Ready.md`, `GDD_Artist_QA_Pitch.md`.
 
 Consult the relevant doc *before* changing economy, reward, progression, or powerup tuning.
+
+**Telemetry:** the game writes structured logs to `GameLogs/combat.log` (score/DPS/per-level `SUMMARY` with `endHp`/`time`) and `GameLogs/economy.log` (earn/spend events). Several economy/star/cannon docs are calibrated from a 2026-06-02 capture — prefer measured rates from these logs over assumed numbers when tuning.
 
 ## Working in Unity Projects
 

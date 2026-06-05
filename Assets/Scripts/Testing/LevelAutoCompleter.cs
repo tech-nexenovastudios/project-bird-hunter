@@ -52,7 +52,7 @@ public class LevelAutoCompleter : MonoBehaviour
         int ch = GameProgressManager.Instance != null ? GameProgressManager.Instance.CurrentChapter : 0;
         int lv = GameProgressManager.Instance != null ? GameProgressManager.Instance.CurrentLevel : 0;
         Debug.Log($"[LevelAutoCompleter] Auto-completing Ch{ch} L{lv} after {delaySeconds}s (score={fakeFinalScore})");
-        GameManager.Instance.CompleteCurrentLevel(fakeFinalScore);
+        GameManager.Instance.CompleteCurrentLevel(LevelResult.FromScore(fakeFinalScore, LevelCompletionReason.Debug));
     }
 
     private void CancelPending()

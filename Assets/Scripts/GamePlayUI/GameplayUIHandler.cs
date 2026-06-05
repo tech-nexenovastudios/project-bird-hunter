@@ -163,6 +163,20 @@ namespace Gameplay.UI
         public void ShowComingSoon()
         {
             if (comingSoonUI != null) comingSoonUI.SetActive(true);
+
+            // The cannon reads raw pointer input and only gates on GameState (a UI raycast
+            // blocker won't stop it), so leave Gameplay and halt any in-progress firing —
+            // otherwise the player keeps controlling the cannon behind the panel.
+            var gm = GameManager.Instance;
+            if (gm != null)
+            {
+                gm.state = GameState.GameOver;
+                if (gm.currentCannon != null)
+                {
+                    var cannon = gm.currentCannon.GetComponent<Gameplay.Player.BaseCannon>();
+                    if (cannon != null) cannon.StopFiring();
+                }
+            }
         }
 
         // ───────── Clear Celebration (task #32 hook) ─────────

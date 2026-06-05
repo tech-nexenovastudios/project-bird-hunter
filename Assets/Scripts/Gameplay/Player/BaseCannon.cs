@@ -449,6 +449,7 @@ namespace Gameplay.Player
             if (fireTimer >= interval)
             {
                 Shoot();
+                GameEvents.FireCannonShoot();
                 fireTimer = 0;
             }
         }
@@ -467,7 +468,6 @@ namespace Gameplay.Player
                         SpawnBullet(gunTips[i].position, gunTips[i].rotation);
             }
             OnShootVFX();
-            GameEvents.FireCannonShoot();
         }
 
         /// <summary>
