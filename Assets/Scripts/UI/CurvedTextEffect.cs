@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -41,7 +42,8 @@ public class CurvedTextEffect : MonoBehaviour
         _text.ForceMeshUpdate();
 
         TMP_TextInfo textInfo = _text.textInfo;
-        int charCount = textInfo.characterCount;
+        if (textInfo == null || textInfo.characterInfo == null) return;
+        int charCount = Mathf.Min(textInfo.characterCount, textInfo.characterInfo.Length);
 
         _lastText = _text.text;
         _lastScale = transform.localScale;
@@ -59,7 +61,9 @@ public class CurvedTextEffect : MonoBehaviour
 
             int vert = textInfo.characterInfo[i].vertexIndex;
             int mat = textInfo.characterInfo[i].materialReferenceIndex;
+            if (mat >= textInfo.meshInfo.Length) continue;
             Vector3[] vertices = textInfo.meshInfo[mat].vertices;
+            if (vertices == null || vert + 3 >= vertices.Length) continue;
 
             // Re-center each glyph on its mid-baseline so the warp rotates it in place.
             Vector3 mid = new Vector2(
@@ -91,5 +95,15 @@ public class CurvedTextEffect : MonoBehaviour
         }
 
         _text.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
+    }
+    
+    
+
+    private void OnValidate()
+    {
+        if (_text == null) return;
+
+        if (_text.havePropertiesChanged || _text.text != _lastText || transform.localScale != _lastScale)
+            Warp();
     }
 }

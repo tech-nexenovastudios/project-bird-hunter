@@ -134,6 +134,7 @@ namespace Gameplay.Managers
         public int LevelScore => _levelScore;
         public int ChapterScore => _chapterScore;
         public int TargetScore => _targetScore;
+        public int LastChapterScore { get; private set; }
 
         public event Action<int, int> OnScoreChanged;
 
@@ -234,6 +235,7 @@ namespace Gameplay.Managers
 
         public void ResetChapterScore()
         {
+            LastChapterScore = _chapterScore;
             _chapterScore = 0;
         }
 

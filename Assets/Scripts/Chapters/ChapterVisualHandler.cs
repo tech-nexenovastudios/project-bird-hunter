@@ -20,8 +20,15 @@ public class ChapterVisualHandler : MonoBehaviour
     [SerializeField] private GameObject chapterUnlockPanel;
     [Tooltip("Curved chapter name shown on the unlock gate (needs a CurvedTextEffect).")]
     [SerializeField] private TextMeshProUGUI chapterNameText;
-    [Tooltip("Large number that ticks 5 → 1 on the unlock gate.")]
+    [Tooltip("Ticks 'next chapter in 5 sec...' → 1 on the unlock gate.")]
     [SerializeField] private TextMeshProUGUI countdownText;
+
+    [Header("Chapter Complete — Stats")]
+    [SerializeField] private TextMeshProUGUI scoreText;
+    [SerializeField] private TextMeshProUGUI highScoreText;
+    [SerializeField] private TextMeshProUGUI goldRewardText;
+    [SerializeField] private TextMeshProUGUI gemRewardText;
+    [SerializeField] private TextMeshProUGUI powerRewardText;
 
     [Header("Chapter Transition — Timing")]
     [SerializeField] private float unlockGateCountdown = 5f;
@@ -125,25 +132,53 @@ public class ChapterVisualHandler : MonoBehaviour
 
         if (chapterNameText != null)
         {
-            string worldName = string.IsNullOrEmpty(newData.worldName) ? $"Chapter {chapterNum}" : newData.worldName;
-            chapterNameText.text = worldName;
+            string chapterName = string.IsNullOrEmpty(newData.chapterName) ? $"Chapter {chapterNum}" : newData.chapterName;
+            chapterNameText.text = chapterName;
         }
+
+        int chapterScore = ScoreManager.Instance != null ? ScoreManager.Instance.LastChapterScore : 0;
+        int highScore = Mathf.Max(GameProgressManager.Instance != null ? GameProgressManager.Instance.HighScore : 0, chapterScore);
+
+        if (scoreText != null)
+        {
+            int shown = 0;
+            DOTween.To(() => shown, v => { shown = v; scoreText.text = shown.ToString("N0"); }, chapterScore, 0.8f)
+                   .SetEase(Ease.OutQuad)
+                   .SetTarget(scoreText);
+        }
+
+        if (highScoreText != null)
+            highScoreText.text = highScore.ToString("N0");
+
+        RefreshChapterRewardTexts();
 
         int remaining = Mathf.CeilToInt(unlockGateCountdown);
         while (remaining > 0)
         {
-            if (countdownText != null)
+            for (int dots = 3; dots >= 1; dots--)
             {
-                countdownText.text = remaining.ToString();
-                countdownText.transform.localScale = Vector3.one * 1.3f;
-                countdownText.transform.DOScale(1f, 0.4f).SetEase(Ease.OutBack);
+                if (countdownText != null)
+                    countdownText.text = $"next chapter in {remaining} sec{new string('.', dots)}";
+
+                yield return new WaitForSeconds(1f / 3f);
             }
 
-            yield return new WaitForSeconds(1f);
             remaining--;
+
+            RefreshChapterRewardTexts();
         }
 
         chapterUnlockPanel.SetActive(false);
+    }
+
+    private void RefreshChapterRewardTexts()
+    {
+        RewardManager rewards = RewardManager.Instance;
+        if (rewards == null) return;
+
+        if (goldRewardText != null) goldRewardText.text = rewards.GetChapterCoins().ToString("N0");
+        if (gemRewardText != null) gemRewardText.text = rewards.GetChapterGems().ToString("N0");
+        if (powerRewardText != null) powerRewardText.text = rewards.GetChapterPower().ToString("N0");
     }
 
     private IEnumerator TransitionRoutine(ChapterData newData, int chapterNum)
@@ -247,6 +282,7 @@ public class ChapterVisualHandler : MonoBehaviour
     {
         if (backgroundRect != null) backgroundRect.DOKill();
         if (platformTransform != null) platformTransform.DOKill();
+        if (scoreText != null) scoreText.DOKill();
 
         GameObject cannonGO = GameManager.Instance != null ? GameManager.Instance.currentCannon : null;
         if (cannonGO != null) cannonGO.transform.DOKill();

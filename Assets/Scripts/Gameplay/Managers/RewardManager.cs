@@ -25,6 +25,10 @@ namespace Gameplay.Managers
         private int _runGems;
         private int _runPower;
 
+        private int _chapterCoins;
+        private int _chapterGems;
+        private int _chapterPower;
+
         // Prevention combo: consecutive birds killed before they could lay. Resets when an egg
         // successfully lands (FireEggSpawned) or a post-lay bird is killed. Triggers escalating
         // bonus payouts at milestone counts so a skilled player flexing on bird-prevention gets
@@ -51,6 +55,7 @@ namespace Gameplay.Managers
             GameEvents.OnBirdDestroyed += HandleBirdDestroyed;
             GameEvents.OnLevelCompleted += HandleLevelCompleted;
             GameEvents.OnEggSpawned += HandleEggSpawned;
+            GameEvents.OnChapterTransitionFinished += ResetChapterTallies;
         }
 
         private void OnDisable()
@@ -59,6 +64,7 @@ namespace Gameplay.Managers
             GameEvents.OnBirdDestroyed -= HandleBirdDestroyed;
             GameEvents.OnLevelCompleted -= HandleLevelCompleted;
             GameEvents.OnEggSpawned -= HandleEggSpawned;
+            GameEvents.OnChapterTransitionFinished -= ResetChapterTallies;
         }
 
         public void ResetForNewLevel()
@@ -78,7 +84,16 @@ namespace Gameplay.Managers
             _runCoins = 0;
             _runGems = 0;
             _runPower = 0;
+            ResetChapterTallies();
             Debug.Log("[RewardManager] Reset for new run");
+        }
+
+        public void ResetChapterTallies()
+        {
+            _chapterCoins = 0;
+            _chapterGems = 0;
+            _chapterPower = 0;
+            Debug.Log("[RewardManager] Chapter tallies reset");
         }
 
         // Combo break — a bird successfully laid an egg, so the prevention streak ends.
@@ -241,6 +256,7 @@ namespace Gameplay.Managers
 
             _sessionCoinsThisLevel += amount;
             _runCoins += amount;
+            _chapterCoins += amount;
 
             OnCoinsAwarded?.Invoke(amount);
             OnRewardBroadcast?.Invoke("coins", amount);
@@ -261,6 +277,7 @@ namespace Gameplay.Managers
 
             _sessionGemsThisLevel += amount;
             _runGems += amount;
+            _chapterGems += amount;
 
             OnGemsAwarded?.Invoke(amount);
             OnRewardBroadcast?.Invoke("gems", amount);
@@ -281,6 +298,7 @@ namespace Gameplay.Managers
 
             _sessionPowerRefundsThisLevel += amount;
             _runPower += amount;
+            _chapterPower += amount;
 
             OnPowerAwarded?.Invoke(amount);
             OnRewardBroadcast?.Invoke("power", amount);
@@ -296,6 +314,10 @@ namespace Gameplay.Managers
         public int GetRunCoins() => _runCoins;
         public int GetRunGems() => _runGems;
         public int GetRunPower() => _runPower;
+
+        public int GetChapterCoins() => _chapterCoins;
+        public int GetChapterGems() => _chapterGems;
+        public int GetChapterPower() => _chapterPower;
 
         public Vector2Int GetExpectedCoinDropRange()
         {
